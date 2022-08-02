@@ -1,2 +1,1 @@
-# polidata-fe
-Front-end da aplicação PoliData.
+This is a starter template for [Learn Next.js](https://nextjs.org/learn).
