@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Menu() {
   return (
     <div className="relative bg-white">
@@ -19,9 +21,15 @@ export default function Menu() {
 
           <nav className="hidden md:flex space-x-10">
 
-            <a href="#" className="text-base font-medium text-slate-900 hover:text-slate-600"> Data Search </a>
-            <a href="#" className="text-base font-medium text-slate-900 hover:text-slate-600"> Data Tools </a>
-            <a href="#" className="text-base font-medium text-slate-900 hover:text-slate-600"> Support </a>
+            <Link href="/search">
+              <a className="text-base font-medium text-slate-900 hover:text-slate-600"> Data Search </a>
+            </Link>
+            <Link href="/tools">
+              <a className="text-base font-medium text-slate-900 hover:text-slate-600"> Data Tools </a>
+            </Link>
+            <Link href="/support">
+              <a className="text-base font-medium text-slate-900 hover:text-slate-600"> Support </a>
+            </Link>
 
           </nav>
 
