@@ -45,3 +45,4 @@ Also install:
 ### TailwindCSS
 
 Some defaults and components could be visualized in <http://localhost:3000/design-system/>.
+See some components ideas in: <https://flowbite.com/>
