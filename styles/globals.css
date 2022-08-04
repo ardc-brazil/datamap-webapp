@@ -1,3 +1,69 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-primary-50;
+  }
+  h1 {
+    @apply text-5xl font-medium;
+  }
+  h2 {
+    @apply text-4xl font-medium;
+  }
+  h3 {
+    @apply text-3xl font-medium text-primary-900;
+  }
+  h4 {
+    @apply text-2xl font-medium text-primary-900;
+  }
+  h5 {
+    @apply text-xl font-medium text-primary-900;
+  }
+  p {
+    @apply text-base font-normal text-primary-900;
+  }
+  a {
+    @apply text-base font-medium text-primary-900 hover:text-secondary-600;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-900 text-primary-50 font-bold py-2 px-4 hover:bg-primary-800 hover:text-primary-200;
+  }
+
+  .btn-primary-outline {
+    @apply bg-primary-50 text-primary-900 font-bold py-2 px-4 border hover:bg-primary-800 hover:text-primary-200;
+  }
+
+  .display-1 {
+    @apply text-8xl font-light;
+  }
+
+  .display-2 {
+    @apply text-7xl font-light;
+  }
+
+  .display-3 {
+    @apply text-6xl font-light;
+  }
+
+  .display-4 {
+    @apply text-5xl font-light;
+  }
+
+  .display-5 {
+    @apply text-4xl font-light;
+  }
+}
+/*
+  @layer utilities {
+    .filter-none {
+      filter: none;
+    }
+    .filter-grayscale {
+      filter: grayscale(100%);
+    }
+  } */
