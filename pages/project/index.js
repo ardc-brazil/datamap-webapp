@@ -1,10 +1,10 @@
 import React from "react";
 import Layout from "../../components/Layout";
 
-export default function SupportPage() {
+export default function ProjectPage() {
   return (
     <Layout>
-      <h1>SupportPage</h1>
+      <h1>Project Home Page</h1>
     </Layout>
   );
 }
