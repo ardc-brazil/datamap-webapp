@@ -11,7 +11,7 @@ module.exports = {
       body: ["Inter", "system-ui", "sans-serif"],
     },
     colors: {
-      // TODO: Set color from figma theme
+      // See the primary pallet colors: https://coolors.co/gradient-palette/f9fafb-111827?number=10
       primary: {
         50: "#f9fafb",
         100: "#f3f4f6",
@@ -25,16 +25,17 @@ module.exports = {
         900: "#111827",
       },
       secondary: {
-        50: "#ecfdf5",
-        100: "#d1fae5",
-        200: "#a7f3d0",
-        300: "#6ee7b7",
-        400: "#34d399",
-        500: "#10b981",
-        600: "#059669",
-        700: "#047857",
-        800: "#065f46",
-        900: "#064e3b",
+        // See the secondary pallet color: https://coolors.co/gradient-palette/fbfcfc-d7e4e3?number=10
+        50: "#FBFCFC",
+        100: "#FBFCFC",
+        200: "#F6F9F9",
+        300: "#F2F6F6",
+        400: "#EDF3F3",
+        500: "#E9F0EF",
+        600: "#E4EDEC",
+        700: "#E0EAE9",
+        800: "#DBE7E6",
+        900: "#D7E4E3",
       },
     },
   },

@@ -23,13 +23,13 @@ export function Navbar() {
           <nav className="hidden md:flex flex-row ml-10">
             <NavbarItem href="/search">Data Search</NavbarItem>
             <NavbarItem href="/tools">Data Tools</NavbarItem>
-            <NavbarItem href="/support">Support</NavbarItem>
+            <NavbarItem href="/project">Project</NavbarItem>
           </nav>
 
           <HiddenNav items={["Data Search", "Data Tools", "Support"]}>
             <MobileNavbarItem href="/search">Data Search</MobileNavbarItem>
             <MobileNavbarItem href="/tools">Data Tools</MobileNavbarItem>
-            <MobileNavbarItem href="/support">Support</MobileNavbarItem>
+            <MobileNavbarItem href="/project">Project</MobileNavbarItem>
           </HiddenNav>
 
           <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
