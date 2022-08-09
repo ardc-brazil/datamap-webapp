@@ -4,7 +4,7 @@ import Layout from "../../components/Layout";
 export default function SupportPage() {
   return (
     <Layout>
-      <div>SupportPage</div>
+      <h1>SupportPage</h1>
     </Layout>
   );
 }

@@ -4,7 +4,7 @@ import Layout from "../../components/Layout";
 export default function ToolPage() {
   return (
     <Layout>
-      <div>ToolPage</div>
+      <h1>ToolPage</h1>
     </Layout>
   );
 }
