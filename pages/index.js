@@ -24,7 +24,7 @@ function BigButton(props) {
 export default function HomePage() {
   return (
     <Layout fluid={true}>
-      <div className="special-background bg-fixed">
+      <div className="special-background">
         <div className="container mx-auto flex flex-row flex-wrap py-20">
           <div className="py-12 px-8 md:basis-7/12 bg-primary-50 drop-shadow-2xl">
             <h1 className="md:display-2 sm:display-4 font-medium">
@@ -43,7 +43,7 @@ export default function HomePage() {
           </p>
         </section>
         <section className="mb-40">
-          <h1>
+          <h1 className="py-8">
             <TextDecorationBolder>Data Search</TextDecorationBolder>
           </h1>
 
