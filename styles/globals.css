@@ -7,19 +7,19 @@
     @apply bg-primary-50;
   }
   h1 {
-    @apply text-5xl font-medium;
+    @apply text-5xl font-medium py-8;
   }
   h2 {
-    @apply text-4xl font-medium;
+    @apply text-4xl font-medium py-6;
   }
   h3 {
-    @apply text-3xl font-medium text-primary-900;
+    @apply text-3xl font-medium text-primary-900 py-4;
   }
   h4 {
-    @apply text-2xl font-medium text-primary-900;
+    @apply text-2xl font-medium text-primary-900 py-2;
   }
   h5 {
-    @apply text-xl font-medium text-primary-900;
+    @apply text-xl font-medium text-primary-900 py-1;
   }
   p {
     @apply text-base font-normal text-primary-900;
@@ -60,7 +60,30 @@
   .display-5 {
     @apply text-4xl font-light;
   }
+
+  /* https://www.magicpattern.design/tools/css-backgrounds */
+  /* .special-background {
+    
+    background-color: #fbfcfc;
+    opacity: 0.8;
+    background-image: repeating-radial-gradient(
+        circle at 0 0,
+        transparent 0,
+        #fbfcfc 10px
+      ),
+      repeating-linear-gradient(#fbfcfc55, #d7e4e3);
+  } */
+
+  .special-background {
+    background-size: 12px 12px;
+    background-image: radial-gradient(
+      circle,
+      #d7e4e3 1px,
+      rgba(0, 0, 0, 0) 1px
+    );
+  }
 }
+
 /*
   @layer utilities {
     .filter-none {
