@@ -60,7 +60,30 @@
   .display-5 {
     @apply text-4xl font-light;
   }
+
+  /* https://www.magicpattern.design/tools/css-backgrounds */
+  /* .special-background {
+    
+    background-color: #fbfcfc;
+    opacity: 0.8;
+    background-image: repeating-radial-gradient(
+        circle at 0 0,
+        transparent 0,
+        #fbfcfc 10px
+      ),
+      repeating-linear-gradient(#fbfcfc55, #d7e4e3);
+  } */
+
+  .special-background {
+    background-size: 12px 12px;
+    background-image: radial-gradient(
+      circle,
+      #d7e4e3 1px,
+      rgba(0, 0, 0, 0) 1px
+    );
+  }
 }
+
 /*
   @layer utilities {
     .filter-none {
