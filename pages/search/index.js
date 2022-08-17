@@ -5,6 +5,7 @@ import { Badge } from "../../components/Search/Badge";
 import { filterCriteria } from "../../fake-data/filters";
 
 import Link from "next/link";
+import SearchBar from "../../components/Dataset/SearchBar";
 
 function ListItem() {
   return (
@@ -327,6 +328,8 @@ export default function SearchPage() {
             onClose={onCriteriaChanged}
             onClearFilters={onClearFilters}
           ></FilterBadges>
+
+          <SearchBar />
 
           <ListDataset />
         </div>
