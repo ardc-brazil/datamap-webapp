@@ -12,7 +12,7 @@ function NavbarItem(props) {
 export function Navbar() {
   return (
     <header className="border-b border-primary-200 sticky top-0 z-50">
-      <div className="mx-auto w-full px-2 bg-primary-50 opacity-[.99]">
+      <div className="mx-auto w-full px-2 backdrop-blur-md bg-primary-50/90">
         <div className="flex items-center py-1 h-16">
           <Link href="/">
             <a className="px-2 py-4">
