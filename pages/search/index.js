@@ -1,5 +1,4 @@
 import React from "react";
-
 import Layout from "../../components/Layout";
 import { FilterCriteria } from "../../components/Search/FilterCriteria";
 
@@ -39,13 +38,13 @@ export default function SearchPage() {
     },
     {
       id: 2,
-      title: "Datastreams",
+      title: "Radio",
       selection: "one",
       options: [
-        { id: 21, value: 1, text: "Datastreams 1" },
-        { id: 22, value: 1, text: "Datastreams 1" },
-        { id: 23, value: 1, text: "Datastreams 1" },
-        { id: 24, value: 1, text: "Datastreams 1" },
+        { id: 21, value: 1, text: "Radio 1" },
+        { id: 22, value: 1, text: "Radio 2" },
+        { id: 23, value: 1, text: "Radio 3" },
+        { id: 24, value: 1, text: "Radio 4" },
       ],
     },
     {
@@ -72,6 +71,11 @@ export default function SearchPage() {
     },
   ];
 
+  function onCriteriaChanged(criteria, option) {
+    console.log(criteria.title);
+    console.log(option);
+  }
+
   return (
     <Layout fluid={true}>
       <div className="grid grid-cols-12 gap-4">
@@ -83,6 +87,7 @@ export default function SearchPage() {
               <FilterCriteria
                 key={criteria.id}
                 criteria={criteria}
+                onCriteriaChanged={onCriteriaChanged}
               ></FilterCriteria>
             ))}
           </div>
