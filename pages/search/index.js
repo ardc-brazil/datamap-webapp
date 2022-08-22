@@ -6,8 +6,14 @@ import { FilterCriteria } from "../../components/Search/FilterCriteria";
 export default function SearchPage() {
   const filterCriteria = [
     {
+      id: 5,
+      title: "Date range",
+      selection: "date-range",
+    },
+    {
       id: 1,
       title: "Category",
+      selection: "multiple",
       options: [
         { id: 1, value: 1, text: "Category 1" },
         { id: 2, value: 1, text: "Category 1" },
@@ -34,6 +40,7 @@ export default function SearchPage() {
     {
       id: 2,
       title: "Datastreams",
+      selection: "one",
       options: [
         { id: 21, value: 1, text: "Datastreams 1" },
         { id: 22, value: 1, text: "Datastreams 1" },
@@ -42,23 +49,25 @@ export default function SearchPage() {
       ],
     },
     {
-      id: 2,
+      id: 3,
       title: "Datastreams",
+      selection: "one",
       options: [
-        { id: 21, value: 1, text: "Datastreams 1" },
-        { id: 22, value: 1, text: "Datastreams 1" },
-        { id: 23, value: 1, text: "Datastreams 1" },
-        { id: 24, value: 1, text: "Datastreams 1" },
+        { id: 25, value: 1, text: "Datastreams 1" },
+        { id: 26, value: 1, text: "Datastreams 1" },
+        { id: 27, value: 1, text: "Datastreams 1" },
+        { id: 28, value: 1, text: "Datastreams 1" },
       ],
     },
     {
-      id: 2,
+      id: 4,
       title: "Datastreams",
+      selection: "multiple",
       options: [
-        { id: 21, value: 1, text: "Datastreams 1" },
-        { id: 22, value: 1, text: "Datastreams 1" },
-        { id: 23, value: 1, text: "Datastreams 1" },
-        { id: 24, value: 1, text: "Datastreams 1" },
+        { id: 29, value: 1, text: "Datastreams 1" },
+        { id: 30, value: 1, text: "Datastreams 1" },
+        { id: 31, value: 1, text: "Datastreams 1" },
+        { id: 32, value: 1, text: "Datastreams 1" },
       ],
     },
   ];
@@ -71,13 +80,10 @@ export default function SearchPage() {
           <hr className="border-primary-200" />
           <div className="pt-6">
             {filterCriteria.map((criteria) => (
-              <div className="border-b border-primary-200">
-                <FilterCriteria
-                  key={criteria.id}
-                  title={criteria.title}
-                  options={criteria.options}
-                ></FilterCriteria>
-              </div>
+              <FilterCriteria
+                key={criteria.id}
+                criteria={criteria}
+              ></FilterCriteria>
             ))}
           </div>
         </div>
