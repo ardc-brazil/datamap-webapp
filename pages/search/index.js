@@ -1,6 +1,7 @@
 import React from "react";
 import Layout from "../../components/Layout";
 import { FilterCriteria } from "../../components/Search/FilterCriteria";
+import { Badge } from "../../components/Search/Badge";
 
 export default function SearchPage() {
   const filterCriteria = [
@@ -93,7 +94,32 @@ export default function SearchPage() {
           </div>
         </div>
 
-        <div className="col-span-9 px-4 ">Resultado de busca</div>
+        <div className="col-span-9 px-4">
+          {/* {[...Array(50).keys()].map((x) => { */}
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          <Badge>Default</Badge>
+          {/* })} */}
+        </div>
       </div>
     </Layout>
   );
