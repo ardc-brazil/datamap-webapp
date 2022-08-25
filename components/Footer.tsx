@@ -21,14 +21,14 @@ export function Footer() {
             </p>
           </div>
           <div className="md:basis-1/5">
-            <h2>Contact</h2>
+            <h2 className="font-light">Contact</h2>
             <p className="px-2 py-4">
               Address: Av. Prof. Luciano Gualberto Butantã, São Paulo SP,
               05508-010
             </p>
           </div>
           <div className="md:basis-1/5">
-            <h2>Project</h2>
+            <h2 className="font-light">Project</h2>
             <ul className="px-2 py-4">
               <li>
                 <Link href="/project/about">
@@ -58,7 +58,7 @@ export function Footer() {
             </ul>
           </div>
           <div className="md:basis-1/5">
-            <h2>Tools</h2>
+            <h2 className="font-light">Tools</h2>
             <ul className="px-2 py-4">
               <li>
                 <Link href="/search">
