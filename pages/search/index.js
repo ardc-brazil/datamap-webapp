@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Layout from "../../components/Layout";
 import { FilterCriteria } from "../../components/Search/FilterCriteria";
 import { Badge } from "../../components/Search/Badge";
@@ -72,10 +72,25 @@ export default function SearchPage() {
     },
   ];
 
-  function onCriteriaChanged(criteria, option) {
-    console.log(criteria.title);
-    console.log(option);
+  function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min) + min);
   }
+
+  function onCriteriaChanged(criteria, option) {
+    // TODO: Convert to typescript e create objects to organize things.
+    if (getRandomInt(0, 100) % 2 == 0) {
+      setSelectedCriterias([
+        { id: 1, title: "a" },
+        { id: 2, title: "b" },
+      ]);
+    } else {
+      setSelectedCriterias([{ id: 2, title: "b" }]);
+    }
+  }
+
+  const [selectedCriterias, setSelectedCriterias] = useState([], false);
 
   return (
     <Layout fluid={true}>
@@ -95,30 +110,9 @@ export default function SearchPage() {
         </div>
 
         <div className="col-span-9 px-4">
-          {/* {[...Array(50).keys()].map((x) => { */}
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          <Badge>Default</Badge>
-          {/* })} */}
+          {selectedCriterias.map((c) => (
+            <Badge key={c.id}>{c.title}</Badge>
+          ))}
         </div>
       </div>
     </Layout>

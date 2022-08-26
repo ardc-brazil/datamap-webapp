@@ -11,6 +11,7 @@ export function Badge(props) {
         type="button"
         className="inline-flex items-center p-0.5 ml-2 text-sm text-primary-400 bg-transparent hover:bg-primary-200 hover:text-primary-90 rounded-full"
         aria-label="Remove"
+        onClick={props.onClose}
       >
         <svg
           aria-hidden="true"
