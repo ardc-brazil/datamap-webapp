@@ -4,6 +4,7 @@ import { Footer } from "./Footer";
 
 type Props = {
   children?: React.ReactNode;
+  fluid?: String
 };
 
 export default (props: Props) => {
