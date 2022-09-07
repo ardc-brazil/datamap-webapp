@@ -2,7 +2,7 @@ import React from "react";
 
 export function DateInput(props) {
   function onDateChanged(e) {
-    props.onDateChanged(props.option, e);
+    props.onDateChanged(props.option, e.target.value);
   }
 
   return (
@@ -12,6 +12,7 @@ export function DateInput(props) {
         key={props.option.id}
         type="date"
         className="form-input block"
+        value={props.option.selected}
         onChange={onDateChanged} />
     </div>
   );

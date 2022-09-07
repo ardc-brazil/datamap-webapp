@@ -103,11 +103,12 @@ function multiple(criteria, onCriteriaChanged) {
 }
 
 function dateRange(criteria, onCriteriaChanged) {
-  function onDateChanged(e) {
-    onCriteriaChanged(criteria, {
-      selected: e.value,
-      option: criteria,
-    });
+  function onDateChanged(option, value) {
+    const event = {
+      selected: value,
+      option: option,
+    };
+    onCriteriaChanged(criteria, event);
   }
 
   return criteria.options.map((o) => (
