@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Layout from "../../components/Layout";
 import { FilterCriteria } from "../../components/Search/FilterCriteria";
 import { Badge } from "../../components/Search/Badge";
@@ -11,6 +11,11 @@ export default function SearchPage() {
 
   const [filters, setFilters] = useState(filterCriteria);
   const [selectedOptions, setSelectedOptions] = useState([], true);
+
+  useEffect(() => {
+    setFilters(filterCriteria);
+    setSelectedOptions(filterOptionsSelected);
+  }, []);
 
   function updateFilters(criteria, event) {
     var updatedFilters = filters.map((f) => {
@@ -49,7 +54,6 @@ export default function SearchPage() {
   }
 
   function onCriteriaChanged(criteria, event) {
-    console.log(criteria, event);
     setFilters(updateFilters(criteria, event));
     setSelectedOptions(filterOptionsSelected);
   }
