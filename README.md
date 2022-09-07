@@ -46,3 +46,27 @@ Also install:
 
 Some defaults and components could be visualized in <http://localhost:3000/design-system/>.
 See some components ideas in: <https://flowbite.com/>
+
+
+### Unit tests
+
+Use [JEST](https://jestjs.io) for unit tests.
+
+Scripts:
+
+```
+# Testing once
+npm run test
+
+# Testing with watch option on
+npm run testing
+``` 
+
+### e2e tests
+
+Use Cypress for end-to-end tests.
+
+```
+# Open cypress screen
+npm run cypress
+``` 

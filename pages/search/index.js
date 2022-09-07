@@ -7,8 +7,6 @@ import { filterCriteria } from "../fake-data/filters";
 // @ts-check
 
 export default function SearchPage() {
-  var idGenerator = 1;
-
   const [filters, setFilters] = useState(filterCriteria);
   const [selectedOptions, setSelectedOptions] = useState([], true);
 

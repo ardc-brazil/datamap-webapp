@@ -1,9 +1,17 @@
-import { useState } from "react";
+import { MouseEventHandler, useState } from "react";
 
-export function MobileMenuItem(props) {
+interface Props {
+  children?: React.ReactNode;
+  href: string;
+  clicked?: MouseEventHandler<HTMLElement>;
+  id: string;
+}
+
+export function MobileMenuItem(props: Props) {
   return (
     <li>
       <a
+        id={props.id}
         href={props.href}
         className="block py-2 pr-4 pl-3 rounded hover:bg-gray-100 md:hover:bg-transparent"
         onClick={props.clicked}
@@ -48,12 +56,10 @@ export function HiddenNav(props) {
 
       <div
         className={`${
-          isActive ?  null : "hidden"
+          isActive ? null : "hidden"
         } md:hidden ml-8 border-b border-t border-primary-200 z-50 fixed top-16 w-full bg-primary-50 opacity-[.99]`}
       >
-        <ul className="flex flex-col p-4 ml-4">
-          {props.children}
-        </ul>
+        <ul className="flex flex-col p-4 ml-4">{props.children}</ul>
       </div>
     </div>
   );

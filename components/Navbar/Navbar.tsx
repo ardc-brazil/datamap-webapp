@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { HiddenNav, MobileMenuItem as MobileNavbarItem } from "./MobileNavbar";
 
-function NavbarItem(props) {
+interface Props {
+  children?: React.ReactNode;
+  href: string;
+  id: string;
+}
+
+function NavbarItem(props: Props) {
   return (
     <Link href={props.href}>
-      <a className="px-2 py-4">{props.children}</a>
+      <a id={props.id} className="px-2 py-4">{props.children}</a>
     </Link>
   );
 }
@@ -21,15 +27,27 @@ export function Navbar() {
           </Link>
 
           <nav className="hidden md:flex flex-row ml-10">
-            <NavbarItem href="/search">Data Search</NavbarItem>
-            <NavbarItem href="/tools">Data Tools</NavbarItem>
-            <NavbarItem href="/project">Project</NavbarItem>
+            <NavbarItem id="navbarItemSearch" href="/search">
+              Data Search
+            </NavbarItem>
+            <NavbarItem id="navbarItemTools" href="/tools">
+              Data Tools
+            </NavbarItem>
+            <NavbarItem id="navbarItemProject" href="/project">
+              Project
+            </NavbarItem>
           </nav>
 
           <HiddenNav items={["Data Search", "Data Tools", "Support"]}>
-            <MobileNavbarItem href="/search">Data Search</MobileNavbarItem>
-            <MobileNavbarItem href="/tools">Data Tools</MobileNavbarItem>
-            <MobileNavbarItem href="/project">Project</MobileNavbarItem>
+            <MobileNavbarItem id="mobileNavbarItemSearch" href="/search">
+              Data Search
+            </MobileNavbarItem>
+            <MobileNavbarItem id="mobileNavbarItemTools" href="/tools">
+              Data Tools
+            </MobileNavbarItem>
+            <MobileNavbarItem id="mobileNavbarItemProject" href="/project">
+              Project
+            </MobileNavbarItem>
           </HiddenNav>
 
           <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
