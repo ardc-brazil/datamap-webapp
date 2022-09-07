@@ -2,95 +2,91 @@ import React, { useState } from "react";
 import Layout from "../../components/Layout";
 import { FilterCriteria } from "../../components/Search/FilterCriteria";
 import { Badge } from "../../components/Search/Badge";
+import { setOriginalNode } from "typescript";
 
 export default function SearchPage() {
+  var idGenerator = 1;
   const filterCriteria = [
     {
-      id: 5,
+      id: idGenerator++,
       title: "Date range",
       selection: "date-range",
     },
     {
-      id: 1,
+      id: idGenerator++,
       title: "Category",
       selection: "multiple",
       options: [
-        { id: 1, value: 1, text: "Category 1" },
-        { id: 2, value: 1, text: "Category 1" },
-        { id: 3, value: 1, text: "Category 1" },
-        { id: 4, value: 1, text: "Category 1" },
-        { id: 5, value: 1, text: "Category 1" },
-        { id: 6, value: 1, text: "Category 1" },
-        { id: 7, value: 1, text: "Category 1" },
-        { id: 8, value: 1, text: "Category 1" },
-        { id: 9, value: 1, text: "Category 1" },
-        { id: 10, value: 1, text: "Category 1" },
-        { id: 11, value: 1, text: "Category 1" },
-        { id: 12, value: 1, text: "Category 1" },
-        { id: 13, value: 1, text: "Category 1" },
-        { id: 14, value: 1, text: "Category 1" },
-        { id: 15, value: 1, text: "Category 1" },
-        { id: 16, value: 1, text: "Category 1" },
-        { id: 17, value: 1, text: "Category 1" },
-        { id: 18, value: 1, text: "Category 1" },
-        { id: 19, value: 1, text: "Category 1" },
-        { id: 20, value: 1, text: "Category 1" },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
+        { id: idGenerator++, value: 1, text: `Category ${idGenerator}` },
       ],
     },
     {
-      id: 2,
+      id: idGenerator++,
       title: "Radio",
       selection: "one",
       options: [
-        { id: 21, value: 1, text: "Radio 1" },
-        { id: 22, value: 1, text: "Radio 2" },
-        { id: 23, value: 1, text: "Radio 3" },
-        { id: 24, value: 1, text: "Radio 4" },
+        { id: idGenerator++, value: 1, text: "Radio 1" },
+        { id: idGenerator++, value: 1, text: "Radio 2" },
+        { id: idGenerator++, value: 1, text: "Radio 3" },
+        { id: idGenerator++, value: 1, text: "Radio 4" },
       ],
     },
     {
-      id: 3,
+      id: idGenerator++,
       title: "Datastreams",
       selection: "one",
       options: [
-        { id: 25, value: 1, text: "Datastreams 1" },
-        { id: 26, value: 1, text: "Datastreams 1" },
-        { id: 27, value: 1, text: "Datastreams 1" },
-        { id: 28, value: 1, text: "Datastreams 1" },
+        { id: idGenerator++, value: 1, text: "Datastreams 1" },
+        { id: idGenerator++, value: 1, text: "Datastreams 1" },
+        { id: idGenerator++, value: 1, text: "Datastreams 1" },
+        { id: idGenerator++, value: 1, text: "Datastreams 1" },
       ],
     },
     {
-      id: 4,
+      id: idGenerator++,
       title: "Datastreams",
       selection: "multiple",
       options: [
-        { id: 29, value: 1, text: "Datastreams 1" },
-        { id: 30, value: 1, text: "Datastreams 1" },
-        { id: 31, value: 1, text: "Datastreams 1" },
-        { id: 32, value: 1, text: "Datastreams 1" },
+        { id: idGenerator++, value: 1, text: "Datastreams 1" },
+        { id: idGenerator++, value: 1, text: "Datastreams 1" },
+        { id: idGenerator++, value: 1, text: "Datastreams 1" },
+        { id: idGenerator++, value: 1, text: "Datastreams 1" },
       ],
     },
   ];
 
-  function getRandomInt(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min) + min);
-  }
-
-  function onCriteriaChanged(criteria, option) {
-    // TODO: Convert to typescript e create objects to organize things.
-    if (getRandomInt(0, 100) % 2 == 0) {
-      setSelectedCriterias([
-        { id: 1, title: "a" },
-        { id: 2, title: "b" },
-      ]);
+  function onCriteriaChanged(criteria, event) {
+    if (event.selected) {
+      setSelectedOptions([...selectedOptions, event.option]);
     } else {
-      setSelectedCriterias([{ id: 2, title: "b" }]);
+      onClose(event.option);
     }
   }
 
-  const [selectedCriterias, setSelectedCriterias] = useState([], false);
+  const [selectedOptions, setSelectedOptions] = useState([], true);
+
+  function onClose(e) {
+    setSelectedOptions(selectedOptions.filter((x) => x.id !== e.id));
+  }
 
   return (
     <Layout fluid={true}>
@@ -110,8 +106,10 @@ export default function SearchPage() {
         </div>
 
         <div className="col-span-9 px-4">
-          {selectedCriterias.map((c) => (
-            <Badge key={c.id}>{c.title}</Badge>
+          {selectedOptions.map((option) => (
+            <Badge key={option.id} onClose={onClose} option={option}>
+              {option.text}
+            </Badge>
           ))}
         </div>
       </div>

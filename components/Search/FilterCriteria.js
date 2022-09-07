@@ -50,23 +50,36 @@ function one(criteria, onCriteriaChanged) {
 
 function multiple(criteria, onCriteriaChanged) {
   var _selected = new Map();
+  var event = {
+    selected: false,
+    option: {}
+  };
 
   function onChanged(props, selected) {
     if (selected) {
       _selected.set(props.id, props);
+      event = {
+        selected: true,
+        option: props
+      }
     } else {
       _selected.delete(props.id);
+      event = {
+        selected: false,
+        option: props
+      }
     }
 
-    onCriteriaChanged(criteria, _selected);
+    onCriteriaChanged(criteria, event);
   }
 
   return criteria.options.map((x) => (
     <Checkbox
       key={x.id}
       id={x.id}
+      // TODO: Criteria ID should be a reference inside Option
       parentId={criteria.id}
-      value={x.value}
+      option={x}
       onChanged={onChanged}
     >
       {x.text}
