@@ -1,5 +1,4 @@
 import React from "react";
-import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
 import { Checkbox } from "./CheckboxButton";
 import { DateInput } from "./DateInput";
 import { RadioButton } from "./RadioButton";
@@ -112,6 +111,6 @@ function dateRange(criteria, onCriteriaChanged) {
   }
 
   return criteria.options.map((o) => (
-    <DateInput option={o} onDateChanged={onDateChanged} />
+    <DateInput key={o.id} option={o} onDateChanged={onDateChanged} />
   ));
 }
