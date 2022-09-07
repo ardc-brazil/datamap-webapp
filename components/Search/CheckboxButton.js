@@ -13,6 +13,7 @@ export function Checkbox(props) {
           type="checkbox"
           value={props.option.value}
           name={`checkbox-component-${props.parentId}`}
+          checked={props.option.selected}
           className="w-5 h-5 accent-primary-900"
           onChange={toggleSelected}
         />
