@@ -1,8 +1,8 @@
 import React from "react";
 
 export function RadioButton(props) {
-  function onChange() {
-    props.onChange(props);
+  function onChange(e) {
+    props.onChanged(props.option, e.target.value);
   }
   return (
     <div className="flex items-center">
@@ -12,6 +12,7 @@ export function RadioButton(props) {
           type="radio"
           value={props.value}
           name={`radio-component-${props.parentId}`}
+          checked={props.option.selected == props.value}
           className="w-5 h-5 accent-primary-900"
           onChange={onChange}
         />

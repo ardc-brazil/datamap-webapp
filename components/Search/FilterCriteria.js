@@ -1,5 +1,7 @@
 import React from "react";
+import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
 import { Checkbox } from "./CheckboxButton";
+import { DateInput } from "./DateInput";
 import { RadioButton } from "./RadioButton";
 
 export function FilterCriteria(props) {
@@ -27,12 +29,27 @@ function buildContentFrom(criteria, onCriteriaChanged) {
 }
 
 function one(criteria, onCriteriaChanged) {
-  var _selected = new Map();
-
-  function onChange(option) {
+  function onChanged(option) {
     _selected.clear();
     _selected.set(option.id, option);
     onCriteriaChanged(criteria, _selected);
+  }
+
+  function onChanged(props, selected) {
+    var event = {};
+    if (selected) {
+      event = {
+        selected: selected,
+        option: props,
+      };
+    } else {
+      event = {
+        selected: selected,
+        option: props,
+      };
+    }
+
+    onCriteriaChanged(criteria, event);
   }
 
   return criteria.options.map((x) => (
@@ -41,7 +58,8 @@ function one(criteria, onCriteriaChanged) {
       id={x.id}
       parentId={criteria.id}
       value={x.value}
-      onChange={onChange}
+      option={x}
+      onChanged={onChanged}
     >
       {x.text}
     </RadioButton>
@@ -49,24 +67,34 @@ function one(criteria, onCriteriaChanged) {
 }
 
 function multiple(criteria, onCriteriaChanged) {
-  var _selected = new Map();
+  var event = {
+    selected: false,
+    option: {},
+  };
 
   function onChanged(props, selected) {
     if (selected) {
-      _selected.set(props.id, props);
+      event = {
+        selected: true,
+        option: props,
+      };
     } else {
-      _selected.delete(props.id);
+      event = {
+        selected: false,
+        option: props,
+      };
     }
 
-    onCriteriaChanged(criteria, _selected);
+    onCriteriaChanged(criteria, event);
   }
 
   return criteria.options.map((x) => (
     <Checkbox
       key={x.id}
       id={x.id}
+      // TODO: Criteria ID should be a reference inside Option
       parentId={criteria.id}
-      value={x.value}
+      option={x}
       onChanged={onChanged}
     >
       {x.text}
@@ -75,30 +103,14 @@ function multiple(criteria, onCriteriaChanged) {
 }
 
 function dateRange(criteria, onCriteriaChanged) {
-  var _selected = new Map();
+  function onDateChanged(e) {
+    onCriteriaChanged(criteria, {
+      selected: e.value,
+      option: criteria,
+    });
+  }
 
-  function onStartDateChanged(e) {
-    _selected.set("start-date", e.target.value);
-    onCriteriaChanged(criteria, _selected);
-  }
-  function onEndDateChanged(e) {
-    _selected.set("end-date", e.target.value);
-    onCriteriaChanged(criteria, _selected);
-  }
-  return (
-    <div>
-      from
-      <input
-        type="date"
-        className="form-input block"
-        onChange={onStartDateChanged}
-      />
-      to
-      <input
-        type="date"
-        className="form-input block"
-        onChange={onEndDateChanged}
-      />
-    </div>
-  );
+  return criteria.options.map((o) => (
+    <DateInput option={o} onDateChanged={onDateChanged} />
+  ));
 }
