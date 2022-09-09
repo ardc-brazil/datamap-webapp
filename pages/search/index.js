@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Layout from "../../components/Layout";
 import { FilterCriteria } from "../../components/Search/FilterCriteria";
 import { Badge } from "../../components/Search/Badge";
-import { filterCriteria } from "../fake-data/filters";
+import { filterCriteria } from "../../fake-data/filters";
 
 import Link from "next/link";
 
