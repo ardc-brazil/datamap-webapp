@@ -7,7 +7,7 @@ export function FilterCriteria(props) {
   var content = buildContentFrom(props.criteria, props.onCriteriaChanged);
 
   return (
-    <div className="border-b border-primary-200">
+    <div className={`${props.border ? "border-b border-primary-200" : ""}`}>
       <div className="mb-4 max-h-56 overflow-y-auto">
         <p className="pb-2 font-bold text-sm">{props.criteria.title}</p>
         {content}
