@@ -19,7 +19,7 @@ export function DateInput(props: DateInputProps) {
         key={props.option.id}
         type="date"
         className="form-input block"
-        value={props.option.selected}
+        value={props.option.selected ?? ""}
         onChange={onDateChanged}
       />
     </div>

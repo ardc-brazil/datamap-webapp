@@ -5,6 +5,7 @@ import { Footer } from "./Footer";
 interface Props {
   children?: React.ReactNode;
   fluid?: String;
+  footerPropsMarginTop?: boolean;
 }
 
 export default (props: Props) => {
@@ -24,7 +25,7 @@ export default (props: Props) => {
       >
         {props.children}
       </main>
-      <Footer />
+      <Footer marginTop={props.footerPropsMarginTop} />
     </>
   );
 };

@@ -1,9 +1,14 @@
 import Link from "next/link";
 import React from "react";
+import { Props } from "../components/types/BaseInterfaces";
 
-export function Footer() {
+export interface FooterProps extends Props {
+  marginTop?: boolean;
+}
+
+export function Footer(props: FooterProps) {
   return (
-    <footer className="bg-secondary-900 mt-12">
+    <footer className={`bg-secondary-900 ${props.marginTop ?? "mt-12"} `}>
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-row flex-wrap">
           <div className="md:basis-2/5">
