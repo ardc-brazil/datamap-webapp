@@ -2,10 +2,10 @@ import Head from "../node_modules/next/head";
 import { Navbar } from "./Navbar/Navbar";
 import { Footer } from "./Footer";
 
-type Props = {
+interface Props {
   children?: React.ReactNode;
-  fluid?: String
-};
+  fluid?: String;
+}
 
 export default (props: Props) => {
   return (

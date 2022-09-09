@@ -1,194 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Layout from "../../components/Layout";
 import { FilterCriteria } from "../../components/Search/FilterCriteria";
 import { Badge } from "../../components/Search/Badge";
+import { filterCriteria } from "../fake-data/filters";
+
+// @ts-check
 
 export default function SearchPage() {
-  var idGenerator = 1;
-  const filterCriteria = [
-    {
-      id: idGenerator++,
-      title: "Date range",
-      selection: "date-range",
-      options: [
-        {
-          id: idGenerator++,
-          value: new Date(),
-          text: "From",
-          selected: null,
-        },
-        {
-          id: idGenerator++,
-          value: new Date(),
-          text: "To",
-          selected: null,
-        },
-      ],
-    },
-    {
-      id: idGenerator++,
-      title: "Category",
-      selection: "multiple",
-      options: [
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: true,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: true,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: true,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-        {
-          id: idGenerator++,
-          value: 1,
-          text: `Category ${idGenerator}`,
-          selected: false,
-        },
-      ],
-    },
-    {
-      id: idGenerator++,
-      title: "Radio",
-      selection: "one",
-      options: [
-        { id: idGenerator++, value: 1, text: "Radio 1", selected: 0 },
-        { id: idGenerator++, value: 2, text: "Radio 2", selected: 0 },
-        { id: idGenerator++, value: 3, text: "Radio 3", selected: 0 },
-        { id: idGenerator++, value: 4, text: "Radio 4", selected: 0 },
-      ],
-    },
-    {
-      id: idGenerator++,
-      title: "Datastreams",
-      selection: "one",
-      options: [
-        { id: idGenerator++, value: 1, text: "Datastreams 1" },
-        { id: idGenerator++, value: 2, text: "Datastreams 2" },
-        { id: idGenerator++, value: 3, text: "Datastreams 3" },
-        { id: idGenerator++, value: 4, text: "Datastreams 4" },
-      ],
-    },
-    {
-      id: idGenerator++,
-      title: "Datastreams",
-      selection: "multiple",
-      options: [
-        { id: idGenerator++, value: 1, text: `Datastreams ${idGenerator}` },
-        { id: idGenerator++, value: 1, text: `Datastreams ${idGenerator}` },
-        { id: idGenerator++, value: 1, text: `Datastreams ${idGenerator}` },
-        { id: idGenerator++, value: 1, text: `Datastreams ${idGenerator}` },
-      ],
-    },
-  ];
-
   const [filters, setFilters] = useState(filterCriteria);
   const [selectedOptions, setSelectedOptions] = useState([], true);
+
+  useEffect(() => {
+    setFilters(filterCriteria);
+    setSelectedOptions(filterOptionsSelected);
+  }, []);
 
   function updateFilters(criteria, event) {
     var updatedFilters = filters.map((f) => {
@@ -215,7 +40,6 @@ export default function SearchPage() {
             if (o.id == event.option.id) {
               o.selected = event.selected;
             }
-
             return o;
           });
         }
@@ -233,21 +57,28 @@ export default function SearchPage() {
   }
 
   function filterOptionsSelected() {
-    var OptionsSelected = [];
+    var optionsSelected = [];
     for (const c of filters) {
       if (c.options) {
         for (const o of c.options) {
           if (o.selected) {
-            OptionsSelected.push({
+            const selectedOption = {
               criteria: c,
               option: o,
-            });
+            };
+
+            if (c.selection == "date-range") {
+              // FIX: Workaround to use the same struct form date-range.
+              // Convert to typescript and work with interfaces to make this clear.
+              selectedOption.option.text = selectedOption.option.selected;
+            }
+            optionsSelected.push(selectedOption);
           }
         }
       }
     }
 
-    return OptionsSelected;
+    return optionsSelected;
   }
 
   function onClose(e) {

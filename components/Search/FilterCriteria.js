@@ -1,5 +1,4 @@
 import React from "react";
-import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
 import { Checkbox } from "./CheckboxButton";
 import { DateInput } from "./DateInput";
 import { RadioButton } from "./RadioButton";
@@ -103,14 +102,15 @@ function multiple(criteria, onCriteriaChanged) {
 }
 
 function dateRange(criteria, onCriteriaChanged) {
-  function onDateChanged(e) {
-    onCriteriaChanged(criteria, {
-      selected: e.value,
-      option: criteria,
-    });
+  function onDateChanged(option, value) {
+    const event = {
+      selected: value,
+      option: option,
+    };
+    onCriteriaChanged(criteria, event);
   }
 
   return criteria.options.map((o) => (
-    <DateInput option={o} onDateChanged={onDateChanged} />
+    <DateInput key={o.id} option={o} onDateChanged={onDateChanged} />
   ));
 }

@@ -82,6 +82,24 @@
       rgba(0, 0, 0, 0) 1px
     );
   }
+
+  /* .marker-style {
+    padding: 30px 0 8px;
+    position: relative;
+  }
+  
+  .marker-style::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 10px;
+    width: 200%;
+    height: 14px;
+    transform: skew(-12deg) translateX(-50%);
+    background: rgba(238, 111, 87, 0.5);
+    z-index: -1;
+  } */
+  
 }
 
 /*
