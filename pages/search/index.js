@@ -173,7 +173,11 @@ function ListDataset() {
 
 function FilterBadges(props) {
   function onClose(e) {
-    props.onClose(e.criteria, { selected: false, option: e.option });
+    props.onClose(e.criteria, { selected: "", option: e.option });
+  }
+
+  function onClearFilters() {
+    props.onClearFilters();
   }
 
   return (
@@ -184,9 +188,20 @@ function FilterBadges(props) {
           onClose={onClose}
           option={selectedOpt}
         >
-          {selectedOpt.option.text}
+          {selectedOpt.option.title
+            ? selectedOpt.option.title
+            : selectedOpt.option.text}
         </Badge>
       ))}
+
+      {props.selectedOptions.length > 1 && (
+        <button
+          className="border border-primary-400 rounded-full px-4 py-1 text-lg hover:border-primary-800"
+          onClick={onClearFilters}
+        >
+          Limpar Filtros
+        </button>
+      )}
     </div>
   );
 }
@@ -197,11 +212,22 @@ export default function SearchPage() {
 
   useEffect(() => {
     setFilters(filterCriteria);
-    setSelectedOptions(filterOptionsSelected);
+    setSelectedOptions(filteredOptionsSelected);
   }, []);
 
-  function updateFilters(criteria, event) {
-    var updatedFilters = filters.map((f) => {
+  function cleanFilters() {
+    return filters.map((f) => {
+      f.options.map((o) => {
+        o.selected = "";
+        return o;
+      });
+
+      return f;
+    });
+  }
+
+  function updatedFilters(criteria, event) {
+    return filters.map((f) => {
       if (f.id == criteria.id) {
         if (f.selection == "multiple") {
           f.options.map((o) => {
@@ -232,16 +258,14 @@ export default function SearchPage() {
 
       return f;
     });
-
-    return updatedFilters;
   }
 
   function onCriteriaChanged(criteria, event) {
-    setFilters(updateFilters(criteria, event));
-    setSelectedOptions(filterOptionsSelected);
+    setFilters(updatedFilters(criteria, event));
+    setSelectedOptions(filteredOptionsSelected);
   }
 
-  function filterOptionsSelected() {
+  function filteredOptionsSelected() {
     var optionsSelected = [];
     for (const c of filters) {
       if (c.options) {
@@ -255,7 +279,7 @@ export default function SearchPage() {
             if (c.selection == "date-range") {
               // FIX: Workaround to use the same struct form date-range.
               // Convert to typescript and work with interfaces to make this clear.
-              selectedOption.option.text = selectedOption.option.selected;
+              selectedOption.option.title = selectedOption.option.selected;
             }
             optionsSelected.push(selectedOption);
           }
@@ -264,6 +288,11 @@ export default function SearchPage() {
     }
 
     return optionsSelected;
+  }
+
+  function onClearFilters() {
+    setFilters(cleanFilters);
+    setSelectedOptions(filteredOptionsSelected);
   }
 
   return (
@@ -296,6 +325,7 @@ export default function SearchPage() {
           <FilterBadges
             selectedOptions={selectedOptions}
             onClose={onCriteriaChanged}
+            onClearFilters={onClearFilters}
           ></FilterBadges>
 
           <ListDataset />

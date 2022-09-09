@@ -1,9 +1,7 @@
 import React from "react";
 
 export function Badge(props) {
-
   function onClose() {
-    console.log(props);
     props.onClose(props.option);
   }
 

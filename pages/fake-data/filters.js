@@ -16,7 +16,7 @@ export const filterCriteria = [
         id: idGenerator++,
         value: new Date(),
         text: "To",
-        selected: null,
+        selected: "",
       },
     ],
   },
