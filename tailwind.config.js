@@ -12,7 +12,7 @@ module.exports = {
     },
     colors: {
       // See the primary pallet colors: https://coolors.co/gradient-palette/f9fafb-111827?number=10
-      transparent: "FFFFFF00",
+      transparent: "transparent",
 
       primary: {
         50: "#f9fafb",

@@ -5,6 +5,9 @@ import { Badge } from "../../components/Search/Badge";
 import { filterCriteria } from "../../fake-data/filters";
 
 import Link from "next/link";
+import SearchBar from "../../components/Dataset/SearchBar";
+
+// @ts-check
 
 function ListItem() {
   return (
@@ -295,13 +298,18 @@ export default function SearchPage() {
     setSelectedOptions(filteredOptionsSelected);
   }
 
+  function onClearSearchText() {}
+  function onSearchText(text) {
+    console.log(text);
+  }
+
   return (
     <Layout fluid={true} footerPropsMarginTop={false}>
       <div className="flex flex-row gap-4">
         <div className="flex-none border-r min-w-[15rem] max-w-[15rem] border-primary-200 pl-4">
           <p className="py-4">Filter By</p>
           <hr className="border-primary-200" />
-          <div className="pt-6">
+          <div className="pt-6 divide-y divide-solid divide-primary-300">
             {filters.map((criteria, index, row) => {
               var border = true;
 
@@ -327,6 +335,8 @@ export default function SearchPage() {
             onClose={onCriteriaChanged}
             onClearFilters={onClearFilters}
           ></FilterBadges>
+
+          <SearchBar onClear={onClearSearchText} onSearch={onSearchText} />
 
           <ListDataset />
         </div>
