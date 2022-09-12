@@ -39,7 +39,7 @@ export default function HomePage() {
         <div className="container mx-auto flex flex-row flex-wrap pt-56 pb-24">
           <div className="w-full">
             <h1 className="font-bold text-8xl text-center pb-8">
-              <TextDecorationBolder>PoliData.</TextDecorationBolder>
+              <TextDecorationBolder>DataMap.</TextDecorationBolder>
             </h1>
 
             <h1 className="font-normal text-7xl text-center pb-8">
@@ -50,7 +50,7 @@ export default function HomePage() {
           {/* <div className="py-12 px-8 md:basis-7/12 bg-primary-50 drop-shadow-2xl">
             <h1 className="md:display-2 sm:display-4 font-medium">
               Precisando analisar dados científicos? Use o&nbsp;
-              <TextDecorationBolder>PoliData.</TextDecorationBolder>
+              <TextDecorationBolder>DataMap.</TextDecorationBolder>
             </h1>
           </div>*/}
         </div>
@@ -59,20 +59,20 @@ export default function HomePage() {
       <div className="container mx-auto px-8">
         <section className="mb-40">
           <p className="display-4 text-center">
-            No PoliData você pode encontrar diversos dataset de diversas fontes
+            No DataMap você pode encontrar diversos dataset de diversas fontes
             de dados do Brasil e do Mundo.
           </p>
         </section>
         <section className="mb-40">
           <h1 className="py-8">
             <TextDecorationBolder className="font-normal">
-              Data Search
+              Search
             </TextDecorationBolder>
           </h1>
 
           <p className="text-xl">
             Busque por categorias disponíveis ou faça uma busca avançada em
-            nossa ferramenta de Data Search.
+            nossa ferramenta de Search.
           </p>
 
           <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-1 gap-4 py-4">

@@ -1,6 +1,6 @@
-# PoliData Webapp
+# DataMap Webapp
 
-Web application for PoliData a SaaS Data Platform for atmospheric big data and data science research group in Brazil.
+Web application for DataMap a SaaS Data Platform for atmospheric big data and data science research group in Brazil.
 
 ## Development
 
@@ -26,8 +26,8 @@ The webapp will be available at <http://localhost:3000/>.
 With docker, just run:
 
 ```sh
-docker build -t polidata-webapp .
-docker run -p 3000:3000 polidata-webapp
+docker build -t datamap-webapp .
+docker run -p 3000:3000 datamap-webapp
 ```
 
 The output should be `Listening on port 3000`, then the webapp is available locally at <http://localhost:3000/>.
