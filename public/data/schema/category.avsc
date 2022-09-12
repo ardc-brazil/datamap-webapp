@@ -1,0 +1,7 @@
+{
+    "namespace": "br.com.datamap",
+    "type": "enum",
+    "name": "Category",
+    "doc": "Data categories",
+    "symbols" : ["AEROSOLS", "ATMOSPHERIC_STATE", "ATMOSPHERIC_CARBON", "CLOUD_PROPERTIES", "RADIOMETRIC", "SURFACE_PROPERTIES"]
+}

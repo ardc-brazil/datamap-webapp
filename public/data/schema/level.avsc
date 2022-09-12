@@ -1,0 +1,7 @@
+{
+    "namespace": "br.com.datamap",
+    "type": "enum",
+    "name": "Level",
+    "doc": "Dataset levels",
+    "symbols" : ["L1", "L2", "L3"]
+}

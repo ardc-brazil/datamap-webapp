@@ -1,0 +1,11 @@
+{
+    "namespace": "br.com.datamap",
+    "doc": "Represents the information to cite the document",
+    "type": "record",
+    "name": "Citation",
+    "fields": [
+        { "name": "doi", "type": "string", "doc": "Dataset doi" },
+        { "name": "contributors", "type": [ "null", "br.com.datamap.User"], "doc": "Work contributors" },
+        { "name": "text_citation", "type": [ "null", "string" ], "doc": "Citation string as text" }
+    ]
+}

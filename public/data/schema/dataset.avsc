@@ -1,0 +1,33 @@
+{
+    "namespace": "br.com.datamap",
+    "doc": "Represents a dataset and all attributes within it",
+    "type": "record",
+    "name": "Dataset",
+    "fields": [
+        { "name": "name", "type": "string", "doc": "Dataset name"},
+        { "name": "creation_date", "type": "string", "doc": "A date in the format ISO8601. e.g 2022-09-12, 2022-09-12T09:28:44-03:00"},
+        { "name": "license", "type": [ "null", "string" ], "doc": "Dataset license"},
+        { "name": "description", "type": "string", "doc": "Dataset description"},
+        { "name": "measurement", "type": "string", "doc": "Dataset measurement type. e.g. CO2 Concentration, Precipitation"},
+        { "name": "site", "type": "string", "doc": "Dataset site of collection"},
+        { "name": "realm", "type": [ "null", "string" ], "doc": "Dataset variable real. e.g. Atmosphere, sea"},
+        { "name": "version", "type": [ "null", "string" ], "doc": "Dataset version"},
+        { "name": "project", "type": [ "null", "string" ], "doc": "Dataset project"},
+        { "name": "source_instrument", "type": [ "null", "string"], "doc": "Dataset source instrument. e.g. Satellite, Observation Tower"},
+        { "name": "institution", "type": ["null", "string"], "doc": "Dataset owner institution"},
+        { "name": "start_date", "type": "string", "doc": "A date in the format ISO8601. e.g 2022-09-12, 2022-09-12T09:28:44-03:00"},
+        { "name": "end_date", "type": "string", "doc": "A date in the format ISO8601. e.g 2022-09-12, 2022-09-12T09:28:44-03:00"},
+        { "name": "tags", "type": { "type": "array", "items": "string"}, "doc": "The tags list" },
+        { "name": "campaign", "type": "br.com.datamap.Campaign", "doc": "Dataset collection campaign"},
+        { "name": "category", "type": "br.com.datamap.Category", "doc": "Dataset category"},
+        { "name": "location", "type": "br.com.datamap.Location", "doc": "Dataset location"},
+        { "name": "author", "type": "br.com.datamap.User", "doc": "Dataset author"},
+        { "name": "contact", "type": { "type": "array", "items": "br.com.datamap.User" }, "doc": "Dataset contacts"},
+        { "name": "citation", "type": [ "null", "br.com.datamap.Citation" ], "doc": "Information about citation of this dataset" },
+        { "name": "data", "type": "br.com.datamap.Data", "doc": "Data links and information of this dataset" },
+        { "name": "addition_information", "type": [ "null", "string" ], "doc": "Dataset additional information, for example, links"},
+        { "name": "level", "type": "br.com.datamap.Level", "doc": "Dataset level"},
+        { "name": "resolution", "type": "br.com.datamap.Resolution", "doc": "Dataset resolution"},
+        { "name": "variable", "type": "br.com.datamap.Variable", "doc": "Dataset variable"}
+    ]
+}
