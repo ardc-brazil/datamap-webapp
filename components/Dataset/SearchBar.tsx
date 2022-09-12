@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Props } from "../../components/types/BaseInterfaces";
 
 interface SearchProps extends Props {
@@ -18,6 +18,16 @@ export default (props: SearchProps) => {
     props.onSearch(searchText);
   }
 
+  function onTextChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSearchText(e.target.value);
+  }
+
+  function onInputEnterSearch(e: React.KeyboardEvent) {
+    if (e.key === "Enter") {
+      onSearch();
+    }
+  }
+
   return (
     <div className="space-x-4 flex py-8">
       <label htmlFor="txt-dataset-search" className="text-4xl">
@@ -30,7 +40,8 @@ export default (props: SearchProps) => {
         placeholder="Enter a category, measurement, datastream, site, source or keyword to begin your search."
         className="form-input border-b-2 border-primary-300 h-10 w-11/12 block border-0 p-3 focus:outline-none focus:ring-0 ring-secondary-900 bg-transparent outline-secondary-900 text-xl"
         value={searchText}
-        onChange={(e) => setSearchText(e.target.value)}
+        onChange={onTextChange}
+        onKeyDown={onInputEnterSearch}
       />
       <button
         className="rounded-full p-2.5 hover:bg-primary-200"
