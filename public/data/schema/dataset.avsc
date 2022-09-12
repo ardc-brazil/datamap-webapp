@@ -5,6 +5,7 @@
     "name": "Dataset",
     "fields": [
         { "name": "name", "type": "string", "doc": "Dataset name"},
+        { "name": "database", "type": "string", "doc": "Dataset database"},
         { "name": "creation_date", "type": "string", "doc": "A date in the format ISO8601. e.g 2022-09-12, 2022-09-12T09:28:44-03:00"},
         { "name": "license", "type": [ "null", "string" ], "doc": "Dataset license"},
         { "name": "description", "type": "string", "doc": "Dataset description"},
