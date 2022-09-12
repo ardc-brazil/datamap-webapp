@@ -309,7 +309,7 @@ export default function SearchPage() {
         <div className="flex-none border-r min-w-[15rem] max-w-[15rem] border-primary-200 pl-4">
           <p className="py-4">Filter By</p>
           <hr className="border-primary-200" />
-          <div className="pt-6">
+          <div className="pt-6 divide-y divide-solid divide-primary-300">
             {filters.map((criteria, index, row) => {
               var border = true;
 
