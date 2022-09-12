@@ -99,10 +99,6 @@
     background: rgba(238, 111, 87, 0.5);
     z-index: -1;
   } */
-  
-  .bg-input-transparent {
-    background: transparent;
-  }
 }
 
 /*

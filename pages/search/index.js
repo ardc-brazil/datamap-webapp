@@ -7,6 +7,8 @@ import { filterCriteria } from "../../fake-data/filters";
 import Link from "next/link";
 import SearchBar from "../../components/Dataset/SearchBar";
 
+// @ts-check
+
 function ListItem() {
   return (
     <Link href="/datasets/data-set-id">
@@ -296,6 +298,11 @@ export default function SearchPage() {
     setSelectedOptions(filteredOptionsSelected);
   }
 
+  function onClearSearchText() {}
+  function onSearchText(text) {
+    console.log(text);
+  }
+
   return (
     <Layout fluid={true} footerPropsMarginTop={false}>
       <div className="flex flex-row gap-4">
@@ -329,7 +336,7 @@ export default function SearchPage() {
             onClearFilters={onClearFilters}
           ></FilterBadges>
 
-          <SearchBar />
+          <SearchBar onClear={onClearSearchText} onSearch={onSearchText} />
 
           <ListDataset />
         </div>
