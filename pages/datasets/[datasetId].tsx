@@ -12,7 +12,7 @@ export default function DatasetDetails() {
           <div className="flex flex-row py-8">
             {/* Title */}
             <div className="basis-10/12">
-              <h1>Fullname for a Dataset</h1>
+              <h1 className="font-extrabold">Fullname for a Dataset</h1>
               <p className="text-primary-500">
                 This is a subtitle it has to be between 20 and 80 characters
                 long.

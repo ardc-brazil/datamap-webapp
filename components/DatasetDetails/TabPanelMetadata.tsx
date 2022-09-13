@@ -3,127 +3,88 @@ import { TabPanel } from "./TabPanel";
 
 import { TabPanelProps } from "./TabPanel";
 
-import { RadioButton } from "../../components/Search/RadioButton";
+function CardItem(props) {
+  return (
+    <div>
+      <div className="text-primary-400 font-bold text-sm uppercase">
+        {props.title}
+      </div>
+      <div>{props.children}</div>
+    </div>
+  );
+}
 
 export function TabPanelMetadata(props: TabPanelProps) {
   return (
     <TabPanel title={props.title}>
-      <h3>Metadata</h3>
+      <h3 className="font-bold">Metadata</h3>
 
       <div className="flex flex-col divide-y divide-primary-300 gap-8 mt-16">
         <div className="py-4">
-          <h4>Usage Information</h4>
+          <h4 className="font-semibold py-4">Usage Information</h4>
           <div className="flex gap-28 py-4">
-            <div>
-              <div>LICENSE</div>
-              <div>CC BY-SA 4.0</div>
-            </div>
-            <div>
-              <div>VISIBILITY</div>
-              <div>Public</div>
-            </div>
+            <CardItem title="LICENSE">CC BY-SA 4.0</CardItem>
+            <CardItem title="VISIBILITY">Public</CardItem>
           </div>
         </div>
         <div>
-          <h4>Collaborators</h4>
+          <h4 className="font-semibold py-4">Collaborators</h4>
           <ul className="py-4">
             <li>First Collaborator</li>
             <li>Second Collaborator</li>
           </ul>
         </div>
         <div>
-          <h4>Coverage</h4>
+          <h4 className="font-semibold py-4">Coverage</h4>
           <div className="flex gap-28 py-4">
-            <div>
-              <div>TEMPORAL COVERAGE START DATE</div>
-              <div>-</div>
-            </div>
-            <div>
-              <div>TEMPORAL COVERAGE END DATE</div>
-              <div>-</div>
-            </div>
-            <div>
-              <div>GEOSPATIAL COVERAGE</div>
-              <div>-</div>
-            </div>
+            <CardItem title="TEMPORAL COVERAGE START DATE">-</CardItem>
+            <CardItem title="TEMPORAL COVERAGE END DATE">-</CardItem>
+            <CardItem title="GEOSPATIAL COVERAGE">-</CardItem>
           </div>
         </div>
         <div>
-          <h4>Provenance</h4>
+          <h4 className="font-semibold py-4">Provenance</h4>
           <div className="flex gap-28 py-4">
-            <div>
-              <div>SOURCES</div>
-              <div>Universidad de Alcalá</div>
-            </div>
+            <CardItem title="SOURCES">Universidad de Alcalá</CardItem>
           </div>
           <div className="flex gap-28 py-4">
-            <div>
-              <div>COLLECTION METHODOLOGY</div>
-              <div>All the data obtained from a Kinect V2 Depth sensor</div>
-            </div>
+            <CardItem title="Collection methodology">
+              All the data obtained from a Kinect V2 Depth sensor
+            </CardItem>
           </div>
         </div>
 
         <div>
-          <h4>Additional Authors</h4>
+          <h4 className="font-semibold py-4">Additional Authors</h4>
           <div className="flex gap-28 py-4">
-            <div>
-              <div>AUTHOR NAME</div>
-              <div>Author Full Name</div>
-            </div>
-            <div>
-              <div>BIO</div>
-              <div>-</div>
-            </div>
+            <CardItem title="AUTHOR NAME">Author Full Name</CardItem>
+            <CardItem title="BIO">-</CardItem>
           </div>
-
           <div className="flex gap-28 py-4">
-            <div>
-              <div>AUTHOR NAME</div>
-              <div>Author Full Name</div>
-            </div>
-            <div>
-              <div>BIO</div>
-              <div>-</div>
-            </div>
+            <CardItem title="AUTHOR NAME">Author Full Name</CardItem>
+            <CardItem title="BIO">-</CardItem>
           </div>
-
           <div className="flex gap-28 py-4">
-            <div>
-              <div>AUTHOR NAME</div>
-              <div>Author Full Name</div>
-            </div>
-            <div>
-              <div>BIO</div>
-              <div>-</div>
-            </div>
+            <CardItem title="AUTHOR NAME">Author Full Name</CardItem>
+            <CardItem title="BIO">-</CardItem>
           </div>
-
           <div className="flex gap-28 py-4">
-            <div>
-              <div>AUTHOR NAME</div>
-              <div>Author Full Name</div>
-            </div>
-            <div>
-              <div>BIO</div>
-              <div>-</div>
-            </div>
+            <CardItem title="AUTHOR NAME">Author Full Name</CardItem>
+            <CardItem title="BIO">-</CardItem>
           </div>
         </div>
 
         <div>
-          <h4>DOI Citation</h4>
+          <h4 className="font-semibold py-4">DOI Citation</h4>
           <div className="flex gap-28 py-4">
-            <div>
-              <div>DOI (DIGITAL OBJECT IDENTIFIER)</div>
-              <div>10.1145/2783446.2783605</div>
-            </div>
+            <CardItem title="DOI (DIGITAL OBJECT IDENTIFIER)">
+              10.1145/2783446.2783605
+            </CardItem>
           </div>
 
           <div className="flex gap-28 py-4">
             <div>
-              <div>CITATION TYPE</div>
-              <div>
+              <CardItem title="CITATION TYPE">
                 <label
                   htmlFor="apa"
                   className="w-full cursor-pointer py-2 mx-2"
@@ -155,7 +116,9 @@ export function TabPanelMetadata(props: TabPanelProps) {
                     BibTeX
                   </span>
                 </label>
+              </CardItem>
 
+              <div className="my-4">
                 <fieldset className="border border-solid border-primary-300 p-3">
                   <legend className="text-sm">Personalia:</legend>
                   <p className="text-primary-600">
