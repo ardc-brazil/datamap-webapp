@@ -4,7 +4,7 @@ import { Footer } from "./Footer";
 
 interface Props {
   children?: React.ReactNode;
-  fluid?: String;
+  fluid?: boolean;
   footerPropsMarginTop?: boolean;
 }
 
@@ -12,7 +12,7 @@ export default (props: Props) => {
   return (
     <>
       <Head>
-        <title>PoliData</title>
+        <title>DataMap</title>
         <link rel="icon" href="/favicon.ico" />
         <meta charSet="utf-8"></meta>
       </Head>

@@ -61,6 +61,10 @@
     @apply text-4xl font-light;
   }
 
+  .small-font-size {
+    font-size: 0.75rem !important;
+  }
+
   /* https://www.magicpattern.design/tools/css-backgrounds */
   /* .special-background {
     

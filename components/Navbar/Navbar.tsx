@@ -10,7 +10,9 @@ interface Props {
 function NavbarItem(props: Props) {
   return (
     <Link href={props.href}>
-      <a id={props.id} className="px-2 py-4">{props.children}</a>
+      <a id={props.id} className="px-2 py-4">
+        {props.children}
+      </a>
     </Link>
   );
 }
@@ -22,28 +24,28 @@ export function Navbar() {
         <div className="flex items-center py-1 h-16">
           <Link href="/">
             <a className="px-2 py-4">
-              <img src="/img/logo.svg" alt="PoliData" />
+              <img src="/img/logo.svg" alt="DataMap" />
             </a>
           </Link>
 
           <nav className="hidden md:flex flex-row ml-10">
             <NavbarItem id="navbarItemSearch" href="/search">
-              Data Search
+              Search
             </NavbarItem>
             <NavbarItem id="navbarItemTools" href="/tools">
-              Data Tools
+              Tools
             </NavbarItem>
             <NavbarItem id="navbarItemProject" href="/project">
               Project
             </NavbarItem>
           </nav>
 
-          <HiddenNav items={["Data Search", "Data Tools", "Support"]}>
+          <HiddenNav items={["Search", "Tools", "Support"]}>
             <MobileNavbarItem id="mobileNavbarItemSearch" href="/search">
-              Data Search
+              Search
             </MobileNavbarItem>
             <MobileNavbarItem id="mobileNavbarItemTools" href="/tools">
-              Data Tools
+              Tools
             </MobileNavbarItem>
             <MobileNavbarItem id="mobileNavbarItemProject" href="/project">
               Project

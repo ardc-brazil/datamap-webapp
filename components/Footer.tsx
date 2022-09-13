@@ -14,7 +14,7 @@ export function Footer(props: FooterProps) {
           <div className="md:basis-2/5">
             <Link href="/">
               <a>
-                <img src="/img/logo.svg" alt="PoliData" />
+                <img src="/img/logo.svg" alt="DataMap" />
               </a>
             </Link>
             <p className="px-4 py-8 text-justify">
@@ -67,7 +67,7 @@ export function Footer(props: FooterProps) {
             <ul className="px-2 py-4">
               <li>
                 <Link href="/search">
-                  <a href="#">Data Search</a>
+                  <a href="#">Search</a>
                 </Link>
               </li>
               <li>
