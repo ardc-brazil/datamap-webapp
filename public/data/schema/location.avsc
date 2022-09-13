@@ -1,0 +1,11 @@
+{
+    "namespace": "br.com.datamap",
+    "doc": "Represents a location",
+    "type": "record",
+    "name": "Location",
+    "fields": [
+        { "name": "location", "type": [ "null", "string" ], "doc": "Location name" },
+        { "name": "latitude", "type": [ "null", "string" ], "doc": "Latitude of a location. e.g. 40.741895" },
+        { "name": "longitude", "type": [ "null", "string" ], "doc": "Longitude of a locaiton. e.g. -73.989308" }
+    ]
+}

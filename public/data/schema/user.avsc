@@ -1,0 +1,10 @@
+{
+    "namespace": "br.com.datamap",
+    "doc": "Represents an user in the system",
+    "type": "record",
+    "name": "User",
+    "fields": [
+        { "name": "name", "type": "string", "doc": "User name" },
+        { "name": "email", "type": [ "null", "string" ], "doc": "User email" }
+    ]
+}

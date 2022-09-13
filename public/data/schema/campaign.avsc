@@ -1,0 +1,11 @@
+{
+    "namespace": "br.com.datamap",
+    "doc": "Represents a campaign to collect data",
+    "type": "record",
+    "name": "Campaign",
+    "fields": [
+        { "name": "name", "type": "string", "doc": "Campaign name" },
+        { "name": "start_date", "type": "string", "doc": "A date in the format ISO8601. e.g 2022-09-12, 2022-09-12T09:28:44-03:00"},
+        { "name": "end_date", "type": "string", "doc": "A date in the format ISO8601. e.g 2022-09-12, 2022-09-12T09:28:44-03:00"}
+    ]
+}
