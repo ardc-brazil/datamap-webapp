@@ -14,6 +14,7 @@
     "start_date": "2003-01-01",
     "end_date": "2020-12-31",
     "tags": [],
+    "category": "AEROSOLS",
     "data_type": "ROUTINE",
     "grid_type": "ARITHMETIC_AVERAGING",
     "location": {
@@ -73,6 +74,7 @@
     "end_date": "2020-12-31",
     "tags": [],
     "data_type": "ROUTINE",
+    "category": "AEROSOLS",
     "grid_type": "ARITHMETIC_AVERAGING",
     "location": {
       "location": "Global"
@@ -128,6 +130,7 @@
     "end_date": "2022-09-13",
     "tags": [],
     "data_type": "ROUTINE",
+    "category": "PRECIPITATION",
     "location": {
       "location": "60 degrees (N) 60 degrees (S)"
     },
@@ -185,6 +188,7 @@
     "end_date": "2020-09-13",
     "tags": [],
     "data_type": "ROUTINE",
+    "category": "AEROSOLS",
     "version": "v10",
     "location": {
       "latitude": "-180.0, -90.0",
@@ -232,6 +236,7 @@
     "end_date": "2021-09-13",
     "tags": [],
     "data_type": "ROUTINE",
+    "category": "AEROSOLS",
     "location": {
       "latitude": "-78.003, 89.92327",
       "longitude": "179.99, -179.99"
@@ -266,6 +271,7 @@
     "level": "L3",
     "tags": [],
     "data_type": "ROUTINE",
+    "category": "AEROSOLS",
     "project": "Atmospheric Infrared Sounder",
     "location": {
       "location": "Global"
@@ -306,6 +312,7 @@
     "tags": [],
     "data_type": "ROUTINE",
     "level": "L3",
+    "category": "AEROSOLS",
     "owner": {
       "name": "Márcio Teixeira"
     },
@@ -338,6 +345,7 @@
     "level": "L3",
     "tags": [],
     "data_type": "ROUTINE",
+    "category": "AEROSOLS",
     "owner": {
       "name": "Márcio Teixeira"
     },
@@ -368,6 +376,7 @@
     "end_date": "2021-12-31",
     "tags": [],
     "data_type": "ROUTINE",
+    "category": "ATMOSPHERIC_STATE",
     "owner": {
       "name": "Márcio Teixeira"
     },
@@ -401,6 +410,7 @@
     "end_date": "2021-08-04",
     "tags": [],
     "data_type": "ROUTINE",
+    "category": "SURFACE_PROPERTIES",
     "owner": {
       "name": "Márcio Teixeira"
     },
@@ -430,6 +440,7 @@
     "tags": [],
     "data_type": "ROUTINE",
     "level": "L3",
+    "category": "SURFACE_PROPERTIES",
     "owner": {
       "name": "Márcio Teixeira"
     },
@@ -457,7 +468,8 @@
     "start_date": "2009-09-18",
     "end_date": "2020-06-30",
     "tags": [],
-    "category": "ROUTINE",
+    "data_type": "ROUTINE",
+    "category": "AEROSOLS",
     "owner": {
       "name": "Márcio Teixeira"
     },
@@ -485,7 +497,8 @@
     "start_date": "2004-10-01",
     "end_date": "2021-12-31",
     "tags": [],
-    "category": "ROUTINE",
+    "data_type": "ROUTINE",
+    "category": "AEROSOLS",
     "owner": {
       "name": "Márcio Teixeira"
     },
