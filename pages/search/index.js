@@ -7,9 +7,12 @@ import { filterCriteria } from "../../fake-data/filters";
 import Link from "next/link";
 import SearchBar from "../../components/Dataset/SearchBar";
 
+import elasticlunr from "elasticlunr";
+import metadata from "../../public/data/data.json";
+
 // @ts-check
 
-function ListItem() {
+function ListItem(item) {
   return (
     <Link href="/datasets/data-set-id">
       <a>
@@ -28,31 +31,41 @@ function ListItem() {
             </div>
           </div>
           <div className="col-span-10">
-            <p className="font-bold text-lg">Fullname for a Dataset</p>
+            <p className="font-bold text-lg">{item.data.name}</p>
             <p>
-              by
-              <span>Author Name 1,</span>
-              <span className="px-2">Author Name 2,</span>
-              <span>Author Name 3</span>
+               { 
+                item.data.author ? 
+                  <span>by {item.data.author.name}</span>
+                  : ""
+                }
             </p>
 
             <p>
               <span>1mo ago</span>
               <span className="px-2">•</span>
-              <span>10GB</span>
+              <span>
+                { getTotalFileSize(item.data.data) }
+              </span>
             </p>
             <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Posuere
-              elementum eget est non feugiat enim. Turpis et nulla massa euismod
-              nec malesuada scelerisque sed at. Pulvinar nec netus lectus
-              aliquam ut egestas eu condimentum pharetra. Luctus laoreet
-              consectetur consectetur hac leo.
+              {item.data.description}
             </p>
           </div>
         </div>
       </a>
     </Link>
   );
+}
+
+function getTotalFileSize(data) {
+  let totalGB = 0;
+
+  data.forEach((d) => {
+    if (d.file_size_gb)
+      totalGB += parseFloat(d.file_size_gb)
+  })
+
+  return totalGB + "GB"
 }
 
 function ListDatasetHeader() {
@@ -160,14 +173,16 @@ function ListDatasetPageNavigator() {
   );
 }
 
-function ListDataset() {
+function ListDataset(data) {
   return (
     <div className="flex flex-col gap-y-4 mr-4">
       <ListDatasetHeader />
       <div className="border-t border-primary-200">
-        <ListItem />
-        <ListItem />
-        <ListItem />
+        {
+          data.data.map((element, index) => {
+            return <ListItem key={index} data={element} />
+          })
+        }
       </div>
       <ListDatasetPageNavigator />
     </div>
@@ -212,10 +227,12 @@ function FilterBadges(props) {
 export default function SearchPage() {
   const [filters, setFilters] = useState(filterCriteria);
   const [selectedOptions, setSelectedOptions] = useState([], true);
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
     setFilters(filterCriteria);
     setSelectedOptions(filteredOptionsSelected);
+    setItems(metadata);
   }, []);
 
   function cleanFilters() {
@@ -299,8 +316,40 @@ export default function SearchPage() {
   }
 
   function onClearSearchText() {}
+
   function onSearchText(text) {
-    console.log(text);
+    setItems(searchIndex(text));
+  }
+
+  function createSearchIndex(data) {
+    const index = elasticlunr(function() {
+      this.addField("name");
+      this.addField("database");
+      this.addField("source_instrument");
+      this.addField("category");
+      this.addField("level");
+      this.addField("data_type");
+      // this.addField("");
+      this.setRef("id");
+    });
+
+    data.forEach((doc) => {
+      index.addDoc(doc);
+    })
+
+    return index;
+  }
+
+  function searchIndex(query) {
+    const index = createSearchIndex(metadata);
+
+    const results = [];
+    
+    index.search(query).map(({ ref, score }) => {
+      results.push(index.documentStore.getDoc(ref));
+    });
+
+    return results;
   }
 
   return (
@@ -338,7 +387,7 @@ export default function SearchPage() {
 
           <SearchBar onClear={onClearSearchText} onSearch={onSearchText} />
 
-          <ListDataset />
+          <ListDataset data={items} />
         </div>
       </div>
     </Layout>
