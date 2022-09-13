@@ -67,10 +67,10 @@ function getTotalFileSize(data) {
   return totalGB + "GB"
 }
 
-function ListDatasetHeader() {
+function ListDatasetHeader(itemCount) {
   return (
     <div className="flex justify-between gap-2">
-      <p>61,708 Results</p>
+      <p>{ itemCount.itemCount } Results</p>
       <div>
         <label htmlFor="sortbySelector">
           <span className=" px-2 ">Sort by:</span>
@@ -80,9 +80,9 @@ function ListDatasetHeader() {
             className="form-select py-0 border-0 focus:border-0 focus:ring-0 bg-primary-50"
           >
             <option value="relevancy" defaultValue>
-              Relevância
+              Relevance
             </option>
-            <option value="date">Data</option>
+            <option value="date">Date</option>
           </select>
         </label>
       </div>
@@ -173,9 +173,10 @@ function ListDatasetPageNavigator() {
 }
 
 function ListDataset(data) {
+  const itemCount = data.data.length
   return (
     <div className="flex flex-col gap-y-4 mr-4">
-      <ListDatasetHeader />
+      <ListDatasetHeader itemCount={itemCount} />
       <div className="border-t border-primary-200">
         {
           data.data.map((element, index) => {
@@ -213,10 +214,10 @@ function FilterBadges(props) {
 
       {props.selectedOptions.length > 1 && (
         <button
-          className="border border-primary-400 rounded-full px-4 py-1 text-lg hover:border-primary-800"
+          className="border border-primary-400 rounded-full px-4 py-0 text-lg hover:border-primary-800"
           onClick={onClearFilters}
         >
-          Limpar Filtros
+          Clean Filters
         </button>
       )}
     </div>
