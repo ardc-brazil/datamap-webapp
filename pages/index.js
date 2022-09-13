@@ -59,7 +59,7 @@ export default function HomePage() {
       <div className="container mx-auto px-8">
         <section className="mb-40">
           <p className="display-4 text-center">
-            No DataMap você pode encontrar diversos dataset de diversas fontes
+            No DataMap você pode encontrar diversos datasets de diversas fontes
             de dados do Brasil e do Mundo.
           </p>
         </section>
