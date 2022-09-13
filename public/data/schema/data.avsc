@@ -7,6 +7,6 @@
         { "name": "file_type", "type": "string", "doc": "Data file type. e.g. csv, zip, txt" },
         { "name": "download_path", "type": "string", "doc": "Data download path" },
         { "name": "format", "type": "string", "doc": "Data format. e.g. netCDF, csv" },
-        { "name": "file_size", "type": "long", "doc": "File size in bytes" }
+        { "name": "file_size_gb", "type": "long", "doc": "File size in GB" }
     ]
 }

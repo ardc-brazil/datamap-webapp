@@ -4,7 +4,7 @@
     "type": "record",
     "name": "Citation",
     "fields": [
-        { "name": "doi", "type": "string", "doc": "Dataset doi" },
+        { "name": "doi", "type": [ "null", "string" ], "doc": "Dataset doi" },
         { "name": "contributors", "type": [ "null", "br.com.datamap.User"], "doc": "Work contributors" },
         { "name": "text_citation", "type": [ "null", "string" ], "doc": "Citation string as text" }
     ]

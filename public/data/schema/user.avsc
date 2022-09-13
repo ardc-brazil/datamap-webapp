@@ -5,6 +5,6 @@
     "name": "User",
     "fields": [
         { "name": "name", "type": "string", "doc": "User name" },
-        { "name": "email", "type": "string", "doc": "User email" }
+        { "name": "email", "type": [ "null", "string" ], "doc": "User email" }
     ]
 }
