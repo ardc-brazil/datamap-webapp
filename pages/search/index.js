@@ -7,8 +7,7 @@ import { filterCriteria } from "../../fake-data/filters";
 import Link from "next/link";
 import SearchBar from "../../components/Dataset/SearchBar";
 
-import elasticlunr from "elasticlunr";
-import metadata from "../../public/data/data.json";
+import {getAllData, searchIndex } from "../../lib/search";
 
 // @ts-check
 
@@ -232,7 +231,7 @@ export default function SearchPage() {
   useEffect(() => {
     setFilters(filterCriteria);
     setSelectedOptions(filteredOptionsSelected);
-    setItems(metadata);
+    setItems(getAllData());
   }, []);
 
   function cleanFilters() {
@@ -318,38 +317,11 @@ export default function SearchPage() {
   function onClearSearchText() {}
 
   function onSearchText(text) {
-    setItems(searchIndex(text));
-  }
-
-  function createSearchIndex(data) {
-    const index = elasticlunr(function() {
-      this.addField("name");
-      this.addField("database");
-      this.addField("source_instrument");
-      this.addField("category");
-      this.addField("level");
-      this.addField("data_type");
-      // this.addField("");
-      this.setRef("id");
-    });
-
-    data.forEach((doc) => {
-      index.addDoc(doc);
-    })
-
-    return index;
-  }
-
-  function searchIndex(query) {
-    const index = createSearchIndex(metadata);
-
-    const results = [];
-    
-    index.search(query).map(({ ref, score }) => {
-      results.push(index.documentStore.getDoc(ref));
-    });
-
-    return results;
+    if (!text) {
+      setItems(getAllData());
+    } else {
+      setItems(searchIndex(text));
+    }
   }
 
   return (
