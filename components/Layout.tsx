@@ -4,7 +4,7 @@ import { Footer } from "./Footer";
 
 interface Props {
   children?: React.ReactNode;
-  fluid?: String;
+  fluid?: boolean;
   footerPropsMarginTop?: boolean;
 }
 
