@@ -40,10 +40,36 @@ module.exports = {
         900: "#D7E4E3",
       },
     },
+    extend: {
+      typography: (theme) => ({
+        DEFAULT: {
+          css: {
+            color: theme("colors.gray.800"),
+            h1: {
+              color: theme("colors.primary.600"),
+              fontWeight: "500",
+              fontSize: 10
+            },
+            h2: {
+              color: theme("colors.primary.600"),
+            },
+            h3: {
+              color: theme("colors.primary.600"),
+            },
+            a: {
+              color: theme("colors.primary.500"),
+              fontWeight: "600",
+              textDecoration: "underline",
+            },
+          },
+        },
+      }),
+    },
   },
   plugins: [
     require("@tailwindcss/forms")({
       strategy: "class", // only generate classes
     }),
+    require("@tailwindcss/typography"),
   ],
 };
