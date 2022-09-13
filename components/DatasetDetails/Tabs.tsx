@@ -18,7 +18,7 @@ export function Tabs(props: TabsProps) {
     <div>
       <div className="text-sm font-medium text-center border-b border-primary-300">
         <ul className="flex flex-wrap -mb-px">
-          {React.Children.map(props.children, (child, index) => {
+          {React.Children.map(props.children, (child: any, index) => {
             return (
               <Tab
                 key={index}
