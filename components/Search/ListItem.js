@@ -38,12 +38,12 @@ export function ListItem(props) {
               {props.data.author ? <span>by {props.data.author.name}</span> : ""}
             </p>
 
-            <p>
+            <div className="py-3 text-primary-500">
               <span>1mo ago</span>
               <span className="px-2">•</span>
               <span>{getTotalFileSize(props.data.data)}</span>
-            </p>
-            <p>{props.data.description}</p>
+            </div>
+            <p className="text-primary-700">{props.data.description}</p>
           </div>
         </div>
       </a>
