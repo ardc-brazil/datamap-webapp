@@ -43,7 +43,7 @@ export default function HomePage() {
             </h1>
 
             <h1 className="font-normal text-7xl text-center pb-8">
-              Analise de dados científicos, para todos.
+              Scientific data analysis, for everyone.
               <br />
             </h1>
           </div>
@@ -59,8 +59,7 @@ export default function HomePage() {
       <div className="container mx-auto px-8">
         <section className="mb-40">
           <p className="display-4 text-center">
-            No DataMap você pode encontrar diversos dataset de diversas fontes
-            de dados do Brasil e do Mundo.
+            With DataMap you can find environmental datasets from diverse sources of data from Brazil and the World.
           </p>
         </section>
         <section className="mb-40">
@@ -71,8 +70,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-xl">
-            Busque por categorias disponíveis ou faça uma busca avançada em
-            nossa ferramenta de Search.
+            Search for available categories or do an advanced search in our tool.
           </p>
 
           <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-1 gap-4 py-4">
