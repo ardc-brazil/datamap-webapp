@@ -178,6 +178,12 @@ function ListDataset(data) {
   );
 }
 
+function EmptySearch() {
+  return (<div className="flex flex-col">
+    No datasets found
+  </div>);
+}
+
 function FilterBadges(props) {
   function onClose(e) {
     props.onClose(e.criteria, { selected: "", option: e.option });
@@ -370,8 +376,7 @@ export default function SearchPage() {
           ></FilterBadges>
 
           <SearchBar onClear={onClearSearchText} onSearch={onSearchText} />
-
-          <ListDataset data={items} />
+          { items.length > 0 ? <ListDataset data={items} /> : <EmptySearch />}
         </div>
       </div>
     </Layout>
