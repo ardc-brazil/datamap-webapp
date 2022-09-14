@@ -245,9 +245,6 @@ export default function SearchPage() {
       result.push(textSearch);
     }
 
-    // setQueryParameters(result);
-
-    debugger;
     searchIdx(result);
   }, [selectedOptions, textSearch]);
 
@@ -332,13 +329,11 @@ export default function SearchPage() {
   }
 
   function onClearSearchText() {
-    debugger;
     setTextSearch("");
   }
 
   function onSearchText(text) {
     setTextSearch(text);
-    // searchIdx();
   }
 
   return (
@@ -367,7 +362,7 @@ export default function SearchPage() {
           </div>
         </div>
 
-        <div className="col-span-9 px-4">
+        <div className="col-span-9 basis-full px-4">
           <FilterBadges
             selectedOptions={selectedOptions}
             onClose={onCriteriaChanged}
