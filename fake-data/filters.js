@@ -10,7 +10,7 @@ export const filterCriteria = [
         id: idGenerator++,
         value: new Date(),
         text: "From",
-        selected: "2022-01-01",
+        selected: "",
       },
       {
         id: idGenerator++,
@@ -29,19 +29,19 @@ export const filterCriteria = [
         id: idGenerator++,
         value: "AEROSOLS",
         text: `Aerosols`,
-        selected: true,
+        selected: false,
       },
       {
         id: idGenerator++,
         value: "PRECIPITATION",
         text: `Precipitation`,
-        selected: true,
+        selected: false,
       },
       {
         id: idGenerator++,
         value: "ATMOSPHERIC_STATE",
         text: `Atmospheric State`,
-        selected: true,
+        selected: false,
       },
       {
         id: idGenerator++,
@@ -56,9 +56,9 @@ export const filterCriteria = [
     title: "Level",
     selection: "one",
     options: [
-      { id: "L1", value: 1, text: "L1", selected: 0 },
-      { id: "L2", value: 2, text: "L2", selected: 0 },
-      { id: "L3", value: 3, text: "L3", selected: 0 }
+      { id: idGenerator++, value: "L1", text: "L1", selected: 0 },
+      { id: idGenerator++, value: "L2", text: "L2", selected: 0 },
+      { id: idGenerator++, value: "L3", text: "L3", selected: 0 }
     ],
   },
   {
@@ -66,8 +66,8 @@ export const filterCriteria = [
     title: "Data Type",
     selection: "multiple",
     options: [
-      { id: "ROUTINE", value: 1, text: `Routine` },
-      { id: "EXPORADIC", value: 1, text: `Exporadic` }
+      { id: idGenerator++, value: "ROUTINE", text: `Routine` },
+      { id: idGenerator++, value: "EXPORADIC", text: `Exporadic` }
     ],
   },
 ];
