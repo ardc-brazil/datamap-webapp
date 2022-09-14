@@ -20,7 +20,7 @@ export default function DatasetDetails() {
             </div>
             {/* Actions */}
             <div className="">
-              <button className="btn-primary">Download (300 MB)</button>
+                <a className="btn-primary" href="/OCO2GriddedXCO2_20200727_v2_1605923534.nc" download>Download (1.8 MB)</a>
             </div>
           </div>
         </div>
