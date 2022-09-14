@@ -9,9 +9,9 @@ export function ListDataset(data) {
     <div className="flex flex-col gap-y-4 mr-4">
       <ListDatasetHeader itemCount={itemCount} />
       <div className="border-t border-primary-200">
-        {data.data.map((element, index) => {
-          return <ListItem key={index} data={element} />;
-        })}
+        {data.data.map((element, index) => (
+          <ListItem key={index} data={element} />
+        ))}
       </div>
       <div className="py-8">
         <ListDatasetPageNavigator />
