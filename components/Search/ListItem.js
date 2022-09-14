@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 
 // @ts-check
-export function ListItem(item) {
+export function ListItem(props) {
   function getTotalFileSize(data) {
     let totalGB = 0;
 
@@ -33,17 +33,17 @@ export function ListItem(item) {
             </div>
           </div>
           <div className="col-span-10">
-            <p className="font-bold text-lg">{item.data.name}</p>
+            <p className="font-bold text-lg">{props.data.name}</p>
             <p>
-              {item.data.author ? <span>by {item.data.author.name}</span> : ""}
+              {props.data.author ? <span>by {props.data.author.name}</span> : ""}
             </p>
 
             <p>
               <span>1mo ago</span>
               <span className="px-2">•</span>
-              <span>{getTotalFileSize(item.data.data)}</span>
+              <span>{getTotalFileSize(props.data.data)}</span>
             </p>
-            <p>{item.data.description}</p>
+            <p>{props.data.description}</p>
           </div>
         </div>
       </a>
