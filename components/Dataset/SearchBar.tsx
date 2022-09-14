@@ -20,6 +20,10 @@ export default (props: SearchProps) => {
 
   function onTextChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSearchText(e.target.value);
+
+    if (e.target.value = "") {
+      this.onClear();
+    }
   }
 
   function onInputEnterSearch(e: React.KeyboardEvent) {
@@ -29,7 +33,7 @@ export default (props: SearchProps) => {
   }
 
   return (
-    <div className="space-x-4 flex py-8">
+    <div className="space-x-4 flex">
       <label htmlFor="txt-dataset-search" className="text-4xl">
         Search
       </label>

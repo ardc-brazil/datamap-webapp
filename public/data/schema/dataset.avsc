@@ -4,6 +4,7 @@
     "type": "record",
     "name": "Dataset",
     "fields": [
+        { "name": "id", "type": "long", "doc": "Dataset id"},
         { "name": "name", "type": "string", "doc": "Dataset name"},
         { "name": "database", "type": "string", "doc": "Dataset database"},
         { "name": "creation_date", "type": "string", "doc": "A date in the format ISO8601. e.g 2022-09-12, 2022-09-12T09:28:44-03:00"},
