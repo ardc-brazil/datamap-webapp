@@ -7,7 +7,7 @@ import { filterCriteria } from "../../fake-data/filters";
 import Link from "next/link";
 import SearchBar from "../../components/Dataset/SearchBar";
 
-import {getAllData, searchIndex } from "../../lib/search";
+import Search from "../../lib/search";
 
 // @ts-check
 
@@ -32,23 +32,15 @@ function ListItem(item) {
           <div className="col-span-10">
             <p className="font-bold text-lg">{item.data.name}</p>
             <p>
-               { 
-                item.data.author ? 
-                  <span>by {item.data.author.name}</span>
-                  : ""
-                }
+              {item.data.author ? <span>by {item.data.author.name}</span> : ""}
             </p>
 
             <p>
               <span>1mo ago</span>
               <span className="px-2">•</span>
-              <span>
-                { getTotalFileSize(item.data.data) }
-              </span>
+              <span>{getTotalFileSize(item.data.data)}</span>
             </p>
-            <p>
-              {item.data.description}
-            </p>
+            <p>{item.data.description}</p>
           </div>
         </div>
       </a>
@@ -60,17 +52,16 @@ function getTotalFileSize(data) {
   let totalGB = 0;
 
   data.forEach((d) => {
-    if (d.file_size_gb)
-      totalGB += parseFloat(d.file_size_gb)
-  })
+    if (d.file_size_gb) totalGB += parseFloat(d.file_size_gb);
+  });
 
-  return totalGB + "GB"
+  return totalGB + "GB";
 }
 
 function ListDatasetHeader(itemCount) {
   return (
     <div className="flex justify-between gap-2">
-      <p>{ itemCount.itemCount } Results</p>
+      <p>{itemCount.itemCount} Results</p>
       <div>
         <label htmlFor="sortbySelector">
           <span className=" px-2 ">Sort by:</span>
@@ -173,16 +164,14 @@ function ListDatasetPageNavigator() {
 }
 
 function ListDataset(data) {
-  const itemCount = data.data.length
+  const itemCount = data.data.length;
   return (
     <div className="flex flex-col gap-y-4 mr-4">
       <ListDatasetHeader itemCount={itemCount} />
       <div className="border-t border-primary-200">
-        {
-          data.data.map((element, index) => {
-            return <ListItem key={index} data={element} />
-          })
-        }
+        {data.data.map((element, index) => {
+          return <ListItem key={index} data={element} />;
+        })}
       </div>
       <ListDatasetPageNavigator />
     </div>
@@ -199,7 +188,7 @@ function FilterBadges(props) {
   }
 
   return (
-    <div className="py-4">
+    <div className="mt-4">
       {props.selectedOptions.map((selectedOpt) => (
         <Badge
           key={selectedOpt.option.id}
@@ -228,12 +217,39 @@ export default function SearchPage() {
   const [filters, setFilters] = useState(filterCriteria);
   const [selectedOptions, setSelectedOptions] = useState([], true);
   const [items, setItems] = useState([]);
+  const [textSearch, setTextSearch] = useState("");
+  // const [queryParameters, setQueryParameters] = useState([]);
+
+  const search = new Search();
+
+  function searchIdx(queryParams) {
+    if (!queryParams || queryParams.length <= 0) {
+      setItems(search.getAllData());
+    } else {
+      setItems(search.searchIndex(queryParams));
+    }
+  }
 
   useEffect(() => {
     setFilters(filterCriteria);
     setSelectedOptions(filteredOptionsSelected);
-    setItems(getAllData());
+    setItems(search.getAllData());
   }, []);
+
+  useEffect(() => {
+    let result = selectedOptions.map((opt) => {
+      return opt.option.value;
+    });
+
+    if (textSearch) {
+      result.push(textSearch);
+    }
+
+    // setQueryParameters(result);
+
+    debugger;
+    searchIdx(result);
+  }, [selectedOptions, textSearch]);
 
   function cleanFilters() {
     return filters.map((f) => {
@@ -315,14 +331,14 @@ export default function SearchPage() {
     setSelectedOptions(filteredOptionsSelected);
   }
 
-  function onClearSearchText() {}
+  function onClearSearchText() {
+    debugger;
+    setTextSearch("");
+  }
 
   function onSearchText(text) {
-    if (!text) {
-      setItems(getAllData());
-    } else {
-      setItems(searchIndex(text));
-    }
+    setTextSearch(text);
+    // searchIdx();
   }
 
   return (
