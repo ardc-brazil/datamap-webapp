@@ -33,7 +33,7 @@ export default (props: SearchProps) => {
   }
 
   return (
-    <div className="space-x-4 flex py-8">
+    <div className="space-x-4 flex">
       <label htmlFor="txt-dataset-search" className="text-4xl">
         Search
       </label>

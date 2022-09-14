@@ -158,14 +158,19 @@ export default function SearchPage() {
         </div>
 
         <div className="col-span-9 basis-full px-4 min-h-screen">
-          <FilterBadges
-            selectedOptions={selectedOptions}
-            onClose={onCriteriaChanged}
-            onClearFilters={onClearFilters}
-          ></FilterBadges>
-
-          <SearchBar onClear={onClearSearchText} onSearch={onSearchText} />
-          {items.length > 0 ? <ListDataset data={items} /> : <EmptySearch />}
+          <div className="mt-12 mb-4">
+            <SearchBar onClear={onClearSearchText} onSearch={onSearchText} />
+          </div>
+          <div className="mb-8 h-12">
+            <FilterBadges
+              selectedOptions={selectedOptions}
+              onClose={onCriteriaChanged}
+              onClearFilters={onClearFilters}
+            ></FilterBadges>
+          </div>
+          <div>
+            {items.length > 0 ? <ListDataset data={items} /> : <EmptySearch />}
+          </div>
         </div>
       </div>
     </Layout>

@@ -11,7 +11,7 @@ export function FilterBadges(props) {
   }
 
   return (
-    <div className="mt-4">
+    <>
       {props.selectedOptions.map((selectedOpt) => (
         <Badge
           key={selectedOpt.option.id}
@@ -32,6 +32,6 @@ export function FilterBadges(props) {
           Clean Filters
         </button>
       )}
-    </div>
+    </>
   );
 }
