@@ -19,7 +19,7 @@ export function TabPanelMetadata(props: TabPanelProps) {
     <TabPanel title={props.title}>
       <h3 className="font-bold">Metadata</h3>
 
-      <div className="flex flex-col divide-y divide-primary-300 gap-8 mt-16">
+      <div className="flex flex-col divide-y divide-primary-200 gap-8 mt-16">
         <div className="py-4">
           <h4 className="font-semibold py-4">Usage Information</h4>
           <div className="flex gap-28 py-4">
