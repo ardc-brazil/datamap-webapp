@@ -20,6 +20,10 @@ export default (props: SearchProps) => {
 
   function onTextChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSearchText(e.target.value);
+
+    if (e.target.value = "") {
+      this.onClear();
+    }
   }
 
   function onInputEnterSearch(e: React.KeyboardEvent) {
