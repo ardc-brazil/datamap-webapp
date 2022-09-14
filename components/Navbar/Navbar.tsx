@@ -55,8 +55,8 @@ export function Navbar() {
           <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
             {/* <a href="" className="btn-primary-outline mx-2">Sign in</a> */}
             <button className="btn-primary-outline mx-2">Sign in</button>
-            {/* <a href="#">Sign up</a> */}
-            <button className="btn-primary">Sign up</button>
+            {/* <a href="#">Register</a> */}
+            <button className="btn-primary">Register</button>
           </div>
         </div>
       </div>

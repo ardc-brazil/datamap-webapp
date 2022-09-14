@@ -34,11 +34,11 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-900 text-primary-50 font-bold py-2 px-4 hover:bg-primary-800 hover:text-primary-200;
+    @apply bg-primary-900 text-primary-50 font-bold py-2 px-4 hover:bg-primary-800 hover:text-primary-200 rounded;
   }
 
   .btn-primary-outline {
-    @apply bg-primary-50 text-primary-900 font-bold py-2 px-4 border hover:bg-primary-800 hover:text-primary-200;
+    @apply bg-primary-50 text-primary-900 font-bold py-2 px-4 border border-primary-400 hover:bg-primary-100 rounded;
   }
 
   .display-1 {
