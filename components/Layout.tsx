@@ -6,6 +6,7 @@ interface Props {
   children?: React.ReactNode;
   fluid?: boolean;
   footerPropsMarginTop?: boolean;
+  hideFooter?: boolean;
 }
 
 export default (props: Props) => {
@@ -25,7 +26,7 @@ export default (props: Props) => {
       >
         {props.children}
       </main>
-      <Footer marginTop={props.footerPropsMarginTop} />
+      {!props.hideFooter && <Footer marginTop={props.footerPropsMarginTop} />}
     </>
   );
 };
