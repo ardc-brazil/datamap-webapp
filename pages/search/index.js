@@ -157,7 +157,7 @@ export default function SearchPage() {
           </div>
         </div>
 
-        <div className="col-span-9 basis-full px-4 min-h-screen">
+        <div className="col-span-9 basis-full px-4 min-h-screen max-w-screen-lg">
           <div className="mt-12 mb-4">
             <SearchBar onClear={onClearSearchText} onSearch={onSearchText} />
           </div>
