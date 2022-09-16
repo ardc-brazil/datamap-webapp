@@ -36,9 +36,6 @@ export function PageNavigatorNumbersArray(props) {
           );
         }
       })}
-      {/* {Arrays.from({ length: 20 }, (pageNumber, index) => {
-             
-            })} */}
     </div>
   );
 }
