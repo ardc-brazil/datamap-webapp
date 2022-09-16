@@ -149,12 +149,15 @@ A note[^1]
 
   if (isLoading)
     return (
-      <div className="min-h-screen">
-        <LoadingAnimation />
-        <LoadingAnimation />
-        <LoadingAnimation />
-        <LoadingAnimation />
-        <LoadingAnimation />
+      <div className="min-h-screen grid grid-cols-12">
+        <div className="col-span-7">
+          <LoadingAnimation />
+          <LoadingAnimation />
+          <LoadingAnimation />
+        </div>
+        <div className="col-span-4">
+          <LoadingAnimation />
+        </div>
       </div>
     );
   if (!data) return <p>No dataset data</p>;
