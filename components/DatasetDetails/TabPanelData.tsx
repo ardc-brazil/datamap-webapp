@@ -54,14 +54,14 @@ export function TabPanelData(props: TabPanelProps) {
 
   useEffect(() => {
     setLoading(true);
-    // setTimeout(() => {
-    //   setData({
-    //     usability: "8.75",
-    //     license: "CC BY-SA 4.0",
-    //     updateFrequency: "Quarterly",
-    //   });
-    //   setLoading(false);
-    // }, 500);
+    setTimeout(() => {
+      setData({
+        usability: "8.75",
+        license: "CC BY-SA 4.0",
+        updateFrequency: "Quarterly",
+      });
+      setLoading(false);
+    }, 1000);
   }, []);
 
   if (isLoading)
