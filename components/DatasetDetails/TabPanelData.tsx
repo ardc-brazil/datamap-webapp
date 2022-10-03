@@ -81,11 +81,10 @@ function ExpansibleDiv(props) {
   const [expanded, setExpanded] = useState(false);
   const ref = useRef(null);
 
-  const minHeight = 500;
+  const minHeight = 300;
 
   useEffect(() => {
     setMinHeightExpandable(ref.current.clientHeight > minHeight);
-    console.log(ref.current.clientHeight);
   }, []);
 
   function toggleView() {
@@ -99,7 +98,7 @@ function ExpansibleDiv(props) {
       <div ref={ref}>
         {expanded && props.children}
         {!expanded && (
-          <div className={`h-[${minHeight}px] relative overflow-hidden`}>
+          <div className={`relative overflow-hidden h-80`}>
             {props.children}
             {/* Box for hide effect at the end of the text clipped */}
             <div className="absolute bottom-0 w-full h-16 flex bg-gradient-to-t from-primary-50 via-primary-50 to-transparent"></div>
