@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { TabPanel, TabPanelProps } from "./TabPanel";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -48,6 +48,68 @@ function LoadingAnimation() {
   );
 }
 
+function ViewMoreOrLessButton(props) {
+  return (
+    <button
+      className="btn-primary-outline whitespace-nowrap rounded-3xl border-0"
+      onClick={props.toggleView}
+    >
+      <svg
+        aria-hidden="true"
+        className={`${
+          props.expanded ? "-rotate-90" : "rotate-90"
+        } w-3 h-3 inline-block mx-1`}
+        fill="currentColor"
+        viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          fillRule="evenodd"
+          d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+          clipRule="evenodd"
+        ></path>
+      </svg>
+
+      {!props.expanded && "View more"}
+      {props.expanded && "View less"}
+    </button>
+  );
+}
+
+function ExpansibleDiv(props) {
+  const [minHeightExpandable, setMinHeightExpandable] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const ref = useRef(null);
+
+  const minHeight = 300;
+
+  useEffect(() => {
+    setMinHeightExpandable(ref.current.clientHeight > minHeight);
+  }, []);
+
+  function toggleView() {
+    setExpanded(!expanded);
+  }
+
+  if (!minHeightExpandable) {
+    return <div ref={ref}>{props.children}</div>;
+  } else {
+    return (
+      <div ref={ref}>
+        {expanded && props.children}
+        {!expanded && (
+          <div className={`relative overflow-hidden h-80`}>
+            {props.children}
+            {/* Box for hide effect at the end of the text clipped */}
+            <div className="absolute bottom-0 w-full h-16 flex bg-gradient-to-t from-primary-50 via-primary-50 to-transparent"></div>
+          </div>
+        )}
+        <ViewMoreOrLessButton toggleView={toggleView} expanded={expanded} />
+      </div>
+    );
+  }
+}
+
 export function TabPanelData(props: TabPanelProps) {
   const [data, setData] = useState(null as TabPanelDataObject);
   const [isLoading, setLoading] = useState(false);
@@ -60,6 +122,7 @@ export function TabPanelData(props: TabPanelProps) {
         license: "CC BY-SA 4.0",
         updateFrequency: "Quarterly",
       });
+
       setLoading(false);
     }, 1000);
   }, []);
@@ -82,11 +145,12 @@ export function TabPanelData(props: TabPanelProps) {
   return (
     <TabPanel title={props.title}>
       <div className="grid grid-cols-12">
-        {/* TODO: Truncate big htmls */}
         <div className="col-span-9 pr-4 py-4">
-          <article className="prose lg:prose-xl max-w-none small-font-size">
-            <ReactMarkdown children={markdown} remarkPlugins={[remarkGfm]} />
-          </article>
+          <ExpansibleDiv>
+            <article className="prose lg:prose-xl max-w-none small-font-size">
+              <ReactMarkdown children={markdown} remarkPlugins={[remarkGfm]} />
+            </article>
+          </ExpansibleDiv>
         </div>
         <div className="col-span-3 flex flex-col gap-8 pl-8">
           <div>
