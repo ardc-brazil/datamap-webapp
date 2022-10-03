@@ -9,11 +9,12 @@
     "cypress": "cypress open"
   },
   "dependencies": {
+    "elasticlunr": "0.9.5",
     "next": "^12.2.5",
     "react": "17.0.2",
     "react-dom": "17.0.2",
-    "elasticlunr": "0.9.5",
     "react-markdown": "^8.0.3",
+    "react-simple-oauth2-login": "^0.5.3",
     "remark-gfm": "^3.0.1"
   },
   "devDependencies": {
