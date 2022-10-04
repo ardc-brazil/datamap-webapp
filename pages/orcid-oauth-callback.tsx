@@ -14,17 +14,20 @@ export async function getServerSideProps(context) {
   const clientSecret = process.env.OAUTH_ORCID_CLIENT_SECRET;
   const redirectUriBase = process.env.OAUTH_ORCID_REDIRECT_URI_BASE;
 
-  const data = {
-    client_id: clientId,
-    client_secret: clientSecret,
-    grant_type: "authorization_code",
-    code: authCode,
-    redirect_uri: `${redirectUriBase}&code=${authCode}`,
-  };
+  // const data = {
+  //   client_id: clientId,
+  //   client_secret: clientSecret,
+  //   grant_type: "authorization_code",
+  //   code: authCode,
+  //   redirect_uri: `${redirectUriBase}&code=${authCode}`,
+  // };
+
+  const data = `client_id=${clientId}&client_secret=${clientSecret}&grant_type=authorization_code&code=${authCode}&redirect_uri=${redirectUriBase}&code=${authCode}`;
 
   const resp = await axios.post(
     "https://orcid.org/oauth/token",
-    qs.stringify(data),
+    // qs.stringify(data),
+    data,
     {
       headers: { "content-type": "application/x-www-form-urlencoded" },
     }
