@@ -8,7 +8,7 @@ export interface FooterProps extends Props {
 
 export function Footer(props: FooterProps) {
   return (
-    <footer className={`bg-secondary-900 ${props.marginTop ?? "mt-12"} `}>
+    <footer className={`bg-secondary-900 h-[50vh] ${props.marginTop ?? "mt-12"} `}>
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-row flex-wrap">
           <div className="md:basis-2/5">

@@ -1,39 +1,53 @@
 import React from "react";
 import axios from "axios";
-import qs from "qs";
+import { setUser } from "../lib/user";
 
 export default function orcidOauthCallback(props) {
-  console.log("======");
-  console.log(props);
-  return <div>orcidOauthCallback</div>;
+  console.log("auth-data");
+  console.log(props.data);
+
+  return (
+    <div>
+      <p>Erro to authenticate:</p>
+      <pre>{JSON.stringify(props.data, null, 2)}</pre>
+    </div>
+  );
 }
 
-export async function getServerSideProps(context) {
-  const authCode = context.query.code;
+export async function getServerSideProps({ req, res, query }) {
+  const authCode = query.code;
   const clientId = process.env.OAUTH_ORCID_CLIENT_ID;
   const clientSecret = process.env.OAUTH_ORCID_CLIENT_SECRET;
   const redirectUriBase = process.env.OAUTH_ORCID_REDIRECT_URI_BASE;
 
-  // const data = {
-  //   client_id: clientId,
-  //   client_secret: clientSecret,
-  //   grant_type: "authorization_code",
-  //   code: authCode,
-  //   redirect_uri: `${redirectUriBase}&code=${authCode}`,
-  // };
+  async function getToken() {
+    try {
+      const requestData = `client_id=${clientId}&client_secret=${clientSecret}&grant_type=authorization_code&code=${authCode}&redirect_uri=${redirectUriBase}&code=${authCode}`;
 
-  const data = `client_id=${clientId}&client_secret=${clientSecret}&grant_type=authorization_code&code=${authCode}&redirect_uri=${redirectUriBase}&code=${authCode}`;
+      const response = await axios.post(
+        "https://orcid.org/oauth/token",
+        requestData,
+        {
+          headers: { "content-type": "application/x-www-form-urlencoded" },
+        }
+      );
 
-  // const resp = await axios.post(
-  //   "https://orcid.org/oauth/token",
-  //   // qs.stringify(data),
-  //   data,
-  //   {
-  //     headers: { "content-type": "application/x-www-form-urlencoded" },
-  //   }
-  // );
+      return response.data;
+    } catch (error) {
+      return error.response.data;
+    }
+  }
+
+  const data = await getToken();
+  const { name, orcid } = data;
+
+  setUser({ name, orcid }, req, res);
 
   return {
-    props: {  }, // will be passed to the page component as props
+    redirect: {
+      permanent: false,
+      destination: "/profile",
+    },
+    props: { data }, // will be passed to the page component as props
   };
 }
