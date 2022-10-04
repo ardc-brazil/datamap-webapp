@@ -24,14 +24,14 @@ export async function getServerSideProps(context) {
 
   const data = `client_id=${clientId}&client_secret=${clientSecret}&grant_type=authorization_code&code=${authCode}&redirect_uri=${redirectUriBase}&code=${authCode}`;
 
-  const resp = await axios.post(
-    "https://orcid.org/oauth/token",
-    // qs.stringify(data),
-    data,
-    {
-      headers: { "content-type": "application/x-www-form-urlencoded" },
-    }
-  );
+  // const resp = await axios.post(
+  //   "https://orcid.org/oauth/token",
+  //   // qs.stringify(data),
+  //   data,
+  //   {
+  //     headers: { "content-type": "application/x-www-form-urlencoded" },
+  //   }
+  // );
 
   return {
     props: { resp }, // will be passed to the page component as props
