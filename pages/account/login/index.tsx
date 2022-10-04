@@ -5,16 +5,19 @@ import { Tabs } from "../../../components/DatasetDetails/Tabs";
 import Router, { useRouter } from "next/router";
 
 function OrcidButton(props) {
+  const appKey = "APP-1RKJOENQPVY476EF";
+  const redirectUri = "https://datamap-webapp.vercel.app/orcid-oauth-callback";
+
   function onClick() {
     Router.push({
       pathname: "/search",
     });
   }
   return (
-    <button
+    <a
       type="button"
-      className="btn-primary-outline self-center font-medium text-sm px-5 py-2.5 text-center inline-flex items-center mr-2 mb-2"
-      onClick={onClick}
+      className="btn-primary-outline self-center font-medium text-sm px-5 py-2.5 text-center inline-flex items-center mr-2 mb-2 cursor-pointer"
+      href={`https://orcid.org/oauth/authorize?client_id=${appKey}&response_type=code&scope=/authenticate&redirect_uri=${redirectUri}`}
     >
       <svg
         className="w-8 h-8 mr-2 -ml-1"
@@ -35,7 +38,7 @@ function OrcidButton(props) {
         />
       </svg>
       {props.children}
-    </button>
+    </a>
   );
 }
 

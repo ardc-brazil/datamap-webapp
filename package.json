@@ -9,6 +9,7 @@
     "cypress": "cypress open"
   },
   "dependencies": {
+    "axios": "^0.27.2",
     "elasticlunr": "0.9.5",
     "next": "^12.2.5",
     "react": "17.0.2",
