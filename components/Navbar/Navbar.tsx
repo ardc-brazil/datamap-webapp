@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HiddenNav, MobileMenuItem as MobileNavbarItem } from "./MobileNavbar";
+import { ActionItemsNavBar } from "./ActionItemsNavBar";
 
 interface Props {
   children?: React.ReactNode;
@@ -53,27 +54,7 @@ export function Navbar() {
           </HiddenNav>
 
           <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
-            <Link
-              href={{
-                pathname: "/account/login",
-                query: { phase: "sign-in" },
-              }}
-            >
-              <a href="" className="btn-primary-outline mx-2">
-                Sign in
-              </a>
-            </Link>
-
-            {/* <button className="btn-primary-outline mx-2">Sign in</button> */}
-            {/* <a href="#">Register</a> */}
-            <Link
-              href={{
-                pathname: "/account/login",
-                query: { phase: "register" },
-              }}
-            >
-              <button className="btn-primary">Register</button>
-            </Link>
+            <ActionItemsNavBar />
           </div>
         </div>
       </div>

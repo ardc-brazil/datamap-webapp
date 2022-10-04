@@ -1,18 +1,8 @@
 import React from "react";
+import { CardItem } from "./CardItem";
 import { TabPanel } from "./TabPanel";
 
 import { TabPanelProps } from "./TabPanel";
-
-function CardItem(props) {
-  return (
-    <div>
-      <div className="text-primary-400 font-bold text-sm uppercase">
-        {props.title}
-      </div>
-      <div>{props.children}</div>
-    </div>
-  );
-}
 
 export function TabPanelMetadata(props: TabPanelProps) {
   return (
