@@ -14,7 +14,7 @@ export function ListItem(props) {
   }
 
   return (
-    <Link href="/datasets/data-set-id">
+    <Link href={`/datasets/${props.data.id}`}>
       <a>
         <div className="flex border-b border-primary-200 hover:bg-primary-100 cursor-pointer py-6">
           <div className="px-4 place-self-center">

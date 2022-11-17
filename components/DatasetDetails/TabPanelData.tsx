@@ -148,9 +148,25 @@ export function TabPanelData(props: TabPanelProps) {
         <div className="col-span-9 pr-4 py-4">
           <ExpansibleDiv>
             <article className="prose lg:prose-xl max-w-none small-font-size">
-              <ReactMarkdown children={markdown} remarkPlugins={[remarkGfm]} />
+              <ReactMarkdown
+                children={props.dataset.description}
+                remarkPlugins={[remarkGfm]}
+              />
             </article>
           </ExpansibleDiv>
+
+          {props.dataset.data && (
+            <div className="mt-4">
+              <h5 className="font-bold">Data Explorer</h5>
+              <ul className="list-disc list-inside py-4">
+                {props.dataset.data?.map((x, i) => (
+                  <li className="pl-4" key={i}>
+                    {x.download_path}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
         <div className="col-span-3 flex flex-col gap-8 pl-8">
           <div>

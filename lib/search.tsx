@@ -11,10 +11,12 @@ export default class Search {
   searchIndex(queryParams: Array<string>) {
     const results = [];
 
-    this.index.search(queryParams.join(' '), { expand: true }).map(({ ref, score }) => {
-      results.push(this.index.documentStore.getDoc(ref));
-    });
-  
+    this.index
+      .search(queryParams.join(" "), { expand: true })
+      .map(({ ref, score }) => {
+        results.push(this.index.documentStore.getDoc(ref));
+      });
+
     return results;
   }
 
@@ -32,12 +34,15 @@ export default class Search {
       this.addField("data_type");
       this.setRef("id");
     });
-  
+
     data.forEach((doc) => {
       index.addDoc(doc);
     });
-  
+
     return index;
   }
-  
+
+  findOneBy(id: String) {
+    return metadata.filter((x) => x.id.toString() === id)[0];
+  }
 }

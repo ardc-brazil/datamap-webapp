@@ -75,7 +75,6 @@ function EmailButton(props) {
 
 export default function LoginPage() {
   const router = useRouter();
-  console.log(router.query);
 
   function getSelectedTabIndex() {
     if (router?.query?.phase == "register") return 1;

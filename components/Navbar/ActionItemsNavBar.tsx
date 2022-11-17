@@ -20,7 +20,7 @@ export function ActionItemsNavBar() {
           query: { phase: "sign-in" },
         }}
       >
-        <a href="" className="btn-primary-outline mx-2">
+        <a href="#" className="btn-primary-outline mx-2">
           Sign in
         </a>
       </Link>
