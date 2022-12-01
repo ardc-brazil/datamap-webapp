@@ -33,12 +33,12 @@ export function Navbar() {
             <NavbarItem id="navbarItemSearch" href="/search">
               Search
             </NavbarItem>
-            <NavbarItem id="navbarItemTools" href="/tools">
+            {/* <NavbarItem id="navbarItemTools" href="/tools">
               Tools
             </NavbarItem>
             <NavbarItem id="navbarItemProject" href="/project">
               Project
-            </NavbarItem>
+            </NavbarItem> */}
           </nav>
 
           <HiddenNav items={["Search", "Tools", "Support"]}>
