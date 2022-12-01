@@ -10,12 +10,14 @@ import { FilterBadges } from "../../components/Search/FilterBadges";
 import { ListDataset } from "../../components/Search/ListDataset";
 import { EmptySearch } from "../../components/Search/EmptySearch";
 
-export default function SearchPage() {
+import { getAllDatasets } from "../../lib/datasets";
+
+function SearchPage(props) {
   const [filters, setFilters] = useState(filterCriteria);
   const [selectedOptions, setSelectedOptions] = useState([], true);
   const [items, setItems] = useState([]);
   const [textSearch, setTextSearch] = useState("");
-  const search = new Search();
+  const search = new Search(props.data);
 
   function searchIdx(queryParams) {
     if (!queryParams || queryParams.length <= 0) {
@@ -176,3 +178,13 @@ export default function SearchPage() {
     </Layout>
   );
 }
+
+export async function getServerSideProps(context) {
+  // Fetch data from external API
+  const data = await getAllDatasets()
+  
+  // Pass data to the page via props
+  return { props: { data } };
+}
+
+export default SearchPage;

@@ -1,11 +1,12 @@
 import elasticlunr from "elasticlunr";
-import metadata from "../public/data/data.json";
 
 export default class Search {
   index: elasticlunr.Index;
+  metadata: any[];
 
-  constructor() {
-    this.index = this.createSearchIndex(metadata);
+  constructor(metadata: any[]) {
+    this.metadata = metadata
+    this.index = this.createSearchIndex(this.metadata);
   }
 
   searchIndex(queryParams: Array<string>) {
@@ -21,7 +22,7 @@ export default class Search {
   }
 
   getAllData() {
-    return metadata;
+    return this.metadata;
   }
 
   createSearchIndex(data: any) {
@@ -43,6 +44,6 @@ export default class Search {
   }
 
   findOneBy(id: String) {
-    return metadata.filter((x) => x.id.toString() === id)[0];
+    return this.metadata.filter((x) => x.id.toString() === id)[0];
   }
 }

@@ -155,13 +155,13 @@ export function TabPanelData(props: TabPanelProps) {
             </article>
           </ExpansibleDiv>
 
-          {props.dataset.data && (
+          {props.dataset.data && props.dataset.data.length > 0 && (
             <div className="mt-4">
               <h5 className="font-bold">Data Explorer</h5>
               <ul className="list-disc list-inside py-4">
                 {props.dataset.data?.map((x, i) => (
                   <li className="pl-4" key={i}>
-                    {x.download_path}
+                    <a href={x.download_path} download>{x.download_path}</a>
                   </li>
                 ))}
               </ul>

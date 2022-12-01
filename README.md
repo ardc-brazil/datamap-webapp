@@ -69,4 +69,15 @@ Use Cypress for end-to-end tests.
 ```
 # Open cypress screen
 npm run cypress
-``` 
+```
+
+### Env Vars
+
+You have to create a `.env.local` file in the project root, and put:
+
+```
+OAUTH_ORCID_CLIENT_ID=cliend_id
+OAUTH_ORCID_CLIENT_SECRET=secret_id
+OAUTH_ORCID_REDIRECT_URI_BASE=https://datamap-webapp.vercel.app/orcid-oauth-callback
+OAUTH_DATAMAP_BASIC_AUTH={base64({username}:{password})} # your username and password enconded in base64.
+```
