@@ -6,7 +6,7 @@ export default function orcidPage() {
   const appServerUrl = "https://orcid.org";
 
   const onFailure = (response) => console.error(response);
-  const onSuccess = (response) => {debugger}; //console.log(response);
+  const onSuccess = (response) => console.log(response);
 
   const [accessToken, setAccessToken] = useState(null);
   const [user, setUser] = useState(null);
