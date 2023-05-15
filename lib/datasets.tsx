@@ -73,12 +73,12 @@ export async function getAllDatasets() {
   const basicAuth = process.env.OAUTH_DATAMAP_BASIC_AUTH;
 
   const data = (await fetch(
-    "http://ec2-3-228-16-84.compute-1.amazonaws.com/api/v1/datasets/",
+    "http://ec2-52-91-147-100.compute-1.amazonaws.com/api/v1/datasets/",
     {
       headers: {
         Authorization: `Basic ${basicAuth}`
       },
-      referrer: "http://ec2-3-228-16-84.compute-1.amazonaws.com/api/v1/",
+      referrer: "http://ec2-52-91-147-100.compute-1.amazonaws.com/api/v1/",
       referrerPolicy: "same-origin",
       body: null,
       method: "GET",
