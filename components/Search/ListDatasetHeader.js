@@ -6,7 +6,7 @@ export function ListDatasetHeader(itemCount) {
       <p>{itemCount.itemCount} Results</p>
       <div>
         <label htmlFor="sortbySelector">
-          <span className=" px-2 ">Sort by:</span>
+          {/* <span className=" px-2 ">Sort by:</span> */}
           <select
             id="sortbySelector"
             name="sortbySelector"
