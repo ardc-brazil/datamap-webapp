@@ -4,9 +4,9 @@ export function ListDatasetHeader(itemCount) {
   return (
     <div className="flex justify-between gap-2">
       <p>{itemCount.itemCount} Results</p>
-      <div>
+      {/* <div>
         <label htmlFor="sortbySelector">
-          {/* <span className=" px-2 ">Sort by:</span> */}
+          <span className=" px-2 ">Sort by:</span>
           <select
             id="sortbySelector"
             name="sortbySelector"
@@ -18,7 +18,7 @@ export function ListDatasetHeader(itemCount) {
             <option value="date">Date</option>
           </select>
         </label>
-      </div>
+      </div> */}
     </div>
   );
 }
