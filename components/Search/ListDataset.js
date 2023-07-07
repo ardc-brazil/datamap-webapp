@@ -13,9 +13,9 @@ export function ListDataset(data) {
           <ListItem key={index} data={element} />
         ))}
       </div>
-      <div className="py-8">
+      {/* <div className="py-8">
         <ListDatasetPageNavigator />
-      </div>
+      </div> */}
     </div>
   );
 }
