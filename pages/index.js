@@ -103,6 +103,7 @@ export default function HomePage() {
             <SearchCategory>Radiometric</SearchCategory>
             <SearchCategory>Surface Properties</SearchCategory>
             <SearchCategory>Subsoil and groundwater properties</SearchCategory>
+            <SearchCategory>Renewable Energy</SearchCategory>
           </div>
         </section>
 
