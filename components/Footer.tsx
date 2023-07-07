@@ -8,33 +8,32 @@ export interface FooterProps extends Props {
 
 export function Footer(props: FooterProps) {
   return (
-    <footer className={`bg-secondary-900 h-[50vh] ${props.marginTop ?? "mt-12"} `}>
-      <div className="container mx-auto px-4 py-12">
-        <div className="flex flex-row flex-wrap">
-          <div className="md:basis-2/5">
+    <footer
+      className={`bg-secondary-900 h-[50vh] ${props.marginTop ?? "mt-12"} `}
+    >
+      <div className="container mx-auto pt-24">
+        <div className="grid grid-rows-1 grid-flow-col gap-4">
+          <div className="row-span-2">
             <Link href="/">
               <a>
-                <img src="/img/logo.svg" alt="DataMap" />
+                <img src="/img/logo.svg" alt="DataMap" className="px-6 w-60 " />
               </a>
             </Link>
-            <p className="px-4 py-8 text-justify">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lacus,
-              morbi in risus sit etiam eleifend elementum. Velit ac semper
-              cursus ut risus eu tellus varius volutpat. Amet, sed et, tortor
-              pellentesque quam lacus, ut a. Consequat eget lacus quis risus,
-              orci feugiat condimentum magnis sagittis.
+            <p className="px-12 py-8">
+              Have an account?{" "}
+              <Link
+                href={{
+                  pathname: "/account/login",
+                  query: { phase: "sign-in" },
+                }}
+              >
+                Sign in.
+              </Link>
             </p>
           </div>
-          <div className="md:basis-1/5">
-            <h2 className="font-light">Contact</h2>
-            <p className="px-2 py-4">
-              Address: Av. Prof. Luciano Gualberto Butantã, São Paulo SP,
-              05508-010
-            </p>
-          </div>
-          <div className="md:basis-1/5">
+          <div className=" row-span-2">
             <h2 className="font-light">Project</h2>
-            <ul className="px-2 py-4">
+            <ul>
               <li>
                 <Link href="/project/about">
                   <a href="#">About</a>
@@ -62,7 +61,7 @@ export function Footer(props: FooterProps) {
               </li>
             </ul>
           </div>
-          <div className="md:basis-1/5">
+          <div className=" row-span-2">
             <h2 className="font-light">Tools</h2>
             <ul className="px-2 py-4">
               <li>
@@ -70,23 +69,12 @@ export function Footer(props: FooterProps) {
                   <a href="#">Search</a>
                 </Link>
               </li>
-              <li>
-                <Link href="/citation-generator">
-                  <a href="#">Citation Generator</a>
-                </Link>
-              </li>
             </ul>
           </div>
         </div>
-
-        <hr />
-
-        <div className="grid grid-cols-2 mt-4">
-          <div>
-            <p>Copywrite ADCB. All Rights Reserved</p>
-          </div>
-          <div className="justify-self-end">Redes sociais</div>
-        </div>
+        <p className="text-center p-12">
+          © {new Date().getFullYear()} Data Map Platform
+        </p>
       </div>
     </footer>
   );
