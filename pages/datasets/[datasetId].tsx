@@ -7,6 +7,7 @@ import { TabPanelMetadata } from "../../components/DatasetDetails/TabPanelMetada
 import { getAllDatasets } from "../../lib/datasets";
 
 import Search from "../../lib/search";
+import LoggedLayout from "../../components/LoggedLayout";
 export default function DatasetDetails(props) {
   function getFileUrls(data: any[]) {
     if (data.length > 0) {
@@ -23,7 +24,7 @@ export default function DatasetDetails(props) {
   }
 
   return (
-    <Layout fluid={true}>
+    <LoggedLayout fluid={true}>
       <div className="">
         <div className="container mx-auto">
           <div className="flex flex-row py-8">
@@ -51,7 +52,7 @@ export default function DatasetDetails(props) {
           </Tabs>
         </div>
       </div>
-    </Layout>
+    </LoggedLayout>
   );
 }
 
