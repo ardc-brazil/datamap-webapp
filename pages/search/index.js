@@ -136,42 +136,55 @@ function SearchPage(props) {
   return (
     <Layout fluid={true} footerPropsMarginTop={false}>
       <div className="flex flex-row gap-4">
-        <div className="flex-none border-r min-w-[15rem] max-w-[15rem] border-primary-200 pl-4">
-          <p className="py-4">Filter By</p>
-          <hr className="border-primary-200" />
-          <div className="pt-6 divide-y divide-solid divide-primary-200">
-            {filters.map((criteria, index, row) => {
-              var border = true;
-
-              if (index + 1 === row.length) {
-                border = false;
-              }
-
-              return (
-                <FilterCriteria
-                  key={criteria.id}
-                  criteria={criteria}
-                  onCriteriaChanged={onCriteriaChanged}
-                  border={border}
-                ></FilterCriteria>
-              );
-            })}
-          </div>
-        </div>
+        <div className="flex-none border-r min-w-[15rem] max-w-[15rem] border-primary-200 pl-4"></div>
 
         <div className="col-span-9 basis-full px-4 min-h-screen max-w-screen-lg">
-          <div className="mt-12 mb-4">
-            <SearchBar onClear={onClearSearchText} onSearch={onSearchText} />
-          </div>
-          <div className="mb-8 h-12">
-            <FilterBadges
-              selectedOptions={selectedOptions}
-              onClose={onCriteriaChanged}
-              onClearFilters={onClearFilters}
-            ></FilterBadges>
-          </div>
-          <div>
-            {items.length > 0 ? <ListDataset data={items} /> : <EmptySearch />}
+          <div className="flex flex-row gap-4">
+            <div className="flex-none border-r min-w-[15rem] max-w-[15rem] border-primary-200 pl-4">
+              <p className="py-4">Filter By</p>
+              <hr className="border-primary-200" />
+              <div className="pt-6 divide-y divide-solid divide-primary-200">
+                {filters.map((criteria, index, row) => {
+                  var border = true;
+
+                  if (index + 1 === row.length) {
+                    border = false;
+                  }
+
+                  return (
+                    <FilterCriteria
+                      key={criteria.id}
+                      criteria={criteria}
+                      onCriteriaChanged={onCriteriaChanged}
+                      border={border}
+                    ></FilterCriteria>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="col-span-9 basis-full px-4 min-h-screen max-w-screen-lg">
+              <div className="mt-12 mb-4">
+                <SearchBar
+                  onClear={onClearSearchText}
+                  onSearch={onSearchText}
+                />
+              </div>
+              <div className="mb-8 h-12">
+                <FilterBadges
+                  selectedOptions={selectedOptions}
+                  onClose={onCriteriaChanged}
+                  onClearFilters={onClearFilters}
+                ></FilterBadges>
+              </div>
+              <div>
+                {items.length > 0 ? (
+                  <ListDataset data={items} />
+                ) : (
+                  <EmptySearch />
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -181,8 +194,8 @@ function SearchPage(props) {
 
 export async function getServerSideProps(context) {
   // Fetch data from external API
-  const data = await getAllDatasets()
-  
+  const data = await getAllDatasets();
+
   // Pass data to the page via props
   return { props: { data } };
 }

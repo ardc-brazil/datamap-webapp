@@ -45,12 +45,12 @@ export function Navbar() {
             <MobileNavbarItem id="mobileNavbarItemSearch" href="/search">
               Search
             </MobileNavbarItem>
-            <MobileNavbarItem id="mobileNavbarItemTools" href="/tools">
+            {/* <MobileNavbarItem id="mobileNavbarItemTools" href="/tools">
               Tools
             </MobileNavbarItem>
             <MobileNavbarItem id="mobileNavbarItemProject" href="/project">
               Project
-            </MobileNavbarItem>
+            </MobileNavbarItem> */}
           </HiddenNav>
 
           <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">
