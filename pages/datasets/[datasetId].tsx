@@ -1,13 +1,11 @@
-import React from "react";
-import Layout from "../../components/Layout";
-import { Tabs } from "../../components/DatasetDetails/Tabs";
 import { TabPanelData } from "../../components/DatasetDetails/TabPanelData";
 import { TabPanelMetadata } from "../../components/DatasetDetails/TabPanelMetadata";
+import { Tabs } from "../../components/DatasetDetails/Tabs";
 
 import { getAllDatasets } from "../../lib/datasets";
 
-import Search from "../../lib/search";
 import LoggedLayout from "../../components/LoggedLayout";
+import Search from "../../lib/search";
 export default function DatasetDetails(props) {
   function getFileUrls(data: any[]) {
     if (data.length > 0) {

@@ -1,10 +1,8 @@
-import React from "react";
-import Layout from "../../components/Layout";
-import { getUser, userSignOut } from "../../lib/user";
 import Link from "next/link";
-import { CardItem } from "../../components/DatasetDetails/CardItem";
 import Router, { useRouter } from "next/router";
+import { CardItem } from "../../components/DatasetDetails/CardItem";
 import LoggedLayout from "../../components/LoggedLayout";
+import { getUser, userSignOut } from "../../lib/user";
 
 export default function ProfilePage() {
   const user = getUser();
@@ -17,7 +15,7 @@ export default function ProfilePage() {
 
   if (user) {
     return (
-      <LoggedLayout>
+      <LoggedLayout fluid={false}>
         <h2>Profile</h2>
         <div className="py-8 mb-60">
           <CardItem className="py-4" title="Name">
@@ -39,7 +37,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <LoggedLayout>
+    <LoggedLayout fluid={false}>
       <div className="py-8">
         <p>User is not authenticated.</p>
         <p className="text-primary-500 text-left mt-6">

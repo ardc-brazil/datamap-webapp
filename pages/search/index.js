@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import LoggedLayout from "../../components/LoggedLayout";
 import { FilterCriteria } from "../../components/Search/FilterCriteria";
 import { filterCriteria } from "../../fake-data/filters";
 
 import SearchBar from "../../components/Dataset/SearchBar";
 
-import Search from "../../lib/search";
+import { EmptySearch } from "../../components/Search/EmptySearch";
 import { FilterBadges } from "../../components/Search/FilterBadges";
 import { ListDataset } from "../../components/Search/ListDataset";
-import { EmptySearch } from "../../components/Search/EmptySearch";
+import Search from "../../lib/search";
 
 import { getAllDatasets } from "../../lib/datasets";
 
