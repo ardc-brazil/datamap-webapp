@@ -92,7 +92,7 @@ export default (props: Props) => {
             </ul>
           </div>
         </aside>
-        <div className="p-4 sm:ml-64 px-16 py-16">{props.children}</div>
+        <div className={`${ props.fluid ? "" : "px-16 py-16"} sm:ml-64`}>{props.children}</div>
       </main>
     </>
   );
