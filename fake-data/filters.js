@@ -45,10 +45,34 @@ export const filterCriteria = [
       },
       {
         id: idGenerator++,
+        value: "CLOUD_PROPERTIES",
+        text: `Cloud Properties`,
+        selected: false,
+      },
+      {
+        id: idGenerator++,
+        value: "RADIOMETRIC",
+        text: `Radiometric`,
+        selected: false,
+      },
+      {
+        id: idGenerator++,
         value: "SURFACE_PROPERTIES",
         text: `Surface Properties`,
         selected: false,
-      }
+      },
+      {
+        id: idGenerator++,
+        value: "SUBSOIL_GROUNDWATER_PROPERTIES",
+        text: `Subsoil and Groundwater Properties`,
+        selected: false,
+      },
+      {
+        id: idGenerator++,
+        value: "RENEWABLE_ENERGY",
+        text: `Reneweble`,
+        selected: false,
+      },
     ],
   },
   {
@@ -58,7 +82,7 @@ export const filterCriteria = [
     options: [
       { id: idGenerator++, value: "L1", text: "L1", selected: 0 },
       { id: idGenerator++, value: "L2", text: "L2", selected: 0 },
-      { id: idGenerator++, value: "L3", text: "L3", selected: 0 }
+      { id: idGenerator++, value: "L3", text: "L3", selected: 0 },
     ],
   },
   {
@@ -67,7 +91,7 @@ export const filterCriteria = [
     selection: "multiple",
     options: [
       { id: idGenerator++, value: "ROUTINE", text: `Routine` },
-      { id: idGenerator++, value: "EXPORADIC", text: `Exporadic` }
+      { id: idGenerator++, value: "EXPORADIC", text: `Exporadic` },
     ],
   },
 ];
