@@ -1,8 +1,9 @@
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
 import { TabPanel } from "../../../components/DatasetDetails/TabPanel";
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
 import Router, { useRouter } from "next/router";
+import { useUser } from "../../../lib/hooks";
 
 function OrcidButton(props) {
   const appKey = "APP-1RKJOENQPVY476EF";
@@ -73,6 +74,50 @@ function EmailButton(props) {
   );
 }
 
+function LocalLoginForm(props) {
+  const [user, { mutate }] = useUser();
+  const [errorMsg, setErrorMsg] = useState("");
+
+  async function onSubmit(e) {
+    e.preventDefault();
+
+    const body = {
+      username: e.currentTarget.username.value,
+      password: e.currentTarget.password.value,
+    };
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (res.status === 200) {
+      const userObj = await res.json();
+      // set user to useSWR state
+      mutate(userObj);
+    } else {
+      setErrorMsg("Incorrect username or password. Try better!");
+    }
+  }
+
+  return (
+    <form onSubmit={onSubmit}>
+      <label>
+        <span>Username</span>
+        <input type="text" name="username" required />
+      </label>
+      <label>
+        <span>Password</span>
+        <input type="password" name="password" required />
+      </label>
+      <div className="submit">
+        <button type="submit">Login</button>
+        <Link href="/signup">I don't have an account</Link>
+      </div>
+    </form>
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
 
@@ -95,6 +140,7 @@ export default function LoginPage() {
         <Tabs defaultSelectedIndex={defaultTabIndex}>
           <TabPanel title="Sign In">
             <div className="flex flex-col">
+              <LocalLoginForm />
               <OrcidButton>Sign in with ORCID</OrcidButton>
               <p className="text-primary-500 text-center mt-6 text-sm">
                 No Account? &nbsp;

@@ -91,3 +91,9 @@ Some valid values are at the [production environment](https://vercel.com/ardc-br
 
 
 
+### Authentication
+
+We are using Passport + Next Connect. See more here:
+
+- Strategy: https://nextjs.org/docs/pages/building-your-application/routing/authenticating
+- Example: https://github.com/vercel/next.js/tree/canary/examples/with-passport-and-next-connect
