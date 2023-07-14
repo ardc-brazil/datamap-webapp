@@ -18,7 +18,7 @@ export default function DatasetDetails(props) {
   }
 
   return (
-    <LoggedLayout fluid={true}>
+    <LoggedLayout fluid={false}>
       <h2>Datasets</h2>
       <p className="text-primary-700">
         Explore, analyze, and share quality data. Learn more about data types,
