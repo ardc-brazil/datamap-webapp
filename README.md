@@ -41,6 +41,7 @@ Also install:
 - https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss
 - https://marketplace.visualstudio.com/items?itemName=formulahendry.auto-rename-tag
 - https://marketplace.visualstudio.com/items?itemName=vitaliymaz.vscode-svg-previewer
+- https://marketplace.visualstudio.com/items?itemName=dsznajder.es7-react-js-snippets
 
 ### TailwindCSS
 
@@ -73,11 +74,20 @@ npm run cypress
 
 ### Env Vars
 
-You have to create a `.env.local` file in the project root, and put:
+You have to create a `.env.local` file in the project root.
 
-```
-OAUTH_ORCID_CLIENT_ID=cliend_id
-OAUTH_ORCID_CLIENT_SECRET=secret_id
-OAUTH_ORCID_REDIRECT_URI_BASE=https://datamap-webapp.vercel.app/orcid-oauth-callback
-OAUTH_DATAMAP_BASIC_AUTH={base64({username}:{password})} # your username and password enconded in base64.
-```
+Copy the file [.env.local.template](./.env.local.template) and replace with valid values. 
+
+Some valid values are at the [production environment](https://vercel.com/ardc-brazil/datamap-webapp/settings/environment-variables) from Vercel.
+
+
+
+
+
+
+
+
+
+
+
+
