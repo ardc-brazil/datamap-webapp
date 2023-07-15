@@ -7,22 +7,22 @@
     @apply bg-primary-50;
   }
   h1 {
-    @apply text-5xl font-medium;
+    @apply leading-relaxed text-5xl font-medium;
   }
   h2 {
-    @apply text-4xl font-medium;
+    @apply leading-relaxed text-4xl font-medium;
   }
   h3 {
-    @apply text-3xl font-medium text-primary-900;
+    @apply leading-relaxed text-3xl font-medium text-primary-900;
   }
   h4 {
-    @apply text-2xl font-medium text-primary-900;
+    @apply leading-relaxed text-2xl font-medium text-primary-900;
   }
   h5 {
-    @apply text-xl font-medium text-primary-900;
+    @apply leading-relaxed text-xl font-medium text-primary-900;
   }
   p {
-    @apply text-base font-normal text-primary-900;
+    @apply my-3 text-base font-normal text-primary-900;
   }
   a {
     @apply text-base font-medium text-primary-900 hover:text-primary-600;
@@ -30,6 +30,24 @@
   /* button {
     @apply btn-primary
   } */
+
+  label {
+    @apply block mb-2 text-sm font-medium text-primary-900
+  }
+  
+  input {
+    @apply bg-primary-50 border border-primary-300 text-primary-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 w-full p-2.5 outline-primary-500
+  }
+
+  textarea {
+    @apply bg-primary-50 border border-primary-300 text-primary-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 outline-secondary-900
+  }
+
+  select {
+    @apply bg-primary-50 border border-primary-300 text-primary-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 outline-secondary-900
+  }
+
+
 }
 
 @layer components {

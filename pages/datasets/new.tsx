@@ -1,6 +1,5 @@
 import { useState } from "react";
 import LoggedLayout from "../../components/LoggedLayout";
-import { randomUUID } from "crypto";
 export default function DatasetDetails(props) {
   function getFileUrls(data: any[]) {
     if (data.length > 0) {
@@ -19,6 +18,12 @@ export default function DatasetDetails(props) {
   return (
     <LoggedLayout fluid={false}>
       <h2>New Dataset</h2>
+      <p>Create a new dataset informing a title and yours data files.</p>
+      <p className="text-xs">
+        A dataset refers to a collection of data that is organized and
+        structured for a specific purpose. It can consist of various types of
+        information such as text, numbers, images, audio, or video.
+      </p>
 
       <div className="mb-6">
         <label
@@ -57,7 +62,13 @@ export default function DatasetDetails(props) {
   );
 
   function RemoteFilesList(props) {
-    const [allRemoteFiles, setAllRemoteFiles] = useState([]);
+    const [allRemoteFiles, setAllRemoteFiles] = useState([
+      {
+        id: crypto.randomUUID(),
+        name: "file1",
+        path: "/a/b/c/file1"
+      },
+    ]);
     const [remoteFilePath, setRemoteFilePath] = useState("");
 
     function onAddRemoteFile(): void {
@@ -134,12 +145,13 @@ export default function DatasetDetails(props) {
     return (
       <div className="flex p-4 hover:bg-primary-100 border border-primary-100">
         <div className="w-full">
-          <p className="">{props.name}</p>
-          <p className="pl-4 text-sm text-primary-500">{props.path}</p>
+          <span>{props.name}</span>
+          <br/>
+          <span className="text-sm text-primary-500">{props.path}</span>
         </div>
 
         <button
-          className="border border-primary-200 hover:bg-primary-400 hover:text-primary-50 rounded-full ml-4 px-4"
+          className="btn-primary-outline rounded-full "
           onClick={onRemove}
         >
           X

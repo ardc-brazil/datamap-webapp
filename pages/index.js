@@ -82,7 +82,7 @@ export default function HomePage() {
             </TextDecorationBolder>
           </h1>
 
-          <p>
+          <p className="text-xl">
             We understand that the ability to find and understand your cataloged
             datasets is crucial for your research success. That's why our
             platform boasts a robust and highly flexible search service.
@@ -91,7 +91,6 @@ export default function HomePage() {
             correlations, uncover insights, and retrieve specific datasets with
             unparalleled ease.
           </p>
-          <br />
           <p>
             Search foravailable categories or do an advanced search in our tool.
           </p>
