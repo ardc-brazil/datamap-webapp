@@ -80,14 +80,7 @@ Copy the file [.env.local.template](./.env.local.template) and replace with vali
 
 Some valid values are at the [production environment](https://vercel.com/ardc-brazil/datamap-webapp/settings/environment-variables) from Vercel.
 
+### Formik
 
-
-
-
-
-
-
-
-
-
-
+We are using Formik to handle all forms in the aplication.
+See more <https://formik.org/>

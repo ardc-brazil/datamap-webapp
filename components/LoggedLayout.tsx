@@ -7,6 +7,7 @@ interface Props {
   fluid?: boolean;
   footerPropsMarginTop?: boolean;
   hideFooter?: boolean;
+  className? : string;
 }
 
 export default (props: Props) => {
@@ -22,7 +23,7 @@ export default (props: Props) => {
       <main
         className={`${
           props.fluid ? "" : "container pb-4 px-4"
-        } mx-auto bg-primary-50 overscroll-none`}
+        } mx-auto bg-primary-50 overscroll-none ${props.className}`} 
       >
         <aside
           id="logo-sidebar"

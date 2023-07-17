@@ -39,6 +39,18 @@ module.exports = {
         800: "#DBE7E6",
         900: "#D7E4E3",
       },
+       error: {
+        50: "#FFADADff",
+        100: "#FF9A9Aff",
+        200: "#FF8787ff",
+        300: "#FF7373ff",
+        400: "#FF6060ff",
+        500: "#FF4D4Dff",
+        600: "#FF3A3Aff",
+        700: "#FF2626ff",
+        800: "#FF1313ff",
+        900: "#FF0000ff",
+       }
     },
     extend: {
       typography: (theme) => ({
