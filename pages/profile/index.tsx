@@ -15,7 +15,7 @@ export default function ProfilePage() {
 
   if (user) {
     return (
-      <LoggedLayout fluid={false}>
+      <LoggedLayout noPadding={false}>
         <h2>Profile</h2>
         <div className="py-8 mb-60">
           <CardItem className="py-4" title="Name">
@@ -37,7 +37,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <LoggedLayout fluid={false}>
+    <LoggedLayout noPadding={false}>
       <div className="py-8">
         <p>User is not authenticated.</p>
         <p className="text-primary-500 text-left mt-6">

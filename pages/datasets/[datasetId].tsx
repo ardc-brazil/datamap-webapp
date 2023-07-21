@@ -22,7 +22,7 @@ export default function DatasetDetails(props) {
   }
 
   return (
-    <LoggedLayout fluid={true}>
+    <LoggedLayout>
       <div className="">
         <div className="container mx-auto">
           <div className="flex flex-row py-8">

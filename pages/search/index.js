@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import LoggedLayout from "../../components/LoggedLayout";
-import { FilterCriteria } from "../../components/Search/FilterCriteria";
+// import { FilterCriteria } from "../../components/Search/FilterCriteria";
+import { FilterCriteriaList } from "../../components/Search/FilterCriteriaList";
 import { filterCriteria } from "../../fake-data/filters";
 
 import SearchBar from "../../components/Dataset/SearchBar";
@@ -134,29 +135,10 @@ function SearchPage(props) {
   }
 
   return (
-    <LoggedLayout fluid={true} footerPropsMarginTop={false}>
+    <LoggedLayout noPadding={true} footerPropsMarginTop={false}>
       <div className="flex flex-row gap-4">
-        <div className="flex-none border-r min-w-[15rem] max-w-[15rem] border-primary-200 pl-4">
-          <p className="py-4">Filter By</p>
-          <hr className="border-primary-200" />
-          <div className="pt-6 divide-y divide-solid divide-primary-200">
-            {filters.map((criteria, index, row) => {
-              var border = true;
-
-              if (index + 1 === row.length) {
-                border = false;
-              }
-
-              return (
-                <FilterCriteria
-                  key={criteria.id}
-                  criteria={criteria}
-                  onCriteriaChanged={onCriteriaChanged}
-                  border={border}
-                ></FilterCriteria>
-              );
-            })}
-          </div>
+        <div className="border-r pl-4 border-primary-200">
+          <FilterCriteriaList filters={filters} />
         </div>
 
         <div className="col-span-9 basis-full px-4 min-h-screen max-w-screen-lg">

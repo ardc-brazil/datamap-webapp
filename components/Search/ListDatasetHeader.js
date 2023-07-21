@@ -2,7 +2,7 @@ import React from "react";
 
 export function ListDatasetHeader(itemCount) {
   return (
-    <div className="flex justify-between gap-2">
+    <div className="flex justify-between">
       <p>{itemCount.itemCount} Results</p>
       {/* <div>
         <label htmlFor="sortbySelector">

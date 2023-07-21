@@ -1,42 +1,36 @@
-
-
 import Link from "next/link";
 import LoggedLayout from "../../components/LoggedLayout";
-export default function DatasetDetails(props) {
-  function getFileUrls(data: any[]) {
-    if (data.length > 0) {
-      return props.dataset.data[0];
-    }
+import { FilterCriteriaList } from "../../components/Search/FilterCriteriaList";
+import { ListDataset } from "../../components/Search/ListDataset";
 
-    // default file
-    return {
-      file_type: ".nc",
-      download_path: "/OCO2GriddedXCO2_20200727_v2_1605923534.nc",
-      format: "netCDF",
-      file_size_gb: "0.1",
-    };
-  }
+import { filterCriteria } from "../../fake-data/filters";
+import { useEffect, useState } from "react";
+import Search from "../../lib/search";
+import { getAllDatasets } from "../../lib/datasets";
+
+export default function DatasetDetails(props) {
+  const [filters, setFilters] = useState(filterCriteria);
+  const [items, setItems] = useState([]);
+  const search = new Search(props.data);
+
+  useEffect(() => {
+    setFilters(filterCriteria);
+    setItems(search.getAllData());
+  }, []);
 
   return (
-    <LoggedLayout fluid={false}>
+    <LoggedLayout>
       <h2>Datasets</h2>
       <p className="text-primary-700">
         Explore, analyze, and share quality data. Learn more about data types,
         creating, and collaborating.
       </p>
 
-      <Link
-        href={{
-          pathname: "/datasets/new",
-          query: { phase: "register" },
-        }}
-      >
-        <button className="btn-primary my-8">+ New Dataset</button>
+      <Link href="/datasets/new">
+        <button className="btn-primary mt-2">+ New Dataset</button>
       </Link>
 
-      {/* TODO: Create component */}
-      {/* Simple search bar for internal */}
-      <div className="mb-8">
+      <div className="mt-8 mb-4">
         <form>
           <label
             htmlFor="default-search"
@@ -78,6 +72,26 @@ export default function DatasetDetails(props) {
           </div>
         </form>
       </div>
+
+      <div className="border-primary-200 mt-8">
+        <div className="flex flex-row gap-4">
+          <FilterCriteriaList filters={filters} />
+          <div className="col-span-9 basis-full px-4 min-h-screen max-w-screen-lg">
+            <div>
+              {/* <EmptySearch /> */}
+              <ListDataset data={items} />
+            </div>
+          </div>
+        </div>
+      </div>
     </LoggedLayout>
   );
+}
+
+export async function getServerSideProps(context) {
+  // Fetch data from external API
+  const data = await getAllDatasets();
+
+  // Pass data to the page via props
+  return { props: { data } };
 }

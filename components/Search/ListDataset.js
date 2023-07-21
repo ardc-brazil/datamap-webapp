@@ -6,7 +6,7 @@ import { ListDatasetPageNavigator } from "./ListDatasetPageNavigator";
 export function ListDataset(data) {
   const itemCount = data.data.length;
   return (
-    <div className="flex flex-col gap-y-4 mr-4">
+    <div className="flex flex-col mr-4">
       <ListDatasetHeader itemCount={itemCount} />
       <div className="border-t border-primary-200">
         {data.data.map((element, index) => (
