@@ -6,7 +6,8 @@ import { getAllDatasets } from "../../lib/datasets";
 
 import LoggedLayout from "../../components/LoggedLayout";
 import Search from "../../lib/search";
-export default function DatasetDetails(props) {
+
+export default function DatasetDetailsPage(props) {
   function getFileUrls(data: any[]) {
     if (data.length > 0) {
       return props.dataset.data[0];

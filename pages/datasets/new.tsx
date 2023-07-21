@@ -2,7 +2,7 @@ import { useState } from "react";
 import LoggedLayout from "../../components/LoggedLayout";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 
-export default function DatasetDetails(props) {
+export default function NewPage(props) {
   function getFileUrls(data: any[]) {
     if (data.length > 0) {
       return props.dataset.data[0];

@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import Search from "../../lib/search";
 import { getAllDatasets } from "../../lib/datasets";
 
-export default function DatasetDetails(props) {
+export default function ListDatasetPage(props) {
   const [filters, setFilters] = useState(filterCriteria);
   const [items, setItems] = useState([]);
   const search = new Search(props.data);
