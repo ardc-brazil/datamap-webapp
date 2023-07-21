@@ -5,6 +5,7 @@ import { useState } from "react";
 import SearchIcon from "./Icons/SearchIcon";
 import DatasetIcon from "./Icons/DatasetIcon";
 import PiechartIcon from "./Icons/PiechartIcon";
+import AvatarButton from "./Profile/AvatarButton";
 
 interface Props {
   children?: React.ReactNode;
@@ -30,7 +31,10 @@ export default (props: Props) => {
       </Head>
 
       <main className="flex flex-nowrap flex-row">
-        {/* <Navbar /> */}
+        <div className="fixed right-0 mr-6 mt-2">
+          <AvatarButton />
+        </div>
+
         <aside
           className={`flex-none w-64 h-screen overflow-auto border-r border-primary-200 ${
             menuClosed
@@ -73,7 +77,9 @@ export default (props: Props) => {
           </ul>
         </aside>
         <div
-          className={`flex justify-center w-full ${props.noPadding ? "" : "px-8 pt-8"} ${
+          className={`flex justify-center w-full ${
+            props.noPadding ? "" : "px-8 pt-8"
+          } ${
             menuClosed
               ? "transition-all duration-500 ease-out ml-16"
               : "transition-all duration-500 ease-out ml-64"
