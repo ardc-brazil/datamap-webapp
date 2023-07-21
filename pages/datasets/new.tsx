@@ -18,16 +18,14 @@ export default function DatasetDetails(props) {
   }
 
   return (
-    <LoggedLayout fluid={true} className="p-10">
-      <div className="mb-6">
-        <h2>New Dataset</h2>
-        <p>Create a new dataset informing a title and remote data files.</p>
-        <p className="text-xs">
-          A dataset refers to a collection of data that is organized and
-          structured for a specific purpose. It can consist of various types of
-          information such as text, numbers, images, audio, or video.
-        </p>
-      </div>
+    <LoggedLayout>
+      <h2>New Dataset</h2>
+      <p>Create a new dataset informing a title and remote data files.</p>
+      <p className="text-xs">
+        A dataset refers to a collection of data that is organized and
+        structured for a specific purpose. It can consist of various types of
+        information such as text, numbers, images, audio, or video.
+      </p>
 
       {/* <div className="mb-6">
         <label

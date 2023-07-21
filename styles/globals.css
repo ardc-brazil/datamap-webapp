@@ -25,38 +25,36 @@
     @apply my-3 text-base font-normal text-primary-900;
   }
   a {
-    @apply text-base font-medium text-primary-900 hover:text-primary-600;
+    @apply text-base font-medium text-primary-900 hover:text-primary-600 outline-secondary-800;
   }
   /* button {
     @apply btn-primary
   } */
 
   label {
-    @apply block mb-2 text-sm font-medium text-primary-800
+    @apply block mb-2 text-sm font-medium text-primary-800;
   }
-  
+
   input {
-    @apply bg-primary-100 border border-primary-300 text-primary-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 w-full p-2.5 outline-primary-500
+    @apply bg-primary-100 border border-primary-300 text-primary-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 w-full p-2.5 outline-primary-500;
   }
 
   textarea {
-    @apply bg-primary-100 border border-primary-300 text-primary-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 outline-secondary-900
+    @apply bg-primary-100 border border-primary-300 text-primary-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 outline-primary-500;
   }
 
   select {
-    @apply bg-primary-50 border border-primary-300 text-primary-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 outline-secondary-900
+    @apply bg-primary-50 border border-primary-300 text-primary-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 outline-primary-500;
   }
-
-
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-900 text-primary-50 font-bold py-2 px-4 hover:bg-primary-800 hover:text-primary-200 rounded;
+    @apply bg-primary-900 text-primary-50 font-normal text-xs py-2 px-4 hover:bg-primary-800 hover:text-primary-200 rounded outline-primary-500;
   }
 
   .btn-primary-outline {
-    @apply bg-primary-50 text-primary-900 font-bold py-2 px-4 border border-primary-400 hover:bg-primary-100 rounded;
+    @apply bg-primary-50 text-primary-900 font-bold py-2 px-4 border border-primary-400 hover:bg-primary-100 rounded outline-primary-500;
   }
 
   .display-1 {

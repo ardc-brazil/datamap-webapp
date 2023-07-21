@@ -1,13 +1,13 @@
 import Link from "next/link";
 import Head from "../node_modules/next/head";
-import { Navbar } from "./Navbar/Navbar";
+import { useRouter } from "next/router";
 
 interface Props {
   children?: React.ReactNode;
   fluid?: boolean;
   footerPropsMarginTop?: boolean;
   hideFooter?: boolean;
-  className? : string;
+  className?: string;
 }
 
 export default (props: Props) => {
@@ -19,34 +19,26 @@ export default (props: Props) => {
         <meta charSet="utf-8"></meta>
       </Head>
 
-      {/* <Navbar /> */}
-      <main
-        className={`${
-          props.fluid ? "" : "container pb-4 px-4"
-        } mx-auto bg-primary-50 overscroll-none ${props.className}`} 
-      >
-        <aside
-          id="logo-sidebar"
-          className="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0 border-r border-primary-200"
-          aria-label="Sidebar"
-        >
-          <div className="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800">
+      <main className="flex flex-nowrap flex-row">
+        {/* <Navbar /> */}
+        <aside className="flex-none w-64 h-screen overflow-auto border-r border-primary-200">
+          <div>
             <Link href="/">
               <a className="px-2 py-4">
                 <img src="/img/logo.svg" alt="DataMap" />
               </a>
             </Link>
-            <ul className="space-y-2 font-medium">
-              <MenuItem href="/dashboard" icon={true}>
-                <button className="btn-primary">+ Create</button>
-              </MenuItem>
-              <MenuItem href="/dashboard">Dashboard</MenuItem>
+
+            <button className="btn-primary">+ Create</button>
+
+            <ul className="py-4">
+              <MenuItem href="/">Home</MenuItem>
               <MenuItem href="/datasets">Datasets</MenuItem>
               <MenuItem href="/search">Search</MenuItem>
             </ul>
           </div>
         </aside>
-        <div className={`${props.fluid ? "" : "px-16 py-16"} sm:ml-64`}>
+        <div className={`${props.fluid ? "" : "px-8 pt-8"}`}>
           {props.children}
         </div>
       </main>
@@ -55,13 +47,23 @@ export default (props: Props) => {
 };
 
 function MenuItem(props) {
+  const router = useRouter();
+
+  function active(href: string) {
+    debugger;
+    return router.pathname == href;
+  }
+
   return (
-    <li>
-      <Link
-        href={props.href}
-        className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
-      >
-        <a>
+    <li
+      className={` ${
+        active(props.href) ? "border-r-2 border-r-primary-800" : ""
+      } flex items-center pointer-events-auto hover:bg-primary-100 h-11`}
+    >
+      <Link href={props.href}>
+        <a
+          className={`flex items-center mx-2 h-full w-full pl-6 group text-primary-700 font-normal`}
+        >
           {!props.icon && (
             <svg
               className="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white inline-block"
