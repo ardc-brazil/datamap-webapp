@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import SearchIcon from "./Icons/SearchIcon";
 import DatasetIcon from "./Icons/DatasetIcon";
-import PiechartIcon from "./Icons/PieChartIcon";
+import PiechartIcon from "./Icons/PiechartIcon";
 
 interface Props {
   children?: React.ReactNode;
