@@ -26,7 +26,7 @@ export default function DatasetDetailsPage(props) {
     <LoggedLayout>
       <div className="w-full">
         <div className="container mx-auto">
-          <div className="flex flex-row py-8">
+          <div className="flex flex-row">
             {/* Title */}
             <div className="basis-10/12">
               <h1 className="font-extrabold">{props.dataset.name}</h1>

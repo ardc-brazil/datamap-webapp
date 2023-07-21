@@ -54,7 +54,7 @@ export default (props: Props) => {
                 viewBox="0 24 24"
                 stroke="currentColor"
               >
-                <path stroke-width="2" d="M5 8h18M5 13h18M5 18h18" />
+                <path strokeWidth="2" d="M5 8h18M5 13h18M5 18h18" />
               </svg>
             </button>
             <Link href="/">
