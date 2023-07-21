@@ -24,8 +24,8 @@ export function Navbar() {
       <div className="mx-auto w-full px-2 backdrop-blur-md bg-primary-50/90">
         <div className="flex items-center py-1 h-16">
           <Link href="/">
-            <a className="px-2 py-4">
-              <img src="/img/logo.svg" alt="DataMap" />
+            <a className="pl-6 py-4">
+              <img src="/img/logo.svg" alt="DataMap" className=" h-9" />
             </a>
           </Link>
 

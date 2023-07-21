@@ -74,6 +74,7 @@ export default function DatasetDetails(props) {
                   id="datasetTitle"
                   name="datasetTitle"
                   placeholder="Enter dataset title"
+                  className="invalid:border-error-500"
                 />
                 <ErrorMessage
                   name="datasetTitle"
