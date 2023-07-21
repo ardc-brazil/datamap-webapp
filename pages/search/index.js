@@ -136,7 +136,7 @@ function SearchPage(props) {
 
   return (
     <LoggedLayout noPadding={true} footerPropsMarginTop={false}>
-      <div className="flex flex-row gap-4">
+      <div className="flex flex-row gap-4 w-full">
         <div className="border-r pl-4 border-primary-200">
           <FilterCriteriaList filters={filters} />
         </div>

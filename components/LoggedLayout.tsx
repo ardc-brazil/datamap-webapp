@@ -73,7 +73,7 @@ export default (props: Props) => {
           </ul>
         </aside>
         <div
-          className={`w-full ${props.noPadding ? "" : "px-8 pt-8"} ${
+          className={`flex justify-center w-full ${props.noPadding ? "" : "px-8 pt-8"} ${
             menuClosed
               ? "transition-all duration-500 ease-out ml-16"
               : "transition-all duration-500 ease-out ml-64"
