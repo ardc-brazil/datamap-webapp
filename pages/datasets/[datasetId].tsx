@@ -24,7 +24,7 @@ export default function DatasetDetailsPage(props) {
 
   return (
     <LoggedLayout>
-      <div className="">
+      <div className="w-full">
         <div className="container mx-auto">
           <div className="flex flex-row py-8">
             {/* Title */}
