@@ -45,7 +45,7 @@ export default function DatasetDetails(props) {
         <Formik
           initialValues={{ datasetTitle: "" }}
           validate={(values) => {
-            const errors = {};
+            const errors = { datasetTitle: "" };
             if (!values.datasetTitle) {
               errors.datasetTitle = "Required";
             }
