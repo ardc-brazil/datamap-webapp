@@ -16,21 +16,23 @@ export default function ProfilePage() {
   if (user) {
     return (
       <LoggedLayout noPadding={false}>
-        <h2>Profile</h2>
-        <div className="py-8 mb-60">
-          <CardItem className="py-4" title="Name">
-            {user.name}
-          </CardItem>
-          <CardItem className="py-4" title="ORCID">
-            <a href={`https://orcid.org/${user.orcid}`} target="_blank">
-              {user.orcid}
-            </a>
-          </CardItem>
-          <br />
+        <div className="w-full">
+          <h2>Profile</h2>  
+          <div className="py-8 mb-60">
+            <CardItem className="py-4" title="Name">
+              {user.name}
+            </CardItem>
+            <CardItem className="py-4" title="ORCID">
+              <a href={`https://orcid.org/${user.orcid}`} target="_blank">
+                {user.orcid}
+              </a>
+            </CardItem>
+            <br />
 
-          <button className="btn-primary" onClick={signOut}>
-            Sign Out
-          </button>
+            <button className="btn-primary" onClick={signOut}>
+              Sign Out
+            </button>
+          </div>
         </div>
       </LoggedLayout>
     );
