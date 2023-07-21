@@ -18,7 +18,7 @@ export default function ProfilePage() {
       <LoggedLayout noPadding={false}>
         <div className="w-full">
           <h2>Profile</h2>  
-          <div className="py-8 mb-60">
+          <div className="py-6 mb-60">
             <CardItem className="py-4" title="Name">
               {user.name}
             </CardItem>
