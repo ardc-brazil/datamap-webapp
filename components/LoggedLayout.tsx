@@ -31,9 +31,9 @@ export default (props: Props) => {
       </Head>
 
       <main className="flex flex-nowrap flex-row">
-        <div className="fixed right-0 mr-6 mt-2">
+        {/* <div className="fixed right-0 mr-6 mt-2">
           <AvatarButton />
-        </div>
+        </div> */}
 
         <aside
           className={`flex-none w-64 h-screen overflow-auto border-r border-primary-200 ${
@@ -77,15 +77,25 @@ export default (props: Props) => {
           </ul>
         </aside>
         <div
-          className={`flex justify-center w-full ${
-            props.noPadding ? "" : "px-8 pt-8"
-          } ${
+          className={`flex flex-col justify-center w-full  ${
             menuClosed
               ? "transition-all duration-500 ease-out ml-16"
               : "transition-all duration-500 ease-out ml-64"
           }`}
         >
-          {props.children}
+          <div
+            className="flex justify-end items-center w-full h-16 pr-6 border-b border-b-primary-200 sticky top-0
+          backdrop-blur-md bg-primary-50/90 z-50"
+          >
+            <AvatarButton />
+          </div>
+          <div
+            className={`flex justify-center w-full ${
+              props.noPadding ? "" : "px-8 pt-8"
+            } `}
+          >
+            {props.children}
+          </div>
         </div>
       </main>
     </>
