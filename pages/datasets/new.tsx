@@ -1,6 +1,7 @@
 import { useState } from "react";
 import LoggedLayout from "../../components/LoggedLayout";
 import { ErrorMessage, Field, Form, Formik } from "formik";
+import { v4 as uuidv4 } from 'uuid';
 
 export default function NewPage(props) {
   function getFileUrls(data: any[]) {
@@ -118,7 +119,7 @@ export default function NewPage(props) {
   function RemoteFilesList(props) {
     const [allRemoteFiles, setAllRemoteFiles] = useState([
       {
-        id: crypto.randomUUID(),
+        id: uuidv4(),
         name: "file1",
         path: "/a/b/c/file1",
       },
@@ -132,7 +133,7 @@ export default function NewPage(props) {
       setAllRemoteFiles((prev) => [
         ...prev,
         {
-          id: crypto.randomUUID(),
+          id: uuidv4(),
           name: fileName,
           path: remoteFilePath,
         },
