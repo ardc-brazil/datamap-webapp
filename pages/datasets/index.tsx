@@ -7,7 +7,6 @@ import { filterCriteria } from "../../fake-data/filters";
 import { useEffect, useState } from "react";
 import Search from "../../lib/search";
 import { getAllDatasets } from "../../lib/datasets";
-import SearchIcon from "../../components/Icons/SearchIcon";
 
 export default function ListDatasetPage(props) {
   const [filters, setFilters] = useState(filterCriteria);
