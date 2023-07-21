@@ -1,14 +1,13 @@
 import Link from "next/link";
 
 import { getUser } from "../../lib/user";
+import AvatarButton from "../Profile/AvatarButton";
 
 export function ActionItemsNavBar() {
   const user = getUser();
   if (user) {
     return (
-      <Link href="/profile">
-        <a className="btn-primary-outline mx-2">{user.name}</a>
-      </Link>
+      <AvatarButton />
     );
   }
 
