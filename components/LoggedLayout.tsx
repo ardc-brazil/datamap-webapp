@@ -51,7 +51,7 @@ export default (props: Props) => {
                 xmlns="http://www.w3.org/2000/svg"
                 className="w-7 h-7 text-primary-900"
                 fill="none"
-                viewBox="0 24 24"
+                viewBox="0 0 24 24"
                 stroke="currentColor"
               >
                 <path strokeWidth="2" d="M5 8h18M5 13h18M5 18h18" />
