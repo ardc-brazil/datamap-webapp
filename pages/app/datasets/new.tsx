@@ -1,5 +1,5 @@
 import { useState } from "react";
-import LoggedLayout from "../../components/LoggedLayout";
+import LoggedLayout from "../../../components/LoggedLayout";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { v4 as uuidv4 } from "uuid";
 

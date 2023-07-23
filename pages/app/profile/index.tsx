@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Router, { useRouter } from "next/router";
-import { CardItem } from "../../components/DatasetDetails/CardItem";
-import LoggedLayout from "../../components/LoggedLayout";
-import { getUser, userSignOut } from "../../lib/user";
+import { CardItem } from "../../../components/DatasetDetails/CardItem";
+import LoggedLayout from "../../../components/LoggedLayout";
+import { getUser, userSignOut } from "../../../lib/user";
 
 export default function ProfilePage() {
   const user = getUser();
