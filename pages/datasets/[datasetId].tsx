@@ -67,3 +67,8 @@ export async function getServerSideProps({ req, res, query }) {
     props: { dataset }, // will be passed to the page component as props
   };
 }
+
+DatasetDetailsPage.auth = {
+  role: "admin",
+  loading: <div>loading...</div>,
+};

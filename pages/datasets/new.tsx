@@ -212,3 +212,8 @@ export default function NewPage(props) {
     );
   }
 }
+
+NewPage.auth = {
+  role: "admin",
+  loading: <div>loading...</div>,
+};

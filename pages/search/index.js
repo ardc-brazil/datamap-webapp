@@ -170,3 +170,8 @@ export async function getServerSideProps(context) {
 }
 
 export default SearchPage;
+
+SearchPage.auth = {
+  role: "admin",
+  loading: <div>loading...</div>,
+};

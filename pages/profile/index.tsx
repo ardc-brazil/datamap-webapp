@@ -59,3 +59,8 @@ export default function ProfilePage() {
     </LoggedLayout>
   );
 }
+
+ProfilePage.auth = {
+  role: "admin",
+  loading: <div>loading...</div>,
+};
