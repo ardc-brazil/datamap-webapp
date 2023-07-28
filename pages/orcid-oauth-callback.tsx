@@ -1,6 +1,5 @@
 import React from "react";
 import axios from "axios";
-// import { setUser } from "../lib/user";
 
 export default function orcidOauthCallback(props) {
   console.log("auth-data");
@@ -22,7 +21,7 @@ export async function getServerSideProps({ req, res, query }) {
 
   async function getToken() {
     try {
-      const requestData = `client_id=${clientId}&client_secret=${clientSecret}&grant_type=authorization_code&code=${authCode}&redirect_uri=${redirectUriBase}&code=${authCode}`;
+      const requestData = `client_id=${clientId}&client_secret=${clientSecret}&grant_type=authorization_code&code=${authCode}&redirect_uri=${redirectUriBase}`;
 
       const response = await axios.post(
         "https://orcid.org/oauth/token",

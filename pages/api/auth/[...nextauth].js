@@ -21,9 +21,16 @@ export const authOptions = {
       id: "orcid",
       name: "Orcid",
       type: "oauth",
-      authorization: `https://orcid.org/oauth/authorize?response_type=code&scope=/authenticate&redirect_uri=${redirectUriBase}`,
+      authorization: {
+        url: "https://orcid.org/oauth/authorize",
+        params: {
+          response_type: "code",
+          scope: "/authenticate",
+          redirect_uri: redirectUriBase
+        }
+      },
       token: "https://orcid.org/oauth/token",
-      // idToken: true,
+      idToken: true,
       // checks: ["pkce", "state"],
       clientId: process.env.OAUTH_ORCID_CLIENT_ID,
       clientSecret: process.env.OAUTH_ORCID_CLIENT_SECRET,
