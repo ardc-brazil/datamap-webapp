@@ -1,6 +1,6 @@
 import React from "react";
 import axios from "axios";
-import { setUser } from "../lib/user";
+// import { setUser } from "../lib/user";
 
 export default function orcidOauthCallback(props) {
   console.log("auth-data");
@@ -41,7 +41,7 @@ export async function getServerSideProps({ req, res, query }) {
   const data = await getToken();
   const { name, orcid } = data;
 
-  setUser({ name, orcid }, req, res);
+  // setUser({ name, orcid }, req, res);
 
   return {
     redirect: {
