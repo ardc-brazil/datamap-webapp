@@ -1,6 +1,6 @@
 import NextAuth from "next-auth"
 import GithubProvider from "next-auth/providers/github"
-import OrcidProvider from "../../../lib/orcidAuthProvider";
+import OrcidProvider from "../../../lib/OrcidOAuthProvider";
 
 
 // const authCode = query.code;
