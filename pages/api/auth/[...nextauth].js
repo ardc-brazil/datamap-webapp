@@ -26,7 +26,7 @@ export const authOptions = {
         params: {
           response_type: "code",
           // scope: "openid",
-          scope: "/authenticate /read-limited",
+          scope: "/authenticate",
           redirect_uri: redirectUriBase
         }
       },
