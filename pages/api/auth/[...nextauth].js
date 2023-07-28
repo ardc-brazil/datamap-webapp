@@ -1,5 +1,6 @@
 import NextAuth from "next-auth"
 import GithubProvider from "next-auth/providers/github"
+import OrcidProvider from "../../../lib/orcidAuthProvider";
 
 
 // const authCode = query.code;
@@ -12,43 +13,13 @@ export const authOptions = {
   // Configure one or more authentication providers
   providers: [
     GithubProvider({
-      // clientId: process.env.GITHUB_ID,
-      clientId: "86022afddf74b7be9a50",
-      // clientSecret: process.env.GITHUB_SECRET,
-      clientSecret: "b8b638a6b435c9bb93505b3dfd7f22a2911fc75d"
+      clientId: process.env.GITHUB_ID,
+      clientSecret: process.env.GITHUB_SECRET,
     }),
-    {
-      id: "orcid",
-      name: "Orcid",
-      type: "oauth",
-      authorization: {
-        url: "https://orcid.org/oauth/authorize",
-        params: {
-          response_type: "code",
-          // scope: "openid",
-          scope: "/authenticate",
-          redirect_uri: redirectUriBase
-        }
-      },
-      token: "https://orcid.org/oauth/token",
-      userinfo: {
-        url: "https://orcid.org/oauth/userinfo",
-      },
-      // idToken: true,
-      // checks: ["pkce", "state"],
+    OrcidProvider({
       clientId: process.env.OAUTH_ORCID_CLIENT_ID,
       clientSecret: process.env.OAUTH_ORCID_CLIENT_SECRET,
-      profile(profile) {
-        return {
-          id: profile.id,
-          name: profile.given_name + " " + profile.family_name,
-          orcid: profile.sub
-          // email: profile.email,
-          // image: profile.picture,
-          
-        }
-      },
-    }
+    }),
   ],
   debug: true,
   callbacks: {
