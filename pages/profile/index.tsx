@@ -1,35 +1,37 @@
 import Link from "next/link";
-import Router, { useRouter } from "next/router";
+import Router from "next/router";
 import { CardItem } from "../../components/DatasetDetails/CardItem";
 import LoggedLayout from "../../components/LoggedLayout";
-import { getUser, userSignOut } from "../../lib/user";
+
+import { signOut, useSession } from "next-auth/react";
 
 export default function ProfilePage() {
-  const user = getUser();
-  const router = useRouter();
+  const { data: session, status } = useSession();
 
-  function signOut() {
-    userSignOut();
+  function clickSignOut() {
+    signOut();
     Router.push("/");
   }
 
-  if (user) {
+  if (status === "authenticated") {
     return (
       <LoggedLayout noPadding={false}>
         <div className="w-full">
-          <h2>Profile</h2>  
+          <h2>Profile</h2>
           <div className="py-6 mb-60">
-            <CardItem className="py-4" title="Name">
-              {user.name}
+            <CardItem className="py-4" title="Image">
+              <img src={session.user.image} className="w-32 rounded border-2 border-primary-400" />
+              <span className="text-xs text-primary-300">{session.user.image}</span>
             </CardItem>
-            <CardItem className="py-4" title="ORCID">
-              <a href={`https://orcid.org/${user.orcid}`} target="_blank">
-                {user.orcid}
-              </a>
+            <CardItem className="py-4" title="Name">
+              {session.user.name}
+            </CardItem>
+            <CardItem className="py-4" title="Email">
+              {session.user.email}
             </CardItem>
             <br />
 
-            <button className="btn-primary" onClick={signOut}>
+            <button className="btn-primary" onClick={clickSignOut}>
               Sign Out
             </button>
           </div>
