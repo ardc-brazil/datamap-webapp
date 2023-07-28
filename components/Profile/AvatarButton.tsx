@@ -8,7 +8,9 @@ export default function AvatarButton() {
 
   useEffect(() => {
     if (status == "authenticated") {
-      setProfileImage(session.user.image)
+      if (session.user.image) {
+        setProfileImage(session.user.image)
+      }
     }
   }, []);
 
