@@ -30,7 +30,7 @@ export const authOptions = {
         }
       },
       token: "https://orcid.org/oauth/token",
-      idToken: true,
+      // idToken: true,
       // checks: ["pkce", "state"],
       clientId: process.env.OAUTH_ORCID_CLIENT_ID,
       clientSecret: process.env.OAUTH_ORCID_CLIENT_SECRET,
