@@ -14,7 +14,7 @@ export const authOptions = {
       clientSecret: process.env.OAUTH_ORCID_CLIENT_SECRET,
     }),
   ],
-  // debug: true,
+  debug: true,
   callbacks: {
     async jwt({ token, account }) {
       // Persist the OAuth access_token to the token right after signin
@@ -28,6 +28,13 @@ export const authOptions = {
       session.accessToken = token.accessToken
       return session
     }
+  },
+  pages: {
+    signIn: '/account/login?phase=sign-in',
+    signOut: '/profile', // TODO: create a signOut page
+    error: '/account/login?phase=sign-in', // Error code passed in query string as ?error=
+    verifyRequest: '/', // (used for check email message)
+    newUser: '/profile' // New users will be directed here on first sign in (leave the property out if not of interest)
   }
 }
 
