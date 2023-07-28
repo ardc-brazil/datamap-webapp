@@ -5,13 +5,21 @@ import { SessionProvider, useSession } from "next-auth/react";
 import type { AppProps } from "next/app";
 import Router, { useRouter } from 'next/router';
 
+interface CustomAppProps {
+  Component: AppProps["Component"] & {
+    auth: {
+      role: string
+    }
+  }
+  pageProps: AppProps["pageProps"]
+}
 
 // Use of the <SessionProvider> is mandatory to allow components that call
 // `useSession()` anywhere in your application to access the `session` object.
 export default function App({
   Component,
   pageProps: { session, ...pageProps },
-}: AppProps<{ session: Session }>) {
+}: CustomAppProps) {
   return (
     <SessionProvider session={session}  >
       {Component.auth ? (

@@ -113,8 +113,6 @@ export default function LoginPage(props) {
 
   const defaultTabIndex = getSelectedTabIndex();
 
-  console.log(props);
-
   return (
     <div className="container mx-auto flex flex-col gap-16 mt-16">
       <Link href="/">
@@ -189,5 +187,5 @@ export default function LoginPage(props) {
 
 LoginPage.getInitialProps = async ({ query }) => {
   const { callbackUrl, error } = query
-  return { callbackUrl, error }
+  return { callbackUrl: (callbackUrl ?? "/"), error }
 }
