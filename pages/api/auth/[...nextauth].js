@@ -25,7 +25,8 @@ export const authOptions = {
         url: "https://orcid.org/oauth/authorize",
         params: {
           response_type: "code",
-          scope: "openid",
+          // scope: "openid",
+          scope: "/authenticate",
           redirect_uri: redirectUriBase
         }
       },
