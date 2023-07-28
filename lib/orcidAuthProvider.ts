@@ -19,6 +19,9 @@ export default function Orcid<P extends OrcidProfile>(
         // checks: ["pkce", "state"],
         clientId: process.env.OAUTH_ORCID_CLIENT_ID,
         clientSecret: process.env.OAUTH_ORCID_CLIENT_SECRET,
+        userinfo: {
+            url: ""
+        },
         profile(profile) {
             return {
                 // id: profile.sub,

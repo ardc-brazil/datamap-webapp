@@ -25,18 +25,21 @@ export const authOptions = {
         url: "https://orcid.org/oauth/authorize",
         params: {
           response_type: "code",
-          scope: "/authenticate",
+          scope: "openid",
           redirect_uri: redirectUriBase
         }
       },
       token: "https://orcid.org/oauth/token",
-      // idToken: true,
+      // userinfo: {
+      //   url: ""
+      // },
+      idToken: true,
       // checks: ["pkce", "state"],
       clientId: process.env.OAUTH_ORCID_CLIENT_ID,
       clientSecret: process.env.OAUTH_ORCID_CLIENT_SECRET,
       profile(profile) {
         console.log("profile:", profile);
-        
+
         return {
           // id: profile.sub,
           // name: profile.name,
