@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 
 export default function AvatarButton() {
   const { data: session, status } = useSession();
-  const [profileImage, setProfileImage] = useState("/img/orcid-logo.svg");
+  const [profileImage, setProfileImage] = useState("/img/avatar-placeholder.svg");
 
   useEffect(() => {
     if (status == "authenticated") {
@@ -16,14 +16,14 @@ export default function AvatarButton() {
 
 
   function onError(currentTarget) {
-    setProfileImage("/img/orcid-logo.svg");
+    setProfileImage("/img/avatar-placeholder.svg");
   }
 
   return (
     <Link href="/profile">
       <a>
         <img
-          className="w-10 h-10 p-1 rounded-full ring-2 ring-primary-300 dark:ring-primary-500 bg-primary-50"
+          className="w-8 h-8 p-1 rounded-full ring-2 ring-primary-300 dark:ring-primary-500 bg-primary-50"
           src={profileImage}
           alt="Avatar"
           onError={onError}
