@@ -96,3 +96,10 @@ export async function getServerSideProps(context) {
   // Pass data to the page via props
   return { props: { data } };
 }
+
+
+ListDatasetPage.auth = {
+  role: "admin",
+  loading: <div>loading...</div>,
+  unauthorized: "/login-with-different-user" // redirect to this url
+};

@@ -1,8 +1,17 @@
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function AvatarButton() {
+  const { data: session, status } = useSession();
   const [profileImage, setProfileImage] = useState("/img/orcid-logo.svg");
+
+  useEffect(() => {
+    if (status == "authenticated") {
+      setProfileImage(session.user.image)
+    }
+  }, []);
+
 
   function onError(currentTarget) {
     setProfileImage("/img/orcid-logo.svg");

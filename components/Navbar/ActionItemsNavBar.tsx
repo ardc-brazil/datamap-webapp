@@ -1,11 +1,12 @@
 import Link from "next/link";
 
-import { getUser } from "../../lib/user";
 import AvatarButton from "../Profile/AvatarButton";
+import { useSession } from "next-auth/react";
 
 export function ActionItemsNavBar() {
-  const user = getUser();
-  if (user) {
+  const { data: session, status } = useSession();
+
+  if (status == "authenticated") {
     return <AvatarButton />;
   } else {
     return (
