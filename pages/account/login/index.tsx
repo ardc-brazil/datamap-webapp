@@ -128,11 +128,11 @@ export default function LoginPage(props) {
         <Tabs defaultSelectedIndex={defaultTabIndex}>
           <TabPanel title="Sign In">
             <div className="flex flex-col">
-              <button
+              {/* <button
                 type="button"
                 className="btn-primary-outline self-center font-medium text-sm px-5 py-2.5 text-center inline-flex items-center mr-2 mb-2 cursor-pointer"
                 onClick={() => signIn()}
-              >Providers</button>
+              >Providers</button> */}
               <OrcidButton callbackUrl={props.callbackUrl}>Sign in with ORCID</OrcidButton>
               <GithubButton callbackUrl={props.callbackUrl}>Sign in with GitHub</GithubButton>
               <p className="text-primary-500 text-center mt-6 text-sm">
