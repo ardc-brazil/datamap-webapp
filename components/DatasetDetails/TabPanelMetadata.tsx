@@ -1,5 +1,3 @@
-import { data } from "cypress/types/jquery";
-import React from "react";
 import { CardItem } from "./CardItem";
 import { TabPanel } from "./TabPanel";
 
