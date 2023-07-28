@@ -30,10 +30,10 @@ export const authOptions = {
         }
       },
       token: "https://orcid.org/oauth/token",
-      // userinfo: {
-      //   url: ""
-      // },
-      idToken: true,
+      userinfo: {
+        url: "https://orcid.org/oauth/userinfo",
+      },
+      // idToken: true,
       // checks: ["pkce", "state"],
       clientId: process.env.OAUTH_ORCID_CLIENT_ID,
       clientSecret: process.env.OAUTH_ORCID_CLIENT_SECRET,

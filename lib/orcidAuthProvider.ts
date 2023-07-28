@@ -20,7 +20,7 @@ export default function Orcid<P extends OrcidProfile>(
         clientId: process.env.OAUTH_ORCID_CLIENT_ID,
         clientSecret: process.env.OAUTH_ORCID_CLIENT_SECRET,
         userinfo: {
-            url: ""
+            url: "https://orcid.org/oauth/userinfo",
         },
         profile(profile) {
             return {
