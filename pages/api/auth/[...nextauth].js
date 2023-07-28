@@ -35,6 +35,8 @@ export const authOptions = {
       clientId: process.env.OAUTH_ORCID_CLIENT_ID,
       clientSecret: process.env.OAUTH_ORCID_CLIENT_SECRET,
       profile(profile) {
+        console.log("profile:", profile);
+        
         return {
           // id: profile.sub,
           // name: profile.name,
