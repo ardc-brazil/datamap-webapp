@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Router from "next/router";
-import { CardItem } from "../../components/DatasetDetails/CardItem";
-import LoggedLayout from "../../components/LoggedLayout";
+import { CardItem } from "../../../components/DatasetDetails/CardItem";
+import LoggedLayout from "../../../components/LoggedLayout";
 
 import { signOut, useSession } from "next-auth/react";
 

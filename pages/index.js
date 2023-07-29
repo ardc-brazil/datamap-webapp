@@ -13,7 +13,7 @@ function TextDecorationBolder(props) {
 
 function SearchCategory(props) {
   return (
-    <Link href="/search">
+    <Link href="/app/search">
       <div className="bg-secondary-300 rounded-xl h-48 relative group cursor-pointer">
         <div className=" grid grid-cols-1 gap-4 place-items-center h-full bg-secondary-400 rounded-xl transition ease-in delay-150 duration-300 opacity-0 group-hover:opacity-100 border-2 border-secondary-900">
           <div>

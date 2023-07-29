@@ -20,7 +20,7 @@ export default function AvatarButton() {
   }
 
   return (
-    <Link href="/profile">
+    <Link href="/app/profile">
       <a>
         <img
           className="w-8 h-8 p-1 rounded-full ring-2 ring-primary-300 dark:ring-primary-500 bg-primary-50"

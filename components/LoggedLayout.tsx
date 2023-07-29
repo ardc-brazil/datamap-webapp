@@ -68,10 +68,10 @@ export default (props: Props) => {
             <MenuItem href="/" text="Home">
               <PiechartIcon className="w-5 h-5 inline-block fill-primary-600" />
             </MenuItem>
-            <MenuItem href="/datasets" text="Datasets">
+            <MenuItem href="/app/datasets" text="Datasets">
               <DatasetIcon className="w-5 h-5 inline-block fill-primary-600" />
             </MenuItem>
-            <MenuItem href="/search" text="Search">
+            <MenuItem href="/app/search" text="Search">
               <SearchIcon className="w-5 h-5 inline-block fill-primary-600" />
             </MenuItem>
           </ul>

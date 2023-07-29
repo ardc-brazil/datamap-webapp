@@ -65,7 +65,7 @@ export function Footer(props: FooterProps) {
             <h2 className="font-light">Tools</h2>
             <ul className="px-2 py-4">
               <li>
-                <Link href="/search">
+                <Link href="/app/search">
                   <a href="#">Search</a>
                 </Link>
               </li>

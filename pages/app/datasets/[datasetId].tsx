@@ -1,11 +1,11 @@
-import { TabPanelData } from "../../components/DatasetDetails/TabPanelData";
-import { TabPanelMetadata } from "../../components/DatasetDetails/TabPanelMetadata";
-import { Tabs } from "../../components/DatasetDetails/Tabs";
+import { TabPanelData } from "../../../components/DatasetDetails/TabPanelData";
+import { TabPanelMetadata } from "../../../components/DatasetDetails/TabPanelMetadata";
+import { Tabs } from "../../../components/DatasetDetails/Tabs";
 
-import { getAllDatasets } from "../../lib/datasets";
+import { getAllDatasets } from "../../../lib/datasets";
 
-import LoggedLayout from "../../components/LoggedLayout";
-import Search from "../../lib/search";
+import LoggedLayout from "../../../components/LoggedLayout";
+import Search from "../../../lib/search";
 
 export default function DatasetDetailsPage(props) {
   function getFileUrls(data: any[]) {
