@@ -3,7 +3,7 @@ import React from "react";
 export default function DatasetIcon(props) {
   return (
     <svg
-      className={props.className}
+      className={`min-w-fit w-5 h-5 inline-block fill-primary-600 ${props.className}`}
       viewBox="0 0 327 327"
       aria-hidden="true"
       fill="currentColor"
