@@ -64,6 +64,22 @@ export default (props: Props) => {
             </Link>
           </div>
 
+          <div className="flex items-center justify-center pt-4">
+
+            {menuClosed &&
+              <Link href="/app/datasets/new">
+                <a className="btn-primary w-full mx-4 shadow-primary-600 shadow-sm text-center font-light rounded-full text-2xl">+</a>
+              </Link>
+            }
+
+            {!menuClosed && (
+              <Link href="/app/datasets/new">
+                <a className="btn-primary w-full mx-4 text-xl shadow-primary-600 shadow-sm text-center font-light">New Dataset</a>
+              </Link>
+            )}
+
+          </div>
+
           <ul className="py-4">
             <MenuItem href="/app/home" text="Home">
               <PiechartIcon />
@@ -75,7 +91,7 @@ export default (props: Props) => {
               <SearchIcon />
             </MenuItem>
           </ul>
-          <hr className="mb-4 mx-4" />
+          <hr className="mb-4" />
           <MenuItem href="/app/profile" text="Profile">
             <AvatarIcon />
           </MenuItem>
@@ -115,13 +131,13 @@ function MenuItem(props) {
   return (
     <li
       className={` ${active(props.href)
-        ? "border-r-2 border-r-primary-800 bg-primary-100"
+        ? "border-r-4 border-r-primary-800 bg-primary-200 font-bold text-primary-900"
         : ""
         } flex items-center pointer-events-auto hover:bg-primary-100 h-11`}
     >
       <Link href={props.href}>
         <a
-          className={`flex items-center mx-2 h-full w-full pl-6 group text-primary-700 font-normal`}
+          className={`flex items-center mx-2 h-full w-full pl-6 group`}
         >
           {props.children}
           <span className="ml-3">{props.text}</span>
