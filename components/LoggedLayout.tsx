@@ -38,8 +38,8 @@ export default (props: Props) => {
 
         <aside
           className={`flex-none w-64 h-screen overflow-auto border-r border-primary-200 ${menuClosed
-            ? "transition-all duration-500 ease-out w-16"
-            : "transition-all duration-500 ease-out w-64"
+            ? "transition-all duration-300 ease-out w-16"
+            : "transition-all duration-300 ease-out w-64"
             } fixed`}
         >
           <div className="flex items-center pl-4 h-16">
@@ -64,17 +64,19 @@ export default (props: Props) => {
             </Link>
           </div>
 
+          
+
           <div className="flex items-center justify-center pt-4">
 
             {menuClosed &&
               <Link href="/app/datasets/new">
-                <a className="btn-primary w-full mx-4 shadow-primary-600 shadow-sm text-center font-light rounded-full text-2xl">+</a>
+                <a className="btn-primary w-full ml-6 mr-4 shadow-primary-600 shadow-sm text-center font-light rounded-full text-2xl">+</a>
               </Link>
             }
 
             {!menuClosed && (
               <Link href="/app/datasets/new">
-                <a className="btn-primary w-full mx-4 text-xl shadow-primary-600 shadow-sm text-center font-light">New Dataset</a>
+                <a className="btn-primary w-full ml-6 mr-4 text-lg shadow-primary-600 shadow-sm text-center font-light">New Dataset</a>
               </Link>
             )}
 
