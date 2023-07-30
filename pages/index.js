@@ -1,5 +1,7 @@
-import Layout from "../components/Layout";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
+import Router from "next/router";
+import Layout from "../components/Layout";
 
 function TextDecorationBolder(props) {
   return (
@@ -13,7 +15,7 @@ function TextDecorationBolder(props) {
 
 function SearchCategory(props) {
   return (
-    <Link href="/search">
+    <Link href="/app/search">
       <div className="bg-secondary-300 rounded-xl h-48 relative group cursor-pointer">
         <div className=" grid grid-cols-1 gap-4 place-items-center h-full bg-secondary-400 rounded-xl transition ease-in delay-150 duration-300 opacity-0 group-hover:opacity-100 border-2 border-secondary-900">
           <div>
@@ -35,7 +37,7 @@ export default function HomePage() {
         <div className="container mx-auto flex flex-row flex-wrap pt-56 pb-24">
           <div className="w-full">
             <h1 className="font-bold text-8xl text-center pb-8">
-              <TextDecorationBolder>DataMap.</TextDecorationBolder>
+              <TextDecorationBolder>DataMap</TextDecorationBolder>
             </h1>
 
             <h1 className="font-normal text-7xl text-center pb-8">

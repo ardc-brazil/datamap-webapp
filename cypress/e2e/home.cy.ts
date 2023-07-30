@@ -7,7 +7,7 @@
 //     cy.get("#navbarItemSearch").click();
 
 //     // The new url should include "/about"
-//     cy.url().should("include", "/search");
+//     cy.url().should("include", "/app/search");
 //   });
 // });
 

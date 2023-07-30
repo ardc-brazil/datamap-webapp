@@ -45,7 +45,7 @@ export async function getServerSideProps({ req, res, query }) {
   return {
     redirect: {
       permanent: false,
-      destination: "/profile",
+      destination: "/app/profile",
     },
     props: { data }, // will be passed to the page component as props
   };

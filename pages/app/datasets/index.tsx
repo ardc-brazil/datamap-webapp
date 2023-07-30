@@ -1,12 +1,12 @@
 import Link from "next/link";
-import LoggedLayout from "../../components/LoggedLayout";
-import { FilterCriteriaList } from "../../components/Search/FilterCriteriaList";
-import { ListDataset } from "../../components/Search/ListDataset";
+import LoggedLayout from "../../../components/LoggedLayout";
+import { FilterCriteriaList } from "../../../components/Search/FilterCriteriaList";
+import { ListDataset } from "../../../components/Search/ListDataset";
 
-import { filterCriteria } from "../../fake-data/filters";
+import { filterCriteria } from "../../../fake-data/filters";
 import { useEffect, useState } from "react";
-import Search from "../../lib/search";
-import { getAllDatasets } from "../../lib/datasets";
+import Search from "../../../lib/search";
+import { getAllDatasets } from "../../../lib/datasets";
 
 export default function ListDatasetPage(props) {
   const [filters, setFilters] = useState(filterCriteria);
@@ -27,7 +27,7 @@ export default function ListDatasetPage(props) {
           creating, and collaborating.
         </p>
 
-        <Link href="/datasets/new">
+        <Link href="/app/datasets/new">
           <button className="btn-primary mt-2">+ New Dataset</button>
         </Link>
 

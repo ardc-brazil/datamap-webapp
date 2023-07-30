@@ -6,6 +6,7 @@ import SearchIcon from "./Icons/SearchIcon";
 import DatasetIcon from "./Icons/DatasetIcon";
 import PiechartIcon from "./Icons/PiechartIcon";
 import AvatarButton from "./Profile/AvatarButton";
+import AvatarIcon from "./Icons/AvatarIcon";
 
 interface Props {
   children?: React.ReactNode;
@@ -36,11 +37,10 @@ export default (props: Props) => {
         </div> */}
 
         <aside
-          className={`flex-none w-64 h-screen overflow-auto border-r border-primary-200 ${
-            menuClosed
-              ? "transition-all duration-500 ease-out w-16"
-              : "transition-all duration-500 ease-out w-64"
-          } fixed`}
+          className={`flex-none w-64 h-screen overflow-auto border-r border-primary-200 ${menuClosed
+            ? "transition-all duration-500 ease-out w-16"
+            : "transition-all duration-500 ease-out w-64"
+            } fixed`}
         >
           <div className="flex items-center pl-4 h-16">
             <button
@@ -54,7 +54,7 @@ export default (props: Props) => {
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path strokeWidth="2" d="M5 8h18M5 13h18M5 18h18" />
+                <path strokeWidth="2" d="M3 8h18M3 13h18M3 18h18" />
               </svg>
             </button>
             <Link href="/">
@@ -64,24 +64,43 @@ export default (props: Props) => {
             </Link>
           </div>
 
+          <div className="flex items-center justify-center pt-4">
+
+            {menuClosed &&
+              <Link href="/app/datasets/new">
+                <a className="btn-primary w-full mx-4 shadow-primary-600 shadow-sm text-center font-light rounded-full text-2xl">+</a>
+              </Link>
+            }
+
+            {!menuClosed && (
+              <Link href="/app/datasets/new">
+                <a className="btn-primary w-full mx-4 text-xl shadow-primary-600 shadow-sm text-center font-light">New Dataset</a>
+              </Link>
+            )}
+
+          </div>
+
           <ul className="py-4">
-            <MenuItem href="/" text="Home">
-              <PiechartIcon className="w-5 h-5 inline-block fill-primary-600" />
+            <MenuItem href="/app/home" text="Home">
+              <PiechartIcon />
             </MenuItem>
-            <MenuItem href="/datasets" text="Datasets">
-              <DatasetIcon className="w-5 h-5 inline-block fill-primary-600" />
+            <MenuItem href="/app/datasets" text="Datasets">
+              <DatasetIcon />
             </MenuItem>
-            <MenuItem href="/search" text="Search">
-              <SearchIcon className="w-5 h-5 inline-block fill-primary-600" />
+            <MenuItem href="/app/search" text="Search">
+              <SearchIcon />
             </MenuItem>
           </ul>
+          <hr className="mb-4" />
+          <MenuItem href="/app/profile" text="Profile">
+            <AvatarIcon />
+          </MenuItem>
         </aside>
         <div
-          className={`flex flex-col justify-center w-full  ${
-            menuClosed
-              ? "transition-all duration-500 ease-out ml-16"
-              : "transition-all duration-500 ease-out ml-64"
-          }`}
+          className={`flex flex-col justify-center w-full  ${menuClosed
+            ? "transition-all duration-500 ease-out ml-16"
+            : "transition-all duration-500 ease-out ml-64"
+            }`}
         >
           <div
             className="flex justify-end items-center w-full h-16 pr-6 border-b border-b-primary-200 sticky top-0
@@ -90,9 +109,8 @@ export default (props: Props) => {
             <AvatarButton />
           </div>
           <div
-            className={`flex justify-center w-full ${
-              props.noPadding ? "" : "px-8 pt-8"
-            } `}
+            className={`flex justify-center w-full ${props.noPadding ? "" : "px-8 pt-8"
+              } `}
           >
             {props.children}
           </div>
@@ -106,21 +124,20 @@ function MenuItem(props) {
   const router = useRouter();
 
   function active(href: string) {
-    var pathName = router.pathname.split("/");
-    return "/" + pathName[1] == href;
+    const browserPath = router.pathname.split("/").join("/");
+    return href.indexOf(browserPath) >= 0;
   }
 
   return (
     <li
-      className={` ${
-        active(props.href)
-          ? "border-r-2 border-r-primary-800 bg-primary-100"
-          : ""
-      } flex items-center pointer-events-auto hover:bg-primary-100 h-11`}
+      className={` ${active(props.href)
+        ? "border-r-4 border-r-primary-800 bg-primary-200 font-bold text-primary-900"
+        : ""
+        } flex items-center pointer-events-auto hover:bg-primary-100 h-11`}
     >
       <Link href={props.href}>
         <a
-          className={`flex items-center mx-2 h-full w-full pl-6 group text-primary-700 font-normal`}
+          className={`flex items-center mx-2 h-full w-full pl-6 group`}
         >
           {props.children}
           <span className="ml-3">{props.text}</span>

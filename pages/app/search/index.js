@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
-import LoggedLayout from "../../components/LoggedLayout";
-// import { FilterCriteria } from "../../components/Search/FilterCriteria";
-import { FilterCriteriaList } from "../../components/Search/FilterCriteriaList";
-import { filterCriteria } from "../../fake-data/filters";
+import LoggedLayout from "../../../components/LoggedLayout";
+// import { FilterCriteria } from "../../../components/Search/FilterCriteria";
+import { FilterCriteriaList } from "../../../components/Search/FilterCriteriaList";
+import { filterCriteria } from "../../../fake-data/filters";
 
-import SearchBar from "../../components/Dataset/SearchBar";
+import SearchBar from "../../../components/Dataset/SearchBar";
 
-import { EmptySearch } from "../../components/Search/EmptySearch";
-import { FilterBadges } from "../../components/Search/FilterBadges";
-import { ListDataset } from "../../components/Search/ListDataset";
-import Search from "../../lib/search";
+import { EmptySearch } from "../../../components/Search/EmptySearch";
+import { FilterBadges } from "../../../components/Search/FilterBadges";
+import { ListDataset } from "../../../components/Search/ListDataset";
+import Search from "../../../lib/search";
 
-import { getAllDatasets } from "../../lib/datasets";
+import { getAllDatasets } from "../../../lib/datasets";
 
 function SearchPage(props) {
   const [filters, setFilters] = useState(filterCriteria);
