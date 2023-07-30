@@ -19,16 +19,20 @@ export default function ProfilePage() {
         <div className="w-full">
           <h2>Profile</h2>
           <div className="py-6 mb-60">
-            <CardItem className="py-4" title="Image">
-              <img src={session.user.image} className="w-32 rounded border-2 border-primary-400" />
-              <span className="text-xs text-primary-300">{session.user.image}</span>
-            </CardItem>
+            {session.user.image &&
+              <CardItem className="py-4" title="Image">
+                <img src={session.user.image} className="w-32 rounded border-2 border-primary-400" />
+                <span className="text-xs text-primary-300">{session.user.image}</span>
+              </CardItem>
+            }
             <CardItem className="py-4" title="Name">
               {session.user.name}
             </CardItem>
-            <CardItem className="py-4" title="Email">
-              {session.user.email}
-            </CardItem>
+            {session.user.email &&
+              <CardItem className="py-4" title="Email">
+                {session.user.email}
+              </CardItem>
+            }
             <br />
 
             <button className="btn-primary" onClick={clickSignOut}>
