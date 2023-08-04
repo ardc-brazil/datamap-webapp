@@ -134,7 +134,9 @@ export default function LoginPage(props) {
                 onClick={() => signIn()}
               >Providers</button> */}
               <OrcidButton callbackUrl={props.callbackUrl}>Sign in with ORCID</OrcidButton>
-              <GithubButton callbackUrl={props.callbackUrl}>Sign in with GitHub</GithubButton>
+              {process.env.NODE_ENV == "development" &&
+                <GithubButton callbackUrl={props.callbackUrl}>Sign in with GitHub</GithubButton>
+              }
               <p className="text-primary-500 text-center mt-6 text-sm">
                 No Account? &nbsp;
                 <Link
