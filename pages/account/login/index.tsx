@@ -1,10 +1,10 @@
 import Link from "next/link";
-import React from "react";
+import Router, { useRouter } from "next/router";
 import { TabPanel } from "../../../components/DatasetDetails/TabPanel";
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
-import Router, { useRouter } from "next/router";
 
-import { signIn } from "next-auth/react"
+import { signIn } from "next-auth/react";
+import { ROUTE_PAGE_SEARCH } from "../../../contants/InternalRoutesConstants";
 
 function OrcidButton(props) {
   const appKey = "APP-1RKJOENQPVY476EF";
@@ -63,7 +63,7 @@ function GithubButton(props) {
 function EmailButton(props) {
   function onClick() {
     Router.push({
-      pathname: "/app/search",
+      pathname: ROUTE_PAGE_SEARCH,
     });
   }
   return (

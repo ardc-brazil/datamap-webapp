@@ -3,10 +3,11 @@ import LoggedLayout from "../../../components/LoggedLayout";
 import { FilterCriteriaList } from "../../../components/Search/FilterCriteriaList";
 import { ListDataset } from "../../../components/Search/ListDataset";
 
-import { filterCriteria } from "../../../fake-data/filters";
 import { useEffect, useState } from "react";
-import Search from "../../../lib/search";
+import { ROUTE_PAGE_DATASETS_NEW } from "../../../contants/InternalRoutesConstants";
+import { filterCriteria } from "../../../fake-data/filters";
 import { getAllDatasets } from "../../../lib/datasets";
+import Search from "../../../lib/search";
 
 export default function ListDatasetPage(props) {
   const [filters, setFilters] = useState(filterCriteria);
@@ -27,7 +28,7 @@ export default function ListDatasetPage(props) {
           creating, and collaborating.
         </p>
 
-        <Link href="/app/datasets/new">
+        <Link href={ROUTE_PAGE_DATASETS_NEW}>
           <button className="btn-primary mt-2">+ New Dataset</button>
         </Link>
 

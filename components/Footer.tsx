@@ -1,6 +1,6 @@
 import Link from "next/link";
-import React from "react";
 import { Props } from "../components/types/BaseInterfaces";
+import { ROUTE_PAGE_SEARCH } from "../contants/InternalRoutesConstants";
 
 export interface FooterProps extends Props {
   marginTop?: boolean;
@@ -65,7 +65,7 @@ export function Footer(props: FooterProps) {
             <h2 className="font-light">Tools</h2>
             <ul className="px-2 py-4">
               <li>
-                <Link href="/app/search">
+                <Link href={ROUTE_PAGE_SEARCH}>
                   <a href="#">Search</a>
                 </Link>
               </li>

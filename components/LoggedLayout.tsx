@@ -1,12 +1,13 @@
 import Link from "next/link";
-import Head from "../node_modules/next/head";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import SearchIcon from "./Icons/SearchIcon";
+import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_PROFILE, ROUTE_PAGE_SEARCH } from "../contants/InternalRoutesConstants";
+import Head from "../node_modules/next/head";
+import AvatarIcon from "./Icons/AvatarIcon";
 import DatasetIcon from "./Icons/DatasetIcon";
 import PiechartIcon from "./Icons/PiechartIcon";
+import SearchIcon from "./Icons/SearchIcon";
 import AvatarButton from "./Profile/AvatarButton";
-import AvatarIcon from "./Icons/AvatarIcon";
 
 interface Props {
   children?: React.ReactNode;
@@ -64,18 +65,18 @@ export default (props: Props) => {
             </Link>
           </div>
 
-          
+
 
           <div className="flex items-center justify-center pt-4">
 
             {menuClosed &&
-              <Link href="/app/datasets/new">
+              <Link href={ROUTE_PAGE_DATASETS}>
                 <a className="btn-primary w-full ml-6 mr-4 shadow-primary-600 shadow-sm text-center font-light rounded-full text-2xl">+</a>
               </Link>
             }
 
             {!menuClosed && (
-              <Link href="/app/datasets/new">
+              <Link href={ROUTE_PAGE_DATASETS_NEW}>
                 <a className="btn-primary w-full ml-6 mr-4 text-lg shadow-primary-600 shadow-sm text-center font-light">New Dataset</a>
               </Link>
             )}
@@ -86,15 +87,15 @@ export default (props: Props) => {
             <MenuItem href="/app/home" text="Home">
               <PiechartIcon />
             </MenuItem>
-            <MenuItem href="/app/datasets" text="Datasets">
+            <MenuItem href={ROUTE_PAGE_DATASETS} text="Datasets">
               <DatasetIcon />
             </MenuItem>
-            <MenuItem href="/app/search" text="Search">
+            <MenuItem href={ROUTE_PAGE_SEARCH} text="Search">
               <SearchIcon />
             </MenuItem>
           </ul>
           <hr className="mb-4" />
-          <MenuItem href="/app/profile" text="Profile">
+          <MenuItem href={ROUTE_PAGE_PROFILE} text="Profile">
             <AvatarIcon />
           </MenuItem>
         </aside>

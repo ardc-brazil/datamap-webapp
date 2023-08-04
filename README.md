@@ -84,3 +84,8 @@ Some valid values are at the [production environment](https://vercel.com/ardc-br
 
 We are using Formik to handle all forms in the aplication.
 See more <https://formik.org/>
+
+### Constants
+
+We are organizing the constants of the project in a `{Category}Contants.ts` file and well documented, following this idea:
+https://dev.to/amirfakour/tips-to-use-constants-file-in-typescript-27je

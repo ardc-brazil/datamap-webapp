@@ -1,5 +1,5 @@
-import React from "react";
 import Link from "next/link";
+import { ROUTE_PAGE_DATASETS } from "../../contants/InternalRoutesConstants";
 
 // @ts-check
 export function ListItem(props) {
@@ -14,7 +14,7 @@ export function ListItem(props) {
   }
 
   return (
-    <Link href={`/datasets/${props.data.id}`}>
+    <Link href={`${ROUTE_PAGE_DATASETS}/${props.data.id}`}>
       <a>
         <div className="flex border-b border-primary-200 hover:bg-primary-100 cursor-pointer py-6">
           <div className="px-4 place-self-center">

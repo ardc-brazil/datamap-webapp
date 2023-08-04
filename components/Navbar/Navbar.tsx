@@ -30,7 +30,7 @@ export function Navbar() {
           </Link>
 
           <nav className="hidden md:flex flex-row ml-10">
-            {/* <NavbarItem id="navbarItemSearch" href="/app/search">
+            {/* <NavbarItem id="navbarItemSearch" href={ROUTE_PAGE_SEARCH}>
               Search
             </NavbarItem> */}
             {/* <NavbarItem id="navbarItemTools" href="/tools">
@@ -42,7 +42,7 @@ export function Navbar() {
           </nav>
 
           <HiddenNav items={["Search", "Tools", "Support"]}>
-            {/* <MobileNavbarItem id="mobileNavbarItemSearch" href="/app/search">
+            {/* <MobileNavbarItem id="mobileNavbarItemSearch" href={ROUTE_PAGE_SEARCH}>
               Search
             </MobileNavbarItem> */}
             {/* <MobileNavbarItem id="mobileNavbarItemTools" href="/tools">
