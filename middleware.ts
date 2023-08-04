@@ -2,6 +2,7 @@ import { getToken } from "next-auth/jwt";
 import { createEdgeRouter } from "next-connect";
 import type { NextFetchEvent, NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { ROUTE_PAGE_HOME } from "./contants/InternalRoutesConstants";
 
 const router = createEdgeRouter<NextRequest, NextFetchEvent>();
 
@@ -10,7 +11,7 @@ router.get("/", async (request) => {
     const token = await getToken({ req: request })
 
     if (token) {
-        return NextResponse.rewrite(new URL('/app/home', request.url))
+        return NextResponse.rewrite(new URL(ROUTE_PAGE_HOME, request.url))
     }
 
     return NextResponse.next();

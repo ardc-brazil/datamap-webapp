@@ -7,6 +7,12 @@
 export const ROUTE_APP_CONTEXT = '/app';
 
 /**
+ * Route to the home internal page.
+ * @constant
+ */
+export const ROUTE_PAGE_HOME = ROUTE_APP_CONTEXT + '/home';
+
+/**
  * Route to the datasets internal page.
  * @constant
  */
