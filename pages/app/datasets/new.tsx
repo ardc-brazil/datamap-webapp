@@ -2,8 +2,16 @@ import { useState } from "react";
 import LoggedLayout from "../../../components/LoggedLayout";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
+
+import Modal from "../../../components/base/PopupModal";
+import Router from "next/router";
+import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
 
 export default function NewPage(props) {
+  const [showModal, setShowModal] = useState(false);
+  const [datasetCreateResponse, setDatasetCreateResponse] = useState(null);
+
   function getFileUrls(data: any[]) {
     if (data.length > 0) {
       return props.dataset.data[0];
@@ -16,6 +24,15 @@ export default function NewPage(props) {
       format: "netCDF",
       file_size_gb: "0.1",
     };
+  }
+
+  function datasetCreated(datasetResponse: any): void {
+    setShowModal(true);
+    setDatasetCreateResponse(datasetResponse);
+  }
+
+  function viewDataset(): void {
+    Router.push(ROUTE_PAGE_DATASETS_DETAILS(datasetCreateResponse));
   }
 
   return (
@@ -31,9 +48,10 @@ export default function NewPage(props) {
 
         <div>
           <Formik
-            initialValues={{ datasetTitle: "" }}
-            validate={(values) => {
-              const errors = { datasetTitle: "" };
+            initialValues={{ datasetTitle: '' }}
+            validate={values => {
+              const errors = {} as any;
+              console.log("alidate");
               if (!values.datasetTitle) {
                 errors.datasetTitle = "Required";
               }
@@ -41,10 +59,16 @@ export default function NewPage(props) {
               return errors;
             }}
             onSubmit={(values, { setSubmitting }) => {
-              setTimeout(() => {
-                alert(JSON.stringify(values, null, 2));
-                setSubmitting(false);
-              }, 400);
+              axios.post("/api/datasets", values)
+                .then(response => {
+                  datasetCreated({ name: values.datasetTitle, ...response.data });
+                })
+                .catch(error => {
+                  console.log(error);
+                  alert("error");
+                })
+                .finally(() => setSubmitting(false));
+
             }}
           >
             {({ isSubmitting }) => (
@@ -92,7 +116,7 @@ export default function NewPage(props) {
 
                 <hr />
                 <div className="flex justify-end items-center w-full">
-                  <button
+                  <button type="submit"
                     className="btn-primary btn-lg mt-4"
                     disabled={isSubmitting}
                   >
@@ -104,6 +128,19 @@ export default function NewPage(props) {
           </Formik>
         </div>
       </div>
+
+      <Modal
+        title="Create new Dataset"
+        show={showModal}
+        confimButtonText="View Dataset"
+        cancel={() => setShowModal(false)}
+        confim={viewDataset}
+      >
+        <p className="font-bold">The dataset '{datasetCreateResponse?.name}' was created with success!</p>
+        <p>Now, you must fill in the maximum of details about the dataset to facilitate the future
+          searches and the data quality of the data platform.</p>
+      </Modal>
+
     </LoggedLayout>
   );
 

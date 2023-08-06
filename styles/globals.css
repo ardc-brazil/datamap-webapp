@@ -55,15 +55,15 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-900 text-primary-50 font-normal text-xs py-2 px-4 hover:bg-primary-800 hover:text-primary-200 rounded outline-primary-500;
+    @apply bg-primary-900 text-primary-50 active:bg-primary-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150
   }
 
   .btn-primary-outline {
-    @apply bg-primary-50 text-primary-900 font-normal text-xs py-2 px-4 border border-primary-400 hover:bg-primary-100 rounded outline-primary-500;
+    @apply bg-primary-50 text-primary-900 active:bg-primary-200 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150
   }
 
   .btn-lg {
-    @apply py-3 text-base
+    @apply text-base px-8 py-3 shadow-md
   }
 
   .display-1 {

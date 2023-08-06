@@ -20,7 +20,7 @@ function NavbarItem(props: Props) {
 
 export function Navbar() {
   return (
-    <header className="border-b border-primary-200 sticky top-0 z-50">
+    <header className="border-b border-primary-200 sticky top-0 z-40">
       <div className="mx-auto w-full px-2 backdrop-blur-md bg-primary-50/90">
         <div className="flex items-center py-1 h-16">
           <Link href="/">

@@ -103,7 +103,7 @@ export default (props: Props) => {
         >
           <div
             className="flex justify-end items-center w-full h-16 pr-6 border-b border-b-primary-200 sticky top-0
-          backdrop-blur-md bg-primary-50/90 z-50"
+          backdrop-blur-md bg-primary-50/90 z-40"
           >
             <AvatarButton />
           </div>
