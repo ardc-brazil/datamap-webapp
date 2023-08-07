@@ -32,7 +32,6 @@ export default function App({
   )
 }
 
-
 function Auth({ children }) {
 
   const router = useRouter();

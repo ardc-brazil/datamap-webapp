@@ -1,11 +1,8 @@
 import { TabPanelData } from "../../../components/DatasetDetails/TabPanelData";
 import { TabPanelMetadata } from "../../../components/DatasetDetails/TabPanelMetadata";
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
-
-import { getAllDatasets } from "../../../lib/datasets";
-
 import LoggedLayout from "../../../components/LoggedLayout";
-import Search from "../../../lib/search";
+import { getDatasetBy } from "../../../lib/dataset";
 
 export default function DatasetDetailsPage(props) {
   function getFileUrls(data: any[]) {
@@ -56,13 +53,12 @@ export default function DatasetDetailsPage(props) {
 }
 
 export async function getServerSideProps({ req, res, query }) {
-  const datasetId = query.datasetId as String;
+  const datasetId = query.datasetId as string;
+  const dataset = await getDatasetBy(datasetId);
 
-  const data = await getAllDatasets();
-
-  const search = new Search(data);
-  const dataset = search.findOneBy(datasetId);
-
+  // TODO: Fix json return from api
+  dataset.data = JSON.parse(dataset.data.replaceAll("'", "\""));
+  
   return {
     props: { dataset }, // will be passed to the page component as props
   };

@@ -2,13 +2,17 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import auth from "../../lib/auth";
-import { createDataset } from "../../lib/dataset";
+import { createDataset, getAllDataset } from "../../lib/dataset";
 import { ResponseError } from "../../types/ResponseError";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
 router
   .use(auth)
+  .get(async (req, res) => {
+    const result = await getAllDataset();
+    res.json(result);
+  })
   .post(async (req, res) => {
     const result = await createDataset(req.body.datasetTitle);
     res.json(result);

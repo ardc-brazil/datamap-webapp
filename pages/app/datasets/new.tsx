@@ -92,8 +92,13 @@ export default function NewPage(props) {
   function handleSubmitForm(values: FormValues, actions: FormikHelpers<any>) {
     axios.post("/api/datasets", values)
       .then(response => {
-        datasetCreated({ name: values.datasetTitle, ...response.data });
-        actions.resetForm();
+        if (response.status == 200) {
+          datasetCreated({ name: values.datasetTitle, ...response.data });
+          actions.resetForm();
+        } else {
+          console.log(response);
+          alert("Sorry! Error to create a new dataset.");
+        }
       })
       .catch(error => {
         console.log(error);

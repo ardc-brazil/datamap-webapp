@@ -19,7 +19,7 @@ export function TabPanelMetadata(props: TabPanelProps) {
         <div>
           <h4 className="font-semibold py-4">Collaborators</h4>
           <ul className="py-4">
-            <li>{props.dataset.owner.name}</li>
+            <li>{props.dataset.owner?.name}</li>
             <li>{props.dataset.author?.name ?? "-"}</li>
             {props.dataset.contacts?.map((x, i) => (
               <li key={i}>{x.name}</li>

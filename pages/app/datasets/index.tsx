@@ -1,9 +1,9 @@
+import axios from "axios";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import LoggedLayout from "../../../components/LoggedLayout";
 import { FilterCriteriaList } from "../../../components/Search/FilterCriteriaList";
 import { ListDataset } from "../../../components/Search/ListDataset";
-
-import { useEffect, useState } from "react";
 import { ROUTE_PAGE_DATASETS_NEW } from "../../../contants/InternalRoutesConstants";
 import { filterCriteria } from "../../../fake-data/filters";
 import { getAllDatasets } from "../../../lib/datasets";
@@ -16,12 +16,36 @@ export default function ListDatasetPage(props) {
 
   useEffect(() => {
     setFilters(filterCriteria);
-    setItems(search.getAllData());
+    axios.get("/api/datasets")
+      .then(response => {
+        if (response.status == 200) {
+
+
+          var items = [];
+          for (let index = 0; index < response.data.length; index++) {
+            const element = response.data[index];
+            element.data = JSON.parse(element.data.replaceAll("'", "\""));
+            element.data.id = element.id;
+            items.push(element.data);
+          }
+
+          setItems(items);
+        } else {
+          console.log(response);
+          alert("Error to read datasets");
+        }
+      })
+      .catch(error => {
+        console.log(error);
+        alert("Error to read datasets");
+      });
+
   }, []);
 
   return (
     <LoggedLayout>
-      <div className="">
+      <div className="container mx-auto">
+
         <h2>Datasets</h2>
         <p className="text-primary-700">
           Explore, analyze, and share quality data. Learn more about data types,
@@ -32,7 +56,7 @@ export default function ListDatasetPage(props) {
           <button className="btn-primary mt-2">+ New Dataset</button>
         </Link>
 
-        <div className="mt-8 mb-4">
+        <div className="mt-8 mb-4 max-w-4xl">
           <form>
             <label
               htmlFor="default-search"
