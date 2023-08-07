@@ -44,19 +44,24 @@ export default function NewPage(props) {
 
   interface FormValues {
     datasetTitle?: string,
-    urls?: any[]
+    urls?: DatafilePath[]
     remoteFilesCount: number
+  }
+
+  interface DatafilePath {
+    url: string,
+    confirmed: boolean
   }
 
   const initialValues: FormValues = {
     datasetTitle: '',
-    urls: [{}],
+    urls: [{ url: '', confirmed: false }],
     remoteFilesCount: 0
   };
 
-  function validatePath(values: FormValues, value: string) {
+  function validatePath(values: FormValues, value: string, index: number, isSubmiting) {
 
-    if (values.urls?.length > 1) {
+    if (index > 0 && values.urls[index].url == '') {
       return null;
     }
 
@@ -81,16 +86,13 @@ export default function NewPage(props) {
             errors.datasetTitle = "Required";
           }
 
-          if (values.urls.length == 1 && !values.urls[0].confirmed) {
+          const confirmed = values.urls.filter(x => x && x.confirmed);
+          if (confirmed.length <= 0) {
             errors.remoteFilesCount = 'You have to informe almost one remote file.';
           }
 
-          for (let index = 0; index < values.urls.length - 1; index++) {
-            const element = values.urls[index];
-            if (!element.confirmed) {
-              errors.remoteFilesCount = 'You have to informe almost one remote file.';
-            }
-          }
+          console.log(errors);
+          console.log(values);
           return errors;
         }}
         onSubmit={(values, actions: FormikHelpers<any>) => {
@@ -165,32 +167,21 @@ export default function NewPage(props) {
                         >
                           Data files
                         </label>
-                        <p
+                        <span
                           id="helper-text-explanation"
-                          className="mt-2 text-xs text-gray-500 dark:text-gray-400"
+                          className="mt-2 text-xs text-gray-500 dark:text-gray-400 font-light"
                         >
                           List the path to the data files from remote URLs. The pattern must be <pre className="inline-block">/path/to/the/file.ext</pre>.
-                        </p>
+                        </span>
 
                         <FieldArray name="urls">
                           {({ insert, remove, push }) => {
-
-                            function newFunction(validateForm, push: any, item: any, setFieldTouched: (field: string, isTouched?: boolean, shouldValidate?: boolean) => void, index: any) {
-                              validateForm().then((error: any) => {
-                                if (!error || !error.urls || error?.urls?.length == 0) {
-                                  push({ url: '' });
-                                  item.confirmed = true;
-                                  setFieldTouched(`urls.${index}.url`, true, true);
-                                }
-                              });
-                            }
-
                             return (
                               <div>
                                 {values.urls.length > 0 &&
-                                  values.urls.map((item, index) => {
+                                  values.urls.map((item: DatafilePath, index: number) => {
 
-                                    if (item.confirmed) {
+                                    if (item?.confirmed) {
                                       if (item && item?.url) {
                                         return (
                                           <div key={index} className="flex items-center hover:bg-primary-100 px-4 border border-primary-100">
@@ -217,9 +208,8 @@ export default function NewPage(props) {
                                               className="items-center justify-center"
                                               placeholder="Informe the path to a file"
                                               validate={(value) => {
-                                                validatePath(values, value);
+                                                return validatePath(values, value, index, isSubmitting);
                                               }}
-                                              onSubmit={() => newFunction(validateForm, push, item, setFieldTouched, index)}
                                             />
 
                                             <ErrorMessage
@@ -237,7 +227,11 @@ export default function NewPage(props) {
                                             type="button"
                                             className="btn-primary btn-small mx-2 h-8 mt-1"
                                             onClick={() => {
-                                              newFunction(validateForm, push, item, setFieldTouched, index);
+                                              if (isValidPath(item?.url)) {
+                                                item.confirmed = true;
+                                                push({ url: '', confirmed: false } as DatafilePath);
+                                                setFieldTouched(`urls.${index}.url`, true, true);
+                                              }
                                             }}
                                           >
                                             <span className="whitespace-nowrap">Add File</span>
