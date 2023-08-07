@@ -23,7 +23,7 @@ export default function Alert(props: AlertProps) {
     if (props.show) {
         return (
 
-            <div className="h-fit text-primary-50 px-6 py-4 border-0 rounded relative mb-4 bg-secondary-500 z-0">
+            <div className="h-fit text-primary-50 px-6 py-4 border-0 rounded relative mb-4 bg-secondary-500 z-0 mt-4">
                 <span className="inline-block align-middle mr-8 text-primary-900">
                     {props.callout &&
                         <b className="capitalize">{props.callout}!</b>
