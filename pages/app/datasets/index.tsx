@@ -18,20 +18,29 @@ export default function ListDatasetPage(props) {
     setFilters(filterCriteria);
     axios.get("/api/datasets")
       .then(response => {
-        if (response.status == 200) {
+        try {
+          if (response.status == 200) {
+            var items = [];
+            for (let index = 0; index < response.data.length; index++) {
+              const element = response.data[index];
+              console.log(element);
+              if (element.id == "a51805f5-5f49-4b22-a74e-0ffa91db3e5a") {
+                continue;
+              }
+              element.data = JSON.parse(element.data.replaceAll("\"", "\\\"").replaceAll("'", "\""));
+              element.data.id = element.id;
+              element.data.name = element.name;
+              items.push(element.data);
+            }
 
-
-          var items = [];
-          for (let index = 0; index < response.data.length; index++) {
-            const element = response.data[index];
-            element.data = JSON.parse(element.data.replaceAll("'", "\""));
-            element.data.id = element.id;
-            items.push(element.data);
+            setItems(items);
+          } else {
+            console.log(response);
+            alert("Error to read datasets");
           }
-
-          setItems(items);
-        } else {
-          console.log(response);
+        } catch (error) {
+          debugger;
+          console.log(error);
           alert("Error to read datasets");
         }
       })
