@@ -13,24 +13,20 @@ import Modal from "../../../components/base/PopupModal";
 import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
 import { isValidPath } from "../../../lib/paths";
 
+interface FormValues {
+  datasetTitle?: string,
+  urls?: DatafilePath[]
+  remoteFilesCount: number
+}
+
+interface DatafilePath {
+  url: string,
+  confirmed: boolean
+}
 export default function NewPage(props) {
   const [showModal, setShowModal] = useState(false);
   const [datasetCreateResponse, setDatasetCreateResponse] = useState(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
-
-  function getFileUrls(data: any[]) {
-    if (data.length > 0) {
-      return props.dataset.data[0];
-    }
-
-    // default file
-    return {
-      file_type: ".nc",
-      download_path: "/OCO2GriddedXCO2_20200727_v2_1605923534.nc",
-      format: "netCDF",
-      file_size_gb: "0.1",
-    };
-  }
 
   function datasetCreated(datasetResponse: any): void {
     setShowModal(true);
@@ -40,17 +36,6 @@ export default function NewPage(props) {
 
   function viewDataset(): void {
     Router.push(ROUTE_PAGE_DATASETS_DETAILS(datasetCreateResponse));
-  }
-
-  interface FormValues {
-    datasetTitle?: string,
-    urls?: DatafilePath[]
-    remoteFilesCount: number
-  }
-
-  interface DatafilePath {
-    url: string,
-    confirmed: boolean
   }
 
   const initialValues: FormValues = {
@@ -72,44 +57,59 @@ export default function NewPage(props) {
     return null;
   }
 
+  function addDataFile(item: DatafilePath, push: any, setFieldTouched, index: number) {
+    if (isValidPath(item?.url)) {
+      item.confirmed = true;
+      push({ url: '', confirmed: false } as DatafilePath);
+      setFieldTouched(`urls.${index}.url`, true, true);
+    }
+  }
+
+  function pathName(url: string): string {
+    const r = /.*\/(.*)$/g;
+    const groups = r.exec(url);
+    return groups[1];
+  }
+
   function onAlertClose(): void {
     setShowSuccessAlert(false);
+  }
+
+  function handleValidateForm(values: FormValues) {
+    const errors = {} as any;
+    if (!values.datasetTitle) {
+      errors.datasetTitle = "Required";
+    }
+
+    const confirmed = values.urls.filter(x => x && x.confirmed);
+    if (confirmed.length <= 0) {
+      errors.remoteFilesCount = 'You have to informe almost one remote file.';
+    }
+
+    return errors;
+  }
+
+  function handleSubmitForm(values: FormValues, actions: FormikHelpers<any>) {
+    axios.post("/api/datasets", values)
+      .then(response => {
+        datasetCreated({ name: values.datasetTitle, ...response.data });
+        actions.resetForm();
+      })
+      .catch(error => {
+        console.log(error);
+        alert("Sorry! Error to create a new dataset.");
+      })
+      .finally(() => actions.setSubmitting(false));
   }
 
   return (
     <LoggedLayout noPadding={false}>
       <Formik
         initialValues={initialValues}
-        validate={(values: FormValues) => {
-          const errors = {} as any;
-          if (!values.datasetTitle) {
-            errors.datasetTitle = "Required";
-          }
-
-          const confirmed = values.urls.filter(x => x && x.confirmed);
-          if (confirmed.length <= 0) {
-            errors.remoteFilesCount = 'You have to informe almost one remote file.';
-          }
-
-          console.log(errors);
-          console.log(values);
-          return errors;
-        }}
-        onSubmit={(values, actions: FormikHelpers<any>) => {
-          axios.post("/api/datasets", values)
-            .then(response => {
-              datasetCreated({ name: values.datasetTitle, ...response.data });
-              actions.resetForm();
-            })
-            .catch(error => {
-              console.log(error);
-              alert("Sorry! Error to create a new dataset.");
-            })
-            .finally(() => actions.setSubmitting(false));
-
-        }}
+        validate={handleValidateForm}
+        onSubmit={handleSubmitForm}
       >
-        {({ isSubmitting, values, validateForm, setFieldTouched }) => (
+        {({ isSubmitting, values, setFieldTouched }) => (
           <Form>
             <LayoutFullScreen >
               <div className="max-w-2xl h-full">
@@ -145,6 +145,7 @@ export default function NewPage(props) {
                       name="datasetTitle"
                       placeholder="Enter dataset title"
                       className="invalid:border-error-500"
+                      onKeyDown={e => { e.key === 'Enter' && e.preventDefault() }}
                     />
                     <ErrorMessage
                       name="datasetTitle"
@@ -175,7 +176,7 @@ export default function NewPage(props) {
                         </span>
 
                         <FieldArray name="urls">
-                          {({ insert, remove, push }) => {
+                          {({ remove, push }) => {
                             return (
                               <div>
                                 {values.urls.length > 0 &&
@@ -186,7 +187,7 @@ export default function NewPage(props) {
                                         return (
                                           <div key={index} className="flex items-center hover:bg-primary-100 px-4 border border-primary-100">
                                             <div className="w-full">
-                                              <span>{item?.url}</span>
+                                              <span>{pathName(item?.url)}</span>
                                               <br />
                                               <span className="text-sm text-primary-500">{item?.url}</span>
                                             </div>
@@ -210,6 +211,12 @@ export default function NewPage(props) {
                                               validate={(value) => {
                                                 return validatePath(values, value, index, isSubmitting);
                                               }}
+                                              onKeyPress={e => {
+                                                if (e.which === 13) {
+                                                  addDataFile(item, push, setFieldTouched, index);
+                                                  e.preventDefault();
+                                                }
+                                              }}
                                             />
 
                                             <ErrorMessage
@@ -227,11 +234,7 @@ export default function NewPage(props) {
                                             type="button"
                                             className="btn-primary btn-small mx-2 h-8 mt-1"
                                             onClick={() => {
-                                              if (isValidPath(item?.url)) {
-                                                item.confirmed = true;
-                                                push({ url: '', confirmed: false } as DatafilePath);
-                                                setFieldTouched(`urls.${index}.url`, true, true);
-                                              }
+                                              addDataFile(item, push, setFieldTouched, index);
                                             }}
                                           >
                                             <span className="whitespace-nowrap">Add File</span>
@@ -288,7 +291,6 @@ export default function NewPage(props) {
       </Modal>
     </LoggedLayout >
   );
-
 }
 
 NewPage.auth = {
