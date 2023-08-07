@@ -22,7 +22,7 @@
     @apply leading-relaxed text-xl font-medium text-primary-900;
   }
   p {
-    @apply my-3 text-base font-normal text-primary-900;
+    @apply my-3 text-base font-light text-primary-700;
   }
   a {
     @apply text-base font-medium text-primary-900 hover:text-primary-600 outline-secondary-800;
@@ -54,18 +54,24 @@
 }
 
 @layer components {
+  
   .btn-primary {
-    @apply bg-primary-900 text-primary-50 active:bg-primary-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150
+    @apply bg-primary-900 text-primary-50 active:bg-primary-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg mr-1 mb-1 ease-linear transition-all duration-150 outline-1 outline-offset-2 focus:outline-primary-900
   }
 
   .btn-primary-outline {
-    @apply bg-primary-50 text-primary-900 active:bg-primary-200 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150
+    @apply bg-primary-50 text-primary-900 active:bg-primary-200 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg mr-1 mb-1 ease-linear transition-all duration-150 outline-1 outline-offset-2 focus:outline-primary-900
+  }
+
+  .btn-small {
+    @apply text-xs px-4 py-2 hover:shadow-md 
   }
 
   .btn-lg {
     @apply text-base px-8 py-3 shadow-md
   }
 
+  
   .display-1 {
     @apply text-8xl font-light;
   }

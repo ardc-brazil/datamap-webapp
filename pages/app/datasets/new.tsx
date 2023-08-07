@@ -1,16 +1,22 @@
+import axios from "axios";
+import { ErrorMessage, Field, FieldArray, Form, Formik, FormikHelpers } from "formik";
 import { useState } from "react";
 import LoggedLayout from "../../../components/LoggedLayout";
-import { ErrorMessage, Field, Form, Formik } from "formik";
-import { v4 as uuidv4 } from "uuid";
-import axios from "axios";
 
-import Modal from "../../../components/base/PopupModal";
 import Router from "next/router";
-import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
+import { TabPanel } from "../../../components/DatasetDetails/TabPanel";
+import { Tabs } from "../../../components/DatasetDetails/Tabs";
+import LayoutFullScreen from "../../../components/LayoutFullScreen";
+import Alert from "../../../components/base/Alert";
+import CloseButton from "../../../components/base/CloseButton";
+import Modal from "../../../components/base/PopupModal";
+import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
+import { isValidPath } from "../../../lib/paths";
 
 export default function NewPage(props) {
   const [showModal, setShowModal] = useState(false);
   const [datasetCreateResponse, setDatasetCreateResponse] = useState(null);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
   function getFileUrls(data: any[]) {
     if (data.length > 0) {
@@ -28,6 +34,7 @@ export default function NewPage(props) {
 
   function datasetCreated(datasetResponse: any): void {
     setShowModal(true);
+    setShowSuccessAlert(true);
     setDatasetCreateResponse(datasetResponse);
   }
 
@@ -35,99 +42,242 @@ export default function NewPage(props) {
     Router.push(ROUTE_PAGE_DATASETS_DETAILS(datasetCreateResponse));
   }
 
+  interface FormValues {
+    datasetTitle?: string,
+    urls?: any[]
+    remoteFilesCount: number
+  }
+
+  const initialValues: FormValues = {
+    datasetTitle: '',
+    urls: [{}],
+    remoteFilesCount: 0
+  };
+
+  function validatePath(values: FormValues, value: string) {
+
+    if (values.urls?.length > 1) {
+      return null;
+    }
+
+    if (!isValidPath(value)) {
+      return 'Invalid path. Pattern: /path/to/the/file.ext'
+    }
+
+    return null;
+  }
+
+  function onAlertClose(): void {
+    setShowSuccessAlert(false);
+  }
+
   return (
     <LoggedLayout noPadding={false}>
-      <div className="max-w-3xl">
-        <h2>New Dataset</h2>
-        <p>Create a new dataset informing a title and remote data files.</p>
-        <p className="text-xs ">
-          A dataset refers to a collection of data that is organized and
-          structured for a specific purpose. It can consist of various types of
-          information such as text, numbers, images, audio, or video.
-        </p>
+      <Formik
+        initialValues={initialValues}
+        validate={(values: FormValues) => {
+          const errors = {} as any;
+          if (!values.datasetTitle) {
+            errors.datasetTitle = "Required";
+          }
 
-        <div>
-          <Formik
-            initialValues={{ datasetTitle: '' }}
-            validate={values => {
-              const errors = {} as any;
-              console.log("alidate");
-              if (!values.datasetTitle) {
-                errors.datasetTitle = "Required";
-              }
+          if (values.urls.length == 1 && !values.urls[0].confirmed) {
+            errors.remoteFilesCount = 'You have to informe almost one remote file.';
+          }
 
-              return errors;
-            }}
-            onSubmit={(values, { setSubmitting }) => {
-              axios.post("/api/datasets", values)
-                .then(response => {
-                  datasetCreated({ name: values.datasetTitle, ...response.data });
-                })
-                .catch(error => {
-                  console.log(error);
-                  alert("error");
-                })
-                .finally(() => setSubmitting(false));
+          for (let index = 0; index < values.urls.length - 1; index++) {
+            const element = values.urls[index];
+            if (!element.confirmed) {
+              errors.remoteFilesCount = 'You have to informe almost one remote file.';
+            }
+          }
+          return errors;
+        }}
+        onSubmit={(values, actions: FormikHelpers<any>) => {
+          axios.post("/api/datasets", values)
+            .then(response => {
+              datasetCreated({ name: values.datasetTitle, ...response.data });
+              actions.resetForm();
+            })
+            .catch(error => {
+              console.log(error);
+              alert("Sorry! Error to create a new dataset.");
+            })
+            .finally(() => actions.setSubmitting(false));
 
-            }}
-          >
-            {({ isSubmitting }) => (
-              <Form>
-                <div className="p-2 my-2">
-                  <label
-                    htmlFor="datasetTitle"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Dataset title
-                  </label>
+        }}
+      >
+        {({ isSubmitting, values, validateForm, setFieldTouched }) => (
+          <Form>
+            <LayoutFullScreen >
+              <div className="max-w-2xl h-full">
+                <Alert callout="Success" show={showSuccessAlert} closed={onAlertClose}>
+                  <p className="font-bold">The dataset '{datasetCreateResponse?.name}' was created with success!</p>
+                  <p>Now, you must fill in the maximum of details about the dataset to facilitate the future
+                    searches and the data quality of the data platform.</p>
+                </Alert>
+                <h2 className="font-bold">New Dataset</h2>
+                <p>Create a new dataset informing a title and remote data files.</p>
+                <p className="text-xs">
+                  A dataset refers to a collection of data that is organized and
+                  structured for a specific purpose. It can consist of various types of
+                  information such as text, numbers, images, audio, or video.
+                </p>
 
-                  <Field
-                    type="text"
-                    id="datasetTitle"
-                    name="datasetTitle"
-                    placeholder="Enter dataset title"
-                    className="invalid:border-error-500"
-                  />
-                  <ErrorMessage
-                    name="datasetTitle"
-                    component="div"
-                    className="text-xs text-error-600"
-                  />
-                </div>
-
-                <hr />
-                <div className="p-2 my-2">
-                  <label
-                    htmlFor="path"
-                    className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Remote files
-                  </label>
-                  <p
-                    id="helper-text-explanation"
-                    className="mt-2 text-xs text-gray-500 dark:text-gray-400"
-                  >
-                    Create a dataset from remote URLs. URLs must point to a
-                    file.
+                <div className="mt-8">
+                  <h6 className=" font-bold">Dataset Identification</h6>
+                  <p className="text-xs">
+                    Give a unique name for your dataset that will be easy to identify and understand the meaning and possible uses for it.
                   </p>
+                  <div className="my-2">
+                    <label
+                      htmlFor="datasetTitle"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      Dataset title
+                    </label>
 
-                  <RemoteFilesList />
+                    <Field
+                      type="text"
+                      id="datasetTitle"
+                      name="datasetTitle"
+                      placeholder="Enter dataset title"
+                      className="invalid:border-error-500"
+                    />
+                    <ErrorMessage
+                      name="datasetTitle"
+                      component="div"
+                      className="text-xs text-error-600"
+                    />
+
+                  </div>
+
+                  <h6 className="font-bold">Data files</h6>
+                  <p className="text-xs">
+                    Your dataset is composed of data files. You have to list all data files that compose your dataset using the options bellow.
+                  </p>
+                  <div className="my-2">
+                    <Tabs>
+                      <TabPanel title="Remote files">
+                        <label
+                          htmlFor="path"
+                          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >
+                          Data files
+                        </label>
+                        <p
+                          id="helper-text-explanation"
+                          className="mt-2 text-xs text-gray-500 dark:text-gray-400"
+                        >
+                          List the path to the data files from remote URLs. The pattern must be <pre className="inline-block">/path/to/the/file.ext</pre>.
+                        </p>
+
+                        <FieldArray name="urls">
+                          {({ insert, remove, push }) => {
+
+                            function newFunction(validateForm, push: any, item: any, setFieldTouched: (field: string, isTouched?: boolean, shouldValidate?: boolean) => void, index: any) {
+                              validateForm().then((error: any) => {
+                                if (!error || !error.urls || error?.urls?.length == 0) {
+                                  push({ url: '' });
+                                  item.confirmed = true;
+                                  setFieldTouched(`urls.${index}.url`, true, true);
+                                }
+                              });
+                            }
+
+                            return (
+                              <div>
+                                {values.urls.length > 0 &&
+                                  values.urls.map((item, index) => {
+
+                                    if (item.confirmed) {
+                                      if (item && item?.url) {
+                                        return (
+                                          <div key={index} className="flex items-center hover:bg-primary-100 px-4 border border-primary-100">
+                                            <div className="w-full">
+                                              <span>{item?.url}</span>
+                                              <br />
+                                              <span className="text-sm text-primary-500">{item?.url}</span>
+                                            </div>
+                                            <CloseButton onClick={() => {
+                                              remove(index);
+                                              setFieldTouched(`urls.${index}.url`, true, true)
+                                            }} />
+                                          </div>
+                                        );
+                                      }
+                                    } else {
+
+                                      return (
+                                        <div key={index} className="flex mt-4 justify-center items-start">
+                                          <div className="w-full">
+                                            <Field
+                                              name={`urls.${index}.url`}
+                                              type="text"
+                                              className="items-center justify-center"
+                                              placeholder="Informe the path to a file"
+                                              validate={(value) => {
+                                                validatePath(values, value);
+                                              }}
+                                              onSubmit={() => newFunction(validateForm, push, item, setFieldTouched, index)}
+                                            />
+
+                                            <ErrorMessage
+                                              name={`urls.${index}.url`}
+                                              component="div"
+                                              className="text-xs text-error-600"
+                                            />
+                                            <ErrorMessage
+                                              name='remoteFilesCount'
+                                              component="div"
+                                              className="text-xs text-error-600"
+                                            />
+                                          </div>
+                                          <button
+                                            type="button"
+                                            className="btn-primary btn-small mx-2 h-8 mt-1"
+                                            onClick={() => {
+                                              newFunction(validateForm, push, item, setFieldTouched, index);
+                                            }}
+                                          >
+                                            <span className="whitespace-nowrap">Add File</span>
+                                          </button>
+                                        </div>
+                                      );
+                                    }
+                                  })
+                                }
+                              </div>
+                            );
+                          }}
+                        </FieldArray>
+                      </TabPanel>
+                      <TabPanel title="AWS S3">
+                        <div className="text-center">
+                          <h4> Unavaible, <span className="text-primary-400">for while</span>!</h4>
+                          <p>We are working in this feature yet. But is good to know that you need this.</p>
+                        </div>
+                      </TabPanel>
+                    </Tabs>
+                  </div>
                 </div>
+              </div>
 
-                <hr />
-                <div className="flex justify-end items-center w-full">
+              <div className="w-full h-24 border-t border-primary-200 ">
+                <div className="container mx-auto max-w-3xl flex justify-end">
                   <button type="submit"
-                    className="btn-primary btn-lg mt-4"
+                    className="btn-primary mt-4"
                     disabled={isSubmitting}
                   >
-                    Create
+                    Create Dataset
                   </button>
                 </div>
-              </Form>
-            )}
-          </Formik>
-        </div>
-      </div>
+              </div>
+
+            </LayoutFullScreen>
+          </Form>
+        )}
+      </Formik>
 
       <Modal
         title="Create new Dataset"
@@ -136,118 +286,15 @@ export default function NewPage(props) {
         cancel={() => setShowModal(false)}
         confim={viewDataset}
       >
-        <p className="font-bold">The dataset '{datasetCreateResponse?.name}' was created with success!</p>
-        <p>Now, you must fill in the maximum of details about the dataset to facilitate the future
-          searches and the data quality of the data platform.</p>
+        <div>
+          <p className="font-bold">The dataset '{datasetCreateResponse?.name}' was created with success!</p>
+          <p>Now, you must fill in the maximum of details about the dataset to facilitate the future
+            searches and the data quality of the data platform.</p>
+        </div>
       </Modal>
-
-    </LoggedLayout>
+    </LoggedLayout >
   );
 
-  function RemoteFilesList(props) {
-    const [allRemoteFiles, setAllRemoteFiles] = useState([
-      {
-        id: uuidv4(),
-        name: "file1",
-        path: "/a/b/c/file1",
-      },
-    ]);
-    const [remoteFilePath, setRemoteFilePath] = useState("");
-
-    function onAddRemoteFile(): void {
-      const tokens = remoteFilePath.split("/");
-      const fileName = tokens[tokens.length - 1];
-
-      setAllRemoteFiles((prev) => [
-        ...prev,
-        {
-          id: uuidv4(),
-          name: fileName,
-          path: remoteFilePath,
-        },
-      ]);
-    }
-
-    function onTextChange(e: React.ChangeEvent<HTMLInputElement>) {
-      setRemoteFilePath(e.target.value);
-    }
-
-    function onInputEnterSearch(e: React.KeyboardEvent) {
-      if (e.key === "Enter") {
-        onAddRemoteFile();
-      }
-    }
-
-    function onRemoteRemoteFile(fileId: string) {
-      console.log(fileId);
-      const removed = allRemoteFiles.filter((item) => item.id != fileId);
-      console.log(removed);
-      setAllRemoteFiles(removed);
-    }
-    return (
-      <div className="mt-4">
-        {allRemoteFiles.length > 0 && (
-          <div className="mb-4">
-            {allRemoteFiles.map((file, index) => (
-              <RemoteFileItem
-                key={index}
-                id={file.id}
-                name={file.name}
-                path={file.path}
-                onRemoteRemoteFile={onRemoteRemoteFile}
-              />
-            ))}
-          </div>
-        )}
-        {/* <span className="text-sm">Files: {allRemoteFiles.length}</span> */}
-
-        <div className="flex items-center my-4">
-          <div className="relative w-full">
-            <input
-              type="text"
-              id="path"
-              placeholder="Informe the path to a file"
-              onChange={onTextChange}
-              onKeyDown={onInputEnterSearch}
-            />
-          </div>
-          <button
-            type="button"
-            className="btn-primary ml-4 w-28 rounded-2xl"
-            onClick={onAddRemoteFile}
-          >
-            <span className="w-full inline-block">Add File</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  function RemoteFileItem(props): JSX.Element {
-    function onRemove(): void {
-      props.onRemoteRemoteFile(props.id);
-    }
-
-    return (
-      <div className="flex items-center hover:bg-primary-100 px-4 border border-primary-100">
-        <div className="w-full">
-          <span>{props.name}</span>
-          <br />
-          <span className="text-sm text-primary-500">{props.path}</span>
-        </div>
-        <button
-          className="btn-primary-outline border rounded-full w-8 h-8 text-center py-0 px-0"
-          onClick={onRemove}
-        >
-          <div className="text-primary-500 hover:text-primary-900">
-            <svg className="w-7 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-            </svg>
-          </div>
-        </button>
-      </div>
-    );
-  }
 }
 
 NewPage.auth = {

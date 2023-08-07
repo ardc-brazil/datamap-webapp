@@ -32,10 +32,6 @@ export default (props: Props) => {
       </Head>
 
       <main className="flex flex-nowrap flex-row">
-        {/* <div className="fixed right-0 mr-6 mt-2">
-          <AvatarButton />
-        </div> */}
-
         <aside
           className={`flex-none w-64 h-screen overflow-auto border-r border-primary-200 ${menuClosed
             ? "transition-all duration-300 ease-out w-16"
@@ -76,7 +72,7 @@ export default (props: Props) => {
 
             {!menuClosed && (
               <Link href={ROUTE_PAGE_DATASETS_NEW}>
-                <a className="btn-primary w-full ml-6 mr-4 text-lg shadow-primary-600 shadow-sm text-center font-light">New Dataset</a>
+                <a className="btn-primary w-full ml-6 mr-4 text-center">New Dataset</a>
               </Link>
             )}
 
