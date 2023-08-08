@@ -55,10 +55,8 @@ export default function DatasetDetailsPage(props) {
 export async function getServerSideProps({ req, res, query }) {
   const datasetId = query.datasetId as string;
   const dataset = await getDatasetBy(datasetId);
+  dataset.data = JSON.parse(dataset.data);
 
-  // TODO: Fix json return from api
-  dataset.data = JSON.parse(dataset.data.replaceAll("'", "\""));
-  
   return {
     props: { dataset }, // will be passed to the page component as props
   };

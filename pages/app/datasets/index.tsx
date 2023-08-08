@@ -24,10 +24,7 @@ export default function ListDatasetPage(props) {
             for (let index = 0; index < response.data.length; index++) {
               const element = response.data[index];
               console.log(element);
-              if (element.id == "a51805f5-5f49-4b22-a74e-0ffa91db3e5a") {
-                continue;
-              }
-              element.data = JSON.parse(element.data.replaceAll("\"", "\\\"").replaceAll("'", "\""));
+              element.data = JSON.parse(element.data);
               element.data.id = element.id;
               element.data.name = element.name;
               items.push(element.data);
