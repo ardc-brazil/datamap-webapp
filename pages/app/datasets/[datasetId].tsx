@@ -24,7 +24,7 @@ export default function DatasetDetailsPage(props) {
           </div>
         </div>
         <div className="container mx-auto">
-          <Tabs>
+          <Tabs className="py-8">
             <TabPanelData title="Data" dataset={props.dataset} />
             <TabPanelMetadata title="Metadata" dataset={props.dataset} />
           </Tabs>
@@ -73,9 +73,9 @@ function DownloadDatafilesButton(props: any) {
       </button>
 
       <div ref={ref} className={`${!isComponentVisible && "hidden"} absolute top-12 bg-primary-50 w-full border border-primary-200 shadow-sm shadow-primary-300 rounded-md`}>
-        <Tabs>
+        <Tabs className="px-4 pb-4">
           <TabPanel title="Remote files">
-            <div className="text-left px-2">
+            <div className="text-left">
               <p className="text-sm">You can copy the dataset folder directly from the server.</p>
               <div className="flex">
                 <div className="relative w-full">

@@ -125,7 +125,7 @@ export default function LoginPage(props) {
       }
 
       <div className="w-4/12 h-fit border border-primary-200 self-center rounded">
-        <Tabs defaultSelectedIndex={defaultTabIndex}>
+        <Tabs className="py-8" defaultSelectedIndex={defaultTabIndex}>
           <TabPanel title="Sign In">
             <div className="flex flex-col">
               {/* <button

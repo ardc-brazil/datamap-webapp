@@ -3,6 +3,7 @@ import { Props } from "../../components/types/BaseInterfaces";
 import { Tab } from "./Tab";
 
 interface TabsProps extends Props {
+  className?: string;
   defaultSelectedIndex?: number;
 }
 export function Tabs(props: TabsProps) {
@@ -33,7 +34,7 @@ export function Tabs(props: TabsProps) {
         </ul>
       </div>
 
-      <div className="py-8">{props.children[tabSelected]}</div>
+      <div className={props.className}>{props.children[tabSelected]}</div>
     </div>
   );
 }
