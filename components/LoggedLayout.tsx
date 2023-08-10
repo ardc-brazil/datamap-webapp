@@ -66,13 +66,13 @@ export default (props: Props) => {
 
             {menuClosed &&
               <Link href={ROUTE_PAGE_DATASETS}>
-                <a className="btn-primary w-full ml-6 mr-4 shadow-primary-600 shadow-sm text-center font-light rounded-full text-2xl">+</a>
+                <a className="btn-primary w-12 h-12 ml-6 mr-4 px-4 py-2 shadow-primary-600 shadow-sm text-center font-light rounded-full text-2xl">+</a>
               </Link>
             }
 
             {!menuClosed && (
               <Link href={ROUTE_PAGE_DATASETS_NEW}>
-                <a className="btn-primary w-full ml-6 mr-4 text-center">New Dataset</a>
+                <a className="btn-primary w-full ml-6 mr-4 text-center whitespace-nowrap">New Dataset</a>
               </Link>
             )}
 
