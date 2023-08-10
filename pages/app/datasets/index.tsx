@@ -7,10 +7,12 @@ import { ListDataset } from "../../../components/Search/ListDataset";
 import { ROUTE_PAGE_DATASETS_NEW } from "../../../contants/InternalRoutesConstants";
 import { filterCriteria } from "../../../fake-data/filters";
 import { getAllDatasets } from "../../../lib/datasets";
+import { EmptySearch } from "../../../components/Search/EmptySearch";
 
 export default function ListDatasetPage(props) {
   const [filters, setFilters] = useState(filterCriteria);
   const [items, setItems] = useState([]);
+  const [loadingDatasetsMessage, setLoadingDatasetsMessage] = useState("Loading datasets...");
 
   useEffect(() => {
     setFilters(filterCriteria);
@@ -25,7 +27,11 @@ export default function ListDatasetPage(props) {
               element.data.name = element.name;
               i.push(element);
             }
-            setItems(i);
+            // setItems(i);
+
+            if (i.length <= 0) {
+              setLoadingDatasetsMessage("No datasets found");
+            }
           } else {
             console.log(response);
             alert("Error to read datasets");
@@ -104,8 +110,7 @@ export default function ListDatasetPage(props) {
             <FilterCriteriaList filters={filters} />
             <div className="col-span-9 basis-full px-4 min-h-screen max-w-screen-lg">
               <div>
-                {/* <EmptySearch /> */}
-                <ListDataset data={items} />
+                {items.length > 0 ? <ListDataset data={items} /> : <EmptySearch>{loadingDatasetsMessage}</EmptySearch>}
               </div>
             </div>
           </div>

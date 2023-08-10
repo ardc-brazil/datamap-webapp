@@ -7,15 +7,6 @@ import useComponentVisible from "../../../hooks/UseComponentVisible";
 import { getDatasetBy } from "../../../lib/dataset";
 
 export default function DatasetDetailsPage(props) {
-  function getFileUrls(data: any[]) {
-    if (data.length > 0) {
-      return props.dataset.dataFiles[0];
-    }
-
-
-    return null;
-  }
-
   return (
     <LoggedLayout>
       <div className="w-full">
