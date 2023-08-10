@@ -27,7 +27,7 @@ export default function ListDatasetPage(props) {
               element.data.name = element.name;
               i.push(element);
             }
-            // setItems(i);
+            setItems(i);
 
             if (i.length <= 0) {
               setLoadingDatasetsMessage("No datasets found");
