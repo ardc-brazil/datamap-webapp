@@ -14,7 +14,7 @@ router
     res.json(result);
   })
   .post(async (req, res) => {
-    const result = await createDataset(req.body.datasetTitle);
+    const result = await createDataset(req.body);
     res.json(result);
   });
 

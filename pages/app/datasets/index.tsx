@@ -7,12 +7,10 @@ import { ListDataset } from "../../../components/Search/ListDataset";
 import { ROUTE_PAGE_DATASETS_NEW } from "../../../contants/InternalRoutesConstants";
 import { filterCriteria } from "../../../fake-data/filters";
 import { getAllDatasets } from "../../../lib/datasets";
-import Search from "../../../lib/search";
 
 export default function ListDatasetPage(props) {
   const [filters, setFilters] = useState(filterCriteria);
   const [items, setItems] = useState([]);
-  const search = new Search(props.data);
 
   useEffect(() => {
     setFilters(filterCriteria);
@@ -20,17 +18,14 @@ export default function ListDatasetPage(props) {
       .then(response => {
         try {
           if (response.status == 200) {
-            var items = [];
-            for (let index = 0; index < response.data.length; index++) {
-              const element = response.data[index];
-              console.log(element);
+            var i = [];
+            for (const element of response.data?.content) {
               element.data = JSON.parse(element.data);
               element.data.id = element.id;
               element.data.name = element.name;
-              items.push(element.data);
+              i.push(element);
             }
-
-            setItems(items);
+            setItems(i);
           } else {
             console.log(response);
             alert("Error to read datasets");

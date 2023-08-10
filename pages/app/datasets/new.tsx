@@ -90,7 +90,10 @@ export default function NewPage(props) {
   }
 
   function handleSubmitForm(values: FormValues, actions: FormikHelpers<any>) {
-    axios.post("/api/datasets", values)
+    const datasetInfo = values;
+    datasetInfo.urls = datasetInfo.urls.filter(x => x.confirmed);
+
+    axios.post("/api/datasets", datasetInfo)
       .then(response => {
         if (response.status == 200) {
           datasetCreated({ name: values.datasetTitle, ...response.data });

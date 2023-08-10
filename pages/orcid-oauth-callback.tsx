@@ -2,9 +2,6 @@ import React from "react";
 import axios from "axios";
 
 export default function orcidOauthCallback(props) {
-  console.log("auth-data");
-  console.log(props.data);
-
   return (
     <div>
       <p>Erro to authenticate:</p>

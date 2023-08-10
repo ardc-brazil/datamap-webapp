@@ -117,6 +117,7 @@ export function TabPanelData(props: TabPanelProps) {
   useEffect(() => {
     setLoading(true);
     setTimeout(() => {
+      // TODO: Create endpoints to get data quality information.
       setData({
         usability: "8.75",
         license: "CC BY-SA 4.0",
@@ -155,13 +156,13 @@ export function TabPanelData(props: TabPanelProps) {
             </article>
           </ExpansibleDiv>
 
-          {props.dataset.data && props.dataset.data.length > 0 && (
+          {props.dataset.dataFiles && props.dataset.dataFiles.length > 0 && (
             <div className="mt-4">
               <h5 className="font-bold">Data Explorer</h5>
               <ul className="list-disc list-inside py-4">
-                {props.dataset.data?.map((x, i) => (
+                {props.dataset.dataFiles?.map((x, i) => (
                   <li className="pl-4" key={i}>
-                    <a href={x.download_path} download>{x.download_path}</a>
+                    <a href={x.path} download>{x.path}</a>
                   </li>
                 ))}
               </ul>

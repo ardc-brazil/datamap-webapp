@@ -1,44 +1,28 @@
 
 import axiosInstance from "./rpc";
+import { DatasetRequest, DataFile, DatasetInfo } from "../types/GatekeeperAPI";
+import { CreateDatasetRequest, CreateDatasetResponse, DatasetDetailsResponse, DatasetListResponsePaged } from "../types/BffAPI";
 
-interface Metadata {
-    id: string;
-    name: string;
-    description: string;
-    source: string;
-    created_at: string;
-    dataset_file: string;
-}
-
-function toData(metadata: Metadata) {
-    var fileData = [
-        {
-            file_type: "",
-            download_path: metadata.dataset_file,
-            format: "",
-            file_size_gb: "0.1",
-        },
-    ];
-
-    if (!metadata.dataset_file || metadata.dataset_file == "") {
-        fileData = [];
-    }
+function toDatasetInfo(datasetRequest: CreateDatasetRequest): DatasetInfo {
+    const dataFiles = datasetRequest.urls.map(
+        x => ({ path: x.url } as DataFile)
+    );
 
     return {
-        id: metadata.id,
-        name: metadata.name,
+        id: "",
+        name: datasetRequest.datasetTitle,
         database: "",
-        creation_date: metadata.created_at,
+        creation_date: new Date(),
         license: "",
-        description: metadata.description,
+        description: "",
         realm: "",
         version: "",
         project: "",
         source_instrument: "",
-        source: metadata.source,
+        source: "",
         institution: "",
-        start_date: "",
-        end_date: "",
+        start_date: new Date(1970, 1, 1),
+        end_date: new Date(1970, 1, 1),
         tags: [],
         category: "AEROSOLS",
         data_type: "",
@@ -46,42 +30,37 @@ function toData(metadata: Metadata) {
         location: {
             location: "Global",
         },
-        owner: {
-            name: "",
-        },
-        author: {
-            name: "",
-        },
-        contacts: [
-            {
-                name: "",
-            },
-        ],
-        reference: [""],
-        data: fileData,
-        additional_information: [""],
+        // TODO: get this from logged user
+        owner: null,
+        // TODO: get this from logged user
+        author: null,
+        contacts: null,
+        reference: [],
+        dataFiles: dataFiles,
+        additional_information: [],
         level: "",
         resolution: {
             temporal: "",
             spatial: "",
         },
         variables: [],
+        is_enabled: true
     };
 }
 
-export async function createDataset(title: string) {
+/**
+ * Create a new dataset.
+ * @param datasetRequest minimum info to create a dataset
+ * @returns CreateDatasetResponse
+ */
+export async function createDataset(datasetRequest: CreateDatasetRequest): Promise<CreateDatasetResponse> {
     try {
+        const request = {
+            name: datasetRequest.datasetTitle,
+            data: toDatasetInfo(datasetRequest)
+        } as DatasetRequest;
 
-        const metadata = {
-            name: title
-        } as Metadata;
-
-        const data = {
-            name: title,
-            data: toData(metadata)
-        }
-
-        const response = await axiosInstance.post("/datasets", data);
+        const response = await axiosInstance.post("/datasets", request);
 
         return response.data;
     } catch (error) {
@@ -89,19 +68,34 @@ export async function createDataset(title: string) {
     }
 }
 
-export async function getDatasetBy(id: string) {
+/**
+ * Get a dataset details.
+ * @param id dataset id
+ * @returns Dataset
+ */
+export async function getDatasetBy(id: string): Promise<DatasetDetailsResponse> {
     try {
         const response = await axiosInstance.get("/datasets/" + id);
-        return response.data;
+        const dataset = JSON.parse(response.data.data) as DatasetDetailsResponse;
+        dataset.id = response.data.id;
+        dataset.name = response.data.name;
+        dataset.is_enabled = response.data.is_enabled;
+
+        return dataset;
+
     } catch (error) {
         return error.response;
     }
 }
 
-export async function getAllDataset() {
+export async function getAllDataset(): Promise<DatasetListResponsePaged> {
     try {
         const response = await axiosInstance.get("/datasets/");
-        return response.data;
+
+        return {
+            content: response.data,
+            size: (response.data as [])?.length
+        }
     } catch (error) {
         return error.response;
     }
