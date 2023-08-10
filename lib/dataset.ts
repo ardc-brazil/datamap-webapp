@@ -1,7 +1,7 @@
 
-import axiosInstance from "./rpc";
-import { DatasetRequest, DataFile, DatasetInfo } from "../types/GatekeeperAPI";
 import { CreateDatasetRequest, CreateDatasetResponse, DatasetDetailsResponse, DatasetListResponsePaged } from "../types/BffAPI";
+import { DataFile, DatasetInfo, DatasetRequest } from "../types/GatekeeperAPI";
+import axiosInstance from "./rpc";
 
 function toDatasetInfo(datasetRequest: CreateDatasetRequest): DatasetInfo {
     const dataFiles = datasetRequest.urls.map(
@@ -76,11 +76,9 @@ export async function createDataset(datasetRequest: CreateDatasetRequest): Promi
 export async function getDatasetBy(id: string): Promise<DatasetDetailsResponse> {
     try {
         const response = await axiosInstance.get("/datasets/" + id);
-        const dataset = JSON.parse(response.data.data) as DatasetDetailsResponse;
-        dataset.id = response.data.id;
-        dataset.name = response.data.name;
-        dataset.is_enabled = response.data.is_enabled;
 
+        const dataset = toDatasetDetailsResponse(response.data);
+        hydrateDatasetMetadataInfo(dataset, response.data);
         return dataset;
 
     } catch (error) {
@@ -88,14 +86,33 @@ export async function getDatasetBy(id: string): Promise<DatasetDetailsResponse> 
     }
 }
 
+function hydrateDatasetMetadataInfo(dataset: DatasetDetailsResponse, response: any) {
+    dataset.id = response.id;
+    dataset.name = response.name;
+    dataset.is_enabled = response.is_enabled;
+}
+
+function toDatasetDetailsResponse(response: any) {
+    return JSON.parse(response.data) as DatasetDetailsResponse;
+}
+
 export async function getAllDataset(): Promise<DatasetListResponsePaged> {
     try {
+        const datasets = [] as DatasetDetailsResponse[];
         const response = await axiosInstance.get("/datasets/");
 
-        return {
-            content: response.data,
-            size: (response.data as [])?.length
+        for (const ds of response.data) {
+            let dataset = toDatasetDetailsResponse(ds);
+            hydrateDatasetMetadataInfo(dataset, ds);
+            datasets.push(dataset);
         }
+
+        const result = {
+            content: datasets,
+            size: datasets.length
+        } as DatasetListResponsePaged;
+
+        return result;
     } catch (error) {
         return error.response;
     }

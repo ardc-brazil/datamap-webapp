@@ -33,7 +33,7 @@ export function ListItem(props) {
           <div className="border-secondary-900">
             <p className="font-bold text-lg">{props.data.name}</p>
             <p>
-              {props.data.author ? (
+              {props.data?.author && props.data?.author?.name != "" ? (
                 <span>by {props.data.author.name}</span>
               ) : (
                 ""
@@ -43,7 +43,7 @@ export function ListItem(props) {
             <div className="py-3 text-primary-500">
               <span>1mo ago</span>
               <span className="px-2">•</span>
-              <span>{getTotalFileSize(props.data.data.dataFiles)}</span>
+              <span>{getTotalFileSize(props.data.dataFiles)}</span>
             </div>
             <p className="text-primary-700">{props.data.description}</p>
           </div>

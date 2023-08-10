@@ -20,31 +20,22 @@ export default function ListDatasetPage(props) {
       .then(response => {
         try {
           if (response.status == 200) {
-            var i = [];
-            for (const element of response.data?.content) {
-              element.data = JSON.parse(element.data);
-              element.data.id = element.id;
-              element.data.name = element.name;
-              i.push(element);
-            }
-            setItems(i);
-
-            if (i.length <= 0) {
+            setItems(response.data?.content);
+            if (items.length <= 0) {
               setLoadingDatasetsMessage("No datasets found");
             }
           } else {
             console.log(response);
-            alert("Error to read datasets");
+            setLoadingDatasetsMessage("Error to read datasets");
           }
         } catch (error) {
-          debugger;
           console.log(error);
-          alert("Error to read datasets");
+          setLoadingDatasetsMessage("Error to read datasets");
         }
       })
       .catch(error => {
         console.log(error);
-        alert("Error to read datasets");
+        setLoadingDatasetsMessage("Error to read datasets");
       });
 
   }, []);
