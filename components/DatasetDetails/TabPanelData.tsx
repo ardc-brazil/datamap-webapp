@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { CardItem } from "./CardItem";
 import { LoadingAnimation } from "./LoadingAnimation";
 import { TabPanel, TabPanelProps } from "./TabPanel";
-import { CardItem } from "./CardItem";
 
 interface TabPanelDataObject {
   usability: string;
@@ -76,6 +76,8 @@ export function TabPanelData(props: TabPanelProps) {
   const [data, setData] = useState(null as TabPanelDataObject);
   const [isLoading, setLoading] = useState(false);
 
+  const [editingDescription, setEditDescription] = useState(false);
+
   useEffect(() => {
     setLoading(true);
     setTimeout(() => {
@@ -105,6 +107,13 @@ export function TabPanelData(props: TabPanelProps) {
     );
   if (!data) return <p>No dataset data</p>;
 
+  function handleEditDescription(event): void {
+    setEditDescription(true);
+  }
+  function handleCancelEditing(event): void {
+    setEditDescription(false);
+  }
+
   return (
     <TabPanel title={props.title}>
       <div className="grid grid-cols-12">
@@ -113,13 +122,36 @@ export function TabPanelData(props: TabPanelProps) {
 
             <div className="w-full">
               <ExpansibleDiv>
-                <h5>About Dataset</h5>
-                <article className="prose lg:prose-xl max-w-none small-font-size">
-                  <ReactMarkdown
-                    children={props.dataset.description}
-                    remarkPlugins={[remarkGfm]}
-                  />
-                </article>
+                <div>
+                  <div className="flex">
+                    <h5 className="w-full">About Dataset</h5>
+                    <button className={`${editingDescription && "hidden"} btn-primary-outline btn-small`} onClick={handleEditDescription}>Edit</button>
+                  </div>
+                  {editingDescription
+                    ?
+                    (
+                      <div className="flex flex-col">
+                        <textarea className="w-full pr-4">
+                          {props.dataset.description}
+                        </textarea>
+
+                        <div className="flex flex-row justify-end py-4">
+                          <button className="btn-primary-outline btn-small w-fit" onClick={handleCancelEditing}>Cancel</button>
+                          <button className="btn-primary btn-small w-fit">Save</button>
+                        </div>
+                      </div>
+                    )
+                    :
+                    (
+                      <article className="prose lg:prose-xl max-w-none small-font-size">
+                        <ReactMarkdown
+                          children={props.dataset.description}
+                          remarkPlugins={[remarkGfm]}
+                        />
+                      </article>
+                    )
+                  }
+                </div>
               </ExpansibleDiv>
             </div>
             <div className="w-96">
