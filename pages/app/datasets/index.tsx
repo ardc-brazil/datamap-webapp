@@ -101,7 +101,7 @@ export default function ListDatasetPage(props) {
             <FilterCriteriaList filters={filters} />
             <div className="col-span-9 basis-full px-4 min-h-screen max-w-screen-lg">
               <div>
-                {items.length > 0 ? <ListDataset data={items} /> : <EmptySearch>{loadingDatasetsMessage}</EmptySearch>}
+                {items?.length > 0 ? <ListDataset data={items} /> : <EmptySearch>{loadingDatasetsMessage}</EmptySearch>}
               </div>
             </div>
           </div>
