@@ -1,5 +1,6 @@
 import { TabPanelData } from "../../../components/DatasetDetails/TabPanelData";
 import { TabPanelMetadata } from "../../../components/DatasetDetails/TabPanelMetadata";
+import { TabPanelDiscussion } from "../../../components/DatasetDetails/TabPanelDiscussion";
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
 import LoggedLayout from "../../../components/LoggedLayout";
 import { getDatasetBy } from "../../../lib/dataset";
@@ -23,9 +24,10 @@ export default function DatasetDetailsPage(props) {
           </div>
         </div>
         <div className="container mx-auto">
-          <Tabs className="py-8">
-            <TabPanelData title="Data" dataset={props.dataset} />
-            <TabPanelMetadata title="Metadata" dataset={props.dataset} />
+          <Tabs className="py-4">
+            <TabPanelData title="Data Card" dataset={props.dataset} />
+            {/* <TabPanelMetadata title="Metadata" dataset={props.dataset} /> */}
+            <TabPanelDiscussion title="Discussions" dataset={props.dataset} />
           </Tabs>
         </div>
       </div>

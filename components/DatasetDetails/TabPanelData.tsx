@@ -1,51 +1,14 @@
-import React, { useEffect, useState, useRef } from "react";
-import { TabPanel, TabPanelProps } from "./TabPanel";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { markdown } from "../../fake-data/lorem-ipsum-mk";
+import { LoadingAnimation } from "./LoadingAnimation";
+import { TabPanel, TabPanelProps } from "./TabPanel";
+import { CardItem } from "./CardItem";
 
 interface TabPanelDataObject {
   usability: string;
   license: string;
   updateFrequency: string;
-}
-
-function LoadingAnimation() {
-  return (
-    <div role="status" className="space-y-2.5 animate-pulse max-w-lg mb-8">
-      <div className="flex items-center space-x-2 w-full">
-        <div className="h-2.5 bg-primary-200 rounded-full dark:bg-primary-700 w-32"></div>
-        <div className="h-2.5 bg-primary-300 rounded-full dark:bg-primary-600 w-24"></div>
-        <div className="h-2.5 bg-primary-300 rounded-full dark:bg-primary-600 w-full"></div>
-      </div>
-      <div className="flex items-center w-full space-x-2 max-w-[480px]">
-        <div className="h-2.5 bg-primary-200 rounded-full dark:bg-primary-700 w-full"></div>
-        <div className="h-2.5 bg-primary-300 rounded-full dark:bg-primary-600 w-full"></div>
-        <div className="h-2.5 bg-primary-300 rounded-full dark:bg-primary-600 w-24"></div>
-      </div>
-      <div className="flex items-center w-full space-x-2 max-w-[400px]">
-        <div className="h-2.5 bg-primary-300 rounded-full dark:bg-primary-600 w-full"></div>
-        <div className="h-2.5 bg-primary-200 rounded-full dark:bg-primary-700 w-80"></div>
-        <div className="h-2.5 bg-primary-300 rounded-full dark:bg-primary-600 w-full"></div>
-      </div>
-      <div className="flex items-center w-full space-x-2 max-w-[480px]">
-        <div className="h-2.5 bg-primary-200 rounded-full dark:bg-primary-700 w-full"></div>
-        <div className="h-2.5 bg-primary-300 rounded-full dark:bg-primary-600 w-full"></div>
-        <div className="h-2.5 bg-primary-300 rounded-full dark:bg-primary-600 w-24"></div>
-      </div>
-      <div className="flex items-center w-full space-x-2 max-w-[440px]">
-        <div className="h-2.5 bg-primary-300 rounded-full dark:bg-primary-600 w-32"></div>
-        <div className="h-2.5 bg-primary-300 rounded-full dark:bg-primary-600 w-24"></div>
-        <div className="h-2.5 bg-primary-200 rounded-full dark:bg-primary-700 w-full"></div>
-      </div>
-      <div className="flex items-center w-full space-x-2 max-w-[360px]">
-        <div className="h-2.5 bg-primary-300 rounded-full dark:bg-primary-600 w-full"></div>
-        <div className="h-2.5 bg-primary-200 rounded-full dark:bg-primary-700 w-80"></div>
-        <div className="h-2.5 bg-primary-300 rounded-full dark:bg-primary-600 w-full"></div>
-      </div>
-      <span className="sr-only">Loading...</span>
-    </div>
-  );
 }
 
 function ViewMoreOrLessButton(props) {
@@ -56,9 +19,8 @@ function ViewMoreOrLessButton(props) {
     >
       <svg
         aria-hidden="true"
-        className={`${
-          props.expanded ? "-rotate-90" : "rotate-90"
-        } w-3 h-3 inline-block mx-1`}
+        className={`${props.expanded ? "-rotate-90" : "rotate-90"
+          } w-3 h-3 inline-block mx-1`}
         fill="currentColor"
         viewBox="0 0 20 20"
         xmlns="http://www.w3.org/2000/svg"
@@ -146,8 +108,9 @@ export function TabPanelData(props: TabPanelProps) {
   return (
     <TabPanel title={props.title}>
       <div className="grid grid-cols-12">
-        <div className="col-span-9 pr-4 py-4">
+        <div className="col-span-9 pr-4 py-2">
           <ExpansibleDiv>
+            <h5>About Dataset</h5>
             <article className="prose lg:prose-xl max-w-none small-font-size">
               <ReactMarkdown
                 children={props.dataset.description}
@@ -158,7 +121,7 @@ export function TabPanelData(props: TabPanelProps) {
 
           {props.dataset.dataFiles && props.dataset.dataFiles.length > 0 && (
             <div className="mt-4">
-              <h5 className="font-bold">Data Explorer</h5>
+              <h5>Data Explorer</h5>
               <ul className="list-disc list-inside py-4">
                 {props.dataset.dataFiles?.map((x, i) => (
                   <li className="pl-4" key={i}>
@@ -168,20 +131,158 @@ export function TabPanelData(props: TabPanelProps) {
               </ul>
             </div>
           )}
+
+          <h5>Metadata</h5>
+
+          <div className="flex flex-col divide-y divide-primary-200 gap-8 mt-16">
+            <div className="py-4">
+              <h4 className="font-semibold py-4">Usage Information</h4>
+              <div className="flex gap-28 py-4">
+                <CardItem title="LICENSE">{props.dataset.license ?? "-"}</CardItem>
+                <CardItem title="VISIBILITY">Public</CardItem>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold py-4">Collaborators</h4>
+              <ul className="py-4">
+                <li>{props.dataset.owner?.name}</li>
+                <li>{props.dataset.author?.name ?? "-"}</li>
+                {props.dataset.contacts?.map((x, i) => (
+                  <li key={i}>{x.name}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold py-4">Coverage</h4>
+              <div className="flex gap-28 py-4">
+                <CardItem title="TEMPORAL COVERAGE START DATE">
+                  {props.dataset.start_date}
+                </CardItem>
+                <CardItem title="TEMPORAL COVERAGE END DATE">
+                  {props.dataset.end_date}
+                </CardItem>
+                <CardItem title="GEOSPATIAL COVERAGE">
+                  {props.dataset.location && props.dataset.location.location && (
+                    <span>{props.dataset.location.location}</span>
+                  )}
+                  {props.dataset.location && props.dataset.location.latitude && (
+                    <div>
+                      <p>Latitude: {props.dataset.location.latitude}</p>
+                      <p>Longitude: {props.dataset.location.longitude}</p>
+                    </div>
+                  )}
+                  {!props.dataset.location && <span>-</span>}
+                </CardItem>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold py-4">Provenance</h4>
+              <div className="flex gap-28 py-4">
+                <CardItem title="SOURCES">{props.dataset.institution}</CardItem>
+              </div>
+              <div className="flex gap-28 py-4">
+                <CardItem title="Collection methodology">
+                  {props.dataset.source_instrument} - {props.dataset.source}
+                </CardItem>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold py-4">Additional Authors</h4>
+              <div className="flex gap-28 py-4">
+                <CardItem title="AUTHOR NAME">Author Full Name</CardItem>
+                <CardItem title="BIO">-</CardItem>
+              </div>
+              <div className="flex gap-28 py-4">
+                <CardItem title="AUTHOR NAME">Author Full Name</CardItem>
+                <CardItem title="BIO">-</CardItem>
+              </div>
+              <div className="flex gap-28 py-4">
+                <CardItem title="AUTHOR NAME">Author Full Name</CardItem>
+                <CardItem title="BIO">-</CardItem>
+              </div>
+              <div className="flex gap-28 py-4">
+                <CardItem title="AUTHOR NAME">Author Full Name</CardItem>
+                <CardItem title="BIO">-</CardItem>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold py-4">DOI Citation</h4>
+              <div className="flex gap-28 py-4">
+                <CardItem title="DOI (DIGITAL OBJECT IDENTIFIER)">
+                  {props.dataset.citation && (
+                    <a href={props.dataset.citation.doi} target="_blank">
+                      {props.dataset.citation.doi}
+                    </a>
+                  )}
+                  {!props.dataset.citation && <span>-</span>}
+                </CardItem>
+              </div>
+              {props.dataset.references && (
+                <div className="flex gap-28 py-4">
+                  <div>
+                    <CardItem title="CITATION TYPE">
+                      <label
+                        htmlFor="apa"
+                        className="w-full cursor-pointer py-2 mx-2"
+                      >
+                        <input
+                          id="apa"
+                          type="radio"
+                          value="citation-type"
+                          name="citation-type"
+                          checked
+                          className="w-5 h-5 accent-primary-900"
+                        />
+                        <span className="ml-2 text-sm font-medium text-primary-900 align-top">
+                          APA
+                        </span>
+                      </label>
+                      <label
+                        htmlFor="apa"
+                        className="w-full cursor-pointer py-2 mx-2"
+                      >
+                        <input
+                          id="apa"
+                          type="radio"
+                          value="citation-type"
+                          name="citation-type"
+                          className="w-5 h-5 accent-primary-900"
+                        />
+                        <span className="ml-2 text-sm font-medium text-primary-900 align-top">
+                          BibTeX
+                        </span>
+                      </label>
+                    </CardItem>
+
+                    <div className="my-4">
+                      <fieldset className="border border-solid border-primary-300 p-3">
+                        <legend className="text-sm">Citation:</legend>
+                        <p className="text-primary-600">
+                          {props.dataset.references}
+                        </p>
+                      </fieldset>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="col-span-3 flex flex-col gap-8 pl-8">
+        <div className="col-span-3 flex flex-col gap-2 pl-8">
           <div>
-            <h5 className="font-bold">Usability</h5>
+            <h6 className="font-semibold">Usability</h6>
             <p>{data.usability}</p>
           </div>
 
           <div>
-            <h5 className="font-bold">License</h5>
+            <h6 className="font-semibold">License</h6>
             <p>{data.license}</p>
           </div>
 
           <div>
-            <h5 className="font-bold">Expected update frequency</h5>
+            <h6 className="font-semibold">Expected update frequency</h6>
             <p>{data.updateFrequency}</p>
           </div>
         </div>
