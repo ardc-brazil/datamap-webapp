@@ -136,14 +136,14 @@ export function TabPanelData(props: TabPanelProps) {
 
           <div className="flex flex-col divide-y divide-primary-200 gap-8 mt-16">
             <div className="py-4">
-              <h4 className="font-semibold py-4">Usage Information</h4>
+              <h6 className="font-semibold py-4">Usage Information</h6>
               <div className="flex gap-28 py-4">
                 <CardItem title="LICENSE">{props.dataset.license ?? "-"}</CardItem>
                 <CardItem title="VISIBILITY">Public</CardItem>
               </div>
             </div>
             <div>
-              <h4 className="font-semibold py-4">Collaborators</h4>
+              <h6 className="font-semibold py-4">Collaborators</h6>
               <ul className="py-4">
                 <li>{props.dataset.owner?.name}</li>
                 <li>{props.dataset.author?.name ?? "-"}</li>
@@ -153,7 +153,7 @@ export function TabPanelData(props: TabPanelProps) {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold py-4">Coverage</h4>
+              <h6 className="font-semibold py-4">Coverage</h6>
               <div className="flex gap-28 py-4">
                 <CardItem title="TEMPORAL COVERAGE START DATE">
                   {props.dataset.start_date}
@@ -176,7 +176,7 @@ export function TabPanelData(props: TabPanelProps) {
               </div>
             </div>
             <div>
-              <h4 className="font-semibold py-4">Provenance</h4>
+              <h6 className="font-semibold py-4">Provenance</h6>
               <div className="flex gap-28 py-4">
                 <CardItem title="SOURCES">{props.dataset.institution}</CardItem>
               </div>
@@ -188,7 +188,7 @@ export function TabPanelData(props: TabPanelProps) {
             </div>
 
             <div>
-              <h4 className="font-semibold py-4">Additional Authors</h4>
+              <h6 className="font-semibold py-4">Additional Authors</h6>
               <div className="flex gap-28 py-4">
                 <CardItem title="AUTHOR NAME">Author Full Name</CardItem>
                 <CardItem title="BIO">-</CardItem>
@@ -208,7 +208,7 @@ export function TabPanelData(props: TabPanelProps) {
             </div>
 
             <div>
-              <h4 className="font-semibold py-4">DOI Citation</h4>
+              <h6 className="font-semibold py-4">DOI Citation</h6>
               <div className="flex gap-28 py-4">
                 <CardItem title="DOI (DIGITAL OBJECT IDENTIFIER)">
                   {props.dataset.citation && (
