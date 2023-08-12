@@ -108,33 +108,60 @@ export function TabPanelData(props: TabPanelProps) {
   return (
     <TabPanel title={props.title}>
       <div className="grid grid-cols-12">
-        <div className="col-span-9 pr-4 py-2">
-          <ExpansibleDiv>
-            <h5>About Dataset</h5>
-            <article className="prose lg:prose-xl max-w-none small-font-size">
-              <ReactMarkdown
-                children={props.dataset.description}
-                remarkPlugins={[remarkGfm]}
-              />
-            </article>
-          </ExpansibleDiv>
+        <div className="col-span-12 pr-4 py-2">
+          <div className="flex w-full">
+
+            <div className="w-full">
+              <ExpansibleDiv>
+                <h5>About Dataset</h5>
+                <article className="prose lg:prose-xl max-w-none small-font-size">
+                  <ReactMarkdown
+                    children={props.dataset.description}
+                    remarkPlugins={[remarkGfm]}
+                  />
+                </article>
+              </ExpansibleDiv>
+            </div>
+            <div className="w-96">
+              <div className="col-span-3 flex flex-col gap-2 pl-8">
+                <div>
+                  <h6 className="font-semibold">Usability</h6>
+                  <p>{data.usability}</p>
+                </div>
+
+                <div>
+                  <h6 className="font-semibold">License</h6>
+                  <p>{data.license}</p>
+                </div>
+
+                <div>
+                  <h6 className="font-semibold">Expected update frequency</h6>
+                  <p>{data.updateFrequency}</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
 
           {props.dataset.dataFiles && props.dataset.dataFiles.length > 0 && (
-            <div className="mt-4">
-              <h5>Data Explorer</h5>
-              <ul className="list-disc list-inside py-4">
-                {props.dataset.dataFiles?.map((x, i) => (
-                  <li className="pl-4" key={i}>
-                    <a href={x.path} download>{x.path}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <>
+              <hr className="my-4" />
+              <div className="mt-4">
+                <h5>Data Explorer</h5>
+                <ul className="list-disc list-inside py-4">
+                  {props.dataset.dataFiles?.map((x, i) => (
+                    <li className="pl-4" key={i}>
+                      <a href={x.path} download>{x.path}</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
           )}
 
-          <h5>Metadata</h5>
-
+          <hr className="my-4" />
           <div className="flex flex-col divide-y divide-primary-200 gap-8 mt-16">
+            <h5>Metadata</h5>
             <div className="py-4">
               <h6 className="font-semibold py-4">Usage Information</h6>
               <div className="flex gap-28 py-4">
@@ -268,22 +295,6 @@ export function TabPanelData(props: TabPanelProps) {
                 </div>
               )}
             </div>
-          </div>
-        </div>
-        <div className="col-span-3 flex flex-col gap-2 pl-8">
-          <div>
-            <h6 className="font-semibold">Usability</h6>
-            <p>{data.usability}</p>
-          </div>
-
-          <div>
-            <h6 className="font-semibold">License</h6>
-            <p>{data.license}</p>
-          </div>
-
-          <div>
-            <h6 className="font-semibold">Expected update frequency</h6>
-            <p>{data.updateFrequency}</p>
           </div>
         </div>
       </div>
