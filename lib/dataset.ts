@@ -100,19 +100,20 @@ export async function getAllDataset(): Promise<DatasetListResponsePaged> {
     try {
         const datasets = [] as DatasetDetailsResponse[];
         const response = await axiosInstance.get("/datasets/");
+        const datasetsList = response.data as DatasetListResponsePaged;
 
-        for (const ds of response.data) {
+        // Parse data string to json object
+        for (const ds of datasetsList.content) {
             let dataset = toDatasetDetailsResponse(ds);
             hydrateDatasetMetadataInfo(dataset, ds);
             datasets.push(dataset);
         }
 
-        const result = {
-            content: datasets,
-            size: datasets.length
-        } as DatasetListResponsePaged;
+        datasetsList.content = datasets;
 
-        return result;
+        console.log(datasetsList)
+
+        return datasetsList;
     } catch (error) {
         return error.response;
     }
