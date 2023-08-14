@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { CardItem } from "./CardItem";
-import { LoadingAnimation } from "./LoadingAnimation";
-import { TabPanel, TabPanelProps } from "./TabPanel";
+import { useEffect, useState } from "react";
+
+import { CardItem } from "../CardItem";
+import { LoadingAnimation } from "../LoadingAnimation";
+import { TabPanel, TabPanelProps } from "../TabPanel";
+import { DatasetDescription } from "./DatasetDescription";
+
 
 interface TabPanelDataObject {
   usability: string;
@@ -11,72 +12,11 @@ interface TabPanelDataObject {
   updateFrequency: string;
 }
 
-function ViewMoreOrLessButton(props) {
-  return (
-    <button
-      className="btn-primary-outline whitespace-nowrap rounded-3xl border-0"
-      onClick={props.toggleView}
-    >
-      <svg
-        aria-hidden="true"
-        className={`${props.expanded ? "-rotate-90" : "rotate-90"
-          } w-3 h-3 inline-block mx-1`}
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          fillRule="evenodd"
-          d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-          clipRule="evenodd"
-        ></path>
-      </svg>
-
-      {!props.expanded && "View more"}
-      {props.expanded && "View less"}
-    </button>
-  );
-}
-
-function ExpansibleDiv(props) {
-  const [minHeightExpandable, setMinHeightExpandable] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const ref = useRef(null);
-
-  const minHeight = 300;
-
-  useEffect(() => {
-    setMinHeightExpandable(ref.current.clientHeight > minHeight);
-  }, []);
-
-  function toggleView() {
-    setExpanded(!expanded);
-  }
-
-  if (!minHeightExpandable) {
-    return <div ref={ref}>{props.children}</div>;
-  } else {
-    return (
-      <div ref={ref}>
-        {expanded && props.children}
-        {!expanded && (
-          <div className={`relative overflow-hidden h-80`}>
-            {props.children}
-            {/* Box for hide effect at the end of the text clipped */}
-            <div className="absolute bottom-0 w-full h-16 flex bg-gradient-to-t from-primary-50 via-primary-50 to-transparent"></div>
-          </div>
-        )}
-        <ViewMoreOrLessButton toggleView={toggleView} expanded={expanded} />
-      </div>
-    );
-  }
-}
-
-export function TabPanelData(props: TabPanelProps) {
+export function TabPanelDataCard(props: TabPanelProps) {
   const [data, setData] = useState(null as TabPanelDataObject);
   const [isLoading, setLoading] = useState(false);
 
-  const [editingDescription, setEditDescription] = useState(false);
+
 
   useEffect(() => {
     setLoading(true);
@@ -107,12 +47,6 @@ export function TabPanelData(props: TabPanelProps) {
     );
   if (!data) return <p>No dataset data</p>;
 
-  function handleEditDescription(event): void {
-    setEditDescription(true);
-  }
-  function handleCancelEditing(event): void {
-    setEditDescription(false);
-  }
 
   return (
     <TabPanel title={props.title}>
@@ -121,38 +55,7 @@ export function TabPanelData(props: TabPanelProps) {
           <div className="flex w-full">
 
             <div className="w-full">
-              <ExpansibleDiv>
-                <div>
-                  <div className="flex">
-                    <h5 className="w-full">About Dataset</h5>
-                    <button className={`${editingDescription && "hidden"} btn-primary-outline btn-small`} onClick={handleEditDescription}>Edit</button>
-                  </div>
-                  {editingDescription
-                    ?
-                    (
-                      <div className="flex flex-col">
-                        <textarea className="w-full pr-4">
-                          {props.dataset.description}
-                        </textarea>
-
-                        <div className="flex flex-row justify-end py-4">
-                          <button className="btn-primary-outline btn-small w-fit" onClick={handleCancelEditing}>Cancel</button>
-                          <button className="btn-primary btn-small w-fit">Save</button>
-                        </div>
-                      </div>
-                    )
-                    :
-                    (
-                      <article className="prose lg:prose-xl max-w-none small-font-size">
-                        <ReactMarkdown
-                          children={props.dataset.description}
-                          remarkPlugins={[remarkGfm]}
-                        />
-                      </article>
-                    )
-                  }
-                </div>
-              </ExpansibleDiv>
+              <DatasetDescription dataset={props.dataset} />
             </div>
             <div className="w-96">
               <div className="col-span-3 flex flex-col gap-2 pl-8">

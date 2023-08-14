@@ -1,20 +1,16 @@
 
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
-import auth from "../../lib/auth";
-import { createDataset, getAllDataset } from "../../lib/dataset";
-import { ResponseError } from "../../types/ResponseError";
+import auth from "../../../lib/auth";
+import { updateDataset } from "../../../lib/dataset";
+import { ResponseError } from "../../../types/ResponseError";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
 router
   .use(auth)
-  .get(async (req, res) => {
-    const result = await getAllDataset();
-    res.json(result);
-  })
-  .post(async (req, res) => {
-    const result = await createDataset(req.body);
+  .put(async (req, res) => {
+    const result = await updateDataset(req.body);
     res.json(result);
   });
 

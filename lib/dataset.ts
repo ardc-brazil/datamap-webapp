@@ -86,6 +86,19 @@ export async function getDatasetBy(id: string): Promise<DatasetDetailsResponse> 
     }
 }
 
+export async function updateDataset(dataset: any) {
+    const ds = {
+        id: dataset.id,
+        name: dataset.name,
+        is_enabled: dataset.is_enabled,
+        data: dataset
+    };
+
+    const response = await axiosInstance.put("/datasets/" + ds.id, ds);
+    
+    return response.data;
+}
+
 function hydrateDatasetMetadataInfo(dataset: DatasetDetailsResponse, response: any) {
     dataset.id = response.id;
     dataset.name = response.name;
@@ -110,8 +123,6 @@ export async function getAllDataset(): Promise<DatasetListResponsePaged> {
         }
 
         datasetsList.content = datasets;
-
-        console.log(datasetsList)
 
         return datasetsList;
     } catch (error) {
