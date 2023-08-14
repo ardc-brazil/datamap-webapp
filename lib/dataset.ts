@@ -126,6 +126,7 @@ export async function getAllDataset(): Promise<DatasetListResponsePaged> {
 
         return datasetsList;
     } catch (error) {
+        console.log(error);
         return error.response;
     }
 }

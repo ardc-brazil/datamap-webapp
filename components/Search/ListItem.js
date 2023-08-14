@@ -46,8 +46,8 @@ export function ListItem(props) {
               <span>{getTotalFileSize(props.data.dataFiles)}</span>
             </div>
             <p className="text-primary-700">{
-              props.data.description.length > 100
-                ? props.data.description.substring(0, 100) + "..."
+              props.data?.description?.length > 300
+                ? props.data.description.substring(0, 300) + "..."
                 : props.data.description
             }</p>
           </div>
