@@ -1,6 +1,7 @@
 
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
+import { NewContext } from "../../../lib/appLocalContext";
 import auth from "../../../lib/auth";
 import { updateDataset } from "../../../lib/dataset";
 import { ResponseError } from "../../../types/ResponseError";
@@ -10,7 +11,8 @@ const router = createRouter<NextApiRequest, NextApiResponse>();
 router
   .use(auth)
   .put(async (req, res) => {
-    const result = await updateDataset(req.body);
+    const context = await NewContext(req);
+    const result = await updateDataset(context, req.body);
     res.json(result);
   });
 

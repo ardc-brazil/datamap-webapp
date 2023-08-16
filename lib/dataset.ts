@@ -1,7 +1,8 @@
 
 import { CreateDatasetRequest, CreateDatasetResponse, DatasetDetailsResponse, DatasetListResponsePaged } from "../types/BffAPI";
 import { DataFile, DatasetInfo, DatasetRequest } from "../types/GatekeeperAPI";
-import axiosInstance from "./rpc";
+import { AppLocalContext } from "./appLocalContext";
+import axiosInstance, { buildHeaders } from "./rpc";
 
 function toDatasetInfo(datasetRequest: CreateDatasetRequest): DatasetInfo {
     const dataFiles = datasetRequest.urls.map(
@@ -53,14 +54,14 @@ function toDatasetInfo(datasetRequest: CreateDatasetRequest): DatasetInfo {
  * @param datasetRequest minimum info to create a dataset
  * @returns CreateDatasetResponse
  */
-export async function createDataset(datasetRequest: CreateDatasetRequest): Promise<CreateDatasetResponse> {
+export async function createDataset(context: AppLocalContext, datasetRequest: CreateDatasetRequest): Promise<CreateDatasetResponse> {
     try {
         const request = {
             name: datasetRequest.datasetTitle,
             data: toDatasetInfo(datasetRequest)
         } as DatasetRequest;
 
-        const response = await axiosInstance.post("/datasets", request);
+        const response = await axiosInstance.post("/datasets", request, buildHeaders(context));
 
         return response.data;
     } catch (error) {
@@ -73,9 +74,9 @@ export async function createDataset(datasetRequest: CreateDatasetRequest): Promi
  * @param id dataset id
  * @returns Dataset
  */
-export async function getDatasetBy(id: string): Promise<DatasetDetailsResponse> {
+export async function getDatasetBy(context: AppLocalContext, id: string): Promise<DatasetDetailsResponse> {
     try {
-        const response = await axiosInstance.get("/datasets/" + id);
+        const response = await axiosInstance.get("/datasets/" + id, buildHeaders(context));
 
         const dataset = toDatasetDetailsResponse(response.data);
         hydrateDatasetMetadataInfo(dataset, response.data);
@@ -86,7 +87,7 @@ export async function getDatasetBy(id: string): Promise<DatasetDetailsResponse> 
     }
 }
 
-export async function updateDataset(dataset: any) {
+export async function updateDataset(context: AppLocalContext, dataset: any) {
     const ds = {
         id: dataset.id,
         name: dataset.name,
@@ -94,8 +95,8 @@ export async function updateDataset(dataset: any) {
         data: dataset
     };
 
-    const response = await axiosInstance.put("/datasets/" + ds.id, ds);
-    
+    const response = await axiosInstance.put("/datasets/" + ds.id, ds, buildHeaders(context));
+
     return response.data;
 }
 
@@ -109,10 +110,10 @@ function toDatasetDetailsResponse(response: any) {
     return JSON.parse(response.data) as DatasetDetailsResponse;
 }
 
-export async function getAllDataset(): Promise<DatasetListResponsePaged> {
+export async function getAllDataset(context: AppLocalContext): Promise<DatasetListResponsePaged> {
     try {
         const datasets = [] as DatasetDetailsResponse[];
-        const response = await axiosInstance.get("/datasets/");
+        const response = await axiosInstance.get("/datasets/", buildHeaders(context));
         const datasetsList = response.data as DatasetListResponsePaged;
 
         // Parse data string to json object

@@ -22,7 +22,7 @@ export async function createUser(requestParams: CreateUserRequest) {
     const request = {
         "name": requestParams.userName,
         "email": email,
-        "roles": ["read"],
+        "roles": ["datasets_read"],
         "providers": [
             {
                 "name": requestParams.providerName,

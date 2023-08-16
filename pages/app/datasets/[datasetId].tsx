@@ -1,8 +1,9 @@
 import { TabPanelDataCard } from "../../../components/DatasetDetails/DataCard/TabPanelDataCard";
-import { TabPanelDiscussion } from "../../../components/DatasetDetails/TabPanelDiscussion";
+import { TabPanelSettings } from "../../../components/DatasetDetails/TabPanelSettings";
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
 import { DownloadDatafilesButton } from "../../../components/DownloadDatafilesButton";
 import LoggedLayout from "../../../components/LoggedLayout";
+import { NewContext } from "../../../lib/appLocalContext";
 import { getDatasetBy } from "../../../lib/dataset";
 
 export default function DatasetDetailsPage(props) {
@@ -26,7 +27,10 @@ export default function DatasetDetailsPage(props) {
           <Tabs className="py-4">
             <TabPanelDataCard title="Data Card" dataset={props.dataset} />
             {/* <TabPanelMetadata title="Metadata" dataset={props.dataset} /> */}
-            <TabPanelDiscussion title="Discussions" dataset={props.dataset} />
+            {/* TODO: Enable discussion tab - Disabled while empty */}
+            {/* <TabPanelDiscussion title="Discussions" dataset={props.dataset} /> */}
+            {/* <TabPanelDiscussion title="Discussions" dataset={props.dataset} /> */}
+            <TabPanelSettings title="Settings" />
           </Tabs>
         </div>
       </div>
@@ -35,8 +39,9 @@ export default function DatasetDetailsPage(props) {
 }
 
 export async function getServerSideProps({ req, res, query }) {
+  const context = await NewContext(req);
   const datasetId = query.datasetId as string;
-  const dataset = await getDatasetBy(datasetId);
+  const dataset = await getDatasetBy(context, datasetId);
   return {
     props: { dataset }, // will be passed to the page component as props
   };

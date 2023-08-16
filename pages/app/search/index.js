@@ -11,7 +11,7 @@ import { FilterBadges } from "../../../components/Search/FilterBadges";
 import { ListDataset } from "../../../components/Search/ListDataset";
 import Search from "../../../lib/search";
 
-import { getAllDatasets } from "../../../lib/datasets";
+import { getAllDatasets } from "../../../lib/dataset";
 
 function SearchPage(props) {
   const [filters, setFilters] = useState(filterCriteria);

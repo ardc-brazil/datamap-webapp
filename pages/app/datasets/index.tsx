@@ -2,12 +2,13 @@ import axios from "axios";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import LoggedLayout from "../../../components/LoggedLayout";
+import { EmptySearch } from "../../../components/Search/EmptySearch";
 import { FilterCriteriaList } from "../../../components/Search/FilterCriteriaList";
 import { ListDataset } from "../../../components/Search/ListDataset";
 import { ROUTE_PAGE_DATASETS_NEW } from "../../../contants/InternalRoutesConstants";
 import { filterCriteria } from "../../../fake-data/filters";
-import { getAllDatasets } from "../../../lib/datasets";
-import { EmptySearch } from "../../../components/Search/EmptySearch";
+import { NewContext } from "../../../lib/appLocalContext";
+import { getAllDataset } from "../../../lib/dataset";
 
 export default function ListDatasetPage(props) {
   const [filters, setFilters] = useState(filterCriteria);
@@ -112,8 +113,9 @@ export default function ListDatasetPage(props) {
 }
 
 export async function getServerSideProps(context) {
-  // Fetch data from external API
-  const data = await getAllDatasets();
+
+  // Fetch data frm external API
+  const data = await getAllDataset(await NewContext(context.req));
 
   // Pass data to the page via props
   return { props: { data } };
