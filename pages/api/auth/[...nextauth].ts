@@ -1,7 +1,8 @@
+import axios, { AxiosError } from "axios";
 import NextAuth, { AuthOptions } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import OrcidProvider from "../../../lib/OrcidOAuthProvider";
-import { createUser } from "../../../lib/users";
+import { CreateUserRequest, createUser, getUserByProviderID } from "../../../lib/users";
 
 export const authOptions: AuthOptions = {
   // Configure one or more authentication providers
@@ -24,8 +25,8 @@ export const authOptions: AuthOptions = {
       }
 
       if (trigger == "signIn") {
-        const user = await createUser(token.email)
-        token.uid = user.uid
+        const user = await getUserByProviderAuthentication(account, token);
+        token.uid = user.id
       }
 
       return token
@@ -47,5 +48,46 @@ export const authOptions: AuthOptions = {
     strategy: "jwt"
   }
 }
+
+async function getUserByProviderAuthentication(account, token) {
+
+  console.log("#account:", account);
+  console.log("#token:", token);
+
+  let params = null as CreateUserRequest;
+
+  if (account.provider == "github") {
+    params = {
+      providerName: account.provider,
+      providerID: token.email,
+      userName: token.email
+    };
+  } else if (account.provider == "orcid") {
+    params = {
+      providerName: account.provider,
+      providerID: token.orcid,
+      userName: token.orcid + "@fake.mail.com"
+    };
+  } else {
+    throw new Error("Invalid provider authentication: " + account.provider);
+  }
+
+  let user = null;
+
+  try {
+    user = await getUserByProviderID(params);
+  } catch (error: any | AxiosError) {
+    if (axios.isAxiosError(error) && error.response.status == 404) {
+      user = createUser(params);
+    }
+  };
+
+  if (!user) {
+    throw new Error("User not found and not created");
+  }
+  
+  return user;
+}
+
 
 export default NextAuth(authOptions)
