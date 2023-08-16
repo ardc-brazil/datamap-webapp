@@ -65,8 +65,8 @@ async function getUserByProviderAuthentication(account, token) {
   } else if (account.provider == "orcid") {
     params = {
       providerName: account.provider,
-      providerID: token.orcid,
-      userName: token.orcid + "@fake.mail.com"
+      providerID: account.orcid,
+      userName: account.orcid + "@fake.mail.com"
     };
   } else {
     throw new Error("Invalid provider authentication: " + account.provider);
