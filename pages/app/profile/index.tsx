@@ -87,7 +87,8 @@ export default function ProfilePage(props) {
 export async function getServerSideProps(context) {
 
   // Fetch data frm external API
-  const data = await getUserByUID(await NewContext(context.req));
+  const ctx = await NewContext(context.req);
+  const data = await getUserByUID(ctx);
 
   // Pass data to the page via props
   return { props: { data } };
