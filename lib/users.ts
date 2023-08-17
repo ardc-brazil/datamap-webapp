@@ -1,9 +1,46 @@
 import axiosInstance from "./rpc";
 
 export interface CreateUserRequest {
+
+    /**
+     * Unique name from oAuth provider.
+     * @example
+     *  - github
+     *  - orcid
+     */
     providerName: string,
+
+    /**
+     * Unique identifier from provider.
+     * @example 
+     *  - andrenmaia@gmail.com
+     *  - cnmaia
+     *  - 0000-0002-6356-145X
+     */
     providerID: string,
+
+    /**
+     * The name of the person, owner of the user.
+     * @example 
+     *  - André Maia
+     *  - Caio Maia
+     *  - José Da Silva
+     */
+    personName: string,
+
+    /**
+     * A name that represents the user.
+     * @example 
+     *  - andremaia
+     *  - cnmaia
+     *  - 0000-0002-6356-145X
+     */
     userName: string,
+
+    /**
+     * User email address
+     */
+    email: string
 }
 
 export interface GetUserByProviderRequest {
@@ -12,17 +49,15 @@ export interface GetUserByProviderRequest {
 }
 
 export async function createUser(requestParams: CreateUserRequest) {
-
-    // TODO: improve email validation.
-    let email = requestParams.userName;
-    if (email.indexOf("@") < 0) {
-        email = requestParams.userName + "@fake.mail.com";
+    
+    if (!requestParams.email || requestParams.email === "") {
+        requestParams.email = requestParams.userName + "@fake.mail.com";
     }
 
     const request = {
-        "name": requestParams.userName,
-        "email": email,
-        "roles": ["datasets_read"],
+        "name": requestParams.personName,
+        "email": requestParams.email,
+        "roles": ["datasets_read", "users_read"],
         "providers": [
             {
                 "name": requestParams.providerName,
