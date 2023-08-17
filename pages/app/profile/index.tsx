@@ -4,8 +4,10 @@ import { CardItem } from "../../../components/DatasetDetails/CardItem";
 import LoggedLayout from "../../../components/LoggedLayout";
 
 import { signOut, useSession } from "next-auth/react";
+import { NewContext } from "../../../lib/appLocalContext";
+import { getUserByUID } from "../../../lib/users";
 
-export default function ProfilePage() {
+export default function ProfilePage(props) {
   const { data: session, status } = useSession();
 
   function clickSignOut() {
@@ -25,14 +27,32 @@ export default function ProfilePage() {
                 <span className="text-xs text-primary-300">{session.user.image}</span>
               </CardItem>
             }
-            <CardItem className="py-4" title="Name">
-              {session.user.name}
+            <CardItem className="py-4" title="ID">
+              {props.data.id}
             </CardItem>
-            {session.user.email &&
-              <CardItem className="py-4" title="Email">
-                {session.user.email}
-              </CardItem>
-            }
+            <CardItem className="py-4" title="Name">
+              {props.data.name}
+            </CardItem>
+            <CardItem className="py-4" title="Email">
+              {props.data.email}
+            </CardItem>
+            <CardItem className="py-4" title="Roles">
+              <ul>
+                {props.data.roles.map((role, index) =>
+                  <li className="ml-4 list-disc" key={index}>{role}</li>
+                )}
+              </ul>
+            </CardItem>
+            <CardItem className="py-4" title="Providers">
+              <ul>
+                {props.data.providers.map((provider, index) =>
+                  <li className="ml-4 list-disc" key={index}>{provider.name} - {provider.reference}</li>
+                )}
+              </ul>
+            </CardItem>
+            <CardItem className="py-4" title="Created At">
+              {props.data.created_at}
+            </CardItem>
             <br />
 
             <button className="btn-primary" onClick={clickSignOut}>
@@ -62,6 +82,15 @@ export default function ProfilePage() {
       </div>
     </LoggedLayout>
   );
+}
+
+export async function getServerSideProps(context) {
+
+  // Fetch data frm external API
+  const data = await getUserByUID(await NewContext(context.req));
+
+  // Pass data to the page via props
+  return { props: { data } };
 }
 
 ProfilePage.auth = {

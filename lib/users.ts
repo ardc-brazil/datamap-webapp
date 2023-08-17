@@ -1,4 +1,5 @@
-import axiosInstance from "./rpc";
+import { AppLocalContext } from "./appLocalContext";
+import axiosInstance, { buildHeaders } from "./rpc";
 
 export interface CreateUserRequest {
 
@@ -48,8 +49,24 @@ export interface GetUserByProviderRequest {
     providerID: string
 }
 
+export interface UserDetailsResponse {
+    id: string,
+    name: string,
+    email: string,
+    roles: string[],
+    providers: ProviderUserDetailsResponse[],
+    is_enabled: boolean,
+    created_at: Date,
+    updated_at: Date
+}
+
+interface ProviderUserDetailsResponse {
+    name: string,
+    reference: string
+}
+
 export async function createUser(requestParams: CreateUserRequest) {
-    
+
     if (!requestParams.email || requestParams.email === "") {
         requestParams.email = requestParams.userName + "@fake.mail.com";
     }
@@ -70,12 +87,12 @@ export async function createUser(requestParams: CreateUserRequest) {
     return response.data;
 }
 
-export async function getUserByUID(uid: string) {
-    return {
-        providerId: "provider_id",
-        uid: "0cbb9610-4b81-44f0-8d1b-0da1fb4a4da7",
-        created_at: new Date()
-    };
+export async function getUserByUID(context: AppLocalContext): Promise<UserDetailsResponse> {
+    const response = await axiosInstance.get(
+        `/users/${context.uid}?is_enabled=true`,
+        buildHeaders(context)
+    );
+    return response.data;
 }
 
 export async function getUserByProviderID(request: GetUserByProviderRequest) {
