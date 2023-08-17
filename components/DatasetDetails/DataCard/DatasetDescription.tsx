@@ -71,9 +71,14 @@ export function DatasetDescription(props: any) {
                 :
                 (
                     <article className="prose lg:prose-xl max-w-none small-font-size">
-                        <ReactMarkdown
-                            children={textContent}
-                            remarkPlugins={[remarkGfm]} />
+                        {textContent
+                            ?
+                            <ReactMarkdown
+                                children={textContent}
+                                remarkPlugins={[remarkGfm]} />
+                            :
+                            <span className="italic">Add a description for your dataset.</span>
+                        }
                     </article>
                 )}
         </div>

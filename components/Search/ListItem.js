@@ -6,6 +6,7 @@ export function ListItem(props) {
   function getTotalFileSize(data) {
     let totalGB = 0;
 
+    // TODO: Use a library like moment.js but for units.
     data?.forEach((d) => {
       if (d.file_size_gb) totalGB += parseFloat(d.file_size_gb);
     });
