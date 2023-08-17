@@ -1,4 +1,5 @@
 import { TabPanelDataCard } from "../../../components/DatasetDetails/DataCard/TabPanelDataCard";
+import DatasetInstitution from "../../../components/DatasetDetails/DatasetInstitution";
 import { TabPanelSettings } from "../../../components/DatasetDetails/TabPanelSettings";
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
 import { DownloadDatafilesButton } from "../../../components/DownloadDatafilesButton";
@@ -15,7 +16,7 @@ export default function DatasetDetailsPage(props) {
             {/* Title */}
             <div className="basis-10/12">
               <h1 className="font-extrabold">{props.dataset.name}</h1>
-              <p className="text-primary-500">{props.dataset.institution}</p>
+              <DatasetInstitution dataset={props.dataset} />
             </div>
             {/* Actions */}
             <div className="">
@@ -30,7 +31,7 @@ export default function DatasetDetailsPage(props) {
             {/* TODO: Enable discussion tab - Disabled while empty */}
             {/* <TabPanelDiscussion title="Discussions" dataset={props.dataset} /> */}
             {/* <TabPanelDiscussion title="Discussions" dataset={props.dataset} /> */}
-            <TabPanelSettings title="Settings" />
+            <TabPanelSettings title="Settings" dataset={props.dataset} />
           </Tabs>
         </div>
       </div>

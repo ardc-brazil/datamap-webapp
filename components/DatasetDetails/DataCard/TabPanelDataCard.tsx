@@ -87,27 +87,27 @@ export function TabPanelDataCard(props: TabPanelProps) {
 
                         <ul className="font-normal">
                           <li className="font-bold">Completeness · 0%</li>
-                          <li>x Subtitle</li>
-                          <li>x Tag</li>
-                          <li>x Description</li>
-                          <li>x Cover Image</li>
+                          <li className="style-error">Subtitle</li>
+                          <li className="style-error"> Tag</li>
+                          <li className="style-error"> Description</li>
+                          <li className="style-error"> Cover Image</li>
 
                         </ul>
 
                         <br />
                         <ul className="font-normal">
                           <li className="font-bold">Credibility · 67%</li>
-                          <li>x Source/Provenance</li>
-                          <li>x Public Notebook</li>
-                          <li>x Update Frequency</li>
+                          <li className="style-error"> Source/Provenance</li>
+                          <li className="style-error"> Public Notebook</li>
+                          <li className="style-error"> Update Frequency</li>
                         </ul>
 
                         <br />
                         <ul className="font-normal">
                           <li className="font-bold">Compatibility · 67%</li>
-                          <li>x License</li>
-                          <li>x File Format</li>
-                          <li>x File Description</li>
+                          <li className="style-checked"> License</li>
+                          <li className="style-error"> File Format</li>
+                          <li className="style-error"> File Description</li>
                         </ul>
                       </div>
                     </div>

@@ -57,6 +57,7 @@ export function DatasetDescription(props: any) {
                 (
                     <div className="flex flex-col">
                         <div>
+                            {/* TODO: Use Formik */}
                             <TextareaAutosize autoFocus
                                 value={textContent}
                                 onChange={e => setTextContent(e.target.value)} />

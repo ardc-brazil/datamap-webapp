@@ -96,6 +96,22 @@
     font-size: 0.75rem !important;
   }
 
+  .style-checked {
+    list-style: none;
+  }
+  
+  .style-checked:before {
+    content: '✓';
+  }
+
+  .style-error {
+    list-style: none;
+  }
+  
+  .style-error:before {
+    content: 'x';
+  }
+
   /* https://www.magicpattern.design/tools/css-backgrounds */
   /* .special-background {
     
