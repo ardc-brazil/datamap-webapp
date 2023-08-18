@@ -11,8 +11,9 @@ export default function ProfilePage(props) {
   const { data: session, status } = useSession();
 
   function clickSignOut() {
-    signOut();
-    Router.push("/");
+    signOut().then((value) => {
+      Router.push("/");
+    });
   }
 
   if (status === "authenticated") {
@@ -88,6 +89,10 @@ export async function getServerSideProps(context) {
 
   // Fetch data frm external API
   const ctx = await NewContext(context.req);
+  if (!ctx.uid) {
+    return { props: {}}
+  }
+
   const data = await getUserByUID(ctx);
 
   // Pass data to the page via props

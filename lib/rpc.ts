@@ -18,7 +18,7 @@ const axiosInterceptorInstance = axios.create({
 export function buildHeaders(context: AppLocalContext) {
   return {
       headers: {
-          "X-User-Id": context.uid
+          "X-User-Id": context.uid ?? ""
       }
   }
 }
