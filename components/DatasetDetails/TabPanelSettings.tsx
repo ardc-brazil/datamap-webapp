@@ -79,7 +79,7 @@ export function TabPanelSettings(props: TabPanelProps) {
                   className="text-xs text-error-600"
                 />
               </div>
-              <div className="w-full">
+              <div className="w-full py-4">
                 <label htmlFor="institution">Institution</label>
                 <Field
                   type="text"
@@ -95,6 +95,25 @@ export function TabPanelSettings(props: TabPanelProps) {
                   className="text-xs text-error-600"
                 />
               </div>
+              {/* TODO: Define how visibility will work */}
+              {/* <div className="w-48 py-4">
+                <label htmlFor="visibility">Visibility</label>
+                <Field
+                  type="text"
+                  id="visibility"
+                  name="visibility"
+                  className="invalid:border-error-500"
+                  as="select"
+                >
+                  <option value="private">Private</option>
+                  <option value="public">Public</option>
+                  </Field>
+                <ErrorMessage
+                  name="institution"
+                  component="div"
+                  className="text-xs text-error-600"
+                />
+              </div> */}
 
               <div className="flex h-24 items-center w-full">
                 <button type="submit" className="btn-primary" disabled={isSubmitting}>Save Changes</button>

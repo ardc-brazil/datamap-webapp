@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { CardItem } from "../CardItem";
+import DatasetLicenseForm from "../DatasetLicenseForm";
 import { LoadingAnimation } from "../LoadingAnimation";
 import { TabPanel, TabPanelProps } from "../TabPanel";
 import { DatasetDescription } from "./DatasetDescription";
@@ -149,9 +150,12 @@ export function TabPanelDataCard(props: TabPanelProps) {
           <div className="flex flex-col divide-y divide-primary-200 gap-8 mt-16">
             <h5>Metadata</h5>
             <div className="py-4">
+              <h6 className="font-semibold py-4">License</h6>
+              <DatasetLicenseForm dataset={props.dataset} />
+            </div>
+            <div className="py-4">
               <h6 className="font-semibold py-4">Usage Information</h6>
               <div className="flex gap-28 py-4">
-                <CardItem title="LICENSE">{props.dataset.license ?? "-"}</CardItem>
                 <CardItem title="VISIBILITY">Public</CardItem>
               </div>
             </div>

@@ -50,7 +50,7 @@ export function DatasetDescription(props: any) {
         <div>
             <div className="flex">
                 <h5 className="w-full">About Dataset</h5>
-                <button className={`${editingDescription && "hidden"} btn-primary-outline btn-small`} onClick={handleEditDescription}>Edit</button>
+                <button className={`${editingDescription && "hidden"} btn-primary-outline btn-small w-16 h-8`} onClick={handleEditDescription}>Edit</button>
             </div>
             {editingDescription
                 ?
