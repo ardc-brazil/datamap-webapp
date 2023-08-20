@@ -77,7 +77,6 @@ export default function DatasetAuthorsForm(props) {
 
                                                     {values.authors?.length > 0 &&
                                                         values.authors.map((item: any, index: number) => {
-                                                            console.log(item);
                                                             return (
                                                                 <div className="py-2" key={index}>
                                                                     <label htmlFor={`authors.${index}.name`}>Author Name</label>
