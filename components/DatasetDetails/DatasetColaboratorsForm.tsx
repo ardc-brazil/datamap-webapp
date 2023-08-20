@@ -24,7 +24,8 @@ export default function DatasetColaboratorsForm(props) {
                 Yup.object().shape({
                     name: Yup.string()
                         .max(255, "Name should be less than 255 characters")
-                        .required("Name is required.")
+                        .required("Name is required."),
+                    permission: Yup.string().required("Select one")
                 })
             )
     });
@@ -116,6 +117,11 @@ export default function DatasetColaboratorsForm(props) {
                                                                                 className="invalid:border-error-500 border"
                                                                                 placeholder="Informe a name for a colaborator"
                                                                             />
+                                                                            <ErrorMessage
+                                                                                name={`colaborators.${index}.name`}
+                                                                                component="div"
+                                                                                className="text-xs text-error-600"
+                                                                            />
                                                                         </div>
                                                                         <div className="mx-4 w-36">
                                                                             <label htmlFor={`colaborators.${index}.name`}>Permission</label>
@@ -126,21 +132,23 @@ export default function DatasetColaboratorsForm(props) {
                                                                                 className="invalid:border-error-500"
                                                                                 as="select"
                                                                             >
+                                                                                <option value="">Select</option>
                                                                                 <option value="owner">Owner</option>
                                                                                 <option value="can_view">Can view</option>
                                                                                 <option value="can_edit">Can edit</option>
                                                                             </Field>
+                                                                            <ErrorMessage
+                                                                                name={`colaborators.${index}.permission`}
+                                                                                component="div"
+                                                                                className="text-xs text-error-600"
+                                                                            />
                                                                         </div>
                                                                         <div className="flex items-center justify-center w-16">
                                                                             <CloseButton onClick={() => arrayHelpers.remove(index)} />
                                                                         </div>
                                                                     </div>
 
-                                                                    <ErrorMessage
-                                                                        name={`colaborators.${index}.name`}
-                                                                        component="div"
-                                                                        className="text-xs text-error-600"
-                                                                    />
+
                                                                 </div>
                                                             )
                                                         })
