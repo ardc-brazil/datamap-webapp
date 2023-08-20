@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { CardItem } from "../CardItem";
+import DatasetAuthorsForm from "../DatasetAuthorsForm";
 import DatasetLicenseForm from "../DatasetLicenseForm";
 import { LoadingAnimation } from "../LoadingAnimation";
 import { TabPanel, TabPanelProps } from "../TabPanel";
@@ -149,6 +150,21 @@ export function TabPanelDataCard(props: TabPanelProps) {
           <hr className="my-4" />
           <div className="flex flex-col divide-y divide-primary-200 gap-8 mt-16">
             <h5>Metadata</h5>
+            {/* <div className="py-4">
+              <h6 className="font-semibold py-4">Colaborators</h6>
+              <ul>
+                <li>{props.dataset.owner?.name}</li>
+                <li>{props.dataset.author?.name ?? "-"}</li>
+                {props.dataset.contacts?.map((x, i) => (
+                  <li key={i}>{x.name}</li>
+                ))}
+              </ul>
+            </div> */}
+            <div className="py-4">
+              <h6 className="font-semibold py-4">Authors</h6>
+              <DatasetAuthorsForm dataset={props.dataset} />
+            </div>
+
             <div className="py-4">
               <h6 className="font-semibold py-4">License</h6>
               <DatasetLicenseForm dataset={props.dataset} />
@@ -158,16 +174,6 @@ export function TabPanelDataCard(props: TabPanelProps) {
               <div className="flex gap-28 py-4">
                 <CardItem title="VISIBILITY">Public</CardItem>
               </div>
-            </div>
-            <div>
-              <h6 className="font-semibold py-4">Collaborators</h6>
-              <ul className="py-4">
-                <li>{props.dataset.owner?.name}</li>
-                <li>{props.dataset.author?.name ?? "-"}</li>
-                {props.dataset.contacts?.map((x, i) => (
-                  <li key={i}>{x.name}</li>
-                ))}
-              </ul>
             </div>
             <div>
               <h6 className="font-semibold py-4">Coverage</h6>
