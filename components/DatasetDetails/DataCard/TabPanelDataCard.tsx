@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { CardItem } from "../CardItem";
 import DatasetAuthorsForm from "../DatasetAuthorsForm";
+import DatasetColaboratorsForm from "../DatasetColaboratorsForm";
 import DatasetLicenseForm from "../DatasetLicenseForm";
 import { LoadingAnimation } from "../LoadingAnimation";
 import { TabPanel, TabPanelProps } from "../TabPanel";
@@ -150,16 +151,10 @@ export function TabPanelDataCard(props: TabPanelProps) {
           <hr className="my-4" />
           <div className="flex flex-col divide-y divide-primary-200 gap-8 mt-16">
             <h5>Metadata</h5>
-            {/* <div className="py-4">
+            <div className="py-4">
               <h6 className="font-semibold py-4">Colaborators</h6>
-              <ul>
-                <li>{props.dataset.owner?.name}</li>
-                <li>{props.dataset.author?.name ?? "-"}</li>
-                {props.dataset.contacts?.map((x, i) => (
-                  <li key={i}>{x.name}</li>
-                ))}
-              </ul>
-            </div> */}
+              <DatasetColaboratorsForm dataset={props.dataset} />
+            </div>
             <div className="py-4">
               <h6 className="font-semibold py-4">Authors</h6>
               <DatasetAuthorsForm dataset={props.dataset} />

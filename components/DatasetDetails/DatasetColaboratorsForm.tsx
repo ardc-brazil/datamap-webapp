@@ -5,9 +5,9 @@ import * as Yup from 'yup';
 import CloseButton from '../base/CloseButton';
 import { CardItem } from "./CardItem";
 
-export default function DatasetAuthorsForm(props) {
+export default function DatasetColaboratorsForm(props) {
 
-    const infoText = "Credit people who helped create the data.";
+    const infoText = "Add collaborators who are responsible for maintaining the dataset including being available for questions from users.";
     const [editing, setEditing] = useState(false);
 
     function handleEditClick(event): void {
@@ -19,7 +19,7 @@ export default function DatasetAuthorsForm(props) {
     }
 
     const schema = Yup.object().shape({
-        authors: Yup.array()
+        colaborators: Yup.array()
             .of(
                 Yup.object().shape({
                     name: Yup.string()
@@ -31,7 +31,7 @@ export default function DatasetAuthorsForm(props) {
 
     function onSubmit(values, { setSubmitting }) {
         setSubmitting(true);
-        props.dataset.authors = values.authors;
+        props.dataset.colaborators = values.colaborators;
 
         axios.put("/api/datasets/" + props.dataset.id, props.dataset)
             .then(response => {
@@ -53,20 +53,47 @@ export default function DatasetAuthorsForm(props) {
         return <button className={`${editing && "hidden"} btn-primary-outline btn-small h-8 w-16`} onClick={handleEditClick}>Edit</button>
     }
 
+    function getColaboratorsList() {
+        let all = [];
+
+        if (props.dataset.owner) {
+            all.concat(props.dataset.owner);
+        }
+
+        if (props.dataset.contacts) {
+            all.concat(props.dataset.contacts);
+        }
+
+        return all;
+    }
+
+    function getPermissionDescription(permission: string) {
+        if (permission === "owner") {
+            return "(Owner)";
+        } else if (permission === "can_view") {
+            return "(Viewer)";
+        } else if (permission === "can_edit") {
+            return "(Editor)";
+        }
+
+        return "";
+    }
+
+
     if (editing || props.alwaysEdition) {
         return (
             <Formik
                 initialValues={{
-                    authors: props.dataset.authors
+                    colaborators: props.dataset.colaborators
                 }}
                 validationSchema={schema}
                 onSubmit={onSubmit}
             >
-                {({ isSubmitting, values, setFieldTouched }) => (
+                {({ isSubmitting, values }) => (
                     <Form>
                         <div className="flex flex-row items-center">
                             <div className="w-full">
-                                <FieldArray name="authors">
+                                <FieldArray name="colaborators">
                                     {(arrayHelpers: ArrayHelpers) => {
                                         return (
                                             <div className="flex">
@@ -75,24 +102,42 @@ export default function DatasetAuthorsForm(props) {
                                                         {infoText}
                                                     </p>
 
-                                                    {values.authors.length > 0 &&
-                                                        values.authors.map((item: any, index: number) => {
-                                                            console.log(item);
+                                                    {values.colaborators?.length > 0 &&
+                                                        values.colaborators.map((item: any, index: number) => {
                                                             return (
                                                                 <div className="py-2" key={index}>
-                                                                    <label htmlFor={`authors.${index}.name`}>Author Name</label>
+
                                                                     <div className="flex items-center gap-2">
-                                                                        <Field
-                                                                            id={`authors.${index}.name`}
-                                                                            name={`authors.${index}.name`}
-                                                                            className="invalid:border-error-500 border"
-                                                                            placeholder="Informe a name for a author"
-                                                                        />
-                                                                        <CloseButton onClick={() => arrayHelpers.remove(index)} />
+                                                                        <div className="w-full">
+                                                                            <label htmlFor={`colaborators.${index}.name`}>Name</label>
+                                                                            <Field
+                                                                                id={`colaborators.${index}.name`}
+                                                                                name={`colaborators.${index}.name`}
+                                                                                className="invalid:border-error-500 border"
+                                                                                placeholder="Informe a name for a colaborator"
+                                                                            />
+                                                                        </div>
+                                                                        <div className="mx-4 w-36">
+                                                                            <label htmlFor={`colaborators.${index}.name`}>Permission</label>
+                                                                            <Field
+                                                                                type="text"
+                                                                                id={`colaborators.${index}.permission`}
+                                                                                name={`colaborators.${index}.permission`}
+                                                                                className="invalid:border-error-500"
+                                                                                as="select"
+                                                                            >
+                                                                                <option value="owner">Owner</option>
+                                                                                <option value="can_view">Can view</option>
+                                                                                <option value="can_edit">Can edit</option>
+                                                                            </Field>
+                                                                        </div>
+                                                                        <div className="flex items-center justify-center w-16">
+                                                                            <CloseButton onClick={() => arrayHelpers.remove(index)} />
+                                                                        </div>
                                                                     </div>
 
                                                                     <ErrorMessage
-                                                                        name={`authors.${index}.name`}
+                                                                        name={`colaborators.${index}.name`}
                                                                         component="div"
                                                                         className="text-xs text-error-600"
                                                                     />
@@ -101,7 +146,7 @@ export default function DatasetAuthorsForm(props) {
                                                         })
                                                     }
 
-                                                    <button type="button" onClick={() => arrayHelpers.push({})}>+ Add Author</button>
+                                                    <button type="button" onClick={() => arrayHelpers.push({})}>+ Add Colaborator</button>
 
                                                 </div>
                                                 <div className="flex w-64 h-10 gap-2 pl-4">
@@ -118,12 +163,12 @@ export default function DatasetAuthorsForm(props) {
                 )}
             </Formik>
         );
-    } else if (props.dataset.authors && props.dataset.authors.length > 0) {
+    } else if (props.dataset.colaborators && props.dataset.colaborators.length > 0) {
         // Print the license information
         return <div className="flex flex-row w-full items-center">
             <p className="text-primary-500 w-full">
-                {props.dataset.authors?.map((author, index) =>
-                    <CardItem key={index} title="Author Name" className="py-2">{author.name}</CardItem>)}
+                {props.dataset.colaborators?.map((person, index) =>
+                    <CardItem key={index} title="Colaborator Name" className="py-2">{`${person.name} ${getPermissionDescription(person.permission)}`}</CardItem>)}
             </p>
             <EditButton />
         </div>
