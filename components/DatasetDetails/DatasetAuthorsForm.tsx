@@ -75,7 +75,7 @@ export default function DatasetAuthorsForm(props) {
                                                         {infoText}
                                                     </p>
 
-                                                    {values.authors.length > 0 &&
+                                                    {values.authors?.length > 0 &&
                                                         values.authors.map((item: any, index: number) => {
                                                             console.log(item);
                                                             return (
