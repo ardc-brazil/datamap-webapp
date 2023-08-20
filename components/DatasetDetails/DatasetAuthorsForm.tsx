@@ -57,7 +57,7 @@ export default function DatasetAuthorsForm(props) {
         return (
             <Formik
                 initialValues={{
-                    authors: props.dataset.authors
+                    authors: props.dataset.authors ?? [{}]
                 }}
                 validationSchema={schema}
                 onSubmit={onSubmit}

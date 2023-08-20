@@ -84,7 +84,7 @@ export default function DatasetColaboratorsForm(props) {
         return (
             <Formik
                 initialValues={{
-                    colaborators: props.dataset.colaborators
+                    colaborators: props.dataset.colaborators ?? [{}]
                 }}
                 validationSchema={schema}
                 onSubmit={onSubmit}
