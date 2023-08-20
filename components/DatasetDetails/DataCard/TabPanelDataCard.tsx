@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-
+import { licenseMapping } from "../../../lib/licenseMapping";
 import { CardItem } from "../CardItem";
 import DatasetAuthorsForm from "../DatasetAuthorsForm";
 import DatasetColaboratorsForm from "../DatasetColaboratorsForm";
@@ -26,7 +26,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
       // TODO: Create endpoints to get data quality information.
       setData({
         usability: "8.75",
-        license: props.dataset.license,
+        license: props.dataset.license ? licenseMapping[props.dataset.license] : "Unknow",
         updateFrequency: "Quarterly",
       });
 
