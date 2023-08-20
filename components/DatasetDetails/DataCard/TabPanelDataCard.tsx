@@ -26,7 +26,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
       // TODO: Create endpoints to get data quality information.
       setData({
         usability: "8.75",
-        license: "CC BY-SA 4.0",
+        license: props.dataset.license,
         updateFrequency: "Quarterly",
       });
 
