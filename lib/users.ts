@@ -100,3 +100,10 @@ export async function getUserByProviderID(request: GetUserByProviderRequest) {
     const response = await axiosInstance.get(`/users/providers/${request.providerName}/${request.providerID}`);
     return response.data;
 }
+
+// TODO: Create a generic way to validade this.
+export function canEditDataset(user: UserDetailsResponse): boolean {
+    // return false;
+    return user.roles.indexOf("datasets_editor") >= 0
+        || user.roles.indexOf("admin") >= 0;
+}

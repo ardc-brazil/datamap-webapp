@@ -2,10 +2,12 @@ import axios from 'axios';
 import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { useState } from 'react';
 import * as Yup from 'yup';
+import { canEditDataset } from "../../lib/users";
 
 export default function DatasetInstitution(props) {
 
     const [editing, setEditing] = useState(false);
+    const canEdit = canEditDataset(props.user);
 
     function handleEditClick(event): void {
         setEditing(true);
@@ -41,7 +43,7 @@ export default function DatasetInstitution(props) {
     }
 
     function EditButton() {
-        return <button className="text-primary-400 hover:text-primary-500 underline pl-2" onClick={handleEditClick}>Edit</button>
+        return <button className={`${!canEdit && "hidden"} text-primary-400 hover:text-primary-500 underline pl-2`} onClick={handleEditClick}>Edit</button>
     }
 
     // in edition mode

@@ -6,8 +6,10 @@ import { DownloadDatafilesButton } from "../../../components/DownloadDatafilesBu
 import LoggedLayout from "../../../components/LoggedLayout";
 import { NewContext } from "../../../lib/appLocalContext";
 import { getDatasetBy } from "../../../lib/dataset";
+import { canEditDataset, getUserByUID } from "../../../lib/users";
 
 export default function DatasetDetailsPage(props) {
+
   return (
     <LoggedLayout>
       <div className="w-full">
@@ -16,7 +18,7 @@ export default function DatasetDetailsPage(props) {
             {/* Title */}
             <div className="basis-10/12">
               <h1 className="font-extrabold">{props.dataset.name}</h1>
-              <DatasetInstitution dataset={props.dataset} />
+              <DatasetInstitution dataset={props.dataset} user={props.user} />
             </div>
             {/* Actions */}
             <div className="">
@@ -26,12 +28,14 @@ export default function DatasetDetailsPage(props) {
         </div>
         <div className="container mx-auto">
           <Tabs className="py-4">
-            <TabPanelDataCard title="Data Card" dataset={props.dataset} />
+            <TabPanelDataCard title="Data Card" dataset={props.dataset} user={props.user} />
             {/* <TabPanelMetadata title="Metadata" dataset={props.dataset} /> */}
             {/* TODO: Enable discussion tab - Disabled while empty */}
             {/* <TabPanelDiscussion title="Discussions" dataset={props.dataset} /> */}
             {/* <TabPanelDiscussion title="Discussions" dataset={props.dataset} /> */}
-            <TabPanelSettings title="Settings" dataset={props.dataset} />
+            {canEditDataset(props.user) &&
+              <TabPanelSettings title="Settings" dataset={props.dataset} user={props.user} />
+            }
           </Tabs>
         </div>
       </div>
@@ -43,8 +47,10 @@ export async function getServerSideProps({ req, res, query }) {
   const context = await NewContext(req);
   const datasetId = query.datasetId as string;
   const dataset = await getDatasetBy(context, datasetId);
+  const user = await getUserByUID(context);
+
   return {
-    props: { dataset }, // will be passed to the page component as props
+    props: { dataset, user }, // will be passed to the page component as props
   };
 }
 

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import TextareaAutosize from 'react-textarea-autosize';
 import remarkGfm from "remark-gfm";
+import { canEditDataset } from "../../../lib/users";
 import { ExpansibleDiv } from "./ExpansibleDiv";
 
 
@@ -10,7 +11,7 @@ export function DatasetDescription(props: any) {
 
     const [editingDescription, setEditDescription] = useState(false);
     const [textContent, setTextContent] = useState(props.dataset.description)
-
+    const canEdit = canEditDataset(props.user);
 
     useEffect(() => {
         setTextContent(props.dataset.description)
@@ -50,7 +51,7 @@ export function DatasetDescription(props: any) {
         <div>
             <div className="flex">
                 <h5 className="w-full">About Dataset</h5>
-                <button className={`${editingDescription && "hidden"} btn-primary-outline btn-small w-16 h-8`} onClick={handleEditDescription}>Edit</button>
+                <button className={`${(editingDescription || !canEdit) && "hidden"} btn-primary-outline btn-small w-16 h-8`} onClick={handleEditDescription}>Edit</button>
             </div>
             {editingDescription
                 ?

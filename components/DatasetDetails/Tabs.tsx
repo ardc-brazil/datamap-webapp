@@ -27,7 +27,7 @@ export function Tabs(props: TabsProps) {
                 onSelected={onTabSelected}
                 active={tabSelected}
               >
-                {child.props.title}
+                {child?.props.title}
               </Tab>
             );
           })}

@@ -2,12 +2,14 @@ import axios from 'axios';
 import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { useState } from 'react';
 import * as Yup from 'yup';
-import { licenseMapping, getAllLicensesIds } from "../../lib/licenseMapping";
+import { getAllLicensesIds, licenseMapping } from "../../lib/licenseMapping";
+import { canEditDataset } from "../../lib/users";
 
 
 export default function DatasetLicenseForm(props) {
 
     const [editing, setEditing] = useState(false);
+    const canEdit = canEditDataset(props.user);
 
     function handleEditClick(event): void {
         setEditing(true);
@@ -43,7 +45,7 @@ export default function DatasetLicenseForm(props) {
     }
 
     function EditButton() {
-        return <button className={`${editing && "hidden"} btn-primary-outline btn-small h-8 w-16`} onClick={handleEditClick}>Edit</button>
+        return <button className={`${(editing || !canEdit) && "hidden"} btn-primary-outline btn-small h-8 w-16`} onClick={handleEditClick}>Edit</button>
     }
 
     if (editing || props.alwaysEdition) {

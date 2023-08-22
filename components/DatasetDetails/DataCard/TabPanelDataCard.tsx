@@ -52,7 +52,6 @@ export function TabPanelDataCard(props: TabPanelProps) {
 
   if (!data) return <p>No dataset data</p>;
 
-
   function handlePointerOver() {
     console.log("ok");
     setShowUsabilityPopup(true);
@@ -62,7 +61,6 @@ export function TabPanelDataCard(props: TabPanelProps) {
     setShowUsabilityPopup(false);
   }
 
-
   return (
     <TabPanel title={props.title}>
       <div className="grid grid-cols-12">
@@ -70,7 +68,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
           <div className="flex w-full">
 
             <div className="w-full">
-              <DatasetDescription dataset={props.dataset} />
+              <DatasetDescription dataset={props.dataset} user={props.user} />
             </div>
             <div className="w-96">
               <div className="col-span-3 flex flex-col gap-2 pl-8">
@@ -153,18 +151,18 @@ export function TabPanelDataCard(props: TabPanelProps) {
             <h4>Metadata</h4>
             <div className="py-4">
               <h6 className="font-semibold py-4">Colaborators</h6>
-              <DatasetColaboratorsForm dataset={props.dataset} />
+              <DatasetColaboratorsForm dataset={props.dataset} user={props.user} />
             </div>
             <div className="py-4">
               <h6 className="font-semibold py-4">Authors</h6>
-              <DatasetAuthorsForm dataset={props.dataset} />
+              <DatasetAuthorsForm dataset={props.dataset} user={props.user} />
             </div>
 
             <div className="py-4">
               <h6 className="font-semibold py-4">License</h6>
-              <DatasetLicenseForm dataset={props.dataset} />
+              <DatasetLicenseForm dataset={props.dataset} user={props.user} />
             </div>
-            
+
             <div>
               <h6 className="font-semibold py-4">Coverage</h6>
               <div className="flex gap-28 py-4">

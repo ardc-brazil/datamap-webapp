@@ -2,6 +2,7 @@ import axios from 'axios';
 import { ArrayHelpers, ErrorMessage, Field, FieldArray, Form, Formik } from 'formik';
 import { useState } from 'react';
 import * as Yup from 'yup';
+import { canEditDataset } from "../../lib/users";
 import CloseButton from '../base/CloseButton';
 import { CardItem } from "./CardItem";
 
@@ -9,6 +10,7 @@ export default function DatasetColaboratorsForm(props) {
 
     const infoText = "Add collaborators who are responsible for maintaining the dataset including being available for questions from users.";
     const [editing, setEditing] = useState(false);
+    const canEdit = canEditDataset(props.user);
 
     function handleEditClick(event): void {
         setEditing(true);
@@ -51,7 +53,7 @@ export default function DatasetColaboratorsForm(props) {
     }
 
     function EditButton() {
-        return <button className={`${editing && "hidden"} btn-primary-outline btn-small h-8 w-16`} onClick={handleEditClick}>Edit</button>
+        return <button className={`${(editing || !canEdit) && "hidden"} btn-primary-outline btn-small h-8 w-16`} onClick={handleEditClick}>Edit</button>
     }
 
     function getColaboratorsList() {
