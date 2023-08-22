@@ -164,12 +164,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
               <h6 className="font-semibold py-4">License</h6>
               <DatasetLicenseForm dataset={props.dataset} />
             </div>
-            <div className="py-4">
-              <h6 className="font-semibold py-4">Usage Information</h6>
-              <div className="flex gap-28 py-4">
-                <CardItem title="VISIBILITY">Public</CardItem>
-              </div>
-            </div>
+            
             <div>
               <h6 className="font-semibold py-4">Coverage</h6>
               <div className="flex gap-28 py-4">
