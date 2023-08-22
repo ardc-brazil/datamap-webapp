@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_HOME, ROUTE_PAGE_PROFILE } from "../contants/InternalRoutesConstants";
+import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_HOME, ROUTE_PAGE_NOTEBOOKS, ROUTE_PAGE_NOTEBOOKS_NEW, ROUTE_PAGE_PROFILE } from "../contants/InternalRoutesConstants";
 import Head from "../node_modules/next/head";
 import AvatarIcon from "./Icons/AvatarIcon";
 import DatasetIcon from "./Icons/DatasetIcon";
 import PiechartIcon from "./Icons/PiechartIcon";
 import AvatarButton from "./Profile/AvatarButton";
+import useComponentVisible from "../hooks/UseComponentVisible";
+import NotebookIcon from "./Icons/NotebookIcon";
+import HomeIcon from "./Icons/HomeIcon";
 
 interface Props {
   children?: React.ReactNode;
@@ -18,9 +21,14 @@ interface Props {
 
 export default (props: Props) => {
   const [menuClosed, setMenuClosed] = useState(false);
+  const { ref, isComponentVisible, setIsComponentVisible } = useComponentVisible(false);
 
   function toggleMenu(): void {
     setMenuClosed(!menuClosed);
+  }
+
+  function showCreateMenu(event): void {
+    setIsComponentVisible(true);
   }
 
   return (
@@ -71,19 +79,36 @@ export default (props: Props) => {
             }
 
             {!menuClosed && (
-              <Link href={ROUTE_PAGE_DATASETS_NEW}>
-                <a className="btn-primary w-full ml-6 mr-4 text-center whitespace-nowrap">New Dataset</a>
-              </Link>
+              <div className="realtive inline-block w-full ml-6 mr-4">
+                <button type="button" className="btn-primary w-full" onClick={showCreateMenu}>
+                  Create
+                  <div className="relative w-full">
+                    <svg className="-mr-1 h-5 w-5 text-gray-400 inline-block absolute -top-5 right-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </button>
+
+                <div ref={ref} className={`${!isComponentVisible && "hidden"} absolute right-4 z-10 mt-0 w-52 origin-top-right rounded shadow-lg ring-1 ring-primary-900 ring-opacity-5 focus:outline-none bg-primary-50`} role="menu" aria-orientation="vertical" aria-labelledby="menu-button">
+                  <div className="py-1" role="none">
+                    <CreateMenuItem href={ROUTE_PAGE_DATASETS_NEW} text="New Dataset" onClick={() => setIsComponentVisible(false)} img="/img/icon-dataset.svg" />
+                    <CreateMenuItem href={ROUTE_PAGE_NOTEBOOKS} text="New Notebook" onClick={() => setIsComponentVisible(false)} img="/img/icon-code.svg" />
+                  </div>
+                </div>
+              </div>
             )}
 
           </div>
 
           <ul className="py-4">
             <MenuItem href={ROUTE_PAGE_HOME} text="Home">
-              <PiechartIcon />
+              <HomeIcon />
             </MenuItem>
             <MenuItem href={ROUTE_PAGE_DATASETS} text="Datasets">
               <DatasetIcon />
+            </MenuItem>
+            <MenuItem href={ROUTE_PAGE_NOTEBOOKS} text="Notebooks">
+              <NotebookIcon />
             </MenuItem>
           </ul>
           <hr className="mb-4" />
@@ -114,6 +139,15 @@ export default (props: Props) => {
     </>
   );
 };
+
+function CreateMenuItem(props) {
+  return <Link href={props.href}>
+    <a className="block px-4 py-2 text-sm hover:bg-primary-100" onClick={() => props.onClick()}>
+      <img src={props.img} className="w-6 inline-block mr-2" />
+      {props.text}
+    </a>
+  </Link>;
+}
 
 function MenuItem(props) {
   const router = useRouter();

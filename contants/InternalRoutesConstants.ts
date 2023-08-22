@@ -19,6 +19,18 @@ export const ROUTE_PAGE_HOME = ROUTE_APP_CONTEXT + '/home';
 export const ROUTE_PAGE_DATASETS = ROUTE_APP_CONTEXT + '/datasets';
 
 /**
+ * Route to the notebooks internal page.
+ * @constant
+ */
+export const ROUTE_PAGE_NOTEBOOKS = ROUTE_APP_CONTEXT + '/notebooks';
+
+/**
+ * Route to the new notebook internal page.
+ * @constant
+ */
+export const ROUTE_PAGE_NOTEBOOKS_NEW = ROUTE_PAGE_NOTEBOOKS + "/new";
+
+/**
  * Route to the datasets internal page.
  * @constant
  */
