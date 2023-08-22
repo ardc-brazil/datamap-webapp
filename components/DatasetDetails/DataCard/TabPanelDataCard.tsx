@@ -6,6 +6,7 @@ import DatasetColaboratorsForm from "../DatasetColaboratorsForm";
 import DatasetLicenseForm from "../DatasetLicenseForm";
 import { LoadingAnimation } from "../LoadingAnimation";
 import { TabPanel, TabPanelProps } from "../TabPanel";
+import DataExplorer from "./DataExplorer";
 import { DatasetDescription } from "./DatasetDescription";
 
 
@@ -143,25 +144,13 @@ export function TabPanelDataCard(props: TabPanelProps) {
 
           </div>
 
-          {props.dataset.dataFiles && props.dataset.dataFiles.length > 0 && (
-            <>
-              <hr className="my-4" />
-              <div className="mt-4">
-                <h5>Data Explorer</h5>
-                <ul className="list-disc list-inside py-4">
-                  {props.dataset.dataFiles?.map((x, i) => (
-                    <li className="pl-4" key={i}>
-                      <a href={x.path} download>{x.path}</a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </>
-          )}
+          <hr className="my-4" />
+
+          <DataExplorer dataset={props.dataset} />
 
           <hr className="my-4" />
           <div className="flex flex-col divide-y divide-primary-200 gap-8 mt-16">
-            <h5>Metadata</h5>
+            <h4>Metadata</h4>
             <div className="py-4">
               <h6 className="font-semibold py-4">Colaborators</h6>
               <DatasetColaboratorsForm dataset={props.dataset} />

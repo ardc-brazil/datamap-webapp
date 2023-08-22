@@ -22,13 +22,13 @@ export function Tab(props: TabProps) {
 
   return (
     <li className="mr-2">
-      <a
-        href="#"
+      <button
+        type="button"
         className={`inline-block p-4 rounded-t-lg border-0 ${cssForActiveTab()}`}
         onClick={onSelected}
       >
         {props.children}
-      </a>
+      </button>
     </li>
   );
 }
