@@ -75,7 +75,7 @@ export default function DataExplorer(props) {
           {/* Header */}
           <div className="flex p-4 ">
             <div className="w-full bg-primary-50">
-              <h6 className="font-semibold">{selectedFile} <span className="text-primary-500 no-underline">(10 MB)</span></h6>
+              <h6 className="font-semibold">{fileName(selectedFile)} <span className="text-primary-500 no-underline">(10 MB)</span></h6>
             </div>
             <div className="">
               <button type="button" className="rounded-full h-8 w-8 hover:bg-primary-100 active:bg-primary-200" onClick={handleCollapseDataExplorer}>
