@@ -87,7 +87,7 @@ export default function DataExplorer(props) {
           {loadingTable
             ? <p className="text-sm px-4">Loading ...</p>
             : (
-              <Tabs>
+              <Tabs className="max-h-[600px]">
                 <TabPanel title="Compact">
                   {/* File Details */}
                   <div className=" overflow-scroll max-h-[600px]">
@@ -115,7 +115,7 @@ export default function DataExplorer(props) {
 
                 </TabPanel>
                 <TabPanel title="Columns">
-                  <div className="p-4">
+                  <div className="p-4 max-h-[600px] overflow-y-auto">
 
                     {fakeData[0].map((column, i) =>
                       <div key={i}>
