@@ -231,6 +231,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
                           value="citation-type"
                           name="citation-type"
                           checked
+                          readOnly
                           className="w-5 h-5 accent-primary-900"
                         />
                         <span className="ml-2 text-sm font-medium text-primary-900 align-top">

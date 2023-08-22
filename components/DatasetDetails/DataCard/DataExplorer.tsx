@@ -4,8 +4,16 @@ import { Tabs } from "../Tabs";
 
 export default function DataExplorer(props) {
 
+  // TODO: Remove with fake data explorer file details
+  if (!props.dataset?.dataFiles?.length) {
+    props.dataset.dataFiles = [
+      { path: "/path/to/a/file1.csv" },
+      { path: "/path/to/a/file2.csv" }
+    ]
+  }
+
   const [dataExplorerCollapsed, setDataExplorerCollapsed] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(props.dataset?.dataFiles[0].path ?? null);
+  const [selectedFile, setSelectedFile] = useState(props.dataset?.dataFiles?.[0].path ?? null);
   const [loadingTable, setLoadingTable] = useState(false);
 
   /**
@@ -19,8 +27,6 @@ export default function DataExplorer(props) {
     const tokens = path.split("/");
     return tokens[tokens.length - 1];
   }
-
-  console.log(props.dataset.dataFiles);
 
   function handleCollapseDataExplorer(event): void {
     setDataExplorerCollapsed(!dataExplorerCollapsed);
@@ -61,14 +67,6 @@ export default function DataExplorer(props) {
   return (
     <div>
       <h4>Data Explorer</h4>
-      {/* <ul className="list-disc list-inside py-4">
-        {props.dataset.dataFiles?.map((x, i) => (
-          <li className="pl-4" key={i}>
-            <a href={x.path} download>{x.path}</a>
-          </li>
-        ))}
-      </ul> */}
-
       <div className="flex gap-4 p-2 overflow-x-clip">
 
         {/* File details */}
@@ -89,10 +87,10 @@ export default function DataExplorer(props) {
           {loadingTable
             ? <p className="text-sm px-4">Loading ...</p>
             : (
-              <Tabs className="p-0">
+              <Tabs>
                 <TabPanel title="Compact">
                   {/* File Details */}
-                  <div className=" overflow-scroll max-h-[600px] mb-4">
+                  <div className=" overflow-scroll max-h-[600px]">
                     <table className="table-auto text-primary-600 font-extralight border-collapse border-spacing-0 border border-primary-200">
                       <thead>
                         <tr className="shadow-sm shadow-primary-700 border border-primary-600 sticky top-0">
@@ -120,10 +118,10 @@ export default function DataExplorer(props) {
                   <div className="p-4">
 
                     {fakeData[0].map((column, i) =>
-                      <>
-                        <ColumnsCard key={i} name={column} value={Math.round(Math.abs(Math.random() * i) * 1000)} />
+                      <div key={i}>
+                        <ColumnsCard name={column} value={Math.round(Math.abs(Math.random() * i) * 1000)} />
                         <hr />
-                      </>
+                      </div>
                     )}
 
                   </div>
