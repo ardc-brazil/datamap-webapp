@@ -125,7 +125,18 @@ export function TabPanelDataCard(props: TabPanelProps) {
 
                 <div>
                   <h6 className="font-semibold">Expected update frequency</h6>
-                  <p>{data.updateFrequency}</p>
+                  {/* TODO: Update the updateFrequency information
+                  Possibilities:
+                    - Unspecified
+                    - Never
+                    - Annually
+                    - Quarterly
+                    - Monthly
+                    - Weekly
+                    - Daily
+                    - Hourly
+                  */}
+                  <p>{data.updateFrequency ?? "Never"}</p>
                 </div>
               </div>
             </div>
@@ -202,26 +213,6 @@ export function TabPanelDataCard(props: TabPanelProps) {
                 <CardItem title="Collection methodology">
                   {props.dataset.source_instrument} - {props.dataset.source}
                 </CardItem>
-              </div>
-            </div>
-
-            <div>
-              <h6 className="font-semibold py-4">Additional Authors</h6>
-              <div className="flex gap-28 py-4">
-                <CardItem title="AUTHOR NAME">Author Full Name</CardItem>
-                <CardItem title="BIO">-</CardItem>
-              </div>
-              <div className="flex gap-28 py-4">
-                <CardItem title="AUTHOR NAME">Author Full Name</CardItem>
-                <CardItem title="BIO">-</CardItem>
-              </div>
-              <div className="flex gap-28 py-4">
-                <CardItem title="AUTHOR NAME">Author Full Name</CardItem>
-                <CardItem title="BIO">-</CardItem>
-              </div>
-              <div className="flex gap-28 py-4">
-                <CardItem title="AUTHOR NAME">Author Full Name</CardItem>
-                <CardItem title="BIO">-</CardItem>
               </div>
             </div>
 
