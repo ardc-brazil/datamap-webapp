@@ -12,7 +12,7 @@ router
   .use(auth)
   .get(async (req, res) => {
     const context = await NewContext(req);
-    const result = await getAllDataset(context);
+    const result = await getAllDataset(context, req.url);
     res.json(result);
   })
   .post(async (req, res) => {

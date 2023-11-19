@@ -1,9 +1,10 @@
 import React from "react";
 
-export function ListDatasetHeader(itemCount) {
+export function ListDatasetHeader(props) {
   return (
     <div className="flex justify-between">
-      <p>{itemCount.itemCount} Results</p>
+      <p>{props.itemCount} Results</p>
+      <p><small>Requested at: {new Date(props.requestedAt).toLocaleString()}</small></p>
       {/* <div>
         <label htmlFor="sortbySelector">
           <span className=" px-2 ">Sort by:</span>

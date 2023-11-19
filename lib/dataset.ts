@@ -110,10 +110,18 @@ function toDatasetDetailsResponse(response: any) {
     return JSON.parse(response.data) as DatasetDetailsResponse;
 }
 
-export async function getAllDataset(context: AppLocalContext): Promise<DatasetListResponsePaged> {
+export async function getAllDataset(context: AppLocalContext, url: String): Promise<DatasetListResponsePaged> {
     try {
+
+        const urlSplited = url?.split("?");
+        var queryString = "";
+
+        if (urlSplited?.length > 0) {
+            queryString = urlSplited[1]
+        }
+
         const datasets = [] as DatasetDetailsResponse[];
-        const response = await axiosInstance.get("/datasets/", buildHeaders(context));
+        const response = await axiosInstance.get(`/datasets/?${queryString}`, buildHeaders(context));
         const datasetsList = response.data as DatasetListResponsePaged;
 
         // Parse data string to json object
