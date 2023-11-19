@@ -81,7 +81,7 @@ async function getUserByProviderAuthentication(account, token) {
   try {
     user = await getUserByProviderID(params);
   } catch (error: any | AxiosError) {
-    if (axios.isAxiosError(error) && error.response.status == 404) {
+    if (axios.isAxiosError(error) && error?.response?.status == 404) {
       user = createUser(params);
     }
   };
