@@ -97,6 +97,7 @@ export default function ListDatasetPage(props) {
           </form>
         </div>
 
+        {/* TODO: Categories filter are disabled until we fix it
         <div className="border-primary-200 mt-8">
           <div className="flex flex-row gap-4">
             <FilterCriteriaList filters={filters} />
@@ -105,6 +106,13 @@ export default function ListDatasetPage(props) {
                 {items?.length > 0 ? <ListDataset data={items} /> : <EmptySearch>{loadingDatasetsMessage}</EmptySearch>}
               </div>
             </div>
+          </div>
+        </div>
+      */}
+
+        <div className="border-primary-200 mt-8">
+          <div className="flex flex-row">
+            {items?.length > 0 ? <ListDataset data={items} /> : <EmptySearch>{loadingDatasetsMessage}</EmptySearch>}
           </div>
         </div>
       </div>
