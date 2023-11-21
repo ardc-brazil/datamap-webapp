@@ -60,7 +60,7 @@ function one(criteria, onCriteriaChanged) {
       option={x}
       onChanged={onChanged}
     >
-      {x.text}
+      {x.label}
     </RadioButton>
   ));
 }
@@ -96,7 +96,7 @@ function multiple(criteria, onCriteriaChanged) {
       option={x}
       onChanged={onChanged}
     >
-      {x.text}
+      {x.label}
     </Checkbox>
   ));
 }

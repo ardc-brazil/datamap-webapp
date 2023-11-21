@@ -3,12 +3,10 @@ import { useState } from "react";
 import useSWR from 'swr';
 import LoggedLayout from "../../../components/LoggedLayout";
 import { EmptySearch } from "../../../components/Search/EmptySearch";
+import { FilterCriteriaList } from "../../../components/Search/FilterCriteriaList";
 import { ListDataset } from "../../../components/Search/ListDataset";
 import TextSearchBar from "../../../components/SearchDataset/TextSearchBar";
 import { ROUTE_PAGE_DATASETS_NEW } from "../../../contants/InternalRoutesConstants";
-import { filterCriteria } from "../../../fake-data/filters";
-import { NewContext } from "../../../lib/appLocalContext";
-import { getAllDataset } from "../../../lib/dataset";
 import { fetcher } from "../../../lib/fetcher";
 
 function useDatasetSearch(fullText) {
@@ -22,7 +20,6 @@ function useDatasetSearch(fullText) {
 }
 
 export default function ListDatasetPage(props) {
-  const [filters, setFilters] = useState(filterCriteria);
   const [textSearch, setTextSearch] = useState({ text: "", at: Date.now() })
   const { datasets, datasetsIsLoading, datasetsIsError } = useDatasetSearch(textSearch.text)
 
@@ -48,40 +45,23 @@ export default function ListDatasetPage(props) {
           <TextSearchBar onTextSearchChanged={onTextSearchChanged} />
         </div>
 
-        {/* TODO: Categories filte are disabled until we fix it
         <div className="border-primary-200 mt-8">
           <div className="flex flex-row gap-4">
-            <FilterCriteriaList filters={filters} />
-            <div className="col-span-9 basis-full px-4 min-h-screen max-w-screen-lg">
+            <FilterCriteriaList />
+
+            <div className="col-span-9 basis-full px-4 min-h-screen">
               <div>
-                {items?.length > 0 ? <ListDataset data={items} /> : <EmptySearch>{loadingDatasetsMessage}</EmptySearch>}
+                {datasetsIsError && <EmptySearch>Error to read datasets</EmptySearch>}
+                {datasetsIsLoading && <EmptySearch>Loading datasets...</EmptySearch>}
+                {datasets?.size <= 0 && <EmptySearch>No datasets found</EmptySearch>}
+                {datasets?.size > 0 && <ListDataset data={datasets.content} requestedAt={textSearch.at} />}
               </div>
             </div>
           </div>
         </div>
-      */}
-
-        <div className="border-primary-200 mt-8">
-          <div className="flex flex-row">
-            {datasetsIsError && <EmptySearch>Error to read datasets</EmptySearch>}
-            {datasetsIsLoading && <EmptySearch>Loading datasets...</EmptySearch>}
-            {datasets?.size <= 0 && <EmptySearch>No datasets found</EmptySearch>}
-            {datasets?.size > 0 && <ListDataset data={datasets.content} requestedAt={textSearch.at} />}
-          </div>
-        </div>
       </div>
-    </LoggedLayout>
+    </LoggedLayout >
   );
-
-}
-
-export async function getServerSideProps(context) {
-
-  // Fetch data frm external API
-  const data = await getAllDataset(await NewContext(context.req), context.req.url);
-
-  // Pass data to the page via props
-  return { props: { data } };
 }
 
 ListDatasetPage.auth = {
