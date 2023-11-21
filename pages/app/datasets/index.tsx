@@ -1,6 +1,6 @@
-import axios from "axios";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import useSWR from 'swr';
 import LoggedLayout from "../../../components/LoggedLayout";
 import { EmptySearch } from "../../../components/Search/EmptySearch";
 import { ListDataset } from "../../../components/Search/ListDataset";
@@ -9,46 +9,14 @@ import { ROUTE_PAGE_DATASETS_NEW } from "../../../contants/InternalRoutesConstan
 import { filterCriteria } from "../../../fake-data/filters";
 import { NewContext } from "../../../lib/appLocalContext";
 import { getAllDataset } from "../../../lib/dataset";
+import { fetcher } from "../../../lib/fetcher";
 
 export default function ListDatasetPage(props) {
   const [filters, setFilters] = useState(filterCriteria);
-  const [items, setItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true)
-  const [loadingDatasetsMessage, setLoadingDatasetsMessage] = useState("Loading datasets...");
-
   const [textSearch, setTextSearch] = useState({ text: "", at: Date.now() })
-
-  useEffect(() => {
-    setLoadingDatasetsMessage("Loading datasets...")
-    setFilters(filterCriteria);
-    axios.get(`/api/datasets?full_text=${textSearch.text}`)
-      .then(response => {
-        try {
-          if (response.status == 200) {
-            setItems(response.data?.content);
-            if (response.data?.content.length <= 0) {
-              setLoadingDatasetsMessage("No datasets found");
-            }
-
-            setIsLoading(false);
-          } else {
-            console.log(response);
-            setLoadingDatasetsMessage("Error to read datasets");
-          }
-        } catch (error) {
-          console.log(error);
-          setLoadingDatasetsMessage("Error to read datasets");
-        }
-      })
-      .catch(error => {
-        console.log(error);
-        setLoadingDatasetsMessage("Error to read datasets");
-      });
-  }, [textSearch]);
+  const { data, error, isLoading } = useSWR(`/api/datasets?full_text=${textSearch.text}`, fetcher)
 
   function onTextSearchChanged(text) {
-    console.log("search")
-    setIsLoading(true);
     setTextSearch({ text: text, at: Date.now() });
   }
 
@@ -85,10 +53,10 @@ export default function ListDatasetPage(props) {
 
         <div className="border-primary-200 mt-8">
           <div className="flex flex-row">
-            {(items?.length <= 0 || isLoading) ?
-              <EmptySearch>{loadingDatasetsMessage}</EmptySearch> :
-              <ListDataset data={items} requestedAt={textSearch.at} />
-            }
+            {error && <EmptySearch>Error to read datasets</EmptySearch>}
+            {isLoading && <EmptySearch>Loading datasets...</EmptySearch>}
+            {data?.size <= 0 && <EmptySearch>No datasets found</EmptySearch>}
+            {data?.size > 0 && <ListDataset data={data.content} requestedAt={textSearch.at} />}
           </div>
         </div>
       </div>
