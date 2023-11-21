@@ -11,10 +11,20 @@ import { NewContext } from "../../../lib/appLocalContext";
 import { getAllDataset } from "../../../lib/dataset";
 import { fetcher } from "../../../lib/fetcher";
 
+function useDatasetSearch(fullText) {
+  const { data, error, isLoading } = useSWR(`/api/datasets?full_text=${fullText}`, fetcher)
+
+  return {
+    datasets: data,
+    datasetsIsLoading: isLoading,
+    datasetsIsError: error
+  };
+}
+
 export default function ListDatasetPage(props) {
   const [filters, setFilters] = useState(filterCriteria);
   const [textSearch, setTextSearch] = useState({ text: "", at: Date.now() })
-  const { data, error, isLoading } = useSWR(`/api/datasets?full_text=${textSearch.text}`, fetcher)
+  const { datasets, datasetsIsLoading, datasetsIsError } = useDatasetSearch(textSearch.text)
 
   function onTextSearchChanged(text) {
     setTextSearch({ text: text, at: Date.now() });
@@ -53,10 +63,10 @@ export default function ListDatasetPage(props) {
 
         <div className="border-primary-200 mt-8">
           <div className="flex flex-row">
-            {error && <EmptySearch>Error to read datasets</EmptySearch>}
-            {isLoading && <EmptySearch>Loading datasets...</EmptySearch>}
-            {data?.size <= 0 && <EmptySearch>No datasets found</EmptySearch>}
-            {data?.size > 0 && <ListDataset data={data.content} requestedAt={textSearch.at} />}
+            {datasetsIsError && <EmptySearch>Error to read datasets</EmptySearch>}
+            {datasetsIsLoading && <EmptySearch>Loading datasets...</EmptySearch>}
+            {datasets?.size <= 0 && <EmptySearch>No datasets found</EmptySearch>}
+            {datasets?.size > 0 && <ListDataset data={datasets.content} requestedAt={textSearch.at} />}
           </div>
         </div>
       </div>
