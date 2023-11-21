@@ -39,6 +39,7 @@ export function FilterCriteriaList(props) {
               key={criteria.id}
               criteria={criteria}
               border={border}
+              onCriteriaChanged={props.onCriteriaChanged}
             ></FilterCriteria>
           );
         })}
