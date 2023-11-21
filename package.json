@@ -22,6 +22,7 @@
     "react-simple-oauth2-login": "^0.5.3",
     "react-textarea-autosize": "^8.5.2",
     "remark-gfm": "^3.0.1",
+    "swr": "^2.2.4",
     "uuid": "^9.0.0",
     "yup": "^1.2.0"
   },
