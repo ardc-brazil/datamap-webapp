@@ -1,5 +1,5 @@
 
-import { CreateDatasetRequest, CreateDatasetResponse, DatasetDetailsResponse, DatasetListResponsePaged } from "../types/BffAPI";
+import { CreateDatasetRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, DatasetDetailsResponse, DatasetListResponsePaged } from "../types/BffAPI";
 import { DataFile, DatasetInfo, DatasetRequest } from "../types/GatekeeperAPI";
 import { AppLocalContext } from "./appLocalContext";
 import axiosInstance, { buildHeaders } from "./rpc";
@@ -100,6 +100,16 @@ export async function updateDataset(context: AppLocalContext, dataset: any) {
     return response.data;
 }
 
+export async function getDatasetCategoryFilters(context: AppLocalContext): Promise<DatasetCategoryFiltersResponse> {
+
+    try {
+        const response = await axiosInstance.get("/datasets/filters", buildHeaders(context));
+        return toDatasetCategoryFiltersResponse(response);
+    } catch (error) {
+        return error.response;
+    }
+}
+
 function hydrateDatasetMetadataInfo(dataset: DatasetDetailsResponse, response: any) {
     dataset.id = response.id;
     dataset.name = response.name;
@@ -108,6 +118,10 @@ function hydrateDatasetMetadataInfo(dataset: DatasetDetailsResponse, response: a
 
 function toDatasetDetailsResponse(response: any) {
     return JSON.parse(response.data) as DatasetDetailsResponse;
+}
+
+function toDatasetCategoryFiltersResponse(response: any) {
+    return response.data as DatasetCategoryFiltersResponse;
 }
 
 export async function getAllDataset(context: AppLocalContext, url: String): Promise<DatasetListResponsePaged> {
