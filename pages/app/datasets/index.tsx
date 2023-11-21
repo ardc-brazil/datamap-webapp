@@ -7,10 +7,12 @@ import { FilterCriteriaList } from "../../../components/Search/FilterCriteriaLis
 import { ListDataset } from "../../../components/Search/ListDataset";
 import TextSearchBar from "../../../components/SearchDataset/TextSearchBar";
 import { ROUTE_PAGE_DATASETS_NEW } from "../../../contants/InternalRoutesConstants";
-import { fetcher } from "../../../lib/fetcher";
+import { fetcher, SWRRetry } from "../../../lib/fetcher";
 
 function useDatasetSearch(fullText) {
-  const { data, error, isLoading } = useSWR(`/api/datasets?full_text=${fullText}`, fetcher)
+  const { data, error, isLoading } = useSWR(`/api/datasets?full_text=${fullText}`, fetcher, {
+    onErrorRetry: SWRRetry
+  })
 
   return {
     datasets: data,
