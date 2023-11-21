@@ -49,10 +49,10 @@ export default function ListDatasetPage(props) {
 
         <div className="border-primary-200 mt-8">
           <div className="flex flex-row gap-4">
-            {/* <FilterCriteriaList onCriteriaChanged={function (criteria, selected) {
+            <FilterCriteriaList onCriteriaChanged={function (criteria, selected) {
               console.log(criteria)
               console.log(selected)
-            }} /> */}
+            }} />
 
             <div className="col-span-9 basis-full px-4 min-h-screen">
               <div>

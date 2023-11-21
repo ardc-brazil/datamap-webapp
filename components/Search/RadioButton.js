@@ -12,7 +12,7 @@ export function RadioButton(props) {
           type="radio"
           value={props.value}
           name={`radio-component-${props.parentId}`}
-          checked={props.option.selected == props.value}
+          checked={props.checked}
           className="w-5 h-5 accent-primary-900"
           onChange={onChange}
         />

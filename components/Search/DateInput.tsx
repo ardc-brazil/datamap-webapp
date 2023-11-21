@@ -5,6 +5,7 @@ import { FilterOption } from "../types/FilterOption";
 interface DateInputProps extends Props {
   option: FilterOption;
   onDateChanged(option: FilterOption, value: string): void;
+  date: string;
 }
 
 export function DateInput(props: DateInputProps) {
@@ -19,7 +20,7 @@ export function DateInput(props: DateInputProps) {
         key={props.option.id}
         type="date"
         className="form-input block"
-        value={props.option.selected ?? ""}
+        value={props.date}
         onChange={onDateChanged}
       />
     </div>

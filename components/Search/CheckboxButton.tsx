@@ -5,6 +5,7 @@ type Props = {
   option: Option;
   parentId: number;
   onChanged?: Function;
+  checked: boolean;
 };
 
 type Option = {
@@ -26,7 +27,7 @@ export function Checkbox(props: Props) {
           type="checkbox"
           value={props.option.value}
           name={`checkbox-component-${props.parentId}`}
-          checked={props.option.selected}
+          checked={props.checked}
           className="w-5 h-5 accent-primary-900"
           onChange={toggleSelected}
         />
