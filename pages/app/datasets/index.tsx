@@ -3,14 +3,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import LoggedLayout from "../../../components/LoggedLayout";
 import { EmptySearch } from "../../../components/Search/EmptySearch";
-import { FilterCriteriaList } from "../../../components/Search/FilterCriteriaList";
 import { ListDataset } from "../../../components/Search/ListDataset";
+import TextSearchBar from "../../../components/SearchDataset/TextSearchBar";
 import { ROUTE_PAGE_DATASETS_NEW } from "../../../contants/InternalRoutesConstants";
 import { filterCriteria } from "../../../fake-data/filters";
 import { NewContext } from "../../../lib/appLocalContext";
 import { getAllDataset } from "../../../lib/dataset";
-import TextSearchBar from "../../../components/SearchDataset/TextSearchBar";
-import DatasetLicenseForm from "../../../components/DatasetDetails/DatasetLicenseForm";
 
 export default function ListDatasetPage(props) {
   const [filters, setFilters] = useState(filterCriteria);
