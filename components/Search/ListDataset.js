@@ -4,7 +4,7 @@ import { ListItem } from "./ListItem";
 export function ListDataset(props) {
   const itemCount = props.data.length;
   return (
-    <div className="flex flex-col mr-4">
+    <div id="listDataset" className="flex flex-col mr-4 w-full">
       <ListDatasetHeader itemCount={itemCount} requestedAt={props.requestedAt} />
       <div className="border-t border-primary-200">
         {props.data.map((element, index) => (
