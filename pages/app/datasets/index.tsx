@@ -9,10 +9,12 @@ import TextSearchBar from "../../../components/SearchDataset/TextSearchBar";
 import { ROUTE_PAGE_DATASETS_NEW } from "../../../contants/InternalRoutesConstants";
 import { fetcher, SWRRetry } from "../../../lib/fetcher";
 
-function useDatasetSearch(fullText) {
-  const { data, error, isLoading } = useSWR(`/api/datasets?full_text=${fullText}`, fetcher, {
+function useDatasetSearch(currentSearchParameters) {
+  const { data, error, isLoading } = useSWR(`/api/datasets?full_text=${currentSearchParameters.textSearch}`, fetcher, {
     onErrorRetry: SWRRetry
   })
+
+  // console.log(currentSearchParameters.criterias);
 
   return {
     datasets: data,
@@ -21,12 +23,79 @@ function useDatasetSearch(fullText) {
   };
 }
 
-export default function ListDatasetPage(props) {
-  const [textSearch, setTextSearch] = useState({ text: "", at: Date.now() })
-  const { datasets, datasetsIsLoading, datasetsIsError } = useDatasetSearch(textSearch.text)
+type CurrentSearchParameterState = {
+  at: number,
+  textSearch: string,
+  criteriasSelected: object,
+};
 
-  function onTextSearchChanged(text) {
-    setTextSearch({ text: text, at: Date.now() });
+
+export default function ListDatasetPage(props) {
+
+  // const premap = {}
+  const [currentSearchParameters, setCurrentSearchParameters] = useState({
+    at: Date.now(),
+    textSearch: "",
+    criteriasSelected: {},
+  } as CurrentSearchParameterState)
+
+  const { datasets, datasetsIsLoading, datasetsIsError } = useDatasetSearch(currentSearchParameters)
+
+  function onTextSearchChanged(text: string) {
+    setCurrentSearchParameters({
+      ...currentSearchParameters,
+      at: Date.now(),
+      textSearch: text,
+    });
+  }
+
+  function onCriteriaChanged(criteria, selectedOption) {
+
+    // multiple
+    if (selectedOption.criteriaSelected.selection === "multiple") {
+      console.log(selectedOption.criteriaSelected.selection)
+      if (selectedOption.valueSelected) {
+        currentSearchParameters.criteriasSelected[selectedOption.optionSelected.id] = {
+          label: selectedOption.optionSelected.label,
+          value: selectedOption.optionSelected.value,
+          selection: selectedOption.criteriaSelected.selection,
+        }
+      } else {
+        delete currentSearchParameters.criteriasSelected[selectedOption.optionSelected.id];
+      }
+    }
+    // one
+    else if (selectedOption.criteriaSelected.selection === "one") {
+      console.log(selectedOption.criteriaSelected.selection)
+
+      // Only one options is available, then we should use the criteria id instead of option
+      // id like in multiple selection.
+      currentSearchParameters.criteriasSelected[selectedOption.criteriaSelected.id] = {
+        label: selectedOption.optionSelected.label,
+        value: selectedOption.optionSelected.value,
+        selection: selectedOption.criteriaSelected.selection,
+      }
+    }
+    // date
+    else if (selectedOption.criteriaSelected.selection === "date-range") {
+      console.log(selectedOption.criteriaSelected.selection)
+
+      if (selectedOption.valueSelected && selectedOption.valueSelected !== '') {
+        currentSearchParameters.criteriasSelected[selectedOption.optionSelected.id] = {
+          label: selectedOption.optionSelected.label,
+          value: selectedOption.optionSelected.value,
+          selection: selectedOption.criteriaSelected.selection,
+        }
+      } else {
+        delete currentSearchParameters.criteriasSelected[selectedOption.optionSelected.id];
+      }
+    }
+
+    setCurrentSearchParameters({
+      ...currentSearchParameters,
+      at: Date.now(),
+      criteriasSelected: currentSearchParameters.criteriasSelected
+    });
   }
 
   return (
@@ -49,17 +118,14 @@ export default function ListDatasetPage(props) {
 
         <div className="border-primary-200 mt-8">
           <div className="flex flex-row gap-4">
-            <FilterCriteriaList onCriteriaChanged={function (criteria, selected) {
-              console.log(criteria)
-              console.log(selected)
-            }} />
+            <FilterCriteriaList onCriteriaChanged={onCriteriaChanged} />
 
             <div className="col-span-9 basis-full px-4 min-h-screen">
               <div>
                 {datasetsIsError && <EmptySearch>Error to read datasets</EmptySearch>}
                 {datasetsIsLoading && <EmptySearch>Loading datasets...</EmptySearch>}
                 {datasets?.size <= 0 && <EmptySearch>No datasets found</EmptySearch>}
-                {datasets?.size > 0 && <ListDataset data={datasets.content} requestedAt={textSearch.at} />}
+                {datasets?.size > 0 && <ListDataset data={datasets.content} requestedAt={currentSearchParameters.at} />}
               </div>
             </div>
           </div>

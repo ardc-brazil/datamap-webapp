@@ -84,6 +84,7 @@ function dateRange(criteria, onCriteriaChanged) {
 
   function onOptionChanged(optionSelected, valueSelected) {
     setDate(valueSelected)
+    optionSelected.value = valueSelected
 
     onCriteriaChanged(criteria, {
       valueSelected: valueSelected,
