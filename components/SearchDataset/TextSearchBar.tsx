@@ -14,7 +14,7 @@ export default function TextSearchBar(props) {
   }
 
   function onSearchClick() {
-    props.onTextSearchChanged(searchText)
+    props.onTextSearchChanged(searchText);
   }
 
   function onInputEnterSearch(e: React.KeyboardEvent) {

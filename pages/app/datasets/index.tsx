@@ -10,11 +10,28 @@ import { ROUTE_PAGE_DATASETS_NEW } from "../../../contants/InternalRoutesConstan
 import { fetcher, SWRRetry } from "../../../lib/fetcher";
 
 function useDatasetSearch(currentSearchParameters) {
-  const { data, error, isLoading } = useSWR(`/api/datasets?full_text=${currentSearchParameters.textSearch}`, fetcher, {
+
+  function buildQueryStringFrom(state: CurrentSearchParameterState) {
+
+    const c = {}
+
+    Object.keys(state.selectedFilters)
+      .map(function groupByCriteriaId(key) {
+
+        const currentCriteria = state.selectedFilters[key];
+
+        if (!c[currentCriteria.criteriaId]) {
+          c[currentCriteria.criteriaId] = []
+        }
+
+        c[currentCriteria.criteriaId].push(currentCriteria.value)
+      })
+    return new URLSearchParams(c).toString();
+  }
+
+  const { data, error, isLoading } = useSWR(`/api/datasets?${buildQueryStringFrom(currentSearchParameters)}`, fetcher, {
     onErrorRetry: SWRRetry
   })
-
-  // console.log(currentSearchParameters.criterias);
 
   return {
     datasets: data,
@@ -25,27 +42,46 @@ function useDatasetSearch(currentSearchParameters) {
 
 type CurrentSearchParameterState = {
   at: number,
-  textSearch: string,
-  criteriasSelected: object,
+  selectedFilters: { [key: string]: SelectedFilterValue },
 };
+
+type SelectedFilterValue = {
+  criteriaId: string
+  label: string
+  value: string
+  selection: string
+}
 
 
 export default function ListDatasetPage(props) {
 
-  // const premap = {}
   const [currentSearchParameters, setCurrentSearchParameters] = useState({
     at: Date.now(),
-    textSearch: "",
-    criteriasSelected: {},
+    selectedFilters: {
+      full_text: {
+        criteriaId: "full_text",
+        label: "full_text",
+        value: "",
+        selection: "full_text",
+      }
+    }
   } as CurrentSearchParameterState)
 
   const { datasets, datasetsIsLoading, datasetsIsError } = useDatasetSearch(currentSearchParameters)
 
   function onTextSearchChanged(text: string) {
     setCurrentSearchParameters({
-      ...currentSearchParameters,
       at: Date.now(),
-      textSearch: text,
+      selectedFilters: {
+        ...
+        currentSearchParameters.selectedFilters,
+        full_text: {
+          criteriaId: "full_text",
+          label: "full_text",
+          value: text,
+          selection: "full_text",
+        }
+      }
     });
   }
 
@@ -53,24 +89,23 @@ export default function ListDatasetPage(props) {
 
     // multiple
     if (selectedOption.criteriaSelected.selection === "multiple") {
-      console.log(selectedOption.criteriaSelected.selection)
       if (selectedOption.valueSelected) {
-        currentSearchParameters.criteriasSelected[selectedOption.optionSelected.id] = {
+        currentSearchParameters.selectedFilters[selectedOption.optionSelected.id] = {
+          criteriaId: selectedOption.criteriaSelected.id,
           label: selectedOption.optionSelected.label,
           value: selectedOption.optionSelected.value,
           selection: selectedOption.criteriaSelected.selection,
         }
       } else {
-        delete currentSearchParameters.criteriasSelected[selectedOption.optionSelected.id];
+        delete currentSearchParameters.selectedFilters[selectedOption.optionSelected.id];
       }
     }
     // one
     else if (selectedOption.criteriaSelected.selection === "one") {
-      console.log(selectedOption.criteriaSelected.selection)
-
       // Only one options is available, then we should use the criteria id instead of option
       // id like in multiple selection.
-      currentSearchParameters.criteriasSelected[selectedOption.criteriaSelected.id] = {
+      currentSearchParameters.selectedFilters[selectedOption.criteriaSelected.id] = {
+        criteriaId: selectedOption.criteriaSelected.id,
         label: selectedOption.optionSelected.label,
         value: selectedOption.optionSelected.value,
         selection: selectedOption.criteriaSelected.selection,
@@ -78,23 +113,22 @@ export default function ListDatasetPage(props) {
     }
     // date
     else if (selectedOption.criteriaSelected.selection === "date-range") {
-      console.log(selectedOption.criteriaSelected.selection)
-
       if (selectedOption.valueSelected && selectedOption.valueSelected !== '') {
-        currentSearchParameters.criteriasSelected[selectedOption.optionSelected.id] = {
+        currentSearchParameters.selectedFilters[selectedOption.optionSelected.id] = {
+          criteriaId: selectedOption.criteriaSelected.id,
           label: selectedOption.optionSelected.label,
           value: selectedOption.optionSelected.value,
           selection: selectedOption.criteriaSelected.selection,
         }
       } else {
-        delete currentSearchParameters.criteriasSelected[selectedOption.optionSelected.id];
+        delete currentSearchParameters.selectedFilters[selectedOption.optionSelected.id];
       }
     }
 
     setCurrentSearchParameters({
       ...currentSearchParameters,
       at: Date.now(),
-      criteriasSelected: currentSearchParameters.criteriasSelected
+      selectedFilters: currentSearchParameters.selectedFilters
     });
   }
 

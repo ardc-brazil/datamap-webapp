@@ -21,7 +21,6 @@ router
 
     if (datasetId === "filters") {
       const result = await getDatasetCategoryFilters(context);
-      console.log(result)
       res.json(result);
     } else {
       res.status(404).end();
