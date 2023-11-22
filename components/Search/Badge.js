@@ -2,7 +2,7 @@ import React from "react";
 
 export function Badge(props) {
   function onClose() {
-    props.onClose(props.option);
+    props.onClose(props.selectedFilter);
   }
 
   return (

@@ -4,10 +4,12 @@ import useSWR from 'swr';
 import LoggedLayout from "../../../components/LoggedLayout";
 import { EmptySearch } from "../../../components/Search/EmptySearch";
 import { FilterCriteriaList } from "../../../components/Search/FilterCriteriaList";
+import { FilterBadges } from "../../../components/Search/FilterBadges";
 import { ListDataset } from "../../../components/Search/ListDataset";
 import TextSearchBar from "../../../components/SearchDataset/TextSearchBar";
 import { ROUTE_PAGE_DATASETS_NEW } from "../../../contants/InternalRoutesConstants";
 import { fetcher, SWRRetry } from "../../../lib/fetcher";
+import { CurrentSearchParameterState, SelectedFilterValue } from "../../../components/types/FilterOption";
 
 function useDatasetSearch(currentSearchParameters) {
 
@@ -40,32 +42,23 @@ function useDatasetSearch(currentSearchParameters) {
   };
 }
 
-type CurrentSearchParameterState = {
-  at: number,
-  selectedFilters: { [key: string]: SelectedFilterValue },
-};
-
-type SelectedFilterValue = {
-  criteriaId: string
-  label: string
-  value: string
-  selection: string
-}
-
-
 export default function ListDatasetPage(props) {
 
-  const [currentSearchParameters, setCurrentSearchParameters] = useState({
+  const emptyCurrentSearchParameters = {
     at: Date.now(),
     selectedFilters: {
       full_text: {
+        id: "full_text",
         criteriaId: "full_text",
         label: "full_text",
         value: "",
         selection: "full_text",
       }
     }
-  } as CurrentSearchParameterState)
+  } as CurrentSearchParameterState
+
+  const [currentSearchParameters, setCurrentSearchParameters] = useState(emptyCurrentSearchParameters)
+  const [lastSearchParameterDeselected, setLastSearchParameterDeselected] = useState(null as SelectedFilterValue)
 
   const { datasets, datasetsIsLoading, datasetsIsError } = useDatasetSearch(currentSearchParameters)
 
@@ -76,6 +69,7 @@ export default function ListDatasetPage(props) {
         ...
         currentSearchParameters.selectedFilters,
         full_text: {
+          id: "full_text",
           criteriaId: "full_text",
           label: "full_text",
           value: text,
@@ -86,11 +80,13 @@ export default function ListDatasetPage(props) {
   }
 
   function onCriteriaChanged(criteria, selectedOption) {
+    setLastSearchParameterDeselected(null)
 
     // multiple
     if (selectedOption.criteriaSelected.selection === "multiple") {
       if (selectedOption.valueSelected) {
         currentSearchParameters.selectedFilters[selectedOption.optionSelected.id] = {
+          id: selectedOption.optionSelected.id,
           criteriaId: selectedOption.criteriaSelected.id,
           label: selectedOption.optionSelected.label,
           value: selectedOption.optionSelected.value,
@@ -105,6 +101,7 @@ export default function ListDatasetPage(props) {
       // Only one options is available, then we should use the criteria id instead of option
       // id like in multiple selection.
       currentSearchParameters.selectedFilters[selectedOption.criteriaSelected.id] = {
+        id: selectedOption.criteriaSelected.id,
         criteriaId: selectedOption.criteriaSelected.id,
         label: selectedOption.optionSelected.label,
         value: selectedOption.optionSelected.value,
@@ -115,6 +112,7 @@ export default function ListDatasetPage(props) {
     else if (selectedOption.criteriaSelected.selection === "date-range") {
       if (selectedOption.valueSelected && selectedOption.valueSelected !== '') {
         currentSearchParameters.selectedFilters[selectedOption.optionSelected.id] = {
+          id: selectedOption.optionSelected.id,
           criteriaId: selectedOption.criteriaSelected.id,
           label: selectedOption.optionSelected.label,
           value: selectedOption.optionSelected.value,
@@ -132,6 +130,33 @@ export default function ListDatasetPage(props) {
     });
   }
 
+  function onBadgesClose(selectedFilter: SelectedFilterValue): void {
+    // Update state to notify last selected filters removed to all components that depends on filters.
+    setLastSearchParameterDeselected(selectedFilter)
+
+    // Update current search parameters for update the dataset list
+    delete currentSearchParameters.selectedFilters[selectedFilter.id];
+    setCurrentSearchParameters({
+      ...currentSearchParameters,
+      at: Date.now(),
+      selectedFilters: currentSearchParameters.selectedFilters
+    });
+  }
+
+  // FIX: Clear all badges has a bug to update the currentSearchParameters from FilterCriteriaList
+  // Only lastSearchParameterDeselected state is tracked. To implement ClearAll, the lastSearchParameterDeselected
+  // should be an array.
+  // function onBadgesClearAll() {
+  //   // Reset current paramenters to initial state.
+  //   setCurrentSearchParameters({
+  //     ...emptyCurrentSearchParameters,
+  //     at: Date.now(),
+  //     selectedFilters: {
+  //       full_text: currentSearchParameters.selectedFilters.full_text
+  //     }
+  //   });
+  // }
+
   return (
     <LoggedLayout>
       <div className="container mx-auto">
@@ -148,12 +173,14 @@ export default function ListDatasetPage(props) {
 
         <div className="mt-8 mb-4 max-w-4xl">
           <TextSearchBar onTextSearchChanged={onTextSearchChanged} />
+          <FilterBadges
+            currentSearchParameterState={currentSearchParameters}
+            onClose={onBadgesClose} />
         </div>
 
         <div className="border-primary-200 mt-8">
           <div className="flex flex-row gap-4">
-            <FilterCriteriaList onCriteriaChanged={onCriteriaChanged} />
-
+            <FilterCriteriaList onCriteriaChanged={onCriteriaChanged} lastSearchParameterDeselected={lastSearchParameterDeselected} />
             <div className="col-span-9 basis-full px-4 min-h-screen">
               <div>
                 {datasetsIsError && <EmptySearch>Error to read datasets</EmptySearch>}

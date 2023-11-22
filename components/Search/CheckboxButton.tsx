@@ -2,7 +2,7 @@ import React from "react";
 
 type Props = {
   children?: React.ReactNode;
-  option: Option;
+  optionSelected: Option;
   parentId: number;
   onChanged?: Function;
   checked: boolean;
@@ -16,16 +16,15 @@ type Option = {
 
 export function Checkbox(props: Props) {
   function toggleSelected(e: React.ChangeEvent<HTMLInputElement>) {
-    props.onChanged(props.option, e.target.checked);
+    props.onChanged(props.optionSelected, e.target.checked);
   }
 
   return (
     <div className="flex items-center">
-      <label htmlFor={props.option.id} className="w-full cursor-pointer py-2">
+      <label htmlFor={props.optionSelected.id} className="w-full cursor-pointer py-2">
         <input
-          id={props.option.id}
+          id={props.optionSelected.id}
           type="checkbox"
-          value={props.option.value}
           name={`checkbox-component-${props.parentId}`}
           checked={props.checked}
           className="w-5 h-5 accent-primary-900"

@@ -40,6 +40,7 @@ export function FilterCriteriaList(props) {
               criteria={criteria}
               border={border}
               onCriteriaChanged={props.onCriteriaChanged}
+              lastSearchParameterDeselected={props.lastSearchParameterDeselected}
             ></FilterCriteria>
           );
         })}
