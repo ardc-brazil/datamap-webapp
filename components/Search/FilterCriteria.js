@@ -66,14 +66,13 @@ function multiple(criteria, onCriteriaChanged, lastSearchParameterDeselected) {
   return criteria.options.map((x) => {
     const [selectedOption, setSelectedOption] = useState(false)
 
-    
     // Remove current selection is changed outside
     if (x.id == lastSearchParameterDeselected?.id && selectedOption === lastSearchParameterDeselected?.value) {
       setSelectedOption(false)
     }
 
     function onOptionChanged(optionSelected, valueSelected) {
-      setSelectedOption(optionSelected.value);
+      setSelectedOption(valueSelected);
       onCriteriaChanged(criteria, {
         valueSelected: valueSelected,
         optionSelected: optionSelected,
