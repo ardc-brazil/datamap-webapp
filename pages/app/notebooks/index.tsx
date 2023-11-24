@@ -1,46 +1,8 @@
-import axios from "axios";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import LoggedLayout from "../../../components/LoggedLayout";
-import { EmptySearch } from "../../../components/Search/EmptySearch";
-import { FilterCriteriaList } from "../../../components/Search/FilterCriteriaList";
-import { ListDataset } from "../../../components/Search/ListDataset";
 import { ROUTE_PAGE_DATASETS_NEW } from "../../../contants/InternalRoutesConstants";
-import { filterCriteria } from "../../../fake-data/filters";
-import { NewContext } from "../../../lib/appLocalContext";
-import { getAllDataset } from "../../../lib/dataset";
 
-export default function ListNotebooksPage(props) {
-  const [filters, setFilters] = useState(filterCriteria);
-  const [items, setItems] = useState([]);
-  const [loadingDatasetsMessage, setLoadingDatasetsMessage] = useState("Loading datasets...");
-
-  useEffect(() => {
-    setFilters(filterCriteria);
-    axios.get("/api/datasets")
-      .then(response => {
-        try {
-          if (response.status == 200) {
-            setItems(response.data?.content);
-            if (items.length <= 0) {
-              setLoadingDatasetsMessage("No datasets found");
-            }
-          } else {
-            console.log(response);
-            setLoadingDatasetsMessage("Error to read datasets");
-          }
-        } catch (error) {
-          console.log(error);
-          setLoadingDatasetsMessage("Error to read datasets");
-        }
-      })
-      .catch(error => {
-        console.log(error);
-        setLoadingDatasetsMessage("Error to read datasets");
-      });
-
-  }, []);
-
+export default function ListNotebooksPage() {
   return (
     <LoggedLayout>
       <div className="container mx-auto">
