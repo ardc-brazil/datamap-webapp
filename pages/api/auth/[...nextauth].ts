@@ -51,9 +51,6 @@ export const authOptions: AuthOptions = {
 
 async function getUserByProviderAuthentication(account, token) {
 
-  console.log("#account", account);
-  console.log("#token", token);
-
   let params = null as CreateUserRequest;
 
   if (account.provider == "github") {

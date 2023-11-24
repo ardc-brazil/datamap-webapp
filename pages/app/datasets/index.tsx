@@ -6,7 +6,7 @@ import { EmptySearch } from "../../../components/Search/EmptySearch";
 import { FilterCriteriaList } from "../../../components/Search/FilterCriteriaList";
 import { FilterBadges } from "../../../components/Search/FilterBadges";
 import { ListDataset } from "../../../components/Search/ListDataset";
-import TextSearchBar from "../../../components/SearchDataset/TextSearchBar";
+import TextSearchBar from "../../../components/Search/TextSearchBar";
 import { ROUTE_PAGE_DATASETS_NEW } from "../../../contants/InternalRoutesConstants";
 import { fetcher, SWRRetry } from "../../../lib/fetcher";
 import { CurrentSearchParameterState, SelectedFilterValue } from "../../../components/types/FilterOption";
