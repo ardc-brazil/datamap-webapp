@@ -3,6 +3,7 @@ import "../styles/globals.css";
 import { SessionProvider, useSession } from "next-auth/react";
 import type { AppProps } from "next/app";
 import Router, { useRouter } from 'next/router';
+import { Session } from "next-auth";
 
 interface CustomAppProps {
   Component: AppProps["Component"] & {
@@ -10,7 +11,7 @@ interface CustomAppProps {
       role: string
     }
   }
-  pageProps: AppProps["pageProps"]
+  pageProps: AppProps<{ session: Session }>["pageProps"]
 }
 
 // Use of the <SessionProvider> is mandatory to allow components that call
