@@ -88,10 +88,11 @@ export async function createUser(requestParams: CreateUserRequest) {
 }
 
 export async function getUserByUID(context: AppLocalContext): Promise<UserDetailsResponse> {
-    return axiosInstance.get(
+    const response = await axiosInstance.get(
         `/users/${context.uid}?is_enabled=true`,
         buildHeaders(context)
     );
+    return response.data;
 }
 
 export async function getUserByProviderID(request: GetUserByProviderRequest) {
