@@ -74,7 +74,7 @@ export async function createUser(requestParams: CreateUserRequest) {
     const request = {
         "name": requestParams.personName,
         "email": requestParams.email,
-        "roles": ["datasets_read", "users_read"],
+        "roles": [],
         "providers": [
             {
                 "name": requestParams.providerName,
@@ -88,11 +88,10 @@ export async function createUser(requestParams: CreateUserRequest) {
 }
 
 export async function getUserByUID(context: AppLocalContext): Promise<UserDetailsResponse> {
-    const response = await axiosInstance.get(
+    return axiosInstance.get(
         `/users/${context.uid}?is_enabled=true`,
         buildHeaders(context)
     );
-    return response.data;
 }
 
 export async function getUserByProviderID(request: GetUserByProviderRequest) {

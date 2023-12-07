@@ -55,8 +55,24 @@ export const ROUTE_PAGE_PROFILE = ROUTE_APP_CONTEXT + '/profile';
  */
 export const ROUTE_PAGE_SEARCH = ROUTE_APP_CONTEXT + '/search';
 
+/**
+ * Route to the error handling internal page.
+ * @constant
+ */
+export const ROUTE_PAGE_ERROR = (params) => appendSearchParams(ROUTE_APP_CONTEXT + '/error', params);
+
+function appendSearchParams(urlString: string, params: any = {}) {
+    let url = new URL(window.location.origin + urlString);
+
+    Object.entries(params).forEach(entry => {
+        const [key, value] = entry;
+        url.searchParams.set(key, value as string);
+      });
+
+    return url.toString();
+}
+
 function replaceIt(url: string, params: any = {}) {
-    var newUrl = '';
     const tokens = url.split('/')
     var result = [];
 

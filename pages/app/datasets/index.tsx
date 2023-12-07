@@ -7,9 +7,10 @@ import { FilterCriteriaList } from "../../../components/Search/FilterCriteriaLis
 import { FilterBadges } from "../../../components/Search/FilterBadges";
 import { ListDataset } from "../../../components/Search/ListDataset";
 import TextSearchBar from "../../../components/Search/TextSearchBar";
-import { ROUTE_PAGE_DATASETS_NEW } from "../../../contants/InternalRoutesConstants";
+import { ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_ERROR } from "../../../contants/InternalRoutesConstants";
 import { fetcher, SWRRetry } from "../../../lib/fetcher";
 import { CurrentSearchParameterState, SelectedFilterValue } from "../../../components/types/FilterOption";
+import Router from 'next/router';
 
 function useDatasetSearch(currentSearchParameters) {
 
@@ -32,7 +33,7 @@ function useDatasetSearch(currentSearchParameters) {
   }
 
   const { data, error, isLoading } = useSWR(`/api/datasets?${buildQueryStringFrom(currentSearchParameters)}`, fetcher, {
-    onErrorRetry: SWRRetry
+    onErrorRetry: SWRRetry,
   })
 
   return {
@@ -61,6 +62,10 @@ export default function ListDatasetPage(props) {
   const [lastSearchParameterDeselected, setLastSearchParameterDeselected] = useState(null as SelectedFilterValue)
 
   const { datasets, datasetsIsLoading, datasetsIsError } = useDatasetSearch(currentSearchParameters)
+
+  if (datasetsIsError) {
+    Router.push(ROUTE_PAGE_ERROR(datasetsIsError));
+  }
 
   function onTextSearchChanged(text: string) {
     setCurrentSearchParameters({

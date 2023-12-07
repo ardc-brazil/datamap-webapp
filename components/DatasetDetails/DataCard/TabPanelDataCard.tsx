@@ -53,7 +53,6 @@ export function TabPanelDataCard(props: TabPanelProps) {
   if (!data) return <p>No dataset data</p>;
 
   function handlePointerOver() {
-    console.log("ok");
     setShowUsabilityPopup(true);
   }
 

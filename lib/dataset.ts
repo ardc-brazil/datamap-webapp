@@ -135,19 +135,26 @@ export async function getAllDataset(context: AppLocalContext, url: String): Prom
         }
 
         const datasets = [] as DatasetDetailsResponse[];
-        const response = await axiosInstance.get(`/datasets/?${queryString}`, buildHeaders(context));
-        const datasetsList = response.data as DatasetListResponsePaged;
+        return axiosInstance
+            .get(`/datasets/?${queryString}`, buildHeaders(context))
+            .then(response => {
+                const datasetsList = response?.data as DatasetListResponsePaged;
 
-        // Parse data string to json object
-        for (const ds of datasetsList.content) {
-            let dataset = toDatasetDetailsResponse(ds);
-            hydrateDatasetMetadataInfo(dataset, ds);
-            datasets.push(dataset);
-        }
+                // Parse data string to json object
+                for (const ds of datasetsList.content) {
+                    let dataset = toDatasetDetailsResponse(ds);
+                    hydrateDatasetMetadataInfo(dataset, ds);
+                    datasets.push(dataset);
+                }
 
-        datasetsList.content = datasets;
+                datasetsList.content = datasets;
 
-        return datasetsList;
+                return datasetsList;
+            })
+            .catch(error => {
+                throw error
+            });
+
     } catch (error) {
         console.log(error);
         return error.response;

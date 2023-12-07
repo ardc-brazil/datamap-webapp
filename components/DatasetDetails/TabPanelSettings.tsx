@@ -7,9 +7,6 @@ import * as Yup from 'yup';
 import { TabPanelProps } from "./TabPanel";
 
 export function TabPanelSettings(props: TabPanelProps) {
-
-
-  console.log(props);
   const router = useRouter();
 
   const schema = Yup.object().shape({

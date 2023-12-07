@@ -78,6 +78,7 @@ async function getUserByProviderAuthentication(account, token) {
   try {
     user = await getUserByProviderID(params);
   } catch (error: any | AxiosError) {
+    // Always create a new user if it does not exist, but has successfully authenticated with a provider.
     if (axios.isAxiosError(error) && error?.response?.status == 404) {
       user = createUser(params);
     }

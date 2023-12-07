@@ -6,6 +6,7 @@ import LoggedLayout from "../../../components/LoggedLayout";
 import { signOut, useSession } from "next-auth/react";
 import { NewContext } from "../../../lib/appLocalContext";
 import { getUserByUID } from "../../../lib/users";
+import { ROUTE_PAGE_ERROR } from "../../../contants/InternalRoutesConstants";
 
 export default function ProfilePage(props) {
   const { data: session, status } = useSession();
@@ -14,6 +15,11 @@ export default function ProfilePage(props) {
     signOut().then((value) => {
       Router.push("/");
     });
+  }
+
+  if (props.error) {
+    Router.push(ROUTE_PAGE_ERROR(props.error));
+    return <></>
   }
 
   if (status === "authenticated") {
@@ -90,13 +96,24 @@ export async function getServerSideProps(context) {
   // Fetch data frm external API
   const ctx = await NewContext(context.req);
   if (!ctx.uid) {
-    return { props: {}}
+    return { props: {} }
   }
 
-  const data = await getUserByUID(ctx);
+  try {
+    const data = await getUserByUID(ctx);
 
-  // Pass data to the page via props
-  return { props: { data } };
+    // Pass data to the page via props
+    return { props: { data } };
+  } catch (err) {
+    return {
+      props: {
+        error: {
+          status: err?.response?.status,
+          info: err?.response?.statusText
+        }
+      }
+    }
+  }
 }
 
 ProfilePage.auth = {

@@ -5,6 +5,7 @@ import { NewContext } from "../../../lib/appLocalContext";
 import auth from "../../../lib/auth";
 import { createDataset, getAllDataset } from "../../../lib/dataset";
 import { ResponseError } from "../../../types/ResponseError";
+import axios, { AxiosError } from "axios";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
@@ -12,8 +13,16 @@ router
   .use(auth)
   .get(async (req, res) => {
     const context = await NewContext(req);
-    const result = await getAllDataset(context, req.url);
-    res.json(result);
+    getAllDataset(context, req.url)
+      .then((result) => {
+        res.json(result);
+      })
+      .catch(error => {
+        console.log(error)
+        if (axios.isAxiosError(error) && error?.response?.status == 403) {
+          res.status(error?.response?.status).end("Forbidden")
+        }
+      })
   })
   .post(async (req, res) => {
     const context = await NewContext(req);
