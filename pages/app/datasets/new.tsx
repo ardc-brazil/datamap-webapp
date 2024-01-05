@@ -11,7 +11,7 @@ import Alert from "../../../components/base/Alert";
 import CloseButton from "../../../components/base/CloseButton";
 import Modal from "../../../components/base/PopupModal";
 import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
-import { isValidPath } from "../../../lib/paths";
+import { isValidPath, isValidPathForFolder } from "../../../lib/paths";
 
 interface FormValues {
   datasetTitle?: string,
@@ -50,15 +50,15 @@ export default function NewPage(props) {
       return null;
     }
 
-    if (!isValidPath(value)) {
-      return 'Invalid path. Pattern: /path/to/the/file.ext'
+    if (!isValidPath(value) && !isValidPathForFolder(value)) {
+      return 'Invalid path. Pattern: /path/to/the/file.ext or /path/to/the/**'
     }
 
     return null;
   }
 
   function addDataFile(item: DatafilePath, push: any, setFieldTouched, index: number) {
-    if (isValidPath(item?.url)) {
+    if (isValidPath(item?.url) || isValidPathForFolder(item?.url)) {
       item.confirmed = true;
       push({ url: '', confirmed: false } as DatafilePath);
       setFieldTouched(`urls.${index}.url`, true, true);
@@ -180,7 +180,7 @@ export default function NewPage(props) {
                           id="helper-text-explanation"
                           className="mt-2 text-xs text-gray-500 dark:text-gray-400 font-light"
                         >
-                          List the path to the data files from remote URLs. The pattern must be <pre className="inline-block">/path/to/the/file.ext</pre>.
+                          List the path to the data files from remote URLs. The pattern must be <pre className="inline-block">/path/to/the/file.ext</pre> for a specific file or <pre className="inline-block">/path/to/the/**</pre> to scan all files under <pre className="inline-block">/path/to/the</pre> folder.
                         </span>
 
                         <FieldArray name="urls">
