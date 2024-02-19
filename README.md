@@ -63,6 +63,19 @@ npm run test
 npm run testing
 ``` 
 
+To open the code coverage report on Google Chrome browser, execute:
+
+````
+npm run test:coverage
+``
+
+But for open last coverage report, run:
+```
+npm run test:coverage:report
+```
+
+The jest plugin for vscode could help you to run locally and see the coverage, see more https://marketplace.visualstudio.com/items?itemName=Orta.vscode-jest
+
 ### e2e tests
 
 Use Cypress for end-to-end tests.
