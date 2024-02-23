@@ -57,7 +57,8 @@ export interface UserDetailsResponse {
     providers: ProviderUserDetailsResponse[],
     is_enabled: boolean,
     created_at: Date,
-    updated_at: Date
+    updated_at: Date,
+    tenancies: string[],
 }
 
 interface ProviderUserDetailsResponse {
