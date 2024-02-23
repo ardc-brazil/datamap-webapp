@@ -25,7 +25,7 @@ export function ActionItemsNavBar() {
         <Link
           href={{
             pathname: "/account/login",
-            query: { phase: "register" },
+            query: { phase: "register", tenancy:"datamap/production/data-amazon" },
           }}
         >
           <button className="btn-primary">Register</button>

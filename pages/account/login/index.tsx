@@ -142,7 +142,7 @@ export default function LoginPage(props) {
                 <Link
                   href={{
                     pathname: "/account/login",
-                    query: { phase: "register" },
+                    query: { phase: "register", tenancy:"datamap/production/data-amazon"},
                   }}
                 >
                   <a className="text-sm text-primary-800 cursor-pointer">
@@ -161,7 +161,7 @@ export default function LoginPage(props) {
                 <Link
                   href={{
                     pathname: "/account/login",
-                    query: { phase: "sign-in" },
+                    query: { phase: "sign-in", tenancy:"datamap/production/data-amazon" },
                   }}
                 >
                   <a className="text-sm text-primary-800 cursor-pointer">
