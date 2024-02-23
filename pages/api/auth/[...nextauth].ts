@@ -3,6 +3,7 @@ import NextAuth, { AuthOptions } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import OrcidProvider from "../../../lib/OrcidOAuthProvider";
 import { CreateUserRequest, createUser, getUserByProviderID } from "../../../lib/users";
+import { defaultTenancy } from "../../../lib/rpc";
 
 export const authOptions: AuthOptions = {
   // Configure one or more authentication providers
@@ -26,7 +27,7 @@ export const authOptions: AuthOptions = {
 
       if (trigger == "signIn") {
         const user = await getUserByProviderAuthentication(account, token);
-        token.uid = user.id
+        token = hydrateWithUserInfo(token, user);
       }
 
       return token
@@ -47,6 +48,18 @@ export const authOptions: AuthOptions = {
   session: {
     strategy: "jwt"
   }
+}
+
+export function hydrateWithUserInfo(token, user: any) {
+  token.uid = user.id;
+
+  if (user.tenancies?.length) {
+    token.tenancies = user.tenancies as string[];
+  } else {
+    token.tenancies = [defaultTenancy];
+  }
+
+  return token;
 }
 
 async function getUserByProviderAuthentication(account, token) {
@@ -87,7 +100,7 @@ async function getUserByProviderAuthentication(account, token) {
   if (!user) {
     throw new Error("User not found and not created");
   }
-  
+
   return user;
 }
 
