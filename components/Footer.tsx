@@ -24,7 +24,7 @@ export function Footer(props: FooterProps) {
               <Link
                 href={{
                   pathname: "/account/login",
-                  query: { phase: "sign-in" },
+                  query: { phase: "sign-in", tenancy:"datamap/production/data-amazon" },
                 }}
               >
                 Sign in.
