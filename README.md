@@ -102,3 +102,27 @@ See more <https://formik.org/>
 
 We are organizing the constants of the project in a `{Category}Contants.ts` file and well documented, following this idea:
 https://dev.to/amirfakour/tips-to-use-constants-file-in-typescript-27je
+
+### Deploying
+
+> **WARNING:** The current deployment process causes downtime for services.
+
+```sh
+# Connect to USP infra
+ssh datamap@143.107.102.162 -p 5010
+
+# Navigate to the project folder
+cd datamap-webapp
+
+# Get the last (main) branch version
+git pull
+
+# Stop backend containers
+docker-compose down
+
+# Rebuild the image (to make sure)
+docker-compose build
+
+# Start backend
+docker-compose up -d
+```
