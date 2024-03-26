@@ -7,7 +7,7 @@ services:
     container_name: datamap-frontend
     restart: always
     env_file:
-      - path: ${ENV_FILE_PATH}
+      - ${ENV_FILE_PATH}
     ports:
       - '3000:3000'
     networks:
