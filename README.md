@@ -63,13 +63,13 @@ npm run test
 npm run testing
 ``` 
 
-To open the code coverage report on Google Chrome browser, execute:
+To run tests and open the code coverage report on Google Chrome browser, execute:
 
-````
+```
 npm run test:coverage
-``
+```
 
-But for open last coverage report, run:
+But for open last coverage report only, withot run the test, perform:
 ```
 npm run test:coverage:report
 ```
