@@ -43,6 +43,13 @@ export default function ProfilePage(props) {
             <CardItem className="py-4" title="Email">
               {props.data.email}
             </CardItem>
+            <CardItem className="py-4" title="Tenancies">
+              <ul>
+                {props.data.tenancies.map((tenancy, index) =>
+                  <li className="ml-4 list-disc" key={index}>{tenancy}</li>
+                )}
+              </ul>
+            </CardItem>
             <CardItem className="py-4" title="Roles">
               <ul>
                 {props.data.roles.map((role, index) =>
@@ -101,6 +108,8 @@ export async function getServerSideProps(context) {
 
   try {
     const data = await getUserByUID(ctx);
+
+    console.log(data);
 
     // Pass data to the page via props
     return { props: { data } };
