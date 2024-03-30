@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  frontend:
+    build: .
+    image: datamap-frontend
+    container_name: datamap-frontend
+    restart: always
+    env_file:
+      - ${ENV_FILE_PATH}
+    ports:
+      - '3000:3000'
+    networks:
+      - gatekeeper_gatekeeper-network
+
+networks:
+  gatekeeper_gatekeeper-network:
+    driver: bridge
+    name: gatekeeper_gatekeeper-network
