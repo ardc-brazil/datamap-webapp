@@ -1,16 +1,17 @@
 import Link from "next/link";
+import { useRouter } from 'next/router';
 import { useState } from "react";
 import useSWR from 'swr';
 import LoggedLayout from "../../../components/LoggedLayout";
 import { EmptySearch } from "../../../components/Search/EmptySearch";
-import { FilterCriteriaList } from "../../../components/Search/FilterCriteriaList";
 import { FilterBadges } from "../../../components/Search/FilterBadges";
+import { FilterCriteriaList } from "../../../components/Search/FilterCriteriaList";
 import { ListDataset } from "../../../components/Search/ListDataset";
 import TextSearchBar from "../../../components/Search/TextSearchBar";
-import { ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_ERROR } from "../../../contants/InternalRoutesConstants";
-import { fetcher, SWRRetry } from "../../../lib/fetcher";
+import Alert from "../../../components/base/Alert";
 import { CurrentSearchParameterState, SelectedFilterValue } from "../../../components/types/FilterOption";
-import Router from 'next/router';
+import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_ERROR } from "../../../contants/InternalRoutesConstants";
+import { SWRRetry, fetcher } from "../../../lib/fetcher";
 
 function useDatasetSearch(currentSearchParameters) {
 
@@ -45,6 +46,8 @@ function useDatasetSearch(currentSearchParameters) {
 
 export default function ListDatasetPage(props) {
 
+  const router = useRouter();
+
   const emptyCurrentSearchParameters = {
     at: Date.now(),
     selectedFilters: {
@@ -60,11 +63,10 @@ export default function ListDatasetPage(props) {
 
   const [currentSearchParameters, setCurrentSearchParameters] = useState(emptyCurrentSearchParameters)
   const [lastSearchParameterDeselected, setLastSearchParameterDeselected] = useState(null as SelectedFilterValue)
-
   const { datasets, datasetsIsLoading, datasetsIsError } = useDatasetSearch(currentSearchParameters)
 
   if (datasetsIsError) {
-    Router.push(ROUTE_PAGE_ERROR(datasetsIsError));
+    router.push(ROUTE_PAGE_ERROR(datasetsIsError));
   }
 
   function onTextSearchChanged(text: string) {
@@ -162,9 +164,16 @@ export default function ListDatasetPage(props) {
   //   });
   // }
 
+  function onAlertClose() {
+    router.push(ROUTE_PAGE_DATASETS);
+  }
+
   return (
     <LoggedLayout>
       <div className="container mx-auto">
+        <Alert callout="Dataset deleted" show={router?.query?.deleteDatasetName as unknown as boolean} closed={onAlertClose}>
+          <p>The dataset <b>'{router?.query?.deleteDatasetName}'</b> was deleted with success!</p>
+        </Alert>
 
         <h2>Datasets</h2>
         <p className="text-primary-700">

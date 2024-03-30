@@ -1,7 +1,7 @@
-import React from "react";
 
 interface ModalProps {
   confimButtonText: string;
+  cancelButtonText?: string;
   confim?(): void;
   cancel?(): void;
   children: any;
@@ -48,7 +48,7 @@ export default function Modal(props: ModalProps) {
                     type="button"
                     onClick={() => props.cancel()}
                   >
-                    Close
+                    {!props.cancelButtonText ? "Close" : props.cancelButtonText}
                   </button>
                   <button
                     className="btn-primary"
