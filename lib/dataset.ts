@@ -171,6 +171,7 @@ export async function deleteDataset(context: AppLocalContext, id: string): Promi
     const response = await axiosInstance.delete("/datasets/" + id, buildHeaders(context));
 
     if (response.status !== 200) {
-        return Promise.reject(response.data.message);
+        console.log(response);
+        return Promise.reject(response);
     }
 }

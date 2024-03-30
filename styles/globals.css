@@ -62,6 +62,10 @@
   .btn-primary-outline {
     @apply bg-primary-50 text-primary-900 active:bg-primary-200 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg mr-1 mb-1 ease-linear transition-all duration-150 outline-1 outline-offset-2 focus:outline-primary-900 cursor-pointer disabled:opacity-50  disabled:active:bg-primary-900
   }
+  
+  .btn-primary-outline-basic {
+    @apply text-primary-900 active:bg-primary-200  hover:bg-primary-200 bg-transparent font-bold uppercase text-sm rounded focus:outline-primary-900 cursor-pointer disabled:opacity-50  disabled:active:bg-primary-900
+  }
 
   .btn-small {
     @apply text-xs px-4 py-2 hover:shadow-md 

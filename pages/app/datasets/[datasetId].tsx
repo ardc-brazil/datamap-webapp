@@ -1,5 +1,6 @@
 import { TabPanelDataCard } from "../../../components/DatasetDetails/DataCard/TabPanelDataCard";
 import DatasetInstitution from "../../../components/DatasetDetails/DatasetInstitution";
+import DatasetMoreSettingsButton from "../../../components/DatasetDetails/DatasetMoreSettingsButton";
 import { TabPanelSettings } from "../../../components/DatasetDetails/TabPanelSettings";
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
 import { DownloadDatafilesButton } from "../../../components/DownloadDatafilesButton";
@@ -21,8 +22,11 @@ export default function DatasetDetailsPage(props) {
               <DatasetInstitution dataset={props.dataset} user={props.user} />
             </div>
             {/* Actions */}
-            <div className="">
+            <div>
               <DownloadDatafilesButton dataset={props.dataset} />
+            </div>
+            <div>
+              <DatasetMoreSettingsButton dataset={props.dataset} />
             </div>
           </div>
         </div>

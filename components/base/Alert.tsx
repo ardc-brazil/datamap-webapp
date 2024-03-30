@@ -1,4 +1,3 @@
-import React, { useState } from 'react'
 
 interface AlertInitialStatus {
     show?: boolean;
@@ -26,7 +25,7 @@ export default function Alert(props: AlertProps) {
             <div className="h-fit text-primary-50 px-6 py-4 border-0 rounded relative mb-4 bg-secondary-500 z-0 mt-4">
                 <span className="inline-block align-middle mr-8 text-primary-900">
                     {props.callout &&
-                        <b className="capitalize">{props.callout}!</b>
+                        <b className="capitalize">{props.callout}</b>
                     } {props.children}
                 </span>
                 <button
