@@ -102,10 +102,8 @@ export default function LoginPage(props) {
 
   return (
     <div className="container mx-auto flex flex-col gap-16 mt-16">
-      <Link href="/">
-        <a className="w-2/12 h-16 self-center">
-          <img className="w-full h-full" src="/img/logo.svg" />
-        </a>
+      <Link href="/" className="w-2/12 h-16 self-center">
+        <img className="w-full h-full" src="/img/logo.svg" />
       </Link>
 
 
@@ -142,12 +140,11 @@ export default function LoginPage(props) {
                 <Link
                   href={{
                     pathname: "/account/login",
-                    query: { phase: "register", tenancy: "datamap/production/data-amazon"},
+                    query: { phase: "register", tenancy: "datamap/production/data-amazon" },
                   }}
+                  className="text-sm text-primary-800 cursor-pointer"
                 >
-                  <a className="text-sm text-primary-800 cursor-pointer">
-                    Create one here.
-                  </a>
+                  Create one here.
                 </Link>
               </p>
             </div>
@@ -163,10 +160,9 @@ export default function LoginPage(props) {
                     pathname: "/account/login",
                     query: { phase: "sign-in", tenancy: "datamap/production/data-amazon" },
                   }}
+                  className="text-sm text-primary-800 cursor-pointer"
                 >
-                  <a className="text-sm text-primary-800 cursor-pointer">
-                    Sign in
-                  </a>
+                  Sign in
                 </Link>
               </p>
             </div>

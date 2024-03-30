@@ -93,8 +93,9 @@ export default function ProfilePage(props) {
               pathname: "/account/login",
               query: { phase: "sign-in" },
             }}
+            className="text-primary-800 cursor-pointer"
           >
-            <a className="text-primary-800 cursor-pointer">Sign in</a>
+            Sign in
           </Link>
         </p>
       </div>
