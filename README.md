@@ -54,6 +54,14 @@ We are using https://fonts.google.com/icons for icons through https://www.npmjs.
 
 See examples at https://github.com/ed-software/react-material-symbols?tab=readme-ov-file#readme and try your icons on [this Storybook](https://react-material-symbols.vercel.app/?path=/docs/outlined--docs).
 
+The customization applied into the icons are:
+
+* style: outlined
+* Fill: false
+* Weight: 200
+* Grade: -25
+* Optical: depends on the place, but usually 32px
+
 ### Unit tests
 
 Use [JEST](https://jestjs.io) for unit tests.
