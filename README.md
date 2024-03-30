@@ -48,6 +48,19 @@ Also install:
 Some defaults and components could be visualized in <http://localhost:3000/design-system/>.
 See some components ideas in: <https://flowbite.com/>
 
+### Icons
+
+We are using https://fonts.google.com/icons for icons through https://www.npmjs.com/package/react-material-symbols.
+
+See examples at https://github.com/ed-software/react-material-symbols?tab=readme-ov-file#readme and try your icons on [this Storybook](https://react-material-symbols.vercel.app/?path=/docs/outlined--docs).
+
+The customization applied into the icons are:
+
+* style: outlined
+* Fill: false
+* Weight: 200
+* Grade: -25
+* Optical: depends on the place, but usually 32px
 
 ### Unit tests
 
@@ -63,13 +76,13 @@ npm run test
 npm run testing
 ``` 
 
-To open the code coverage report on Google Chrome browser, execute:
+To run tests and open the code coverage report on Google Chrome browser, execute:
 
-````
+```
 npm run test:coverage
-``
+```
 
-But for open last coverage report, run:
+But for open last coverage report only, withot run the test, perform:
 ```
 npm run test:coverage:report
 ```

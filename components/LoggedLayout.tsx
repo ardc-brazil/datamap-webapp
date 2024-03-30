@@ -61,10 +61,8 @@ export default (props: Props) => {
                 <path strokeWidth="2" d="M3 8h18M3 13h18M3 18h18" />
               </svg>
             </button>
-            <Link href="/">
-              <a className="w-full pl-4 flex items-start">
-                <img src="/img/logo.svg" alt="DataMap" className="h-9" />
-              </a>
+            <Link href="/" className="w-full pl-4 flex items-start">
+              <img src="/img/logo.svg" alt="DataMap" className="h-9" />
             </Link>
           </div>
 
@@ -73,8 +71,8 @@ export default (props: Props) => {
           <div className="flex items-center justify-center pt-4">
 
             {menuClosed &&
-              <Link href={ROUTE_PAGE_DATASETS}>
-                <a className="btn-primary w-12 h-12 ml-6 mr-4 px-4 py-2 shadow-primary-600 shadow-sm text-center font-light rounded-full text-2xl">+</a>
+              <Link href={ROUTE_PAGE_DATASETS} className="btn-primary w-12 h-12 ml-6 mr-4 px-4 py-2 shadow-primary-600 shadow-sm text-center font-light rounded-full text-2xl">
+                +
               </Link>
             }
 
@@ -141,11 +139,9 @@ export default (props: Props) => {
 };
 
 function CreateMenuItem(props) {
-  return <Link href={props.href}>
-    <a className="block px-4 py-2 text-sm hover:bg-primary-100" onClick={() => props.onClick()}>
-      <img src={props.img} className="w-6 inline-block mr-2" />
-      {props.text}
-    </a>
+  return <Link href={props.href} className="block px-4 py-2 text-sm hover:bg-primary-100" onClick={() => props.onClick()}>
+    <img src={props.img} className="w-6 inline-block mr-2" />
+    {props.text}
   </Link>;
 }
 
@@ -164,13 +160,9 @@ function MenuItem(props) {
         : ""
         } flex items-center pointer-events-auto hover:bg-primary-100 h-11`}
     >
-      <Link href={props.href}>
-        <a
-          className={`flex items-center mx-2 h-full w-full pl-6 group`}
-        >
-          {props.children}
-          <span className="ml-3">{props.text}</span>
-        </a>
+      <Link href={props.href} className={`flex items-center mx-2 h-full w-full pl-6 group`}>
+        {props.children}
+        <span className="ml-3">{props.text}</span>
       </Link>
     </li>
   );

@@ -60,6 +60,17 @@ export default function ProfilePage(props) {
             <CardItem className="py-4" title="Created At">
               {props.data.created_at}
             </CardItem>
+            <CardItem className="py-4" title="Tenancies">
+              {props.data.tenancies?.length > 0 ? (
+                <ul>
+                  {props.data.tenancies.map((tenancy, index) =>
+                    <li className="ml-4 list-disc" key={index}>{tenancy}</li>
+                  )}
+                </ul>
+              ) : (
+                <i>Empty - no tenancy set for user.</i>
+              )}
+            </CardItem>
             <br />
 
             <button className="btn-primary" onClick={clickSignOut}>
@@ -82,8 +93,9 @@ export default function ProfilePage(props) {
               pathname: "/account/login",
               query: { phase: "sign-in" },
             }}
+            className="text-primary-800 cursor-pointer"
           >
-            <a className="text-primary-800 cursor-pointer">Sign in</a>
+            Sign in
           </Link>
         </p>
       </div>

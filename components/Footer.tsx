@@ -15,16 +15,14 @@ export function Footer(props: FooterProps) {
         <div className="grid grid-rows-1 grid-flow-col gap-4">
           <div className="row-span-2">
             <Link href="/">
-              <a>
-                <img src="/img/logo.svg" alt="DataMap" className="px-6 w-60 " />
-              </a>
+              <img src="/img/logo.svg" alt="DataMap" className="px-6 w-60 " />
             </Link>
             <p className="px-12 py-8">
               Have an account?{" "}
               <Link
                 href={{
                   pathname: "/account/login",
-                  query: { phase: "sign-in" },
+                  query: { phase: "sign-in", tenancy: "datamap/production/data-amazon" },
                 }}
               >
                 Sign in.
@@ -36,27 +34,27 @@ export function Footer(props: FooterProps) {
             <ul>
               <li>
                 <Link href="/project/about">
-                  <a href="#">About</a>
+                  About
                 </Link>
               </li>
               <li>
                 <Link href="/project/faqs">
-                  <a href="#">FAQs</a>
+                  FAQs
                 </Link>
               </li>
               <li>
                 <Link href="/project/support">
-                  <a href="#">Support</a>
+                  Support
                 </Link>
               </li>
               <li>
                 <Link href="/project/tutorials">
-                  <a href="#">Tutorials</a>
+                  Tutorials
                 </Link>
               </li>
               <li>
                 <Link href="/project/privacy-policy">
-                  <a href="#">Privacy Policy</a>
+                  Privacy Policy
                 </Link>
               </li>
             </ul>
@@ -66,7 +64,7 @@ export function Footer(props: FooterProps) {
             <ul className="px-2 py-4">
               <li>
                 <Link href={ROUTE_PAGE_DATASETS}>
-                  <a href="#">Datasets</a>
+                  Datasets
                 </Link>
               </li>
             </ul>
