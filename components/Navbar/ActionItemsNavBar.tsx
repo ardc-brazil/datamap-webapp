@@ -16,10 +16,9 @@ export function ActionItemsNavBar() {
             pathname: "/account/login",
             query: { phase: "sign-in", tenancy: "datamap/production/data-amazon" },
           }}
+          className="btn-primary-outline mx-2"
         >
-          <a href="#" className="btn-primary-outline mx-2">
-            Sign in
-          </a>
+          Sign in
         </Link>
 
         <Link

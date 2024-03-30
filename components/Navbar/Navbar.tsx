@@ -10,10 +10,8 @@ interface Props {
 
 function NavbarItem(props: Props) {
   return (
-    <Link href={props.href}>
-      <a id={props.id} className="px-2 py-4">
-        {props.children}
-      </a>
+    <Link href={props.href} id={props.id} className="px-2 py-4">
+      {props.children}
     </Link>
   );
 }
@@ -23,10 +21,8 @@ export function Navbar() {
     <header className="border-b border-primary-200 sticky top-0 z-40">
       <div className="mx-auto w-full px-2 backdrop-blur-md bg-primary-50/90">
         <div className="flex items-center py-1 h-16">
-          <Link href="/">
-            <a className="pl-6 py-4">
-              <img src="/img/logo.svg" alt="DataMap" className=" h-9" />
-            </a>
+          <Link href="/" className="pl-6 py-4">
+            <img src="/img/logo.svg" alt="DataMap" className=" h-9" />
           </Link>
 
           <nav className="hidden md:flex flex-row ml-10">
