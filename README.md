@@ -48,6 +48,11 @@ Also install:
 Some defaults and components could be visualized in <http://localhost:3000/design-system/>.
 See some components ideas in: <https://flowbite.com/>
 
+### Icons
+
+We are using https://fonts.google.com/icons for icons through https://www.npmjs.com/package/react-material-symbols.
+
+See examples at https://github.com/ed-software/react-material-symbols?tab=readme-ov-file#readme and try your icons on [this Storybook](https://react-material-symbols.vercel.app/?path=/docs/outlined--docs).
 
 ### Unit tests
 
