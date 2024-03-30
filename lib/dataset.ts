@@ -83,6 +83,7 @@ export async function getDatasetBy(context: AppLocalContext, id: string): Promis
         return dataset;
 
     } catch (error) {
+        // FIX: throw a error or encapsulate
         return error.response;
     }
 }
@@ -158,5 +159,18 @@ export async function getAllDataset(context: AppLocalContext, url: String): Prom
     } catch (error) {
         console.log(error);
         return error.response;
+    }
+}
+
+/**
+ * Delete dataset (logical delete --> disable)
+ * @param id dataset id
+ * @returns Dataset
+ */
+export async function deleteDataset(context: AppLocalContext, id: string): Promise<void> {
+    const response = await axiosInstance.delete("/datasets/" + id, buildHeaders(context));
+
+    if (response.status !== 200) {
+        return Promise.reject(response.data.message);
     }
 }
