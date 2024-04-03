@@ -3,8 +3,8 @@ version: '3'
 services:
   frontend:
     build: .
-    image: datamap-frontend
-    container_name: datamap-frontend
+    image: datamap_frontend
+    container_name: datamap_frontend
     restart: always
     env_file:
       - ${ENV_FILE_PATH}
