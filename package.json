@@ -12,6 +12,13 @@
   },
   "dependencies": {
     "@types/jest": "^29.5.12",
+    "@uppy/core": "^3.10.0",
+    "@uppy/dashboard": "^3.8.0",
+    "@uppy/drag-drop": "^3.1.0",
+    "@uppy/file-input": "^3.1.1",
+    "@uppy/progress-bar": "^3.1.1",
+    "@uppy/react": "^3.3.0",
+    "@uppy/tus": "^3.5.4",
     "axios": "^1.6.8",
     "cookies-next": "^2.1.1",
     "eslint-config-next": "^14.1.4",

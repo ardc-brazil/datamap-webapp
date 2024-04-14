@@ -1,16 +1,18 @@
 import axios from "axios";
 import { ErrorMessage, Field, FieldArray, Form, Formik, FormikHelpers } from "formik";
-import { useState } from "react";
-import LoggedLayout from "../../../components/LoggedLayout";
-
+import { useSession } from "next-auth/react";
 import Router from "next/router";
+import { useState } from "react";
 import { TabPanel } from "../../../components/DatasetDetails/TabPanel";
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
 import LayoutFullScreen from "../../../components/LayoutFullScreen";
+import LoggedLayout from "../../../components/LoggedLayout";
 import Alert from "../../../components/base/Alert";
 import CloseButton from "../../../components/base/CloseButton";
 import Modal from "../../../components/base/PopupModal";
+import UppyUploader from "../../../components/base/UppyUploader";
 import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
+import { isUppyUploadEnabled } from "../../../lib/featureFlags";
 import { isValidPath, isValidPathForFolder } from "../../../lib/paths";
 
 interface FormValues {
@@ -24,6 +26,7 @@ interface DatafilePath {
   confirmed: boolean
 }
 export default function NewPage(props) {
+  const { data: session } = useSession();
   const [showModal, setShowModal] = useState(false);
   const [datasetCreateResponse, setDatasetCreateResponse] = useState(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
@@ -263,9 +266,17 @@ export default function NewPage(props) {
                           <p>We are working in this feature yet. But is good to know that you need this.</p>
                         </div>
                       </TabPanel>
+                      {isUppyUploadEnabled(session) &&
+                        <TabPanel title="File">
+                          <div className="grid grid-cols-1 place-items-center py-2">
+                            <UppyUploader />
+                          </div>
+                        </TabPanel>
+                      }
                     </Tabs>
                   </div>
                 </div>
+                <br />
               </div>
 
               <div className="w-full h-24 border-t border-primary-200 ">
