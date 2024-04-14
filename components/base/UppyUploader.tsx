@@ -9,6 +9,10 @@ import { useState } from 'react';
 export default function UppyUploader() {
     const { data: session } = useSession();
 
+    console.log("==============");
+    console.log(process.env.TUS_SERVICE_ENDPOINT);
+    console.log("==============");
+
     // IMPORTANT: passing an initializer function to prevent Uppy from being reinstantiated on every render.
     const [uppy] = useState(
         new Uppy({
@@ -22,7 +26,7 @@ export default function UppyUploader() {
                 // TODO: Implement call to remove file after uploaded.
             }
         }).use(Tus, {
-            endpoint: process.env.NEXT_PUBLIC_TUS_SERVICE_ENDPOINT,
+            endpoint: process.env.TUS_SERVICE_ENDPOINT,
             headers: {
                 "X-User-Id": session?.user?.uid,
             }
