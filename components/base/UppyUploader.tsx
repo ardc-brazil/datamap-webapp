@@ -10,7 +10,7 @@ export default function UppyUploader() {
     const { data: session } = useSession();
 
     console.log("==============");
-    console.log(process.env.TUS_SERVICE_ENDPOINT);
+    console.log(getTusEndpoint());
     console.log("==============");
 
     // IMPORTANT: passing an initializer function to prevent Uppy from being reinstantiated on every render.
@@ -26,7 +26,7 @@ export default function UppyUploader() {
                 // TODO: Implement call to remove file after uploaded.
             }
         }).use(Tus, {
-            endpoint: process.env.TUS_SERVICE_ENDPOINT,
+            endpoint: getTusEndpoint(),
             headers: {
                 "X-User-Id": session?.user?.uid,
             }
@@ -37,6 +37,17 @@ export default function UppyUploader() {
     //     // Adding to global `meta` will add it to every file.
     //     uppy.setOptions({ meta: { "uid": "test1234" } });
     // }, [uppy]);
+
+    function getTusEndpoint() {
+        
+        if (!process.env.NEXT_PUBLIC_TUS_SERVICE_ENDPOINT) {
+            if (process.env.NODE_ENV == "development") {
+                return "http://localhost:1080/files/";
+            }
+        }
+
+        return "https://datamap.pcs.usp.br/files/";
+    }
 
     return (
         <>
