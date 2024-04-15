@@ -3,7 +3,7 @@
  * @param path File serve path
  * @returns true if is a valid file pattern, otherwise false.
  */
-export function isValidPath(path: string): boolean {
+export function isValidFilePath(path: string): boolean {
     const regex = /\/\w+\.\w+$/g;
     return regex.test(path);
 }
@@ -13,7 +13,7 @@ export function isValidPath(path: string): boolean {
  * @param path Folder serve path
  * @returns true if is a valid folder pattern, otherwise false.
  */
-export function isValidPathForFolder(path: string): boolean {
+export function isValidFolderPath(path: string): boolean {
     const regex = /\/\w+\/\*\*$/g;
     return regex.test(path);
 }

@@ -1,4 +1,4 @@
-import { isValidPath, isValidPathForFolder } from "../paths";
+import { isValidFilePath, isValidFolderPath } from "../paths";
 
 test.each`
   path	                | expected
@@ -12,7 +12,7 @@ test.each`
   ${"a/a"}	            | ${false}
   ${"a/a./"}	          | ${false}
 `('validPath($path)', ({ path, expected }) => {
-  expect(isValidPath(path)).toBe(expected);
+  expect(isValidFilePath(path)).toBe(expected);
 });
 
 test.each`
@@ -27,5 +27,5 @@ test.each`
   ${"a/a"}	            | ${false}
   ${"a/a./**"}	          | ${false}
 `('isValidPathForFolder($path)', ({ path, expected }) => {
-  expect(isValidPathForFolder(path)).toBe(expected);
+  expect(isValidFolderPath(path)).toBe(expected);
 });
