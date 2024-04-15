@@ -3,6 +3,7 @@ import { Props } from "../../components/types/BaseInterfaces";
 import { Tab } from "./Tab";
 
 interface TabsProps extends Props {
+  onTabChanged?(tabId: number): void;
   className?: string;
   defaultSelectedIndex?: number;
 }
@@ -13,6 +14,9 @@ export function Tabs(props: TabsProps) {
 
   function onTabSelected(tabId: number) {
     setTabSelected(tabId);
+    if (props.onTabChanged) {
+      props.onTabChanged(tabId);
+    }
   }
 
   return (
