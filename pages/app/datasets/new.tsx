@@ -53,7 +53,7 @@ export default function NewPage(props) {
       return null;
     }
 
-    if (!isValidFilePath(value) || !isValidFolderPath(value)) {
+    if (!isValidFilePath(value) && !isValidFolderPath(value)) {
       return 'Invalid path. Pattern: /path/to/the/file.ext or /path/to/the/**'
     }
 
