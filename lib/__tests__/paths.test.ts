@@ -6,6 +6,8 @@ test.each`
   ${"a/a.jpg"}	        | ${true}
   ${"/a/a.jpg"}	        | ${true}
   ${"/a/b/c/d/e.jpg"}	  | ${true}
+  ${"/a/b/c/d/e_e.jpg"}	  | ${true}
+  ${"/a/b/c/d/e-e.jpg"}	  | ${true}
   ${"/a/b/c/d/e..jpg"}	| ${false}
   ${""}	                | ${false}
   ${"/a"}	              | ${false}
@@ -21,6 +23,7 @@ test.each`
   ${"a/**"}	            | ${false}
   ${"/a/**"}	          | ${true}
   ${"/a/b/c/d/**"}	    | ${true}
+  ${"/a/b/c/d-e/**"}	    | ${true}
   ${"/a/b/c/d/**.jpg"}	| ${false}
   ${""}	                | ${false}
   ${"/a"}	              | ${false}
