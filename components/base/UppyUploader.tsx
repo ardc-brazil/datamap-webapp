@@ -39,18 +39,17 @@ export default function UppyUploader() {
     // }, [uppy]);
 
     function getTusEndpoint() {
-
-        if (!process.env.NEXT_PUBLIC_TUS_SERVICE_ENDPOINT) {
-            if (process.env.NODE_ENV == "development") {
-                return "http://localhost:1080/files/";
-            }
-
-            console.log("Using default TUS server endpoint");
-            return "https://datamap.pcs.usp.br/files/";
+        if (process.env.NEXT_PUBLIC_TUS_SERVICE_ENDPOINT) {
+            console.log("Using TUS server endpoint set from env var")
+            return process.env.NEXT_PUBLIC_TUS_SERVICE_ENDPOINT
         }
 
-        console.log("Using TUS server endpoint set from env var")
-        return process.env.NEXT_PUBLIC_TUS_SERVICE_ENDPOINT
+        if (process.env.NODE_ENV == "development") {
+            return "http://localhost:1080/files/";
+        }
+
+        console.log("Using default TUS server endpoint");
+        return "https://datamap.pcs.usp.br/files/";
     }
 
     return (
