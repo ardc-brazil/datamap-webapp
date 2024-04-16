@@ -15,16 +15,6 @@ import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesCon
 import { isUppyUploadEnabled } from "../../../lib/featureFlags";
 import { isValidFilePath, isValidFolderPath } from "../../../lib/paths";
 
-interface FormValues {
-  datasetTitle?: string,
-  urls?: DatafilePath[]
-  remoteFilesCount: number
-}
-
-interface DatafilePath {
-  url: string,
-  confirmed: boolean
-}
 export default function NewPage(props) {
   const { data: session } = useSession();
   const [showModal, setShowModal] = useState(false);
@@ -44,6 +34,7 @@ export default function NewPage(props) {
   const initialValues: FormValues = {
     datasetTitle: '',
     urls: [{ url: '', confirmed: false }],
+    uploadedDataFiles: [],
     remoteFilesCount: 0
   };
 
@@ -85,7 +76,7 @@ export default function NewPage(props) {
     }
 
     const confirmed = values.urls.filter(x => x && x.confirmed);
-    if (confirmed.length <= 0) {
+    if (confirmed.length <= 0 && values?.uploadedDataFiles?.length <= 0) {
       errors.remoteFilesCount = 'You have to informe almost one remote file.';
     }
 
@@ -260,12 +251,12 @@ export default function NewPage(props) {
                           }}
                         </FieldArray>
                       </TabPanel>
-                      <TabPanel title="AWS S3">
+                      {/* <TabPanel title="AWS S3">
                         <div className="text-center">
                           <h4> Unavaible, <span className="text-primary-400">for while</span>!</h4>
                           <p>We are working in this feature yet. But is good to know that you need this.</p>
                         </div>
-                      </TabPanel>
+                      </TabPanel> */}
                       {isUppyUploadEnabled(session) &&
                         <TabPanel title="File">
                           <div className="grid grid-cols-1 place-items-center py-2">

@@ -1,29 +1,56 @@
-import Uppy from '@uppy/core';
+import Uppy, { UploadedUppyFile } from '@uppy/core';
 import '@uppy/core/dist/style.min.css';
 import '@uppy/dashboard/dist/style.min.css';
 import { Dashboard } from '@uppy/react';
 import Tus from '@uppy/tus';
+import { ErrorMessage, useFormikContext } from "formik";
 import { useSession } from "next-auth/react";
 import { useState } from 'react';
 
-export default function UppyUploader() {
+interface UppyUploaderProps {
+    onFileUploaded?(success: UploadedUppyFile<Record<string, unknown>, Record<string, unknown>>): void;
+}
+
+export default function UppyUploader(props: UppyUploaderProps) {
     const { data: session } = useSession();
 
-    console.log("==============");
-    console.log(getTusEndpoint());
-    console.log("==============");
+    const formikContext = useFormikContext();
 
     // IMPORTANT: passing an initializer function to prevent Uppy from being reinstantiated on every render.
-    const [uppy] = useState(
+    const [uppy] = useState(() =>
         new Uppy({
             debug: false,
             autoProceed: true,
             meta: { "uid": "test1234" },
         }).on('complete', (result) => {
             console.log('Upload result:', result)
+            if (result.successful) {
+                result.successful.forEach(success => {
+                    if (props.onFileUploaded) {
+                        props.onFileUploaded(success)
+                    }
+
+                    // Add file to the formik context to validate before submit
+                    const formikValues = (formikContext.values as FormValues)
+                    formikValues?.uploadedDataFiles?.push({
+                        id: success.id,
+                        name: success.name,
+                        extension: success.extension,
+                    })
+
+                    formikContext.setFieldValue("remoteFilesCount", formikValues?.uploadedDataFiles?.length, true);
+                });
+            }
         }).on('file-removed', (file, reason) => {
             if (reason === 'removed-by-user') {
                 // TODO: Implement call to remove file after uploaded.
+                // Remove file from the formik context to validate before submit
+                const formikValues = (formikContext.values as FormValues)
+                const index = formikValues?.uploadedDataFiles?.findIndex(x => x.id == file.id)
+                if (index > -1) {
+                    formikValues?.uploadedDataFiles?.splice(index, 1)
+                    formikContext.setFieldValue("remoteFilesCount", formikValues?.uploadedDataFiles?.length, true);
+                }
             }
         }).use(Tus, {
             endpoint: getTusEndpoint(),
@@ -54,6 +81,11 @@ export default function UppyUploader() {
 
     return (
         <>
+            <ErrorMessage
+                name='remoteFilesCount'
+                component="div"
+                className="text-xs text-error-600"
+            />
             <Dashboard
                 uppy={uppy}
                 disabled={false}
