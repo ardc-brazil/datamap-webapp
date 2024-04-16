@@ -1,4 +1,4 @@
-import { isValidPath, isValidPathForFolder } from "../paths";
+import { isValidFilePath, isValidFolderPath } from "../paths";
 
 test.each`
   path	                | expected
@@ -6,13 +6,15 @@ test.each`
   ${"a/a.jpg"}	        | ${true}
   ${"/a/a.jpg"}	        | ${true}
   ${"/a/b/c/d/e.jpg"}	  | ${true}
+  ${"/a/b/c/d/e_e.jpg"}	  | ${true}
+  ${"/a/b/c/d/e-e.jpg"}	  | ${true}
   ${"/a/b/c/d/e..jpg"}	| ${false}
   ${""}	                | ${false}
   ${"/a"}	              | ${false}
   ${"a/a"}	            | ${false}
   ${"a/a./"}	          | ${false}
 `('validPath($path)', ({ path, expected }) => {
-  expect(isValidPath(path)).toBe(expected);
+  expect(isValidFilePath(path)).toBe(expected);
 });
 
 test.each`
@@ -21,11 +23,12 @@ test.each`
   ${"a/**"}	            | ${false}
   ${"/a/**"}	          | ${true}
   ${"/a/b/c/d/**"}	    | ${true}
+  ${"/a/b/c/d-e/**"}	    | ${true}
   ${"/a/b/c/d/**.jpg"}	| ${false}
   ${""}	                | ${false}
   ${"/a"}	              | ${false}
   ${"a/a"}	            | ${false}
   ${"a/a./**"}	          | ${false}
 `('isValidPathForFolder($path)', ({ path, expected }) => {
-  expect(isValidPathForFolder(path)).toBe(expected);
+  expect(isValidFolderPath(path)).toBe(expected);
 });

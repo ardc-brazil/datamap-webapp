@@ -63,6 +63,12 @@ describe('Dataset Gateway test', () => {
             // given
             const datasetId = "b7fe1dd9-5cd3-4814-87b1-0926af050297"
             const ctx = await NewContext(new NextRequest(new URL('http://localhost:3000')))
+            const expected = {
+                data: {
+                    "message": `Dataset ${datasetId} not found`
+                },
+                status: 404,
+            };
 
             mockAxiosDelete.mockResolvedValue({
                 data: {
@@ -72,7 +78,7 @@ describe('Dataset Gateway test', () => {
             })
 
             // when, then
-            await  expect(deleteDataset(ctx, datasetId)).rejects.toBe(`Dataset ${datasetId} not found`)
+            await  expect(deleteDataset(ctx, datasetId)).rejects.toMatchObject(expected)
         });
     })
 })

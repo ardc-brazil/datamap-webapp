@@ -13,7 +13,7 @@ import Modal from "../../../components/base/PopupModal";
 import UppyUploader from "../../../components/base/UppyUploader";
 import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
 import { isUppyUploadEnabled } from "../../../lib/featureFlags";
-import { isValidPath, isValidPathForFolder } from "../../../lib/paths";
+import { isValidFilePath, isValidFolderPath } from "../../../lib/paths";
 
 interface FormValues {
   datasetTitle?: string,
@@ -53,7 +53,7 @@ export default function NewPage(props) {
       return null;
     }
 
-    if (!isValidPath(value) && !isValidPathForFolder(value)) {
+    if (!isValidFilePath(value) && !isValidFolderPath(value)) {
       return 'Invalid path. Pattern: /path/to/the/file.ext or /path/to/the/**'
     }
 
@@ -61,7 +61,7 @@ export default function NewPage(props) {
   }
 
   function addDataFile(item: DatafilePath, push: any, setFieldTouched, index: number) {
-    if (isValidPath(item?.url) || isValidPathForFolder(item?.url)) {
+    if (isValidFilePath(item?.url) || isValidFolderPath(item?.url)) {
       item.confirmed = true;
       push({ url: '', confirmed: false } as DatafilePath);
       setFieldTouched(`urls.${index}.url`, true, true);
