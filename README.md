@@ -139,3 +139,22 @@ ENV_FILE_PATH=../environment/frontend.env.production docker-compose down
 # Start backend
 ENV_FILE_PATH=../environment/frontend.env.production docker-compose up -d
 ```
+
+## Architecture
+
+### RPC
+
+Remote procedure call (RPC) is the way that front-end application communicates with the Backend application.
+We perform RPC for two reasons: data changing and data fetching.
+
+#### Data changing
+
+![](./docs/frontnend-rpc/frontendRPC.png)
+
+#### Data fetching
+We are using [SWR](https://swr.vercel.app/) directly on page instead of using a BFF Gateway implementation for feching data from Backend for Frontend (BFF). SWR has many benefits when fetching data from BFF, some pros are: realtime, paginantion, retry, caching, auto cache invalidation.
+
+The following diagram demonstrate how to perform a data fetching.
+
+![](./docs/frontnend-rpc-datafetch/frontendRPC-DataFetching.png)
+

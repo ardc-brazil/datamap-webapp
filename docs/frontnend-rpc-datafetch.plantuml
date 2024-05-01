@@ -1,0 +1,80 @@
+@startuml frontendRPC-DataFetching
+
+header frontend RPC communication pattern
+
+title Data fetching
+
+box "Client" #LightBlue
+  participant pg as "Page"
+  participant clientMapper as "Client BFF Mapper"
+  participant swr as "SWR"
+  pg -> swr: GET /api/datasets
+end box
+
+box "Backend for Fronend (BFF)" #LightYellow
+  participant apiHandler as "Handler"
+  participant bffMapper as "Mapper"
+  participant apiController as "Controller"
+  participant apiGateway as "API Gateway"
+  participant backendApiMapper as "Gatekeeper API Mapper"
+  participant gatekeeper as "Gatekeeper"
+
+  swr -> apiHandler: GET /api/datasets?param=1&param=2
+  note over swr
+    All request contains
+    a JWT token validated 
+    by the BFF "auth" middleware.
+  end note
+  apiHandler -> bffMapper: map(bffRequest)
+  apiHandler <-- bffMapper: entity
+
+  apiHandler -> apiController: getDatasets(entity)
+  apiController -> apiGateway: getDatasets(entity)
+  apiGateway -> backendApiMapper: map(entity)
+  apiGateway <-- backendApiMapper: backendRequestV1
+  apiGateway -> gatekeeper: GET /api/v1/datasets?params=1&params=2&params=3
+  note right
+    All requests sends 
+    "X-Api-Key", "X-Api-Secret",
+    "X-User-Id", "X-Datamap-Tenancies",
+    in the request header
+  end note
+
+  alt success
+    apiGateway <-- gatekeeper: backendResponseV1 {200 OK}
+    apiGateway -> backendApiMapper: map(backendResponseV1)
+    apiGateway <-- backendApiMapper: entities
+  else error
+    
+    apiGateway <-- gatekeeper: backendErrorResponseV1 {4xx|5xx}
+    note right
+      Errors must be mapped 
+      to an error entity, 
+      that contains "code" 
+      and "message"
+    end note
+    apiGateway -> backendApiMapper: map(backendResponseV1)
+    apiGateway <-- backendApiMapper: errorEntity
+  end alt
+
+  apiController <-- apiGateway: entities
+  apiHandler <-- apiController: entities
+  apiHandler -> bffMapper: map(entities)
+  apiHandler <-- bffMapper: bffResponse
+  apiHandler --> swr: bffResponse {200 OK}
+  note over apiHandler
+' TODO Define how to paginated requests will work
+' TODO Define response object that contains errorEntities
+    Even if the response is a errorEntity
+    we should return 200 OK, because
+    bffResponse is a wrapper with
+    "isError" and "data" properties and
+    pagination info
+  end note 
+  swr -> clientMapper: map(bffResponse)
+  swr <-- clientMapper: pageProperties
+  pg <-- swr: pageProperties
+
+end box
+
+@enduml
