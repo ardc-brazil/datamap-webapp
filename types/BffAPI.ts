@@ -1,6 +1,6 @@
 import { DatasetInfo } from "./GatekeeperAPI"
 
-export interface CreateDatasetRequest {
+export interface CreateDatasetBFFRequest {
     datasetTitle: string,
     urls: Url[]
     remoteFilesCount: number
@@ -16,6 +16,8 @@ export interface Url {
 }
 
 export interface DatasetDetailsResponse extends DatasetInfo { }
+
+export interface GetDatasetDetailsResponse extends DatasetDetailsResponse { }
 
 export interface DatasetCategoryFiltersResponse {
     id: string
@@ -35,4 +37,3 @@ export interface DatasetListResponsePaged {
     content: DatasetDetailsResponse[],
     size: number
 }
-

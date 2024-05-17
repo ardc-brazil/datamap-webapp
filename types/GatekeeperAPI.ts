@@ -7,9 +7,10 @@
  * Represents a request to dataset creation.
  * @interface
  */
-export interface DatasetRequest {
+export interface CreateDatasetAPIRequest {
     name: string;
     data: any;
+    tenancty: string;
 }
 
 /**
@@ -73,4 +74,19 @@ interface Person {
 interface Resolution {
     temporal: string,
     spatial: string
+}
+
+export interface GetUserDetailsV1Response {
+    id: string,
+    name: string,
+    email: string,
+    roles: string[],
+    providers: {
+        name: string,
+        reference: string
+    }[],
+    is_enabled: boolean,
+    created_at: Date,
+    updated_at: Date,
+    tenancies: string[],
 }

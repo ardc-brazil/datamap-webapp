@@ -1,10 +1,10 @@
 
-import { CreateDatasetRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, DatasetDetailsResponse, DatasetListResponsePaged } from "../types/BffAPI";
-import { DataFile, DatasetInfo, DatasetRequest } from "../types/GatekeeperAPI";
+import { CreateDatasetBFFRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, DatasetDetailsResponse, DatasetListResponsePaged, GetDatasetDetailsResponse } from "../types/BffAPI";
+import { CreateDatasetAPIRequest, DataFile, DatasetInfo } from "../types/GatekeeperAPI";
 import { AppLocalContext } from "./appLocalContext";
 import axiosInstance, { buildHeaders } from "./rpc";
 
-function toDatasetInfo(datasetRequest: CreateDatasetRequest): DatasetInfo {
+function toDatasetInfo(datasetRequest: CreateDatasetBFFRequest): DatasetInfo {
     const dataFiles = datasetRequest.urls.map(
         x => ({ path: x.url } as DataFile)
     );
@@ -54,36 +54,17 @@ function toDatasetInfo(datasetRequest: CreateDatasetRequest): DatasetInfo {
  * @param datasetRequest minimum info to create a dataset
  * @returns CreateDatasetResponse
  */
-export async function createDataset(context: AppLocalContext, datasetRequest: CreateDatasetRequest): Promise<CreateDatasetResponse> {
+export async function createDataset(context: AppLocalContext, datasetRequest: CreateDatasetBFFRequest): Promise<CreateDatasetResponse> {
     try {
         const request = {
             name: datasetRequest.datasetTitle,
             data: toDatasetInfo(datasetRequest)
-        } as DatasetRequest;
+        } as CreateDatasetAPIRequest;
 
         const response = await axiosInstance.post("/datasets", request, buildHeaders(context));
 
         return response.data;
     } catch (error) {
-        return error.response;
-    }
-}
-
-/**
- * Get a dataset details.
- * @param id dataset id
- * @returns Dataset
- */
-export async function getDatasetBy(context: AppLocalContext, id: string): Promise<DatasetDetailsResponse> {
-    try {
-        const response = await axiosInstance.get("/datasets/" + id, buildHeaders(context));
-
-        const dataset = toDatasetDetailsResponse(response.data);
-        hydrateDatasetMetadataInfo(dataset, response.data);
-        return dataset;
-
-    } catch (error) {
-        // FIX: throw a error or encapsulate
         return error.response;
     }
 }

@@ -5,11 +5,18 @@ import { TabPanelSettings } from "../../../components/DatasetDetails/TabPanelSet
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
 import { DownloadDatafilesButton } from "../../../components/DownloadDatafilesButton";
 import LoggedLayout from "../../../components/LoggedLayout";
+import { GatekeeperAPI } from "../../../gateways/Gatekeeper";
 import { NewContext } from "../../../lib/appLocalContext";
-import { getDatasetBy } from "../../../lib/dataset";
-import { canEditDataset, getUserByUID } from "../../../lib/users";
+import { canEditDataset } from "../../../lib/users";
+import { GetDatasetDetailsResponse } from "../../../types/BffAPI";
+import { GetUserDetailsV1Response } from "../../../types/GatekeeperAPI";
 
-export default function DatasetDetailsPage(props) {
+interface Props {
+  dataset: GetDatasetDetailsResponse,
+  user: GetUserDetailsV1Response,
+}
+
+export default function DatasetDetailsPage(props: Props) {
 
   return (
     <LoggedLayout>
@@ -47,14 +54,23 @@ export default function DatasetDetailsPage(props) {
   );
 }
 
+function map(dataset: GetDatasetDetailsResponse, user: GetUserDetailsV1Response): Props {
+  return {
+    dataset: dataset,
+    user: user,
+  };
+}
+
 export async function getServerSideProps({ req, res, query }) {
   const context = await NewContext(req);
   const datasetId = query.datasetId as string;
-  const dataset = await getDatasetBy(context, datasetId);
-  const user = await getUserByUID(context);
+  const gatekeeperAPI = new GatekeeperAPI()
+
+  const dataset = await gatekeeperAPI.getDatasetBy(context, datasetId);
+  const user = await gatekeeperAPI.getUserByUID(context);
 
   return {
-    props: { dataset, user }, // will be passed to the page component as props
+    props: map(dataset, user)
   };
 }
 

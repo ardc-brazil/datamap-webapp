@@ -88,14 +88,6 @@ export async function createUser(requestParams: CreateUserRequest) {
     return response.data;
 }
 
-export async function getUserByUID(context: AppLocalContext): Promise<UserDetailsResponse> {
-    const response = await axiosInstance.get(
-        `/users/${context.uid}?is_enabled=true`,
-        buildHeaders(context)
-    );
-    return response.data;
-}
-
 export async function getUserByProviderID(request: GetUserByProviderRequest) {
     // TODO: improve error handler
     const response = await axiosInstance.get(`/users/providers/${request.providerName}/${request.providerID}`);

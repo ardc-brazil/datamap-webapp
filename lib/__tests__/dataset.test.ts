@@ -1,11 +1,15 @@
 import { NextRequest } from "next/server";
 import { NewContext } from "../appLocalContext";
-import { deleteDataset, getDatasetBy } from "../dataset";
+import { createDataset, deleteDataset } from "../dataset";
 import axiosInstance from "../rpc";
+import { CreateDatasetBFFRequest, CreateDatasetResponse, Url } from "../../types/BffAPI";
+import { AxiosError } from "axios";
+import { GatekeeperAPI } from "../../gateways/Gatekeeper";
 
 jest.mock("../rpc")
 const mockAxiosGet = jest.mocked(axiosInstance.get)
 const mockAxiosDelete = jest.mocked(axiosInstance.delete)
+const mockAxiosPost = jest.mocked(axiosInstance.post)
 
 describe('Dataset Gateway test', () => {
 
@@ -28,8 +32,10 @@ describe('Dataset Gateway test', () => {
                 }
             })
 
+            const target = new GatekeeperAPI()
+
             // when
-            const actual = await getDatasetBy(ctx, datasetId)
+            const actual = await target.getDatasetBy(ctx, datasetId)
 
             // then
             expect(actual).not.toBeUndefined()
@@ -78,8 +84,89 @@ describe('Dataset Gateway test', () => {
             })
 
             // when, then
-            await  expect(deleteDataset(ctx, datasetId)).rejects.toMatchObject(expected)
+            await expect(deleteDataset(ctx, datasetId)).rejects.toMatchObject(expected)
         });
+    })
+
+    describe('createDataset', () => {
+        it('success', async () => {
+            // given
+            const expectedDatasetId = "b7fe1dd9-5cd3-4814-87b1-0926af050297"
+            const ctx = await NewContext(new NextRequest(new URL('http://localhost:3000')))
+            const expectedCreateDatasetRequest = {
+                datasetTitle: "dataset title",
+                urls: [
+                    {
+                        url: "url/for/file.txt",
+                        confirmed: true
+                    } as Url
+                ],
+                remoteFilesCount: 0,
+            } as CreateDatasetBFFRequest;
+
+            mockAxiosPost.mockResolvedValue({
+                data: {
+                    id: expectedDatasetId,
+                } as CreateDatasetResponse
+            });
+
+            // when
+            const actual = await createDataset(ctx, expectedCreateDatasetRequest);
+
+            // then
+            expect(actual).not.toBeUndefined()
+            expect(actual).toMatchObject({
+                id: expectedDatasetId,
+            })
+        })
+
+        it('tenancy is required', async () => {
+            // given
+            const expectedResponse = {
+                data: {
+                    errors: ["'tenancy' is a required property"],
+                    message: 'Input payload validation failed'
+                },
+                status: 401,
+                statusText: 'Unauthorized',
+                headers: {},
+                config: null,
+            };
+
+            const ctx = await NewContext(new NextRequest(new URL('http://localhost:3000')))
+            const expectedCreateDatasetRequest = {
+                datasetTitle: "dataset title",
+                urls: [
+                    {
+                        url: "url/for/file.txt",
+                        confirmed: true
+                    } as Url
+                ],
+                remoteFilesCount: 0,
+            } as CreateDatasetBFFRequest;
+
+            mockAxiosPost.mockRejectedValue(
+                new AxiosError("Unauthorized", "401", null, {},
+                    {
+                        data: {
+                            errors: ["'tenancy' is a required property"],
+                            message: 'Input payload validation failed'
+                        },
+                        status: 401,
+                        statusText: 'Unauthorized',
+                        headers: {},
+                        config: null,
+                    }))
+
+
+            // when
+            const actual = await createDataset(ctx, expectedCreateDatasetRequest);
+
+            // then
+            expect(actual).not.toBeUndefined()
+            expect(actual).toMatchObject(expectedResponse)
+        })
+
     })
 })
 

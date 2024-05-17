@@ -5,8 +5,8 @@ import LoggedLayout from "../../../components/LoggedLayout";
 
 import { signOut, useSession } from "next-auth/react";
 import { NewContext } from "../../../lib/appLocalContext";
-import { getUserByUID } from "../../../lib/users";
 import { ROUTE_PAGE_ERROR } from "../../../contants/InternalRoutesConstants";
+import { GatekeeperAPI } from "../../../gateways/Gatekeeper";
 
 export default function ProfilePage(props) {
   const { data: session, status } = useSession();
@@ -111,8 +111,10 @@ export async function getServerSideProps(context) {
     return { props: {} }
   }
 
+  const gatekeeperAPI = new GatekeeperAPI();
+
   try {
-    const data = await getUserByUID(ctx);
+    const data = await gatekeeperAPI.getUserByUID(ctx);
 
     // Pass data to the page via props
     return { props: { data } };
