@@ -14,7 +14,9 @@ export class GatekeeperAPI {
         try {
             const response = await axiosInstance.get("/datasets/" + id, buildHeaders(context));
 
-            const dataset = toDatasetDetailsResponse(response.data);
+            // TODO: Model response intreface correctly.
+            // const dataset = toDatasetDetailsResponse(response.data);
+            const dataset = response?.data?.data as DatasetDetailsResponse;
             hydrateDatasetMetadataInfo(dataset, response.data);
             return dataset;
 

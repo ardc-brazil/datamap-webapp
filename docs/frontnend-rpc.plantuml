@@ -10,7 +10,7 @@ box "Client" #LightBlue
   participant bffGateway as "Client BFF Gateway"
 
   pg -> clientMapper: map(pageProperties)
-  pg <-- clientMapper: bffRequet
+  pg <-- clientMapper: bffRequest
   pg -> bffGateway: createNewDataset(bffRequet)
 
 end box

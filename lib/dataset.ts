@@ -1,8 +1,8 @@
 
-import { CreateDatasetBFFRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, DatasetDetailsResponse, DatasetListResponsePaged, GetDatasetDetailsResponse } from "../types/BffAPI";
+import { CreateDatasetBFFRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, DatasetDetailsResponse, DatasetListResponsePaged } from "../types/BffAPI";
 import { CreateDatasetAPIRequest, DataFile, DatasetInfo } from "../types/GatekeeperAPI";
 import { AppLocalContext } from "./appLocalContext";
-import axiosInstance, { buildHeaders } from "./rpc";
+import axiosInstance, { buildHeaders, getSelectedTenancy } from "./rpc";
 
 function toDatasetInfo(datasetRequest: CreateDatasetBFFRequest): DatasetInfo {
     const dataFiles = datasetRequest.urls.map(
@@ -65,6 +65,7 @@ export async function createDataset(context: AppLocalContext, datasetRequest: Cr
 
         return response.data;
     } catch (error) {
+        console.log(error);
         return error.response;
     }
 }
@@ -74,7 +75,9 @@ export async function updateDataset(context: AppLocalContext, dataset: any) {
         id: dataset.id,
         name: dataset.name,
         is_enabled: dataset.is_enabled,
-        data: dataset
+        data: dataset,
+        // TODO: Set the selected tenancy only
+        tenancy: getSelectedTenancy(context)
     };
 
     const response = await axiosInstance.put("/datasets/" + ds.id, ds, buildHeaders(context));
@@ -124,7 +127,8 @@ export async function getAllDataset(context: AppLocalContext, url: String): Prom
 
                 // Parse data string to json object
                 for (const ds of datasetsList.content) {
-                    let dataset = toDatasetDetailsResponse(ds);
+                    // TODO: .data is not a string any more, what it is impact of it.
+                    let dataset = (ds as any).data;
                     hydrateDatasetMetadataInfo(dataset, ds);
                     datasets.push(dataset);
                 }

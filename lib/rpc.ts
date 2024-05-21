@@ -20,9 +20,19 @@ export function buildHeaders(context: AppLocalContext) {
   return {
     headers: {
       "X-User-Id": context.uid ?? "",
-      "X-Datamap-Tenancies": context.tenancies?.join(";") ?? defaultTenancy,
+      "X-Datamap-Tenancies": getTenancies(context),
     }
   }
+}
+
+export function getTenancies(context: AppLocalContext): string {
+  return context.tenancies?.join(";") ?? defaultTenancy;
+}
+
+export function getSelectedTenancy(context: AppLocalContext): string {
+  return context?.tenancies?.length > 0
+    ? context?.tenancies?.[0]
+    : "";
 }
 
 export default axiosInterceptorInstance;
