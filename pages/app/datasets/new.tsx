@@ -40,7 +40,7 @@ export default function NewPage(props) {
 
   function validatePath(values: FormValues, value: string, index: number, isSubmiting) {
 
-    if (index > 0 && values.urls[index].url == '') {
+    if (index > 0 && values?.urls?.[index]?.url == '') {
       return null;
     }
 

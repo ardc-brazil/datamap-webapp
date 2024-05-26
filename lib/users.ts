@@ -49,6 +49,23 @@ export interface GetUserByProviderRequest {
     providerID: string
 }
 
+export interface GetUserByProviderResponse {
+    id: string
+    name: string
+    email: string
+    roles: string[]
+    is_enabled: boolean
+    created_at: string
+    updated_at: string
+    providers: GetUserByProviderProvidersResponse[]
+    tenancies: string[]
+}
+
+export interface GetUserByProviderProvidersResponse {
+    name: string
+    reference: string
+}
+
 export interface UserDetailsResponse {
     id: string,
     name: string,
@@ -66,7 +83,7 @@ interface ProviderUserDetailsResponse {
     reference: string
 }
 
-export async function createUser(requestParams: CreateUserRequest) {
+export async function createUser(requestParams: CreateUserRequest): Promise<GetUserByProviderResponse> {
 
     if (!requestParams.email || requestParams.email === "") {
         requestParams.email = requestParams.userName + "@fake.mail.com";
@@ -85,18 +102,22 @@ export async function createUser(requestParams: CreateUserRequest) {
     };
 
     const response = await axiosInstance.post("/users/", request);
-    return response.data;
+    return response.data as GetUserByProviderResponse;
 }
 
 export async function getUserByUID(context: AppLocalContext): Promise<UserDetailsResponse> {
-    const response = await axiosInstance.get(
-        `/users/${context.uid}?is_enabled=true`,
-        buildHeaders(context)
-    );
-    return response.data;
+    try {
+        const response = await axiosInstance.get(
+            `/users/${context.uid}?is_enabled=true`,
+            buildHeaders(context)
+        );
+        return response.data;
+    } catch (error) {
+        return Promise.reject(error.response)
+    }
 }
 
-export async function getUserByProviderID(request: GetUserByProviderRequest) {
+export async function getUserByProviderID(request: GetUserByProviderRequest): Promise<GetUserByProviderResponse> {
     // TODO: improve error handler
     const response = await axiosInstance.get(`/users/providers/${request.providerName}/${request.providerID}`);
     return response.data;
@@ -104,7 +125,6 @@ export async function getUserByProviderID(request: GetUserByProviderRequest) {
 
 // TODO: Create a generic way to validade this.
 export function canEditDataset(user: UserDetailsResponse): boolean {
-    // return false;
-    return user.roles.indexOf("datasets_editor") >= 0
+    return user.roles.indexOf("datasets_write") >= 0
         || user.roles.indexOf("admin") >= 0;
 }

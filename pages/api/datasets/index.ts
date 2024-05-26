@@ -12,22 +12,25 @@ const router = createRouter<NextApiRequest, NextApiResponse>();
 router
   .use(auth)
   .get(async (req, res) => {
-    const context = await NewContext(req);
-    getAllDataset(context, req.url)
-      .then((result) => {
-        res.json(result);
-      })
-      .catch(error => {
-        console.log(error)
-        if (axios.isAxiosError(error) && error?.response?.status == 403) {
-          res.status(error?.response?.status).end("Forbidden")
-        }
-      })
+    try {
+      const context = await NewContext(req);
+      const response = await getAllDataset(context, req.url)
+
+      res.json(response);
+
+    } catch (error) {
+      console.log(error)
+      res.status(error?.response?.status).end();
+    }
   })
   .post(async (req, res) => {
-    const context = await NewContext(req);
-    const result = await createDataset(context, req.body);
-    res.json(result);
+    try {
+      const context = await NewContext(req);
+      const result = await createDataset(context, req.body);
+      res.json(result);
+    } catch (error) {
+      res.status(error?.status).end()
+    }
   });
 
 export default router.handler({

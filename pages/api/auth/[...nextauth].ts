@@ -2,8 +2,8 @@ import axios, { AxiosError } from "axios";
 import NextAuth, { AuthOptions } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import OrcidProvider from "../../../lib/OrcidOAuthProvider";
-import { CreateUserRequest, createUser, getUserByProviderID } from "../../../lib/users";
 import { defaultTenancy } from "../../../lib/rpc";
+import { CreateUserRequest, GetUserByProviderResponse, createUser, getUserByProviderID } from "../../../lib/users";
 
 export const authOptions: AuthOptions = {
   // Configure one or more authentication providers
@@ -64,7 +64,7 @@ export function hydrateWithUserInfo(token, user: any) {
   return token;
 }
 
-async function getUserByProviderAuthentication(account, token) {
+async function getUserByProviderAuthentication(account, token): Promise<GetUserByProviderResponse> {
 
   let params = null as CreateUserRequest;
 
@@ -95,7 +95,11 @@ async function getUserByProviderAuthentication(account, token) {
   } catch (error: any | AxiosError) {
     // Always create a new user if it does not exist, but has successfully authenticated with a provider.
     if (axios.isAxiosError(error) && error?.response?.status == 404) {
-      user = createUser(params);
+      try {
+        user = await createUser(params);
+      } catch (error) {
+        console.log(error)
+      }
     }
   };
 

@@ -40,7 +40,7 @@ function useDatasetSearch(currentSearchParameters) {
   return {
     datasets: data,
     datasetsIsLoading: isLoading,
-    datasetsIsError: error
+    datasetsError: error
   };
 }
 
@@ -63,10 +63,10 @@ export default function ListDatasetPage(props) {
 
   const [currentSearchParameters, setCurrentSearchParameters] = useState(emptyCurrentSearchParameters)
   const [lastSearchParameterDeselected, setLastSearchParameterDeselected] = useState(null as SelectedFilterValue)
-  const { datasets, datasetsIsLoading, datasetsIsError } = useDatasetSearch(currentSearchParameters)
+  const { datasets, datasetsIsLoading, datasetsError } = useDatasetSearch(currentSearchParameters)
 
-  if (datasetsIsError) {
-    router.push(ROUTE_PAGE_ERROR(datasetsIsError));
+  if (datasetsError?.status == 401) {
+    router.push(ROUTE_PAGE_ERROR(datasetsError));
   }
 
   function onTextSearchChanged(text: string) {
@@ -197,7 +197,7 @@ export default function ListDatasetPage(props) {
             <FilterCriteriaList onCriteriaChanged={onCriteriaChanged} lastSearchParameterDeselected={lastSearchParameterDeselected} />
             <div className="col-span-9 basis-full px-4 min-h-screen">
               <div>
-                {datasetsIsError && <EmptySearch>Error to read datasets</EmptySearch>}
+                {datasetsError && <EmptySearch>Error to read datasets</EmptySearch>}
                 {datasetsIsLoading && <EmptySearch>Loading datasets...</EmptySearch>}
                 {datasets?.size <= 0 && <EmptySearch>No datasets found</EmptySearch>}
                 {datasets?.size > 0 && <ListDataset data={datasets.content} requestedAt={currentSearchParameters.at} />}

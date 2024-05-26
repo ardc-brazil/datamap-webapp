@@ -7,9 +7,10 @@
  * Represents a request to dataset creation.
  * @interface
  */
-export interface DatasetRequest {
-    name: string;
-    data: any;
+export interface DatasetCreationRequest {
+    name: string
+    data: any
+    tenancy: string
 }
 
 /**

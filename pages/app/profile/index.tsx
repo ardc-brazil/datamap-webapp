@@ -35,35 +35,35 @@ export default function ProfilePage(props) {
               </CardItem>
             }
             <CardItem className="py-4" title="ID">
-              {props.data.id}
+              {props?.data?.id}
             </CardItem>
             <CardItem className="py-4" title="Name">
-              {props.data.name}
+              {props?.data?.name}
             </CardItem>
             <CardItem className="py-4" title="Email">
-              {props.data.email}
+              {props?.data?.email}
             </CardItem>
             <CardItem className="py-4" title="Roles">
               <ul>
-                {props.data.roles.map((role, index) =>
+                {props?.data?.roles.map((role, index) =>
                   <li className="ml-4 list-disc" key={index}>{role}</li>
                 )}
               </ul>
             </CardItem>
             <CardItem className="py-4" title="Providers">
               <ul>
-                {props.data.providers.map((provider, index) =>
+                {props?.data?.providers.map((provider, index) =>
                   <li className="ml-4 list-disc" key={index}>{provider.name} - {provider.reference}</li>
                 )}
               </ul>
             </CardItem>
             <CardItem className="py-4" title="Created At">
-              {props.data.created_at}
+              {props?.data?.created_at}
             </CardItem>
             <CardItem className="py-4" title="Tenancies">
-              {props.data.tenancies?.length > 0 ? (
+              {props?.data?.tenancies?.length > 0 ? (
                 <ul>
-                  {props.data.tenancies.map((tenancy, index) =>
+                  {props?.data?.tenancies.map((tenancy, index) =>
                     <li className="ml-4 list-disc" key={index}>{tenancy}</li>
                   )}
                 </ul>
