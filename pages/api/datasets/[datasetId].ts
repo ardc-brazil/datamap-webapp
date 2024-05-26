@@ -11,19 +11,32 @@ const router = createRouter<NextApiRequest, NextApiResponse>();
 router
   .use(auth)
   .put(async (req, res) => {
-    const context = await NewContext(req);
-    const result = await updateDataset(context, req.body);
-    res.json(result);
+    try {
+      const context = await NewContext(req);
+      const result = await updateDataset(context, req.body);
+      res.json(result);
+    } catch (error) {
+      res.status(error?.status).end()
+    }
   })
   .get(async (req, res) => {
     const context = await NewContext(req);
     const { datasetId } = req.query
 
-    if (datasetId === "filters") {
-      const result = await getDatasetCategoryFilters(context);
-      res.json(result);
-    } else {
-      res.status(404).end();
+    try {
+      if (datasetId === "filters") {
+        const result = await getDatasetCategoryFilters(context);
+        res.json(result);
+
+      } else {
+        res.status(404).end();
+      }
+    } catch (error) {
+      if (error?.status) {
+        res.status(error?.status).end();
+      } else {
+        res.status(500).end();
+      }
     }
   })
   .delete(async (req, res) => {

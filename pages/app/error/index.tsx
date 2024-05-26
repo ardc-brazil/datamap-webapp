@@ -7,8 +7,6 @@ export default function ErrorHandlingPage(props) {
 
     const router = useRouter()
 
-
-
     return (
         <LoggedLayout noPadding={false}>
             <div className="text-center">

@@ -1,22 +1,27 @@
-import React from "react";
-
-import { FilterCriteria } from "./FilterCriteria";
+import Router from "next/router";
 import useSWR from 'swr';
-import { fetcher } from "../../lib/fetcher"
+import { ROUTE_PAGE_ERROR } from "../../contants/InternalRoutesConstants";
+import { fetcher } from "../../lib/fetcher";
+import { FilterCriteria } from "./FilterCriteria";
 
 function useDatasetCategoryFilters() {
+
   const { data, error, isLoading } = useSWR("/api/datasets/filters", fetcher);
 
   return {
     datasetCategoryFilters: data,
     datasetCategoryFiltersIsLoading: isLoading,
-    datasetCategoryFiltersIsError: error
+    datasetCategoryFiltersError: error
   };
 }
 
 export function FilterCriteriaList(props) {
 
-  const { datasetCategoryFilters, datasetCategoryFiltersIsLoading, datasetCategoryFiltersIsError } = useDatasetCategoryFilters()
+  const { datasetCategoryFilters, datasetCategoryFiltersIsLoading, datasetCategoryFiltersError: datasetCategoryFiltersError } = useDatasetCategoryFilters()
+
+  if (datasetCategoryFiltersError?.status == 401) {
+    Router.push(ROUTE_PAGE_ERROR(datasetCategoryFiltersError));
+  }
 
   return (
 
@@ -26,7 +31,7 @@ export function FilterCriteriaList(props) {
       <div className="pt-6 divide-y divide-solid divide-primary-200">
 
         {datasetCategoryFiltersIsLoading && <p className="text-sm">Loading dynamic filters</p>}
-        {datasetCategoryFiltersIsError && <p className="text-sm">Error to read dynamic filters</p>}
+        {datasetCategoryFiltersError && <p className="text-sm">Error to read dynamic filters</p>}
         {datasetCategoryFilters && datasetCategoryFilters.map((criteria, index, row) => {
           var border = true;
 

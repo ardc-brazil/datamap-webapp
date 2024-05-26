@@ -20,15 +20,22 @@ export default function DatasetMoreSettingsButton(props: any) {
     function confirmDelete() {
         const datasetId = props.dataset.id;
         deleteDataset(datasetId)
-        redirectAfterDelete()
+            .then(deletedSuccessfully => {
+                if (deletedSuccessfully) {
+                    redirectAfterDelete()
+                }
+            })
     }
 
-    function deleteDataset(datasetId: string) {
-        axios.delete(`/api/datasets/${datasetId}`)
-            .catch(error => {
-                console.log(error);
-                alert("Sorry! Error to delete dataset.");
-            });
+    async function deleteDataset(datasetId: string): Promise<boolean> {
+        try {
+            await axios.delete(`/api/datasets/${datasetId}`)
+            return true;
+        } catch (error) {
+            console.log(error);
+            alert("Error to delete dataset.\nResult:" + error?.response?.statusText);
+            return false;
+        }
     }
 
     function redirectAfterDelete() {

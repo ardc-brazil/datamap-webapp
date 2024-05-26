@@ -1,6 +1,6 @@
 
 import { CreateDatasetRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, DatasetDetailsResponse, DatasetListResponsePaged } from "../types/BffAPI";
-import { DataFile, DatasetInfo, DatasetRequest } from "../types/GatekeeperAPI";
+import { DataFile, DatasetCreationRequest, DatasetInfo } from "../types/GatekeeperAPI";
 import { AppLocalContext } from "./appLocalContext";
 import axiosInstance, { buildHeaders } from "./rpc";
 
@@ -58,13 +58,15 @@ export async function createDataset(context: AppLocalContext, datasetRequest: Cr
     try {
         const request = {
             name: datasetRequest.datasetTitle,
-            data: toDatasetInfo(datasetRequest)
-        } as DatasetRequest;
+            data: toDatasetInfo(datasetRequest),
+            tenancy: context.tenancy,
+        } as DatasetCreationRequest;
 
         const response = await axiosInstance.post("/datasets", request, buildHeaders(context));
 
         return response.data;
     } catch (error) {
+        console.log(error);
         return error.response;
     }
 }
@@ -90,13 +92,12 @@ export async function getDatasetBy(context: AppLocalContext, id: string): Promis
 
 export async function updateDataset(context: AppLocalContext, dataset: any) {
     const ds = {
-        id: dataset.id,
         name: dataset.name,
-        is_enabled: dataset.is_enabled,
-        data: dataset
+        data: dataset,
+        tenancy: context.tenancy,
     };
 
-    const response = await axiosInstance.put("/datasets/" + ds.id, ds, buildHeaders(context));
+    const response = await axiosInstance.put("/datasets/" + dataset.id, ds, buildHeaders(context));
 
     return response.data;
 }
@@ -106,8 +107,8 @@ export async function getDatasetCategoryFilters(context: AppLocalContext): Promi
     try {
         const response = await axiosInstance.get("/datasets/filters", buildHeaders(context));
         return toDatasetCategoryFiltersResponse(response);
-    } catch (error) {
-        return error.response;
+    } catch (error: any) {
+        return Promise.reject(error?.response)
     }
 }
 
@@ -118,7 +119,7 @@ function hydrateDatasetMetadataInfo(dataset: DatasetDetailsResponse, response: a
 }
 
 function toDatasetDetailsResponse(response: any) {
-    return JSON.parse(response.data) as DatasetDetailsResponse;
+    return response.data as DatasetDetailsResponse;
 }
 
 function toDatasetCategoryFiltersResponse(response: any) {
