@@ -61,10 +61,16 @@ export interface DatasetInfo {
     resolution: Resolution,
     variables: any[],
     is_enabled: boolean
+    citation?: {
+        doi?: string
+    }
+    references?: string
 }
 
 interface Location {
     location: string,
+    latitude: string
+    longitude: string
 }
 
 interface Person {
