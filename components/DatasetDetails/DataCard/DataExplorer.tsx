@@ -1,20 +1,30 @@
 import { useState } from 'react';
-import { TabPanel } from "../TabPanel";
-import { Tabs } from "../Tabs";
-import FileDescriptor from "./FileDescriptor";
+import { GetDatasetDetailsResponse, GetDatasetDetailsVersionFilesResponse } from "../../../types/BffAPI";
 
-export default function DataExplorer(props) {
+export interface Props {
+  dataset: GetDatasetDetailsResponse
+}
+
+export default function DataExplorer(props: Props) {
 
   // TODO: Remove with fake data explorer file details
-  if (!props.dataset?.dataFiles?.length) {
-    props.dataset.dataFiles = [
-      { path: "/path/to/a/file1.csv" },
-      { path: "/path/to/a/file2.csv" }
-    ]
+  // I added this to move the .dataset.data.dataFiles to the .current_version.files
+  // if the version is empty. This will be used during the transition from Remove File upload
+  // to Update data files to the Datamap platform data storage.
+  if (props.dataset?.data?.dataFiles?.length && props.dataset?.current_version?.files?.length <= 0) {
+    props.dataset.current_version.files = props.dataset?.data?.dataFiles
+      ?.map((item, idx) => (
+        {
+          id: String(idx),
+          name: item.path
+        } as GetDatasetDetailsVersionFilesResponse
+      ))
   }
 
+  console.log(props.dataset?.data?.dataFiles);
+
   // const [dataExplorerCollapsed, setDataExplorerCollapsed] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(props.dataset?.dataFiles?.[0].path ?? null);
+  const [selectedFile, setSelectedFile] = useState(props.dataset?.data?.dataFiles?.[0].path ?? null);
   const [loadingTable, setLoadingTable] = useState(false);
 
   /**
@@ -29,9 +39,22 @@ export default function DataExplorer(props) {
     return tokens[tokens.length - 1];
   }
 
-  function handleSelectFile(x: any): void {
+  function fileNameResolution(path: string): string {
+    const fl = fileName(path);
+
+    // If the path is a folder, also should the folder name.
+    // This is temporary for Remote Files Upload mode.
+    if (fl == "**") {
+      const tokens = path.split("/");
+      return tokens[tokens.length - 2];
+    }
+
+    return fl
+  }
+
+  function handleSelectFile(x: GetDatasetDetailsVersionFilesResponse): void {
     setLoadingTable(true);
-    setSelectedFile(x.path);
+    setSelectedFile(x.name);
 
     setTimeout(() => {
       setLoadingTable(false);
@@ -69,11 +92,11 @@ export default function DataExplorer(props) {
           {/* files list */}
           <div className="h-full">
             <ul className="list-none py-2 overflow-x-auto">
-              {props.dataset.dataFiles?.map((x, i) => (
-                <li className={`${selectedFile === x.path ? "bg-primary-200" : "hover:bg-primary-100"} text-sm text-primary-500 font-light whitespace-nowrap my-1`} key={i} onClick={() => handleSelectFile(x)}>
+              {props.dataset?.current_version?.files?.map((x, i) => (
+                <li className={`${selectedFile === x.name ? "bg-primary-200" : "hover:bg-primary-100"} text-sm text-primary-500 font-light whitespace-nowrap my-1`} key={i} onClick={() => handleSelectFile(x)}>
                   <div className="flex gap-2 items-center py-1 cursor-pointer">
                     <img src="/img/icon-file.svg" className="w-4 h-4" />
-                    <p className="text-sm py-0 my-0">{fileName(x.path)}</p>
+                    <p className="text-sm py-0 my-0">{fileNameResolution(x.name)}</p>
                   </div>
                 </li>
               ))}
@@ -86,7 +109,7 @@ export default function DataExplorer(props) {
               <li className={`text-sm text-primary-500 font-light whitespace-nowrap my-1`}>
                 <div className="flex gap-2 items-center py-1">
                   <img src="/img/icon-folder.svg" className="w-4 h-4" />
-                  <p className="text-sm py-0 my-0">{props.dataset?.dataFiles?.length ?? 0} files</p>
+                  <p className="text-sm py-0 my-0">{props.dataset?.data?.dataFiles?.length ?? 0} files</p>
                 </div>
               </li>
               <li className={`text-sm text-primary-500 font-light whitespace-nowrap my-1`}>

@@ -8,6 +8,7 @@ import { LoadingAnimation } from "../LoadingAnimation";
 import { TabPanel, TabPanelProps } from "../TabPanel";
 import DataExplorer from "./DataExplorer";
 import { DatasetDescription } from "./DatasetDescription";
+import { GetDatasetDetailsResponse } from "../../../types/BffAPI";
 
 
 interface TabPanelDataObject {
@@ -27,7 +28,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
       // TODO: Create endpoints to get data quality information.
       setData({
         usability: "8.75",
-        license: props.dataset.license ? licenseMapping[props.dataset.license] : "Unknow",
+        license: props.dataset.data.license ? licenseMapping[props.dataset.data.license] : "Unknow",
         updateFrequency: "Quarterly",
       });
 
