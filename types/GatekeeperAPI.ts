@@ -69,8 +69,8 @@ export interface DatasetInfo {
 
 interface Location {
     location: string,
-    latitude: string
-    longitude: string
+    latitude?: string
+    longitude?: string
 }
 
 interface Person {
