@@ -1,5 +1,5 @@
 
-import { CreateDatasetRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, DatasetDetailsResponse, DatasetListResponsePaged } from "../types/BffAPI";
+import { CreateDatasetRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, DatasetDetailsResponse, DatasetListResponsePaged, GetDatasetDetailsResponse } from "../types/BffAPI";
 import { DataFile, DatasetCreationRequest, DatasetInfo } from "../types/GatekeeperAPI";
 import { AppLocalContext } from "./appLocalContext";
 import axiosInstance, { buildHeaders } from "./rpc";
@@ -76,15 +76,12 @@ export async function createDataset(context: AppLocalContext, datasetRequest: Cr
  * @param id dataset id
  * @returns Dataset
  */
-export async function getDatasetBy(context: AppLocalContext, id: string): Promise<DatasetDetailsResponse> {
+export async function getDatasetBy(context: AppLocalContext, id: string): Promise<GetDatasetDetailsResponse> {
     try {
         const response = await axiosInstance.get("/datasets/" + id, buildHeaders(context));
-
-        const dataset = toDatasetDetailsResponse(response.data);
-        hydrateDatasetMetadataInfo(dataset, response.data);
-        return dataset;
-
+        return response.data as GetDatasetDetailsResponse;
     } catch (error) {
+        console.log(error);
         // FIX: throw a error or encapsulate
         return error.response;
     }

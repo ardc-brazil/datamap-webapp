@@ -21,7 +21,7 @@ export function TabPanelSettings(props: TabPanelProps) {
   function onSubmit(values, { setSubmitting }) {
     setSubmitting(true);
     props.dataset.name = values.name;
-    props.dataset.institution = values.institution;
+    props.dataset.data.institution = values.institution;
 
     axios.put("/api/datasets/" + props.dataset.id, props.dataset)
       .then(response => {
@@ -50,7 +50,7 @@ export function TabPanelSettings(props: TabPanelProps) {
       <Formik
         initialValues={{
           name: props.dataset.name,
-          institution: props.dataset.institution,
+          institution: props.dataset.data.institution,
         }}
         validationSchema={schema}
         onSubmit={onSubmit}

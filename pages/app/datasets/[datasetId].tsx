@@ -7,9 +7,16 @@ import { DownloadDatafilesButton } from "../../../components/DownloadDatafilesBu
 import LoggedLayout from "../../../components/LoggedLayout";
 import { NewContext } from "../../../lib/appLocalContext";
 import { getDatasetBy } from "../../../lib/dataset";
-import { canEditDataset, getUserByUID } from "../../../lib/users";
+import { UserDetailsResponse, canEditDataset, getUserByUID } from "../../../lib/users";
+import { GetDatasetDetailsResponse } from "../../../types/BffAPI";
 
-export default function DatasetDetailsPage(props) {
+interface Props {
+  // TODO: Map this BFF response to a PageObject to avoid high coupling with the API.
+  dataset: GetDatasetDetailsResponse
+  user: UserDetailsResponse
+}
+
+export default function DatasetDetailsPage(props: Props) {
 
   return (
     <LoggedLayout>
@@ -54,7 +61,10 @@ export async function getServerSideProps({ req, res, query }) {
   const user = await getUserByUID(context);
 
   return {
-    props: { dataset, user }, // will be passed to the page component as props
+    props: {
+      dataset,
+      user
+    }
   };
 }
 

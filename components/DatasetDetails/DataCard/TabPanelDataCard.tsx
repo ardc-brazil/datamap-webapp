@@ -8,6 +8,7 @@ import { LoadingAnimation } from "../LoadingAnimation";
 import { TabPanel, TabPanelProps } from "../TabPanel";
 import DataExplorer from "./DataExplorer";
 import { DatasetDescription } from "./DatasetDescription";
+import { GetDatasetDetailsResponse } from "../../../types/BffAPI";
 
 
 interface TabPanelDataObject {
@@ -27,7 +28,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
       // TODO: Create endpoints to get data quality information.
       setData({
         usability: "8.75",
-        license: props.dataset.license ? licenseMapping[props.dataset.license] : "Unknow",
+        license: props.dataset.data.license ? licenseMapping[props.dataset.data.license] : "Unknow",
         updateFrequency: "Quarterly",
       });
 
@@ -166,33 +167,33 @@ export function TabPanelDataCard(props: TabPanelProps) {
               <h6 className="font-semibold py-4">Coverage</h6>
               <div className="flex gap-28 py-4">
                 <CardItem title="TEMPORAL COVERAGE START DATE">
-                  {props.dataset.start_date}
+                  {props.dataset.data.start_date}
                 </CardItem>
                 <CardItem title="TEMPORAL COVERAGE END DATE">
-                  {props.dataset.end_date}
+                  {props.dataset.data.end_date}
                 </CardItem>
                 <CardItem title="GEOSPATIAL COVERAGE">
-                  {props.dataset.location && props.dataset.location.location && (
-                    <span>{props.dataset.location.location}</span>
+                  {props.dataset.data.location && props.dataset.data.location.location && (
+                    <span>{props.dataset.data.location.location}</span>
                   )}
-                  {props.dataset.location && props.dataset.location.latitude && (
+                  {props.dataset.data.location && props.dataset.data.location.latitude && (
                     <div>
-                      <p>Latitude: {props.dataset.location.latitude}</p>
-                      <p>Longitude: {props.dataset.location.longitude}</p>
+                      <p>Latitude: {props.dataset.data.location.latitude}</p>
+                      <p>Longitude: {props.dataset.data.location.longitude}</p>
                     </div>
                   )}
-                  {!props.dataset.location && <span>-</span>}
+                  {!props.dataset.data.location && <span>-</span>}
                 </CardItem>
               </div>
             </div>
             <div>
               <h6 className="font-semibold py-4">Provenance</h6>
               <div className="flex gap-28 py-4">
-                <CardItem title="SOURCES">{props.dataset.institution}</CardItem>
+                <CardItem title="SOURCES">{props.dataset.data.institution}</CardItem>
               </div>
               <div className="flex gap-28 py-4">
                 <CardItem title="Collection methodology">
-                  {props.dataset.source_instrument} - {props.dataset.source}
+                  {props.dataset.data.source_instrument} - {props.dataset.data.source}
                 </CardItem>
               </div>
             </div>
@@ -201,15 +202,15 @@ export function TabPanelDataCard(props: TabPanelProps) {
               <h6 className="font-semibold py-4">DOI Citation</h6>
               <div className="flex gap-28 py-4">
                 <CardItem title="DOI (DIGITAL OBJECT IDENTIFIER)">
-                  {props.dataset.citation && (
-                    <a href={props.dataset.citation.doi} target="_blank">
-                      {props.dataset.citation.doi}
+                  {props.dataset.data.citation && (
+                    <a href={props.dataset.data.citation.doi} target="_blank">
+                      {props.dataset.data.citation.doi}
                     </a>
                   )}
-                  {!props.dataset.citation && <span>-</span>}
+                  {!props.dataset.data.citation && <span>-</span>}
                 </CardItem>
               </div>
-              {props.dataset.references && (
+              {props.dataset.data.references && (
                 <div className="flex gap-28 py-4">
                   <div>
                     <CardItem title="CITATION TYPE">
@@ -251,7 +252,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
                       <fieldset className="border border-solid border-primary-300 p-3">
                         <legend className="text-sm">Citation:</legend>
                         <p className="text-primary-600">
-                          {props.dataset.references}
+                          {props.dataset.data.references}
                         </p>
                       </fieldset>
                     </div>
