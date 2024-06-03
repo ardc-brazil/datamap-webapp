@@ -47,18 +47,13 @@ export default function DatasetFilesList(props: Props) {
         props.handleSelectFile(file);
     }
 
-    function selectIconBy(file: GetDatasetDetailsVersionFileResponse): string {
-        return isFolder(file.name)
-            ? "folder"
-            : "description";
-    }
-
     return (
         <ul className="list-none py-2 overflow-x-auto">
             {props.datasetVersion?.files?.map((x, i) => (
                 <li className={`${selectedFile === x.name ? "bg-primary-200" : "hover:bg-primary-100"} text-sm text-primary-500 font-light whitespace-nowrap my-1`} key={i} onClick={() => handleSelectFile(x)}>
                     <div className="flex gap-2 items-center py-1 cursor-pointer">
-                        <MaterialSymbol icon={selectIconBy(x)} size={22} grade={-25} weight={200} className="align-middle" />
+                        {isFolder(x.name) && <MaterialSymbol icon="folder" size={22} grade={-25} weight={200} className="align-middle" />}
+                        {!isFolder(x.name) && <MaterialSymbol icon="description" size={22} grade={-25} weight={200} className="align-middle" />}
                         <p className="text-sm py-0 my-0">{fileNameResolution(x.name)}</p>
                     </div>
                 </li>
