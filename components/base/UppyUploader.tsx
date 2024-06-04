@@ -4,43 +4,43 @@ import '@uppy/dashboard/dist/style.min.css';
 import { Dashboard } from '@uppy/react';
 import Tus from '@uppy/tus';
 import { ErrorMessage, useFormikContext } from "formik";
-import { useSession } from "next-auth/react";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface UppyUploaderProps {
-    onFileUploaded?(success: UploadedUppyFile<Record<string, unknown>, Record<string, unknown>>): void;
+    datasetId?: string
+    userId?: string
+    userToken?: string
+    onFileUploaded?(success: UploadedUppyFile<Record<string, unknown>, Record<string, unknown>>): void
+    onCreateDatasetSuccess?(datasetId: string)
+    onCreatedDatasetError?(error: Error): void
+    onUppyStateCreated(uppy: Uppy);
+}
+interface DatasetPrototyping {
+    id: string
+    title?: string
 }
 
 export default function UppyUploader(props: UppyUploaderProps) {
-    const { data: session } = useSession();
-
     const formikContext = useFormikContext();
 
     // IMPORTANT: passing an initializer function to prevent Uppy from being reinstantiated on every render.
     const [uppy] = useState(() =>
         new Uppy({
             debug: false,
-            autoProceed: true,
             meta: { "uid": "test1234" },
-        }).on('complete', (result) => {
-            console.log('Upload result:', result)
-            if (result.successful) {
-                result.successful.forEach(success => {
-                    if (props.onFileUploaded) {
-                        props.onFileUploaded(success)
-                    }
+        }).use(Tus, {
+            endpoint: getTusEndpoint(),
+            removeFingerprintOnSuccess: true,
+        }).on('file-added', (file) => {
+            // Add file to the formik context to validate before submit
+            const formikValues = (formikContext.values as FormValues)
+            formikValues?.uploadedDataFiles?.push({
+                id: file.id,
+                name: file.name,
+                extension: file.extension,
+            })
 
-                    // Add file to the formik context to validate before submit
-                    const formikValues = (formikContext.values as FormValues)
-                    formikValues?.uploadedDataFiles?.push({
-                        id: success.id,
-                        name: success.name,
-                        extension: success.extension,
-                    })
-
-                    formikContext.setFieldValue("remoteFilesCount", formikValues?.uploadedDataFiles?.length, true);
-                });
-            }
+            formikContext.setFieldValue("remoteFilesCount", formikValues?.uploadedDataFiles?.length, true);
         }).on('file-removed', (file, reason) => {
             if (reason === 'removed-by-user') {
                 // TODO: Implement call to remove file after uploaded.
@@ -52,18 +52,31 @@ export default function UppyUploader(props: UppyUploaderProps) {
                     formikContext.setFieldValue("remoteFilesCount", formikValues?.uploadedDataFiles?.length, true);
                 }
             }
-        }).use(Tus, {
-            endpoint: getTusEndpoint(),
-            headers: {
-                "X-User-Id": session?.user?.uid,
-            }
         })
     );
 
-    // useEffect(() => {
-    //     // Adding to global `meta` will add it to every file.
-    //     uppy.setOptions({ meta: { "uid": "test1234" } });
-    // }, [uppy]);
+    useEffect(() => {
+        // Update user and token based on data change from the base page
+        uppy.getPlugin('Tus').setOptions({
+            headers: {
+                "X-User-Id": props.userId,
+                "X-User-Token": props.userToken,
+            },
+        })
+    }, [props.userToken])
+
+    useEffect(() => {
+        // Update dataset id created based on data change from the base page
+        uppy.setMeta({ "dataset_id": props.datasetId });
+    }, [props.datasetId]);
+
+    useEffect(() => {
+        // TODO: Move the uppy component creation to a specific file to avoid
+        // bubble it up.
+        // Bubble up the uppy instance after created and configurated.
+        props?.onUppyStateCreated?.(uppy);
+    }, [uppy]);
+
 
     function getTusEndpoint() {
         if (process.env.NEXT_PUBLIC_TUS_SERVICE_ENDPOINT) {

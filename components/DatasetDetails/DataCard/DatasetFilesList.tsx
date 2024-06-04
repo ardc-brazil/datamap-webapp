@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MaterialSymbol } from 'react-material-symbols';
 import 'react-material-symbols/outlined'; // Place in your root app file. There are also `sharp` and `outlined` variants.
+import { bytesToSize } from "../../../lib/fileSize";
 import { GetDatasetDetailsVersionFileResponse, GetDatasetDetailsVersionResponse } from "../../../types/BffAPI";
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
 
 export default function DatasetFilesList(props: Props) {
 
-    const [selectedFile, setSelectedFile] = useState(props.datasetVersion?.files?.[0].name ?? null);
+    const [selectedFile, setSelectedFile] = useState(props.datasetVersion?.files?.[0]?.name ?? null);
 
     /**
      * Extract the file name from a full path file.
@@ -54,7 +55,8 @@ export default function DatasetFilesList(props: Props) {
                     <div className="flex gap-2 items-center py-1 cursor-pointer">
                         {isFolder(x.name) && <MaterialSymbol icon="folder" size={22} grade={-25} weight={200} className="align-middle" />}
                         {!isFolder(x.name) && <MaterialSymbol icon="description" size={22} grade={-25} weight={200} className="align-middle" />}
-                        <p className="text-sm py-0 my-0">{fileNameResolution(x.name)}</p>
+                        <p className="w-full text-sm py-0 my-0">{fileNameResolution(x.name)}</p>
+                        <p className="text-sm py-0 pr-2 my-0" >{bytesToSize(x.size_bytes)}</p>
                     </div>
                 </li>
             ))}

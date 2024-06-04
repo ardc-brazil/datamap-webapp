@@ -31,7 +31,7 @@ function totalBytes(current_version: GetDatasetDetailsVersionResponse): number {
  * @param bytes Total bytes to convert to size
  * @returns String size of the total bytes
  */
-function bytesToSize(bytes: number): string {
+export function bytesToSize(bytes: number): string {
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     if (bytes === 0) return '0 Bytes'
     const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), sizes.length - 1);

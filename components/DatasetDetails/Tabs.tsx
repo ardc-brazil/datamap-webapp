@@ -24,6 +24,7 @@ export function Tabs(props: TabsProps) {
       <div className="text-sm font-medium text-center border-b border-primary-300">
         <ul className="flex flex-wrap -mb-px">
           {React.Children.map(props.children, (child: any, index) => {
+            // debugger;
             return (
               <Tab
                 key={index}
@@ -38,7 +39,13 @@ export function Tabs(props: TabsProps) {
         </ul>
       </div>
 
-      <div className={props.className}>{props.children[tabSelected]}</div>
+      {React.Children.count(props.children) <= 1 &&
+        <div className={props.className}>{props.children}</div>
+      }
+
+      {React.Children.count(props.children) > 1 &&
+        <div className={props.className}>{props.children[tabSelected]}</div>
+      }
     </div>
   );
 }

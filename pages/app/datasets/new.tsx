@@ -1,25 +1,36 @@
-import axios from "axios";
-import { ErrorMessage, Field, FieldArray, Form, Formik, FormikHelpers } from "formik";
+import Uppy from "@uppy/core";
+import { ErrorMessage, Field, Form, Formik, FormikHelpers, useFormikContext } from "formik";
 import { useSession } from "next-auth/react";
 import Router from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TabPanel } from "../../../components/DatasetDetails/TabPanel";
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
 import LayoutFullScreen from "../../../components/LayoutFullScreen";
 import LoggedLayout from "../../../components/LoggedLayout";
 import Alert from "../../../components/base/Alert";
-import CloseButton from "../../../components/base/CloseButton";
 import Modal from "../../../components/base/PopupModal";
 import UppyUploader from "../../../components/base/UppyUploader";
 import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
-import { isUppyUploadEnabled } from "../../../lib/featureFlags";
+import { BFFAPI } from "../../../gateways/BFFAPI";
 import { isValidFilePath, isValidFolderPath } from "../../../lib/paths";
+import { CreateDatasetResponseV2, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, UpdateDatasetRequest } from "../../../types/BffAPI";
+
+interface DatasetPrototyping {
+  createDatasetResponseV2: CreateDatasetResponseV2
+  fileUploadAuthTokenResponse: FileUploadAuthTokenResponse
+}
 
 export default function NewPage(props) {
+  const bffGateway = new BFFAPI();
+
   const { data: session } = useSession();
   const [showModal, setShowModal] = useState(false);
   const [datasetCreateResponse, setDatasetCreateResponse] = useState(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const formikContext = useFormikContext();
+
+  const [datasetPrototyping, setDatasetPrototyping] = useState({} as DatasetPrototyping);
+  const [uppyReference, setUppyReference] = useState(null as Uppy);
 
   function datasetCreated(datasetResponse: any): void {
     setShowModal(true);
@@ -83,26 +94,61 @@ export default function NewPage(props) {
     return errors;
   }
 
-  function handleSubmitForm(values: FormValues, actions: FormikHelpers<any>) {
-    const datasetInfo = values;
-    datasetInfo.urls = datasetInfo.urls.filter(x => x.confirmed);
+  async function uploadFiles() {
+    return uppyReference.upload();
+  }
 
-    axios.post("/api/datasets", datasetInfo)
-      .then(response => {
-        if (response.status == 200) {
-          datasetCreated({ name: values.datasetTitle, ...response.data });
-          actions.resetForm();
-        } else {
-          console.log(response);
-          alert("Sorry! Error to create a new dataset.");
-        }
-      })
+  async function updateDataset(request: UpdateDatasetRequest) {
+    return bffGateway.updateDataset(request);
+  }
+
+  function handleSubmitForm(values: FormValues, actions: FormikHelpers<any>) {
+    const request = {
+      id: datasetPrototyping.createDatasetResponseV2.id,
+      name: values.datasetTitle,
+    } as UpdateDatasetRequest;
+
+    uploadFiles()
+      .then(() => updateDataset(request))
+      .then(() => datasetCreated(request))
+      .then(() => actions.setSubmitting(false))
       .catch(error => {
-        console.log(error);
-        alert("Sorry! Error to create a new dataset.");
+        console.log("Erro when finish the dataset creation:", error);
       })
       .finally(() => actions.setSubmitting(false));
   }
+
+  function onCreateDatasetSuccess(datasetId: string): void {
+    formikContext.setFieldValue("datasetTitle", datasetId, true);
+  }
+
+  function onUppyStateCreated(uppy: Uppy) {
+    setUppyReference(uppy);
+  }
+
+  useEffect(() => {
+    try {
+      // Create a new dataset if the dataset prototyping is empty.
+      if (!datasetPrototyping?.createDatasetResponseV2?.id) {
+        bffGateway.createNewDataset({
+          title: "",
+        }).then(createDatasetResponseV2 => {
+          const request = { file: { id: createDatasetResponseV2.id } } as FileUploadAuthTokenRequest;
+          bffGateway.createUploadFileAuthToken(request)
+            .then(fileUploadAuthTokenResponse => {
+              setDatasetPrototyping({
+                createDatasetResponseV2: createDatasetResponseV2,
+                fileUploadAuthTokenResponse: fileUploadAuthTokenResponse
+              });
+            })
+        })
+      }
+    } catch (error) {
+      console.log("on-file-added error");
+      console.log(error);
+      props?.onCreatedDatasetError?.(error);
+    }
+  })
 
   return (
     <LoggedLayout noPadding={false}>
@@ -163,107 +209,16 @@ export default function NewPage(props) {
                   </p>
                   <div className="my-2">
                     <Tabs>
-                      <TabPanel title="Remote files">
-                        <label
-                          htmlFor="path"
-                          className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >
-                          Data files
-                        </label>
-                        <span
-                          id="helper-text-explanation"
-                          className="mt-2 text-xs text-gray-500 dark:text-gray-400 font-light"
-                        >
-                          List the path to the data files from remote URLs. The pattern must be <pre className="inline-block">/path/to/the/file.ext</pre> for a specific file or <pre className="inline-block">/path/to/the/**</pre> to scan all files under <pre className="inline-block">/path/to/the</pre> folder.
-                        </span>
-
-                        <FieldArray name="urls">
-                          {({ remove, push }) => {
-                            return (
-                              <div>
-                                {values.urls.length > 0 &&
-                                  values.urls.map((item: DatafilePath, index: number) => {
-
-                                    if (item?.confirmed) {
-                                      if (item && item?.url) {
-                                        return (
-                                          <div key={index} className="flex items-center hover:bg-primary-100 px-4 border border-primary-100">
-                                            <div className="w-full">
-                                              <span>{pathName(item?.url)}</span>
-                                              <br />
-                                              <span className="text-sm text-primary-500">{item?.url}</span>
-                                            </div>
-                                            <CloseButton onClick={() => {
-                                              remove(index);
-                                              setFieldTouched(`urls.${index}.url`, true, true)
-                                            }} />
-                                          </div>
-                                        );
-                                      }
-                                    } else {
-
-                                      return (
-                                        <div key={index} className="flex mt-4 justify-center items-start">
-                                          <div className="w-full">
-                                            <Field
-                                              name={`urls.${index}.url`}
-                                              type="text"
-                                              className="items-center justify-center"
-                                              placeholder="Informe the path to a file"
-                                              validate={(value) => {
-                                                return validatePath(values, value, index, isSubmitting);
-                                              }}
-                                              onKeyPress={e => {
-                                                if (e.which === 13) {
-                                                  addDataFile(item, push, setFieldTouched, index);
-                                                  e.preventDefault();
-                                                }
-                                              }}
-                                            />
-
-                                            <ErrorMessage
-                                              name={`urls.${index}.url`}
-                                              component="div"
-                                              className="text-xs text-error-600"
-                                            />
-                                            <ErrorMessage
-                                              name='remoteFilesCount'
-                                              component="div"
-                                              className="text-xs text-error-600"
-                                            />
-                                          </div>
-                                          <button
-                                            type="button"
-                                            className="btn-primary btn-small mx-2 h-8 mt-1"
-                                            onClick={() => {
-                                              addDataFile(item, push, setFieldTouched, index);
-                                            }}
-                                          >
-                                            <span className="whitespace-nowrap">Add File</span>
-                                          </button>
-                                        </div>
-                                      );
-                                    }
-                                  })
-                                }
-                              </div>
-                            );
-                          }}
-                        </FieldArray>
-                      </TabPanel>
-                      {/* <TabPanel title="AWS S3">
-                        <div className="text-center">
-                          <h4> Unavaible, <span className="text-primary-400">for while</span>!</h4>
-                          <p>We are working in this feature yet. But is good to know that you need this.</p>
+                      <TabPanel title="File">
+                        <div className="grid grid-cols-1 place-items-center py-2 h-64">
+                          <UppyUploader
+                            datasetId={datasetPrototyping?.createDatasetResponseV2?.id}
+                            userId={datasetPrototyping?.fileUploadAuthTokenResponse?.user?.id}
+                            userToken={datasetPrototyping?.fileUploadAuthTokenResponse?.token?.jwt}
+                            onCreateDatasetSuccess={onCreateDatasetSuccess}
+                            onUppyStateCreated={onUppyStateCreated} />
                         </div>
-                      </TabPanel> */}
-                      {isUppyUploadEnabled(session) &&
-                        <TabPanel title="File">
-                          <div className="grid grid-cols-1 place-items-center py-2">
-                            <UppyUploader />
-                          </div>
-                        </TabPanel>
-                      }
+                      </TabPanel>
                     </Tabs>
                   </div>
                 </div>

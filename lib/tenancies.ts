@@ -1,12 +1,9 @@
-import { getCookie, setCookie, hasCookie } from "cookies-next";
-import { defaultTenancy } from "./rpc";
-import { NextRequest } from "next/server";
+import { getCookie, hasCookie, setCookie } from "cookies-next";
 import { NextApiRequest } from "next";
-
-
+import { NextRequest } from "next/server";
+import { defaultTenancy } from "./rpc";
 
 export class TenanciesResolver {
-    
     cookieTenancyKey: 'tenancy';
 
     getCurrentTenancyOrDefaultFrom(req: NextRequest): string {
