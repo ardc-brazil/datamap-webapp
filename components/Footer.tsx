@@ -38,23 +38,13 @@ export function Footer(props: FooterProps) {
                 </Link>
               </li>
               <li>
-                <Link href="/project/faqs">
-                  FAQs
-                </Link>
-              </li>
-              <li>
                 <Link href="/project/support">
                   Support
                 </Link>
               </li>
               <li>
-                <Link href="/project/tutorials">
-                  Tutorials
-                </Link>
-              </li>
-              <li>
-                <Link href="/project/privacy-policy">
-                  Privacy Policy
+                <Link href="/project/data-policy">
+                  Data Policy
                 </Link>
               </li>
             </ul>
