@@ -29,7 +29,7 @@ function SearchCategory(props) {
   );
 }
 
-export default function HomePage() {
+export default function HomePage(props) {
   return (
     <Layout fluid={true}>
       <div className="special-background">
@@ -126,7 +126,74 @@ export default function HomePage() {
             your datasets in real-time.
           </p>
         </section>
+
+        <section className="mb-40">
+          <h1 className="py-8">
+            <TextDecorationBolder className="font-normal">
+              Research Group
+            </TextDecorationBolder>
+          </h1>
+
+          <p className="text-xl">
+            The Datamap Project is led by a dedicated and interdisciplinary team of experts from various fields, united by a common goal: to create an innovative platform that seamlessly integrates observational data and modeling components. Our working group includes researchers, data scientists, software developers, and visualization specialists who are passionate about leveraging advanced technologies to push the boundaries of scientific discovery.
+          </p>
+
+          <div className="w-full flex flex-row gap-8 flex-wrap justify-center py-12">
+            {props.researchers.profiles.map((profile, i) =>
+              <Researcher key={i} profile={profile} />
+            )}
+          </div>
+        </section>
       </div>
     </Layout>
   );
+}
+
+interface ResearcherProps {
+  profile: {
+    name: string
+    role: string
+    profilePicture?: string
+    orcid?: string
+  }
+}
+
+function Researcher(props: ResearcherProps) {
+
+  function profilePictureUrl() {
+    return props.profile.profilePicture ?? "/img/researcher-profile/default-profile.webp"
+  }
+
+  function ResearcherContainer() {
+    return (
+      <div className="flex flex-col w-fit items-center">
+        <div id="tooltip-jese" role="tooltip" className="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
+          {props.profile.name}
+        </div>
+        <img className="rounded w-52 h-52" src={profilePictureUrl()} alt={`${props.profile.name} - ${props.profile.role}`} />
+        <h5 className="text-center">{props.profile.name}{props.profile.orcid &&
+          <img src="/img/orcid-logo.svg" className="w-4 inline-block ml-2" />
+        }</h5>
+        <span className="font-light">{props.profile.role}</span>
+      </div>
+    )
+  }
+
+  return <>
+    {!props.profile.orcid && <ResearcherContainer />}
+    {props.profile.orcid &&
+      <a href={`https://orcid.org/${props.profile.orcid}`}>
+        <ResearcherContainer />
+      </a>}
+  </>
+}
+
+export async function getStaticProps() {
+  const researchers = require("/public/data/researchers.json");
+
+  return {
+    props: {
+      researchers,
+    },
+  }
 }

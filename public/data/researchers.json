@@ -1,0 +1,33 @@
+{
+  "profiles": [
+    {
+      "name": "Luciana Varanda Rizzo",
+      "role": "Principal Investigator, UNIFESP",
+      "profilePicture": "/img/researcher-profile/luciana-varanda-rizzo-profile.jpg",
+      "orcid": "0000-0002-1748-6997"
+    },
+    {
+      "name": "Alan Calheiros",
+      "role": "Principal Investigator, INPE",
+      "profilePicture": "/img/researcher-profile/alan-calheiros-profile.png"
+    },
+    {
+      "name": "Pedro Corrêa",
+      "role": "Principal Investigator, EPUSP",
+      "profilePicture": "/img/researcher-profile/pedro-correa-profile.png",
+      "orcid": "0000-0002-8743-4244"
+    },
+    {
+      "name": "André Maia",
+      "role": "Master, PPGEE/EPUSP",
+      "orcid": "0000-0002-6356-145X",
+      "profilePicture": "/img/researcher-profile/andre-maia-profile.jpg"
+    },
+    {
+      "name": "Caio Maia",
+      "role": "Master, PPGEE/EPUSP",
+      "orcid": "0000-0002-2106-114X",
+      "profilePicture": "/img/researcher-profile/caio-maia-profile.png"
+    }
+  ]
+}
