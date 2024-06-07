@@ -33,10 +33,10 @@ export interface GetDatasetDetailsVersionResponse {
     // TODO: convert design_state to Enum
     design_state: string
     is_enabled: boolean
-    files: GetDatasetDetailsVersionFilesResponse[]
+    files: GetDatasetDetailsVersionFileResponse[]
 }
 
-export interface GetDatasetDetailsVersionFilesResponse {
+export interface GetDatasetDetailsVersionFileResponse {
     id: string
     name: string
     size_bytes?: number
