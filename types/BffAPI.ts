@@ -1,9 +1,20 @@
 import { DatasetInfo } from "./GatekeeperAPI"
 
 export interface CreateDatasetRequest {
-    datasetTitle: string,
-    urls: Url[]
-    remoteFilesCount: number
+    title: string,
+
+    /**
+     * @deprecated TODO: use title field instead
+     */
+    datasetTitle?: string,
+    /**
+     * @deprecated TODO: use dataset version.
+     */
+    urls?: Url[]
+    /**
+     * @deprecated TODO: useless information, remove from the code
+     */
+    remoteFilesCount?: number
 }
 
 export interface CreateDatasetResponse {
@@ -69,4 +80,63 @@ export interface DatasetListResponsePaged {
     content: DatasetDetailsResponse[],
     size: number
 }
+export interface CreateDatasetRequestV2 {
+    title: string
+    dataFiles?: [
+        {
+            id: string,
+            name: string,
+            extension: string,
+        }
+    ]
+}
 
+enum DesignState {
+    DRAFT = "DRAFT"
+}
+
+export interface CreateDatasetResponseV2 {
+    id: string
+    name: string
+    design_state: DesignState
+    versions: [
+        {
+            id: string
+            name: string
+            design_state: DesignState,
+            is_enabled: boolean,
+            files: []
+        }
+    ],
+    current_version: {
+        id: string
+        name: string
+        design_state: DesignState,
+        is_enabled: boolean,
+        files: []
+    }
+}
+
+export interface FileUploadAuthTokenRequest {
+    file: {
+        id: string
+    }
+}
+export interface FileUploadAuthTokenResponse {
+    user: {
+        id: string
+    },
+    token: {
+        jwt: string
+    }
+}
+
+
+export interface UpdateDatasetRequest {
+    id: string,
+    name: string,
+    data: object,
+}
+
+export interface UpdateDatasetResponse {
+}

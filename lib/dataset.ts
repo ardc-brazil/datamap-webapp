@@ -5,13 +5,13 @@ import { AppLocalContext } from "./appLocalContext";
 import axiosInstance, { buildHeaders } from "./rpc";
 
 function toDatasetInfo(datasetRequest: CreateDatasetRequest): DatasetInfo {
-    const dataFiles = datasetRequest.urls.map(
+    const dataFiles = datasetRequest?.urls?.map(
         x => ({ path: x.url } as DataFile)
     );
 
     return {
         id: "",
-        name: datasetRequest.datasetTitle,
+        name: datasetRequest.datasetTitle ?? datasetRequest?.title ?? "none",
         database: "",
         creation_date: new Date(),
         license: "",
@@ -37,7 +37,8 @@ function toDatasetInfo(datasetRequest: CreateDatasetRequest): DatasetInfo {
         author: null,
         contacts: null,
         reference: [],
-        dataFiles: dataFiles,
+        // TODO: deprecate dataFiles, we should always use the data files in version
+        dataFiles: dataFiles ?? [],
         additional_information: [],
         level: "",
         resolution: {
@@ -57,7 +58,7 @@ function toDatasetInfo(datasetRequest: CreateDatasetRequest): DatasetInfo {
 export async function createDataset(context: AppLocalContext, datasetRequest: CreateDatasetRequest): Promise<CreateDatasetResponse> {
     try {
         const request = {
-            name: datasetRequest.datasetTitle,
+            name: datasetRequest.datasetTitle ?? datasetRequest?.title,
             data: toDatasetInfo(datasetRequest),
             tenancy: context.tenancy,
         } as DatasetCreationRequest;
@@ -90,7 +91,7 @@ export async function getDatasetBy(context: AppLocalContext, id: string): Promis
 export async function updateDataset(context: AppLocalContext, dataset: any) {
     const ds = {
         name: dataset.name,
-        data: dataset,
+        data: dataset?.dataFiles ? dataset : toDatasetInfo({ title: dataset.name }),
         tenancy: context.tenancy,
     };
 

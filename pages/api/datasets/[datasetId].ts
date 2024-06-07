@@ -16,7 +16,7 @@ router
       const result = await updateDataset(context, req.body);
       res.json(result);
     } catch (error) {
-      res.status(error?.status).end()
+      res.status(error?.response?.status).end()
     }
   })
   .get(async (req, res) => {

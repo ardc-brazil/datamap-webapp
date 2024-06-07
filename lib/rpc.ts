@@ -8,7 +8,7 @@ export const defaultTenancy = "datamap/production/data-amazon";
 
 const axiosInterceptorInstance = axios.create({
   baseURL: apiBaseURL,
-  timeout: 1000,
+  timeout: (1000 * 10), // 10 sec
   headers: {
     "Accept": "application/json",
     "X-Api-Key": apiKey,
