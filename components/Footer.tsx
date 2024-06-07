@@ -9,7 +9,7 @@ export interface FooterProps extends Props {
 export function Footer(props: FooterProps) {
   return (
     <footer
-      className={`bg-secondary-900 h-[50vh] ${props.marginTop ?? "mt-12"} `}
+      className={`bg-secondary-900 h-fit ${props.marginTop ?? "mt-12"} `}
     >
       <div className="container mx-auto pt-24">
         <div className="grid grid-rows-1 grid-flow-col gap-4">
@@ -38,23 +38,13 @@ export function Footer(props: FooterProps) {
                 </Link>
               </li>
               <li>
-                <Link href="/project/faqs">
-                  FAQs
-                </Link>
-              </li>
-              <li>
                 <Link href="/project/support">
                   Support
                 </Link>
               </li>
               <li>
-                <Link href="/project/tutorials">
-                  Tutorials
-                </Link>
-              </li>
-              <li>
-                <Link href="/project/privacy-policy">
-                  Privacy Policy
+                <Link href="/project/data-policy">
+                  Data Policy
                 </Link>
               </li>
             </ul>
@@ -70,7 +60,7 @@ export function Footer(props: FooterProps) {
             </ul>
           </div>
         </div>
-        <p className="text-center p-12">
+        <p className="text-center p-12 mb-0">
           © {new Date().getFullYear()} Data Map Platform
         </p>
       </div>
