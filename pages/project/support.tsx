@@ -16,8 +16,15 @@ export default function SupportPage() {
             <h3>Frequently Asked Questions (FAQ)</h3>
             <p>Explore our FAQ section for quick answers to common questions about Datamap. This section covers a wide range of topics, from basic features to advanced functionalities.</p>
 
+            <h3>Institutional Support</h3>
+            <p>
+                If you have any inquiries or require personalized assistance, Pedro is available to help. You can reach him through the contact form on our website or by emailing him directly at <a href="mailto:pedro.correa@usp.br">pedro.correa@usp.br</a>.
+            </p>
+
             <h3>Technical Support</h3>
-            <p>If you encounter any issues or need personalized assistance, our technical support team is here to help. You can reach out to us through the contact form on our website or by emailing our support team directly at <a href="mailto:amaia@usp.br">amaia@usp.br</a>. We aim to respond to all inquiries within 24 hours.</p>
+            <p>
+                If you encounter any issues or need personalized assistance, our technical support team is here to help. You can reach out to us through the contact form on our website or by emailing our support team directly at <a href="mailto:amaia@usp.br">amaia@usp.br</a>.
+            </p>
 
             <h3>Community Forum</h3>
             <p>Join our community forum to connect with other Datamap users, share experiences, and seek advice. The forum is a great place to exchange ideas, learn from others, and stay updated on the latest developments and best practices.</p>
