@@ -31,7 +31,7 @@ export function ResearcherProfile(props: ResearcherProps) {
     return <>
         {!props.profile.orcid && <ResearcherContainer />}
         {props.profile.orcid &&
-            <a href={`https://orcid.org/${props.profile.orcid}`}>
+            <a href={`https://orcid.org/${props.profile.orcid}`} target="_blank">
                 <ResearcherContainer />
             </a>}
     </>
