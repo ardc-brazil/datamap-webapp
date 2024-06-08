@@ -131,13 +131,13 @@ cd datamap-webapp
 git pull
 
 # Rebuild the image (to make sure)
-ENV_FILE_PATH=../environment/frontend.env.production docker-compose build
+ENV_FILE_PATH=../environment/frontend.prod.env docker-compose build
 
 # Stop backend containers
-ENV_FILE_PATH=../environment/frontend.env.production docker-compose down
+ENV_FILE_PATH=../environment/frontend.prod.env docker-compose down
 
 # Start backend
-ENV_FILE_PATH=../environment/frontend.env.production docker-compose up -d
+ENV_FILE_PATH=../environment/frontend.prod.env docker-compose up -d
 ```
 
 ## Architecture
