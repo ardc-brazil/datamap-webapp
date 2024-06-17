@@ -47,6 +47,16 @@ export function Footer(props: FooterProps) {
                   Data Policy
                 </Link>
               </li>
+              <li>
+                <Link href="/project/research-group">
+                  Research Group
+                </Link>
+              </li>
+              <li>
+                <Link href="/project/partners-and-supporters">
+                  Partners and Supporters
+                </Link>
+              </li>
             </ul>
           </div>
           <div className=" row-span-2">
@@ -60,9 +70,29 @@ export function Footer(props: FooterProps) {
             </ul>
           </div>
         </div>
-        <p className="text-center p-12 mb-0">
-          © {new Date().getFullYear()} Data Map Platform
-        </p>
+        <div className="p-12 flex flex-row gap-4 justify-center">
+          <a href="https://www.usp.br/" target="_blank">
+            <img className="grayscale hover:grayscale-0 inline-block w-24 self-center" src="/img/partners-supporters/usp-logo.png" alt="University of São Paulo (USP)" />
+          </a>
+          <a href="https://www.gov.br/inpe" target="_blank">
+            <img className="grayscale hover:grayscale-0 inline-block w-16 self-center" src="/img/partners-supporters/inpe-logo.png" alt="National Institute for Space Research (INPE)" />
+          </a>
+          <a href="https://www.unicamp.br/" target="_blank">
+            <img className="grayscale hover:grayscale-0 inline-block w-12 self-center" src="/img/partners-supporters/unicamp-logo.svg" alt="University of Campinas (Unicamp)" />
+          </a>
+          <a href="https://datacite.org/" target="_blank">
+            <img className="grayscale hover:grayscale-0 inline-block w-32 self-center" src="/img/partners-supporters/datacite-logo.png" alt="DataCite" />
+          </a>
+          <a href="https://www.shell.com.br/" target="_blank">
+            <img className="grayscale hover:grayscale-0 inline-block w-7 self-center" src="/img/partners-supporters/shell-logo.png" alt="Shell" />
+          </a>
+          <a href="https://fapesp.br/" target="_blank">
+            <img className="grayscale hover:grayscale-0 inline-block w-24 h-fit self-center" src="/img/partners-supporters/fapesp-logo.png" alt="São Paulo Research Foundation (Fapesp)" />
+          </a>
+          <a href="https://www.arm.gov/" target="_blank">
+            <img className="grayscale hover:grayscale-0 inline-block w-24 self-center" src="/img/partners-supporters/arm-logo.png" alt="Atmospheric Radiation Measurement (ARM)" />
+          </a>
+        </div>
       </div>
     </footer>
   );
