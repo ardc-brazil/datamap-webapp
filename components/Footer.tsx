@@ -47,6 +47,11 @@ export function Footer(props: FooterProps) {
                   Data Policy
                 </Link>
               </li>
+              <li>
+                <Link href="/project/research-group">
+                  Research Group
+                </Link>
+              </li>
             </ul>
           </div>
           <div className=" row-span-2">
