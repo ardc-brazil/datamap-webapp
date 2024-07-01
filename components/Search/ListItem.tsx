@@ -5,6 +5,7 @@ import Moment from "react-moment";
 import { ROUTE_PAGE_DATASETS } from "../../contants/InternalRoutesConstants";
 import { totalDatasetVersionFilesSize } from "../../lib/fileSize";
 import { GetDatasetsDetasetDetailsResponse } from "../../types/BffAPI";
+import { Badge } from "./Badge";
 
 
 interface Props {
@@ -19,7 +20,7 @@ export function ListItem(props: Props) {
         <div className="px-4 place-self-center">
           <MaterialSymbol icon="database" size={84} grade={-25} weight={400} className="align-middle" color="#e5e7eb" fill />
         </div>
-        <div className="border-secondary-900">
+        <div className="border-secondary-900 w-full">
           <p className="font-bold text-lg">{(props.dataset?.name == "" ? null : props.dataset?.name) ?? "No title"}</p>
           <p>
             {props.dataset?.data.author && props.dataset?.data.author?.name != "" ? (
@@ -39,6 +40,9 @@ export function ListItem(props: Props) {
               ? props.dataset.data?.description.substring(0, 300) + "..."
               : ((props.dataset?.data?.description == "" ? null : props.dataset?.data?.description) ?? "No description")
           }</p>
+        </div>
+        <div className="place-self-start">
+          <Badge>{props.dataset.current_version.design_state}</Badge>
         </div>
       </div>
     </Link>
