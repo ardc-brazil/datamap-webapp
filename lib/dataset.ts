@@ -124,24 +124,10 @@ export async function getAllDataset(context: AppLocalContext, url: String): Prom
             queryString = urlSplited[1]
         }
 
-        const datasets = [];
-        console.log(buildHeaders(context));
-
         return axiosInstance
             .get(`/datasets/?${queryString}`, buildHeaders(context))
             .then(response => {
                 return response?.data as GetDatasetsResponse;
-
-                // Parse data string to json object
-                // for (const ds of datasetsList.content) {
-                //     // let dataset = toDatasetDetailsResponse(ds);
-                //     // hydrateDatasetMetadataInfo(dataset, ds);
-                //     // datasets.push(dataset);
-                // }
-
-                // datasetsList.content = datasets;
-
-                return datasetsList;
             })
             .catch(error => {
                 throw error
