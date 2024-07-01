@@ -1,5 +1,5 @@
 
-import { CreateDatasetRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, DatasetDetailsResponse, DatasetListResponsePaged, GetDatasetDetailsResponse } from "../types/BffAPI";
+import { CreateDatasetRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, GetDatasetDetailsResponse, GetDatasetsResponse } from "../types/BffAPI";
 import { DataFile, DatasetCreationRequest, DatasetInfo } from "../types/GatekeeperAPI";
 import { AppLocalContext } from "./appLocalContext";
 import axiosInstance, { buildHeaders } from "./rpc";
@@ -110,21 +110,11 @@ export async function getDatasetCategoryFilters(context: AppLocalContext): Promi
     }
 }
 
-function hydrateDatasetMetadataInfo(dataset: DatasetDetailsResponse, response: any) {
-    dataset.id = response.id;
-    dataset.name = response.name;
-    dataset.is_enabled = response.is_enabled;
-}
-
-function toDatasetDetailsResponse(response: any) {
-    return response.data as DatasetDetailsResponse;
-}
-
 function toDatasetCategoryFiltersResponse(response: any) {
     return response.data as DatasetCategoryFiltersResponse;
 }
 
-export async function getAllDataset(context: AppLocalContext, url: String): Promise<DatasetListResponsePaged> {
+export async function getAllDataset(context: AppLocalContext, url: String): Promise<GetDatasetsResponse> {
     try {
 
         const urlSplited = url?.split("?");
@@ -134,20 +124,22 @@ export async function getAllDataset(context: AppLocalContext, url: String): Prom
             queryString = urlSplited[1]
         }
 
-        const datasets = [] as DatasetDetailsResponse[];
+        const datasets = [];
+        console.log(buildHeaders(context));
+
         return axiosInstance
             .get(`/datasets/?${queryString}`, buildHeaders(context))
             .then(response => {
-                const datasetsList = response?.data as DatasetListResponsePaged;
+                return response?.data as GetDatasetsResponse;
 
                 // Parse data string to json object
-                for (const ds of datasetsList.content) {
-                    let dataset = toDatasetDetailsResponse(ds);
-                    hydrateDatasetMetadataInfo(dataset, ds);
-                    datasets.push(dataset);
-                }
+                // for (const ds of datasetsList.content) {
+                //     // let dataset = toDatasetDetailsResponse(ds);
+                //     // hydrateDatasetMetadataInfo(dataset, ds);
+                //     // datasets.push(dataset);
+                // }
 
-                datasetsList.content = datasets;
+                // datasetsList.content = datasets;
 
                 return datasetsList;
             })

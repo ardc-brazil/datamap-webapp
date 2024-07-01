@@ -1,9 +1,9 @@
-import { DatasetDetailsResponse, DatasetListResponsePaged } from "../../types/BffAPI";
+import { GetDatasetsDetasetDetailsResponse } from "../../types/BffAPI";
 import { ListDatasetHeader } from "./ListDatasetHeader";
 import { ListItem } from "./ListItem";
 
 interface Props {
-  data: DatasetDetailsResponse[]
+  data: GetDatasetsDetasetDetailsResponse[]
   requestedAt: number
 }
 
@@ -14,7 +14,7 @@ export function ListDataset(props: Props) {
       <ListDatasetHeader itemCount={itemCount} requestedAt={props?.requestedAt} />
       <div className="border-t border-primary-200">
         {props.data.map((element, index) => (
-          <ListItem key={index} data={element} />
+          <ListItem key={index} dataset={element} />
         ))}
       </div>
       {/* <div className="py-8">

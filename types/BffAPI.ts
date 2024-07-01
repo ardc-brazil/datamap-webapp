@@ -77,9 +77,39 @@ export interface DatasetCategoryFilterOptionResponse {
 }
 
 export interface DatasetListResponsePaged {
-    content: DatasetDetailsResponse[],
+    content: GetDatasetsResponse,
     size: number
 }
+
+export interface GetDatasetsResponse {
+    content: GetDatasetsDetasetDetailsResponse[]
+    size: number
+}
+
+export interface GetDatasetsDetasetDetailsResponse {
+    id: string
+    name: string
+    design_state: DesignState
+    data: DatasetInfo
+    created_at: Date
+    versions: [
+        {
+            id: string
+            name: string
+            design_state: DesignState,
+            is_enabled: boolean,
+            files: []
+        }
+    ],
+    current_version: {
+        id: string
+        name: string
+        design_state: DesignState,
+        is_enabled: boolean,
+        files: []
+    }
+}
+
 export interface CreateDatasetRequestV2 {
     title: string
     dataFiles?: [
