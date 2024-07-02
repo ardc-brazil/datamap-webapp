@@ -1,13 +1,19 @@
-import axios from 'axios';
 import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { useState } from 'react';
 import * as Yup from 'yup';
+import { BFFAPI } from "../../gateways/BFFAPI";
 import { getAllLicensesIds, licenseMapping } from "../../lib/licenseMapping";
-import { canEditDataset } from "../../lib/users";
+import { UserDetailsResponse, canEditDataset } from "../../lib/users";
+import { GetDatasetDetailsResponse, UpdateDatasetRequest } from "../../types/BffAPI";
 
+interface Props {
+    dataset: GetDatasetDetailsResponse
+    user?: UserDetailsResponse
+    alwaysEdition?: boolean
+}
 
-export default function DatasetLicenseForm(props) {
-
+export default function DatasetLicenseForm(props: Props) {
+    const bffGateway = new BFFAPI();
     const [editing, setEditing] = useState(false);
     const canEdit = canEditDataset(props.user);
 
@@ -26,22 +32,25 @@ export default function DatasetLicenseForm(props) {
 
     function onSubmit(values, { setSubmitting }) {
         setSubmitting(true);
-        props.dataset.license = values.license;
+        props.dataset.data.license = values.license;
 
-        axios.put("/api/datasets/" + props.dataset.id, props.dataset)
-            .then(response => {
-                if (response.status == 200) {
-                    setEditing(false);
-                } else {
-                    console.log(response);
-                    alert("Sorry! Error...");
-                }
-            })
-            .catch(error => {
-                console.log(error);
-                alert("Sorry! Error...");
-            })
-            .finally(() => setSubmitting(false));
+        try {
+            const updateDatasetRequest = {
+                id: props.dataset.id,
+                name: props.dataset.name,
+                data: props.dataset.data,
+                tenancy: props.dataset.tenancy,
+                is_enabled: props.dataset.is_enabled
+            } as UpdateDatasetRequest
+
+            bffGateway.updateDataset(updateDatasetRequest);
+            setEditing(false);
+        } catch (error) {
+            console.log(error);
+            alert("Sorry! Error...");
+        } finally {
+            setSubmitting(false);
+        }
     }
 
     function EditButton() {
@@ -51,7 +60,7 @@ export default function DatasetLicenseForm(props) {
     if (editing || props.alwaysEdition) {
         return (
             <Formik
-                initialValues={{ license: props.dataset.license }}
+                initialValues={{ license: props.dataset.data.license }}
                 validationSchema={schema}
                 onSubmit={onSubmit}
             >
@@ -86,11 +95,11 @@ export default function DatasetLicenseForm(props) {
                 )}
             </Formik>
         );
-    } else if (props.dataset.license) {
+    } else if (props.dataset.data.license) {
         // Print the license information
         return <div className="flex flex-row w-full items-center">
             <p className="text-primary-500 w-full">
-                {licenseMapping[props.dataset.license]}
+                {licenseMapping[props.dataset.data.license]}
             </p>
             <EditButton />
         </div>

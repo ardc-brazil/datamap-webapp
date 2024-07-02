@@ -1,13 +1,20 @@
-import axios from 'axios';
 import { ArrayHelpers, ErrorMessage, Field, FieldArray, Form, Formik } from 'formik';
 import { useState } from 'react';
 import * as Yup from 'yup';
-import { canEditDataset } from "../../lib/users";
+import { BFFAPI } from "../../gateways/BFFAPI";
+import { UserDetailsResponse, canEditDataset } from "../../lib/users";
+import { GetDatasetDetailsResponse, UpdateDatasetRequest } from "../../types/BffAPI";
 import CloseButton from '../base/CloseButton';
 import { CardItem } from "./CardItem";
 
-export default function DatasetColaboratorsForm(props) {
+interface Props {
+    dataset: GetDatasetDetailsResponse
+    user?: UserDetailsResponse
+    alwaysEdition?: boolean
+}
 
+export default function DatasetColaboratorsForm(props: Props) {
+    const bffGateway = new BFFAPI();
     const infoText = "Add collaborators who are responsible for maintaining the dataset including being available for questions from users.";
     const [editing, setEditing] = useState(false);
     const canEdit = canEditDataset(props.user);
@@ -34,40 +41,29 @@ export default function DatasetColaboratorsForm(props) {
 
     function onSubmit(values, { setSubmitting }) {
         setSubmitting(true);
-        props.dataset.colaborators = values.colaborators;
+        props.dataset.data.colaborators = values.colaborators;
 
-        axios.put("/api/datasets/" + props.dataset.id, props.dataset)
-            .then(response => {
-                if (response.status == 200) {
-                    setEditing(false);
-                } else {
-                    console.log(response);
-                    alert("Sorry! Error...");
-                }
-            })
-            .catch(error => {
-                console.log(error);
-                alert("Sorry! Error...");
-            })
-            .finally(() => setSubmitting(false));
+        try {
+            const updateDatasetRequest = {
+                id: props.dataset.id,
+                name: props.dataset.name,
+                data: props.dataset.data,
+                tenancy: props.dataset.tenancy,
+                is_enabled: props.dataset.is_enabled
+            } as UpdateDatasetRequest
+
+            bffGateway.updateDataset(updateDatasetRequest);
+            setEditing(false);
+        } catch (error) {
+            console.log(error);
+            alert("Sorry! Error...");
+        } finally {
+            setSubmitting(false);
+        }
     }
 
     function EditButton() {
         return <button className={`${(editing || !canEdit) && "hidden"} btn-primary-outline btn-small h-8 w-16`} onClick={handleEditClick}>Edit</button>
-    }
-
-    function getColaboratorsList() {
-        let all = [];
-
-        if (props.dataset.owner) {
-            all.concat(props.dataset.owner);
-        }
-
-        if (props.dataset.contacts) {
-            all.concat(props.dataset.contacts);
-        }
-
-        return all;
     }
 
     function getPermissionDescription(permission: string) {
@@ -87,7 +83,7 @@ export default function DatasetColaboratorsForm(props) {
         return (
             <Formik
                 initialValues={{
-                    colaborators: props.dataset.colaborators ?? [{}]
+                    colaborators: props.dataset.data.colaborators ?? [{}]
                 }}
                 validationSchema={schema}
                 onSubmit={onSubmit}
@@ -173,11 +169,11 @@ export default function DatasetColaboratorsForm(props) {
                 )}
             </Formik>
         );
-    } else if (props.dataset.colaborators && props.dataset.colaborators.length > 0) {
+    } else if (props?.dataset?.data?.colaborators?.length > 0) {
         // Print the license information
         return <div className="flex flex-row w-full items-center">
             <p className="text-primary-500 w-full">
-                {props.dataset.colaborators?.map((person, index) =>
+                {props?.dataset?.data?.colaborators?.map((person, index) =>
                     <CardItem key={index} title="Colaborator Name" className="py-2">{`${person.name} ${getPermissionDescription(person.permission)}`}</CardItem>)}
             </p>
             <EditButton />

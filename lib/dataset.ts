@@ -1,5 +1,5 @@
 
-import { CreateDatasetRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, GetDatasetDetailsResponse, GetDatasetsResponse } from "../types/BffAPI";
+import { CreateDatasetRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, GetDatasetDetailsResponse, GetDatasetsResponse, UpdateDatasetRequest } from "../types/BffAPI";
 import { DataFile, DatasetCreationRequest, DatasetInfo } from "../types/GatekeeperAPI";
 import { AppLocalContext } from "./appLocalContext";
 import axiosInstance, { buildHeaders } from "./rpc";
@@ -34,8 +34,9 @@ function toDatasetInfo(datasetRequest: CreateDatasetRequest): DatasetInfo {
         // TODO: get this from logged user
         owner: null,
         // TODO: get this from logged user
-        author: null,
+        authors: null,
         contacts: null,
+        colaborators: null,
         reference: [],
         // TODO: deprecate dataFiles, we should always use the data files in version
         dataFiles: dataFiles ?? [],
@@ -88,15 +89,8 @@ export async function getDatasetBy(context: AppLocalContext, id: string): Promis
     }
 }
 
-export async function updateDataset(context: AppLocalContext, dataset: any) {
-    const ds = {
-        name: dataset.name,
-        data: dataset?.dataFiles ? dataset : toDatasetInfo({ title: dataset.name }),
-        tenancy: context.tenancy,
-    };
-
-    const response = await axiosInstance.put("/datasets/" + dataset.id, ds, buildHeaders(context));
-
+export async function updateDataset(context: AppLocalContext, dataset: UpdateDatasetRequest) {
+    const response = await axiosInstance.put("/datasets/" + dataset.id, dataset, buildHeaders(context));
     return response.data;
 }
 

@@ -52,8 +52,12 @@ export interface DatasetInfo {
     grid_type: string,
     location: Location,
     owner: Person
-    author: Person,
+    authors: Person[],
     contacts: Person[],
+    colaborators: {
+        name: string
+        permission: string
+    }[],
     reference: any[],
     dataFiles: DataFile[],
     additional_information: any[],
