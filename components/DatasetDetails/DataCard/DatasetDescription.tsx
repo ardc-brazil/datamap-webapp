@@ -1,20 +1,25 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import TextareaAutosize from 'react-textarea-autosize';
 import remarkGfm from "remark-gfm";
-import { canEditDataset } from "../../../lib/users";
+import { BFFAPI } from "../../../gateways/BFFAPI";
+import { UserDetailsResponse, canEditDataset } from "../../../lib/users";
+import { GetDatasetDetailsResponse, UpdateDatasetRequest } from "../../../types/BffAPI";
 import { ExpansibleDiv } from "./ExpansibleDiv";
 
+interface Props {
+    dataset: GetDatasetDetailsResponse
+    user?: UserDetailsResponse
+}
 
-export function DatasetDescription(props: any) {
-
+export function DatasetDescription(props: Props) {
+    const bffGateway = new BFFAPI();
     const [editingDescription, setEditDescription] = useState(false);
-    const [textContent, setTextContent] = useState(props.dataset.description)
+    const [textContent, setTextContent] = useState(props.dataset.data.description)
     const canEdit = canEditDataset(props.user);
 
     useEffect(() => {
-        setTextContent(props.dataset.description)
+        setTextContent(props.dataset.data.description)
 
     }, []);
 
@@ -22,30 +27,29 @@ export function DatasetDescription(props: any) {
         setEditDescription(true);
     }
     function handleCancelEditing(event): void {
-        setTextContent(props.dataset.description);
+        setTextContent(props.dataset.data.description);
         setEditDescription(false);
     }
 
     function handleSave(event): void {
-        props.dataset.description = textContent;
+        props.dataset.data.description = textContent;
 
-        axios.put("/api/datasets/" + props.dataset.id, props.dataset)
-            .then(response => {
-                if (response.status == 200) {
-                    setEditDescription(false);
-                } else {
-                    console.log(response);
-                    alert("Sorry! Error...");
-                }
-            })
-            .catch(error => {
-                console.log(error);
-                alert("Sorry! Error...");
-            })
-        // .finally(() => actions.setSubmitting(false));
+        try {
+            const updateDatasetRequest = {
+                id: props.dataset.id,
+                name: props.dataset.name,
+                data: props.dataset.data,
+                tenancy: props.dataset.tenancy,
+                is_enabled: props.dataset.is_enabled
+            } as UpdateDatasetRequest
 
+            bffGateway.updateDataset(updateDatasetRequest);
+            setEditDescription(false);
+        } catch (error) {
+            console.log(error);
+            alert("Sorry! Error...");
+        }
     }
-
 
     return <ExpansibleDiv forceExpanded={editingDescription}>
         <div>
@@ -54,8 +58,7 @@ export function DatasetDescription(props: any) {
                 <button className={`${(editingDescription || !canEdit) && "hidden"} btn-primary-outline btn-small w-16 h-8`} onClick={handleEditDescription}>Edit</button>
             </div>
             {editingDescription
-                ?
-                (
+                ? (
                     <div className="flex flex-col">
                         <div>
                             {/* TODO: Use Formik */}
@@ -70,16 +73,14 @@ export function DatasetDescription(props: any) {
                         </div>
                     </div>
                 )
-                :
-                (
+                : (
                     <article className="prose lg:prose-xl max-w-none small-font-size">
                         {textContent
-                            ?
-                            <ReactMarkdown
+                            ? (<ReactMarkdown
                                 children={textContent}
                                 remarkPlugins={[remarkGfm]} />
-                            :
-                            <span className="italic">Add a description for your dataset.</span>
+                            )
+                            : (<span className="italic">Add a description for your dataset.</span>)
                         }
                     </article>
                 )}

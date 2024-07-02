@@ -166,6 +166,8 @@ export interface UpdateDatasetRequest {
     id: string,
     name: string,
     data: object,
+    tenancy: string
+    is_enabled: boolean
 }
 
 export interface UpdateDatasetResponse {

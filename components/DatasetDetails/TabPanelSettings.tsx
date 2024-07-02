@@ -1,14 +1,15 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { TabPanel } from "./TabPanel";
 
-import axios from "axios";
 import { useRouter } from "next/router";
 import * as Yup from 'yup';
+import { BFFAPI } from "../../gateways/BFFAPI";
+import { UpdateDatasetRequest } from "../../types/BffAPI";
 import { TabPanelProps } from "./TabPanel";
 
 export function TabPanelSettings(props: TabPanelProps) {
+  const bffGateway = new BFFAPI();
   const router = useRouter();
-
   const schema = Yup.object().shape({
     name: Yup.string()
       .min(3, 'Min 3 characteres')
@@ -23,22 +24,23 @@ export function TabPanelSettings(props: TabPanelProps) {
     props.dataset.name = values.name;
     props.dataset.data.institution = values.institution;
 
-    axios.put("/api/datasets/" + props.dataset.id, props.dataset)
-      .then(response => {
-        if (response.status == 200) {
-          // setEditing(false);
-          // TODO: Reload data smoothly external to settings tab.
-          router.reload();
-        } else {
-          console.log(response);
-          alert("Sorry! Error...");
-        }
-      })
-      .catch(error => {
-        console.log(error);
-        alert("Sorry! Error...");
-      })
-      .finally(() => setSubmitting(false));
+    try {
+      const updateDatasetRequest = {
+        id: props.dataset.id,
+        name: props.dataset.name,
+        data: props.dataset.data,
+        tenancy: props.dataset.tenancy,
+        is_enabled: props.dataset.is_enabled
+      } as UpdateDatasetRequest
+
+      bffGateway.updateDataset(updateDatasetRequest);
+      router.reload();
+    } catch (error) {
+      console.log(error);
+      alert("Sorry! Error...");
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
