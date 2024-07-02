@@ -1,8 +1,8 @@
-import React from "react";
+import { SelectedFilterValue } from "../types/FilterOption";
 
 interface Props {
-  onClose?(selectedFilter: string): void
-  selectedFilter?: string
+  onClose?(selectedFilter: SelectedFilterValue): void
+  selectedFilter?: SelectedFilterValue
   children: any;
 }
 
