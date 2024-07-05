@@ -11,8 +11,6 @@ interface UppyUploaderProps {
     userId?: string
     userToken?: string
     onFileUploaded?(success: UploadedUppyFile<Record<string, unknown>, Record<string, unknown>>): void
-    onCreateDatasetSuccess?(datasetId: string)
-    onCreatedDatasetError?(error: Error): void
     onUppyStateCreated(uppy: Uppy);
 }
 interface DatasetPrototyping {
