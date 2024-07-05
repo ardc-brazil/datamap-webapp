@@ -1,5 +1,5 @@
 import Uppy from "@uppy/core";
-import { ErrorMessage, Field, Form, Formik, FormikHelpers, useFormikContext } from "formik";
+import { ErrorMessage, Field, Form, Formik, FormikHelpers } from "formik";
 import { useSession } from "next-auth/react";
 import Router from "next/router";
 import { useEffect, useState } from "react";
@@ -12,25 +12,25 @@ import Modal from "../../../components/base/PopupModal";
 import UppyUploader from "../../../components/base/UppyUploader";
 import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
-import { isValidFilePath, isValidFolderPath } from "../../../lib/paths";
-import { CreateDatasetResponseV2, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, UpdateDatasetRequest } from "../../../types/BffAPI";
+import {
+  CreateDatasetResponseV2,
+  FileUploadAuthTokenRequest,
+  FileUploadAuthTokenResponse,
+  PublishDatasetVersionRequest,
+  UpdateDatasetRequest
+} from "../../../types/BffAPI";
 
 interface DatasetPrototyping {
   createDatasetResponseV2: CreateDatasetResponseV2
   fileUploadAuthTokenResponse: FileUploadAuthTokenResponse
 }
 
-interface Props {}
-
-export default function NewPage(props: Props) {
+export default function NewPage() {
   const bffGateway = new BFFAPI();
-
   const { data: session } = useSession();
   const [showModal, setShowModal] = useState(false);
   const [datasetCreateResponse, setDatasetCreateResponse] = useState(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
-  const formikContext = useFormikContext();
-
   const [datasetPrototyping, setDatasetPrototyping] = useState({} as DatasetPrototyping);
   const [uppyReference, setUppyReference] = useState(null as Uppy);
 
@@ -50,33 +50,6 @@ export default function NewPage(props: Props) {
     uploadedDataFiles: [],
     remoteFilesCount: 0
   };
-
-  function validatePath(values: FormValues, value: string, index: number, isSubmiting) {
-
-    if (index > 0 && values?.urls?.[index]?.url == '') {
-      return null;
-    }
-
-    if (!isValidFilePath(value) && !isValidFolderPath(value)) {
-      return 'Invalid path. Pattern: /path/to/the/file.ext or /path/to/the/**'
-    }
-
-    return null;
-  }
-
-  function addDataFile(item: DatafilePath, push: any, setFieldTouched, index: number) {
-    if (isValidFilePath(item?.url) || isValidFolderPath(item?.url)) {
-      item.confirmed = true;
-      push({ url: '', confirmed: false } as DatafilePath);
-      setFieldTouched(`urls.${index}.url`, true, true);
-    }
-  }
-
-  function pathName(url: string): string {
-    const r = /.*\/(.*)$/g;
-    const groups = r.exec(url);
-    return groups[1];
-  }
 
   function onAlertClose(): void {
     setShowSuccessAlert(false);
@@ -104,10 +77,15 @@ export default function NewPage(props: Props) {
     return bffGateway.updateDataset(request);
   }
 
-  function handleSubmitForm(values: FormValues, actions: FormikHelpers<any>) {
+  async function publishDatasetVersion(request: PublishDatasetVersionRequest) {
+    return bffGateway.publishDatasetVersion(request);
+  }
 
+  function handleSubmitForm(values: FormValues, actions: FormikHelpers<any>) {
     // Mapping datasetPrototyping.createDatasetResponseV2 top UpdateDatasetRequest
-    const request = {
+    console.log(session?.user);
+    datasetPrototyping.createDatasetResponseV2.data.authors = [{ name: session?.user?.name }]
+    const datasetUpdateRequest = {
       id: datasetPrototyping.createDatasetResponseV2.id,
       name: values.datasetTitle,
       data: datasetPrototyping.createDatasetResponseV2.data,
@@ -116,17 +94,25 @@ export default function NewPage(props: Props) {
     } as UpdateDatasetRequest;
 
     uploadFiles()
-      .then(() => updateDataset(request))
-      .then(() => datasetCreated(request))
+      .then(() => updateDataset(datasetUpdateRequest))
+      .then(() => {
+        // Mapping to PublishDatasetVersionRequest
+        const request = {
+          datasetId: datasetPrototyping.createDatasetResponseV2.id,
+          tenancies: [datasetPrototyping.createDatasetResponseV2.tenancy],
+          user_id: session?.user?.uid,
+          versionName: datasetPrototyping.createDatasetResponseV2.current_version.name
+        } as PublishDatasetVersionRequest;
+
+        return publishDatasetVersion(request);
+      })
+      .then(() => datasetCreated(datasetUpdateRequest))
       .then(() => actions.setSubmitting(false))
       .catch(error => {
         console.log("Erro when finish the dataset creation:", error);
+        alert("Sorry! Error to create dataset.");
       })
       .finally(() => actions.setSubmitting(false));
-  }
-
-  function onCreateDatasetSuccess(datasetId: string): void {
-    formikContext.setFieldValue("datasetTitle", datasetId, true);
   }
 
   function onUppyStateCreated(uppy: Uppy) {
@@ -153,9 +139,8 @@ export default function NewPage(props: Props) {
     } catch (error) {
       console.log("on-file-added error");
       console.log(error);
-      props?.onCreatedDatasetError?.(error);
     }
-  })
+  }, [datasetPrototyping])
 
   return (
     <LoggedLayout noPadding={false}>
@@ -222,7 +207,6 @@ export default function NewPage(props: Props) {
                             datasetId={datasetPrototyping?.createDatasetResponseV2?.id}
                             userId={datasetPrototyping?.fileUploadAuthTokenResponse?.user?.id}
                             userToken={datasetPrototyping?.fileUploadAuthTokenResponse?.token?.jwt}
-                            onCreateDatasetSuccess={onCreateDatasetSuccess}
                             onUppyStateCreated={onUppyStateCreated} />
                         </div>
                       </TabPanel>
