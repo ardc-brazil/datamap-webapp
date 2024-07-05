@@ -175,3 +175,14 @@ export interface UpdateDatasetRequest {
 
 export interface UpdateDatasetResponse {
 }
+
+
+export interface PublishDatasetVersionRequest {
+    datasetId: string
+    versionName: string
+    user_id: string
+    tenancies: string[]
+}
+
+export interface PublishDatasetVersionResponse {
+}

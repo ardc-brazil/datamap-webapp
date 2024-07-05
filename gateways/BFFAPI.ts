@@ -1,6 +1,6 @@
 import axios from "axios";
 import { UserDetailsResponse } from "../lib/users";
-import { CreateDatasetRequestV2, CreateDatasetResponseV2, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
+import { CreateDatasetRequestV2, CreateDatasetResponseV2, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
 
 
 /**
@@ -73,7 +73,6 @@ export class BFFAPI {
             const response = await axios.post("/api/auth/token", request);
 
             if (response.status == 200) {
-                console.log("Created with success:", response);
                 return response.data;
             }
 
@@ -85,5 +84,29 @@ export class BFFAPI {
         }
 
         return Promise.reject("Error to create file upload token");
+    }
+
+    /**
+     * Publish a dataset version.
+     * 
+     * @param request api request
+     * @returns api response
+     */
+    async publishDatasetVersion(request: PublishDatasetVersionRequest): Promise<PublishDatasetVersionResponse> {
+        try {
+            const versionName = request.versionName;
+            const response = await axios.put(`/api/versions/${versionName}`, request);
+
+            if (response.status == 200) {
+                return response.data;
+            }
+
+            console.log(response);
+        }
+        catch (error) {
+            console.log(error);
+        }
+
+        return Promise.reject("Error to publish a dataset version");
     }
 }

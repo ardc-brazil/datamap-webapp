@@ -1,5 +1,5 @@
 
-import { CreateDatasetRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, GetDatasetDetailsResponse, GetDatasetsResponse, UpdateDatasetRequest } from "../types/BffAPI";
+import { CreateDatasetRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, GetDatasetDetailsResponse, GetDatasetsResponse, UpdateDatasetRequest, PublishDatasetVersionRequest, PublishDatasetVersionResponse } from "../types/BffAPI";
 import { DataFile, DatasetCreationRequest, DatasetInfo } from "../types/GatekeeperAPI";
 import { AppLocalContext } from "./appLocalContext";
 import axiosInstance, { buildHeaders } from "./rpc";
@@ -145,4 +145,30 @@ export async function deleteDataset(context: AppLocalContext, id: string): Promi
         console.log(response);
         return Promise.reject(response);
     }
+}
+
+/**
+ * Publish a dataset version after created.
+ * 
+ * @param context App context
+ * @param request request info to publish a version
+ * @returns Response from published version
+ */
+export async function publishDatasetVersion(context: AppLocalContext, request: PublishDatasetVersionRequest): Promise<PublishDatasetVersionResponse> {
+    try {
+        const datasetId = request.datasetId;
+        const versionName = request.versionName;
+        const response = await axiosInstance.put(
+            `datasets/${datasetId}/versions/${versionName}/publish`,
+            request,
+            buildHeaders(context)
+        );
+
+        return response.data as PublishDatasetVersionResponse;
+    } catch (error) {
+        console.log(error);
+    }
+
+    return Promise.reject("Error on publish a databaset version");
+
 }
