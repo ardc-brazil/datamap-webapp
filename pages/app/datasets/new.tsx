@@ -20,7 +20,9 @@ interface DatasetPrototyping {
   fileUploadAuthTokenResponse: FileUploadAuthTokenResponse
 }
 
-export default function NewPage(props) {
+interface Props {}
+
+export default function NewPage(props: Props) {
   const bffGateway = new BFFAPI();
 
   const { data: session } = useSession();
@@ -103,9 +105,14 @@ export default function NewPage(props) {
   }
 
   function handleSubmitForm(values: FormValues, actions: FormikHelpers<any>) {
+
+    // Mapping datasetPrototyping.createDatasetResponseV2 top UpdateDatasetRequest
     const request = {
       id: datasetPrototyping.createDatasetResponseV2.id,
       name: values.datasetTitle,
+      data: datasetPrototyping.createDatasetResponseV2.data,
+      tenancy: datasetPrototyping.createDatasetResponseV2.tenancy,
+      is_enabled: true,
     } as UpdateDatasetRequest;
 
     uploadFiles()

@@ -122,13 +122,16 @@ export interface CreateDatasetRequestV2 {
 }
 
 enum DesignState {
-    DRAFT = "DRAFT"
+    DRAFT = "DRAFT",
+    PUBLISHED = "PUBLISHED"
 }
 
 export interface CreateDatasetResponseV2 {
     id: string
     name: string
+    data: DatasetInfo
     design_state: DesignState
+    tenancy: string
     versions: [
         {
             id: string
