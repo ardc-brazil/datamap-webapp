@@ -9,6 +9,7 @@ import { TabPanel, TabPanelProps } from "../TabPanel";
 import DataExplorer from "./DataExplorer";
 import { DatasetDescription } from "./DatasetDescription";
 import { GetDatasetDetailsResponse } from "../../../types/BffAPI";
+import DatasetCoverageForm from "../DatasetCoverageForm";
 
 
 interface TabPanelDataObject {
@@ -165,26 +166,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
 
             <div>
               <h6 className="font-semibold py-4">Coverage</h6>
-              <div className="flex gap-28 py-4">
-                <CardItem title="TEMPORAL COVERAGE START DATE">
-                  {props.dataset.data.start_date}
-                </CardItem>
-                <CardItem title="TEMPORAL COVERAGE END DATE">
-                  {props.dataset.data.end_date}
-                </CardItem>
-                <CardItem title="GEOSPATIAL COVERAGE">
-                  {props.dataset.data.location && props.dataset.data.location.location && (
-                    <span>{props.dataset.data.location.location}</span>
-                  )}
-                  {props.dataset.data.location && props.dataset.data.location.latitude && (
-                    <div>
-                      <p>Latitude: {props.dataset.data.location.latitude}</p>
-                      <p>Longitude: {props.dataset.data.location.longitude}</p>
-                    </div>
-                  )}
-                  {!props.dataset.data.location && <span>-</span>}
-                </CardItem>
-              </div>
+              <DatasetCoverageForm dataset={props.dataset} user={props.user}/>
             </div>
             <div>
               <h6 className="font-semibold py-4">Provenance</h6>
