@@ -10,6 +10,7 @@ import DataExplorer from "./DataExplorer";
 import { DatasetDescription } from "./DatasetDescription";
 import { GetDatasetDetailsResponse } from "../../../types/BffAPI";
 import DatasetCoverageForm from "../DatasetCoverageForm";
+import DatasetProvenance from "../DatasetProvenance";
 
 
 interface TabPanelDataObject {
@@ -170,14 +171,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
             </div>
             <div>
               <h6 className="font-semibold py-4">Provenance</h6>
-              <div className="flex gap-28 py-4">
-                <CardItem title="SOURCES">{props.dataset.data.institution}</CardItem>
-              </div>
-              <div className="flex gap-28 py-4">
-                <CardItem title="Collection methodology">
-                  {props.dataset.data.source_instrument} - {props.dataset.data.source}
-                </CardItem>
-              </div>
+              <DatasetProvenance dataset={props.dataset} user={props.user} />
             </div>
 
             <div>
