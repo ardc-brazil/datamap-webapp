@@ -28,15 +28,20 @@ export default function DatasetCoverageForm(props: Props) {
     }
 
     const schema = Yup.object().shape({
-        colaborators: Yup.array()
-            .of(
-                Yup.object().shape({
-                    name: Yup.string()
-                        .max(255, "Name should be less than 255 characters")
-                        .required("Name is required."),
-                    permission: Yup.string().required("Select one")
-                })
-            )
+        coverage: Yup.object().shape({
+            start_date: Yup.date().required("Inform the start date"),
+            end_date: Yup.date().required("Inform the start date"),
+            location: Yup.object().shape({
+                location: Yup.string()
+                    .max(255, "Location name should be less than 255 characters"),
+                latitude: Yup.number()
+                    .min(-90, "must be greather than or equal to -90.o")
+                    .max(90, "must be less than or equal to 90.0"),
+                longitude: Yup.number()
+                    .min(-180, "must be greather than or equal to -180.0")
+                    .max(180, "must be less than or equal to 180.0"),
+            })
+        })
     });
 
     function onSubmit(values, { setSubmitting }) {
