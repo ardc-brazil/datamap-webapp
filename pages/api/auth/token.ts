@@ -46,7 +46,7 @@ router
 
 export default router.handler({
     onError: (err: ResponseError, req, res) => {
-        console.error(err.stack);
+        console.error(err);
         res.status(err.statusCode || 500).end(err.message);
     },
 });
