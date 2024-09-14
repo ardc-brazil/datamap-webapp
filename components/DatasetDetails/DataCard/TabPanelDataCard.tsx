@@ -8,9 +8,10 @@ import { LoadingAnimation } from "../LoadingAnimation";
 import { TabPanel, TabPanelProps } from "../TabPanel";
 import DataExplorer from "./DataExplorer";
 import { DatasetDescription } from "./DatasetDescription";
-import { GetDatasetDetailsResponse } from "../../../types/BffAPI";
+import { GetDatasetDetailsDOIResponse, GetDatasetDetailsResponse } from "../../../types/BffAPI";
 import DatasetCoverageForm from "../DatasetCoverageForm";
 import DatasetProvenance from "../DatasetProvenance";
+import DatasetCitation from "../DatasetCitation";
 
 
 interface TabPanelDataObject {
@@ -24,19 +25,24 @@ export function TabPanelDataCard(props: TabPanelProps) {
   const [isLoading, setLoading] = useState(false);
   const [showUsabilityPopup, setShowUsabilityPopup] = useState(false);
 
+  function onDOIGenerationChangeState(state: string, newDOIState: GetDatasetDetailsDOIResponse) {
+    props.onDOIGenerationChangeState(state, newDOIState);
+  }
+
   useEffect(() => {
     setLoading(true);
     setTimeout(() => {
       // TODO: Create endpoints to get data quality information.
-      setData({
-        usability: "8.75",
-        license: props.dataset.data.license ? licenseMapping[props.dataset.data.license] : "Unknow",
-        updateFrequency: "Quarterly",
-      });
-
-      setLoading(false);
-    }, 1000);
-  }, []);
+      if (props.dataset?.data) {
+        setData({
+          usability: "8.75",
+          license: props.dataset.data.license ? licenseMapping[props.dataset.data.license] : "Unknow",
+          updateFrequency: "Quarterly",
+        });
+        setLoading(false);
+      }
+    }, 500);
+  }, [props.dataset]);
 
   if (isLoading) {
     return (
@@ -149,7 +155,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
           <DataExplorer dataset={props.dataset} />
 
           <hr className="my-4" />
-          <div className="flex flex-col divide-y divide-primary-200 gap-8 mt-16">
+          <div className="flex flex-col divide-y divide-primary-200 gap-8 mt-16 mb-16">
             <h4>Metadata</h4>
             <div className="py-4">
               <h6 className="font-semibold py-4">Colaborators</h6>
@@ -167,7 +173,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
 
             <div>
               <h6 className="font-semibold py-4">Coverage</h6>
-              <DatasetCoverageForm dataset={props.dataset} user={props.user}/>
+              <DatasetCoverageForm dataset={props.dataset} user={props.user} />
             </div>
             <div>
               <h6 className="font-semibold py-4">Provenance</h6>
@@ -175,66 +181,12 @@ export function TabPanelDataCard(props: TabPanelProps) {
             </div>
 
             <div>
-              <h6 className="font-semibold py-4">DOI Citation</h6>
-              <div className="flex gap-28 py-4">
-                <CardItem title="DOI (DIGITAL OBJECT IDENTIFIER)">
-                  {props.dataset.data.citation && (
-                    <a href={props.dataset.data.citation.doi} target="_blank">
-                      {props.dataset.data.citation.doi}
-                    </a>
-                  )}
-                  {!props.dataset.data.citation && <span>-</span>}
-                </CardItem>
-              </div>
-              {props.dataset.data.references && (
-                <div className="flex gap-28 py-4">
-                  <div>
-                    <CardItem title="CITATION TYPE">
-                      <label
-                        htmlFor="apa"
-                        className="w-full cursor-pointer py-2 mx-2"
-                      >
-                        <input
-                          id="apa"
-                          type="radio"
-                          value="citation-type"
-                          name="citation-type"
-                          checked
-                          readOnly
-                          className="w-5 h-5 accent-primary-900"
-                        />
-                        <span className="ml-2 text-sm font-medium text-primary-900 align-top">
-                          APA
-                        </span>
-                      </label>
-                      <label
-                        htmlFor="apa"
-                        className="w-full cursor-pointer py-2 mx-2"
-                      >
-                        <input
-                          id="apa"
-                          type="radio"
-                          value="citation-type"
-                          name="citation-type"
-                          className="w-5 h-5 accent-primary-900"
-                        />
-                        <span className="ml-2 text-sm font-medium text-primary-900 align-top">
-                          BibTeX
-                        </span>
-                      </label>
-                    </CardItem>
-
-                    <div className="my-4">
-                      <fieldset className="border border-solid border-primary-300 p-3">
-                        <legend className="text-sm">Citation:</legend>
-                        <p className="text-primary-600">
-                          {props.dataset.data.references}
-                        </p>
-                      </fieldset>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <h6 className="font-semibold py-4">Citation</h6>
+              <DatasetCitation
+                dataset={props.dataset}
+                user={props.user}
+                onDOIGenerationChangeState={onDOIGenerationChangeState}
+              />
             </div>
           </div>
         </div>
