@@ -12,6 +12,8 @@ import { GetDatasetDetailsDOIResponse, GetDatasetDetailsResponse } from "../../.
 import DatasetCoverageForm from "../DatasetCoverageForm";
 import DatasetProvenance from "../DatasetProvenance";
 import DatasetCitation from "../DatasetCitation";
+import { isDOIManagementEnabled } from "../../../lib/featureFlags";
+import { useSession } from "next-auth/react";
 
 
 interface TabPanelDataObject {
@@ -21,6 +23,7 @@ interface TabPanelDataObject {
 }
 
 export function TabPanelDataCard(props: TabPanelProps) {
+  const { data: session, status } = useSession();
   const [data, setData] = useState(null as TabPanelDataObject);
   const [isLoading, setLoading] = useState(false);
   const [showUsabilityPopup, setShowUsabilityPopup] = useState(false);
@@ -180,14 +183,16 @@ export function TabPanelDataCard(props: TabPanelProps) {
               <DatasetProvenance dataset={props.dataset} user={props.user} />
             </div>
 
-            <div>
-              <h6 className="font-semibold py-4">Citation</h6>
-              <DatasetCitation
-                dataset={props.dataset}
-                user={props.user}
-                onDOIGenerationChangeState={onDOIGenerationChangeState}
-              />
-            </div>
+            {isDOIManagementEnabled(session) &&
+              <div>
+                <h6 className="font-semibold py-4">Citation</h6>
+                <DatasetCitation
+                  dataset={props.dataset}
+                  user={props.user}
+                  onDOIGenerationChangeState={onDOIGenerationChangeState}
+                />
+              </div>
+            }
           </div>
         </div>
       </div>
