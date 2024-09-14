@@ -27,7 +27,6 @@ const APIResponseFixture = {
         database: '',
         end_date: '1970-02-01T03:00:00.000Z',
         location: { location: 'Global' },
-        dataFiles: [[Object]],
         data_type: '',
         grid_type: '',
         reference: [],
