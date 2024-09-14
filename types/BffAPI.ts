@@ -157,7 +157,12 @@ export interface GetDatasetsDetasetDetailsResponse {
         name: string
         design_state: DesignState,
         is_enabled: boolean,
-        files: []
+        files: [],
+        doi: {
+            identifier: string
+            status: GetDatasetDetailsDOIResponseState
+            linkType: GetDatasetDetailsDOIResponseLink
+        }
     }
 }
 
