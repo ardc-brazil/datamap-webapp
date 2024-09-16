@@ -5,8 +5,9 @@ import 'react-material-symbols/outlined'; // Place in your root app file. There 
 import * as Yup from 'yup';
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { UserDetailsResponse } from "../../lib/users";
-import { CreateDOIRequest, GetDatasetDetailsDOIResponse, GetDatasetDetailsResponse } from "../../types/BffAPI";
+import { CreateDOIRequest, DeleteDOIRequest, GetDatasetDetailsDOIResponse, GetDatasetDetailsResponse } from "../../types/BffAPI";
 import Alert from "../base/Alert";
+import Modal from "../base/PopupModal";
 import { CardItem } from "./CardItem";
 
 const bffGateway = new BFFAPI();
@@ -28,6 +29,26 @@ export default function DatasetCitation(props: Props) {
 
     function onRegisterAutoDOIClick(): void {
         setGenerating(true);
+    }
+
+    function onDeleteDOIConfirmedClick() {
+        console.log("delete doi");
+        const req = {
+            doiId: currentDOI.id
+        } as DeleteDOIRequest;
+
+        bffGateway.deleteDOI(req)
+            .then(result => {
+                // TODO: improve success message
+                console.log("DOI delete with success", result);
+
+                // Clean the current DOI registered
+                setCurrentDOI(null);
+            })
+            .catch(reason => {
+                // TODO: improve error message
+                console.log("DOI delete error", reason);
+            });
     }
 
     function onManualDOIFormEditionCancel() {
@@ -63,7 +84,6 @@ export default function DatasetCitation(props: Props) {
         />
     }
 
-
     return <CitationDOIViewer
         dataset={props.dataset}
         user={props.user}
@@ -71,6 +91,7 @@ export default function DatasetCitation(props: Props) {
         creationMessage={DOICreationMessage}
         onRegisterManualDOIClick={onRegisterManualDOIClick}
         onRegisterAutoDOIClick={onRegisterAutoDOIClick}
+        onDeleteDOIConfirmedClick={onDeleteDOIConfirmedClick}
     />
 }
 
@@ -253,6 +274,7 @@ interface CitationDOIViewerProps extends Props {
     creationMessage: string
     onRegisterAutoDOIClick(): void
     onRegisterManualDOIClick(): void
+    onDeleteDOIConfirmedClick(): void
 }
 
 /**
@@ -264,6 +286,7 @@ interface CitationDOIViewerProps extends Props {
  */
 function CitationDOIViewer(props: CitationDOIViewerProps) {
     const [showAlert, setShowAlert] = useState(!!props.creationMessage);
+    const [showCheckDOIDeletionModal, setShowCheckDOIDeletionModal] = useState(false);
 
     function RegisterManualDOIButton(props) {
         return (
@@ -285,6 +308,11 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
         );
     }
 
+    function onDeleteDOIConfirmedClick() {
+        props.onDeleteDOIConfirmedClick();
+        setShowCheckDOIDeletionModal(false);
+    }
+
     function getDOIURL(doi: GetDatasetDetailsDOIResponse): string {
         return `https://doi.org/${doi.identifier}`
     }
@@ -301,6 +329,19 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
                     </p>
                 </div>
                 }
+
+                <Modal
+                    title="DOI Deletion confirmation"
+                    show={showCheckDOIDeletionModal}
+                    confimButtonText="Yes"
+                    cancel={() => setShowCheckDOIDeletionModal(false)}
+                    confim={onDeleteDOIConfirmedClick}
+                >
+                    <div>
+                        <p className="font-bold">{`Are you sure that you want to delete "${props.currentDOI.identifier}" DOI?`}</p>
+                        <p>DOI deletion is permanent. Once deleted, it cannot be recovered.</p>
+                    </div>
+                </Modal>
                 <div className="flex flex-row w-full items-center">
 
                     <p className="text-primary-500 w-full">
@@ -314,7 +355,8 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
                                 {props.currentDOI.status}
                             </CardItem>
                             <CardItem title="Navegate to next state">
-                                <button type="submit" className="btn-primary-outline btn-small" >Finadble</button>
+                                <button type="submit" className="btn-primary btn-small">Findable</button>
+                                <button className="btn-primary btn-small bg-error-900" onClick={() => setShowCheckDOIDeletionModal(true)}>Delete</button>
                             </CardItem>
                         </div>
                     </p>

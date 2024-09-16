@@ -50,3 +50,13 @@ export async function createDOI(context: AppLocalContext, req: CreateDOIRequest)
     //     message: "Invalid identifier"
     // }
 }
+
+
+/**
+ * Delete a new DOI.
+ * @param request minimum info to delete a DOI.
+ * @returns 
+ */
+export async function deleteDOI(context: AppLocalContext, doiId: string): Promise<void | ErrorMessage> {
+    // TODO: Implement GK integration    
+}

@@ -49,6 +49,7 @@ export interface GetDatasetDetailsVersionResponse {
 }
 
 export interface GetDatasetDetailsDOIResponse {
+    id: string
     identifier: string
     status: GetDatasetDetailsDOIResponseState
     linkType: GetDatasetDetailsDOIResponseLink
@@ -262,4 +263,8 @@ export interface CreateDOIResponse {
 export interface ErrorMessage {
     code: string
     message: string
+}
+
+export interface DeleteDOIRequest {
+    doiId: string
 }

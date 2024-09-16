@@ -1,6 +1,6 @@
 import axios from "axios";
 import { UserDetailsResponse } from "../lib/users";
-import { CreateDatasetRequestV2, CreateDatasetResponseV2, CreateDOIRequest, CreateDOIResponse, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
+import { CreateDatasetRequestV2, CreateDatasetResponseV2, CreateDOIRequest, CreateDOIResponse, DeleteDOIRequest, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
 
 
 /**
@@ -112,7 +112,7 @@ export class BFFAPI {
 
     /**
      * Create a new DOI for a specific dataset.
-     * @param createDOIRequest api request
+     * @param request api request
      * @returns api response
      */
     async createDOI(request: CreateDOIRequest): Promise<CreateDOIResponse> {
@@ -131,4 +131,24 @@ export class BFFAPI {
         return Promise.reject("Error to generate a DOI");
     }
 
+    /**
+     * Delete a DOI for a specific dataset.
+     * @param request api request
+     * @returns api response
+     */
+    async deleteDOI(request: DeleteDOIRequest): Promise<void> {
+        try {
+            const response = await axios.delete(`/api/dois/${request.doiId}`);
+
+            if (response.status == 200) {
+                return response.data;
+            }
+
+            console.log(response);
+        }
+        catch (error) {
+            console.log(error);
+        }
+        return Promise.reject("Error to delete a DOI");
+    }
 }
