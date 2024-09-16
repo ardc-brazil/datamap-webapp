@@ -267,5 +267,6 @@ export interface ErrorMessage {
 }
 
 export interface DeleteDOIRequest {
-    doiId: string
+    datasetId: string
+    versionId: string
 }

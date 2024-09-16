@@ -3,7 +3,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import { NewContext } from "../../../lib/appLocalContext";
 import auth from "../../../lib/auth";
-import { createDOI } from "../../../lib/doi";
+import { createDOI, deleteDOI } from "../../../lib/doi";
+import { DeleteDOIRequest } from "../../../types/BffAPI";
 import { ResponseError } from "../../../types/ResponseError";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
@@ -17,6 +18,16 @@ router
             res.json(result);
         } catch (error) {
             res.status(error?.status).end()
+        }
+    })
+    .delete(async (req, res) => {
+        const context = await NewContext(req);
+        try {
+            await deleteDOI(context, req.body as DeleteDOIRequest);
+            res.status(200).end();
+        } catch (e) {
+            console.log(e);
+            res.status(e.response.status).end();
         }
     });
 

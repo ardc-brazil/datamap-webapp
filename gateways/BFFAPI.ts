@@ -138,7 +138,7 @@ export class BFFAPI {
      */
     async deleteDOI(request: DeleteDOIRequest): Promise<void> {
         try {
-            const response = await axios.delete(`/api/dois/${request.doiId}`);
+            const response = await axios.delete(`/api/dois/`, { data: request });
 
             if (response.status == 200) {
                 return response.data;

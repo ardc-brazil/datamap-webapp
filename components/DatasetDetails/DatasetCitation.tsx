@@ -34,7 +34,8 @@ export default function DatasetCitation(props: Props) {
     function onDeleteDOIConfirmedClick() {
         console.log("delete doi");
         const req = {
-            doiId: currentDOI.id
+            datasetId: props.dataset.id,
+            versionId: props.dataset.current_version.id
         } as DeleteDOIRequest;
 
         bffGateway.deleteDOI(req)
@@ -356,7 +357,13 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
                             </CardItem>
                             <CardItem title="Navegate to next state">
                                 <button type="submit" className="btn-primary btn-small">Findable</button>
-                                <button className="btn-primary btn-small bg-error-900" onClick={() => setShowCheckDOIDeletionModal(true)}>Delete</button>
+                                <button 
+                                    className="btn-primary btn-small bg-error-900 disabled:focus:bg-error-900 disabled:hover:bg-error-900 disabled:cursor-not-allowed"
+                                    onClick={() => setShowCheckDOIDeletionModal(true)}
+                                    disabled={props.currentDOI.status !== "DRAFT"}
+                                >
+                                    Delete
+                                </button>
                             </CardItem>
                         </div>
                     </p>
