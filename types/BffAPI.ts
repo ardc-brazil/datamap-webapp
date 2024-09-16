@@ -160,6 +160,7 @@ export interface GetDatasetsDetasetDetailsResponse {
         is_enabled: boolean,
         files: [],
         doi: {
+            id: string
             identifier: string
             status: GetDatasetDetailsDOIResponseState
             linkType: GetDatasetDetailsDOIResponseLink
