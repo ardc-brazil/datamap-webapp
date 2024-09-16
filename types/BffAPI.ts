@@ -242,3 +242,24 @@ export interface PublishDatasetVersionRequest {
 
 export interface PublishDatasetVersionResponse {
 }
+
+export interface CreateDOIRequest {
+    datasetId: string
+    versionId: string
+    identifier?: string
+    // TODO: This is conflicts with GetDatasetDetailsDOIResponseLink
+    // Should we use registerMode or linkType?
+    registerMode: string
+}
+
+export interface CreateDOIResponse {
+    id: string
+    identifier: string,
+    status: string,
+    mode: string,
+}
+
+export interface ErrorMessage {
+    code: string
+    message: string
+}

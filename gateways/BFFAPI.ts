@@ -1,6 +1,6 @@
 import axios from "axios";
 import { UserDetailsResponse } from "../lib/users";
-import { CreateDatasetRequestV2, CreateDatasetResponseV2, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
+import { CreateDatasetRequestV2, CreateDatasetResponseV2, CreateDOIRequest, CreateDOIResponse, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
 
 
 /**
@@ -109,4 +109,26 @@ export class BFFAPI {
 
         return Promise.reject("Error to publish a dataset version");
     }
+
+    /**
+     * Create a new DOI for a specific dataset.
+     * @param createDOIRequest api request
+     * @returns api response
+     */
+    async createDOI(request: CreateDOIRequest): Promise<CreateDOIResponse> {
+        try {
+            const response = await axios.post(`/api/dois/`, request);
+
+            if (response.status == 200) {
+                return response.data;
+            }
+
+            console.log(response);
+        }
+        catch (error) {
+            console.log(error);
+        }
+        return Promise.reject("Error to generate a DOI");
+    }
+
 }
