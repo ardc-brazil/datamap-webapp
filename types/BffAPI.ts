@@ -163,7 +163,7 @@ export interface GetDatasetsDetasetDetailsResponse {
             id: string
             identifier: string
             status: GetDatasetDetailsDOIResponseState
-            mode: GetDatasetDetailsDOIResponseRegisterMode
+            registerMode: GetDatasetDetailsDOIResponseRegisterMode
         }
     }
 }
