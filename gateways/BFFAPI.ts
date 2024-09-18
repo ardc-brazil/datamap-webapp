@@ -1,13 +1,12 @@
 import axios from "axios";
 import { UserDetailsResponse } from "../lib/users";
-import { CreateDatasetRequestV2, CreateDatasetResponseV2, CreateDOIRequest, CreateDOIResponse, DeleteDOIRequest, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
+import { CreateDatasetRequestV2, CreateDatasetResponseV2, CreateDOIRequest, CreateDOIResponse, DeleteDOIRequest, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, NavigateDOIStatusRequest, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
 
 
 /**
  * Gateway implementation for nextjs BFF.
  */
 export class BFFAPI {
-
     /**
      * Create a new dataset.
      * @param request Dataset creation request
@@ -151,4 +150,25 @@ export class BFFAPI {
         }
         return Promise.reject("Error to delete a DOI");
     }
+
+    /**
+     * Navigate DOI to another status
+     * @param request api request
+     */
+    async navigateDOIStatus(request: NavigateDOIStatusRequest) {
+        try {
+            const response = await axios.put(`/api/dois/`, { data: request });
+
+            if (response.status == 200) {
+                return response.data;
+            }
+
+            console.log(response);
+        }
+        catch (error) {
+            console.log(error);
+        }
+        return Promise.reject("Error to update navigate to a new DOI status");
+    }
+
 }

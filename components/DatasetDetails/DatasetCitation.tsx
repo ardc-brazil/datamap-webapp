@@ -5,7 +5,7 @@ import 'react-material-symbols/outlined'; // Place in your root app file. There 
 import * as Yup from 'yup';
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { UserDetailsResponse } from "../../lib/users";
-import { CreateDOIRequest, DeleteDOIRequest, GetDatasetDetailsDOIResponse, GetDatasetDetailsResponse } from "../../types/BffAPI";
+import { CreateDOIRequest, DeleteDOIRequest, GetDatasetDetailsDOIResponse, GetDatasetDetailsDOIResponseState, GetDatasetDetailsResponse, NavigateDOIStatusRequest } from "../../types/BffAPI";
 import Alert from "../base/Alert";
 import Modal from "../base/PopupModal";
 import { CardItem } from "./CardItem";
@@ -68,6 +68,26 @@ export default function DatasetCitation(props: Props) {
         setGenerating(false);
     }
 
+    function onNavigateTo(status: GetDatasetDetailsDOIResponseState) {
+        // TODO: Call API when this feature was unblocked to the users
+        const req = {
+            datasetId: props.dataset.id,
+            versionId: currentDOI.id,
+            status: status
+        } as NavigateDOIStatusRequest;
+
+        bffGateway.navigateDOIStatus(req)
+            .then(result => {
+                // TODO: improve success message
+                console.log("DOI status navigated with success", result);
+                setCurrentDOI({ ...currentDOI, status: status });
+            })
+            .catch(reason => {
+                // TODO: improve error message
+                console.log("DOI navigate status error", reason);
+            });
+    }
+
     if (generating) {
         return <CitationAutoDOIForm
             dataset={props.dataset}
@@ -93,6 +113,7 @@ export default function DatasetCitation(props: Props) {
         onRegisterManualDOIClick={onRegisterManualDOIClick}
         onRegisterAutoDOIClick={onRegisterAutoDOIClick}
         onDeleteDOIConfirmedClick={onDeleteDOIConfirmedClick}
+        onNavigateTo={onNavigateTo}
     />
 }
 
@@ -276,6 +297,7 @@ interface CitationDOIViewerProps extends Props {
     onRegisterAutoDOIClick(): void
     onRegisterManualDOIClick(): void
     onDeleteDOIConfirmedClick(): void
+    onNavigateTo(status: GetDatasetDetailsDOIResponseState): void
 }
 
 /**
@@ -312,6 +334,10 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
     function onDeleteDOIConfirmedClick() {
         props.onDeleteDOIConfirmedClick();
         setShowCheckDOIDeletionModal(false);
+    }
+
+    function onNavigateTo(status: GetDatasetDetailsDOIResponseState) {
+        props.onNavigateTo(status);
     }
 
     function getDOIURL(doi: GetDatasetDetailsDOIResponse): string {
@@ -355,9 +381,14 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
                             <CardItem title="Status">
                                 {props.currentDOI.status}
                             </CardItem>
-                            <CardItem title="Navegate to next state">
-                                <button type="submit" className="btn-primary btn-small">Findable</button>
-                                <button 
+                            <CardItem title="Navigate to next state">
+                                <NavigateToNextStatusButton
+                                    currentDOI={props.currentDOI}
+                                    onNavigateTo={onNavigateTo}
+                                />
+                            </CardItem>
+                            <CardItem title="Delete DOI">
+                                <button
                                     className="btn-primary btn-small bg-error-900 disabled:focus:bg-error-900 disabled:hover:bg-error-900 disabled:cursor-not-allowed"
                                     onClick={() => setShowCheckDOIDeletionModal(true)}
                                     disabled={props.currentDOI.status !== "DRAFT"}
@@ -382,4 +413,51 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
             <RegisterAutoDOIButton onClick={props.onRegisterAutoDOIClick} />
         </div>
     )
+}
+
+
+interface NavigateToNextStatusButtonProps {
+    onNavigateTo(status: GetDatasetDetailsDOIResponseState): void;
+    currentDOI: GetDatasetDetailsDOIResponse
+}
+
+function NavigateToNextStatusButton(props: NavigateToNextStatusButtonProps) {
+
+    function onClick() {
+
+        if (props.currentDOI.status == GetDatasetDetailsDOIResponseState.DRAFT) {
+            props.onNavigateTo(GetDatasetDetailsDOIResponseState.REGISTERED);
+            return;
+        }
+
+        if (props.currentDOI.status == GetDatasetDetailsDOIResponseState.REGISTERED) {
+            props.onNavigateTo(GetDatasetDetailsDOIResponseState.FINDABLE);
+            return;
+        }
+    }
+
+    function getButtonText(status: GetDatasetDetailsDOIResponseState) {
+        if (status == GetDatasetDetailsDOIResponseState.DRAFT) {
+            return "Registered";
+        }
+
+        return "Findable";
+    }
+
+    // Supress button show if the current DOI status is final.
+    if (props.currentDOI.status == GetDatasetDetailsDOIResponseState.FINDABLE) {
+        return <span><small>FINDABLE is a final state, is not possible to navigate to the next state</small></span>;
+    }
+
+    return (
+        <>
+            <button
+                type="submit"
+                className="btn-primary btn-small"
+                onClick={onClick}
+            >
+                {getButtonText(props.currentDOI.status)}
+            </button>
+        </>
+    );
 }
