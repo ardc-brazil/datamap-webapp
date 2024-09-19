@@ -1,4 +1,4 @@
-import { CreateDOIRequest, CreateDOIResponse, ErrorMessage } from "../types/BffAPI";
+import { CreateDOIRequest, CreateDOIResponse, DeleteDOIRequest, ErrorMessage } from "../types/BffAPI";
 import { AppLocalContext } from "./appLocalContext";
 
 
@@ -49,4 +49,15 @@ export async function createDOI(context: AppLocalContext, req: CreateDOIRequest)
     //     code: "234",
     //     message: "Invalid identifier"
     // }
+}
+
+
+/**
+ * Delete a new DOI.
+ * @param request minimum info to delete a DOI.
+ * @returns 
+ */
+export async function deleteDOI(context: AppLocalContext, request: DeleteDOIRequest): Promise<void | ErrorMessage> {
+    // TODO: Implement GK integration   
+    console.log("Call GK API with:", request);
 }
