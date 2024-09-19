@@ -13,7 +13,7 @@ After install nodejs version, run the npm commands:
 npm install
 ```
 
-Run the app locally, in development mode, using:
+Run the app locally, in development mode, using:`
 
 ```sh
 npm run dev

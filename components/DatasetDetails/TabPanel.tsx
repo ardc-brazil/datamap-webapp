@@ -1,8 +1,9 @@
 import { Props } from "../../components/types/BaseInterfaces";
 import { UserDetailsResponse } from "../../lib/users";
-import { GetDatasetDetailsResponse } from "../../types/BffAPI";
+import { GetDatasetDetailsDOIResponse, GetDatasetDetailsResponse } from "../../types/BffAPI";
 
 export interface TabPanelProps extends Props {
+  onDOIGenerationChangeState?(state: string, newDOIState: GetDatasetDetailsDOIResponse): unknown;
   title: String;
   dataset?: GetDatasetDetailsResponse;
   user?: UserDetailsResponse
