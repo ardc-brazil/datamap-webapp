@@ -16,7 +16,7 @@ export function CardItem(props: Props) {
         </span>
         {props.info &&
           <div className='has-tooltip cursor-default inline'>
-            <span className='tooltip rounded shadow-lg p-1 bg-gray-100 -mt-8 bg-primary-900 text-primary-50 max-w-xs'>
+            <span className='tooltip rounded shadow-lg p-1 bg-gray-100 -mt-8 bg-primary-900 text-primary-50 font-normal max-w-xs'>
               {props.info}
             </span>
             &nbsp;<MaterialSymbol icon="info" size={16} grade={-25} weight={400} className="align-bottom inline" />
