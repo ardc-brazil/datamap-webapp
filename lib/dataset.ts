@@ -1,14 +1,10 @@
 
-import { CreateDatasetRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, GetDatasetDetailsResponse, GetDatasetsResponse, UpdateDatasetRequest, PublishDatasetVersionRequest, PublishDatasetVersionResponse } from "../types/BffAPI";
-import { DataFile, DatasetCreationRequest, DatasetInfo } from "../types/GatekeeperAPI";
+import { CreateDatasetRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, GetDatasetDetailsResponse, GetDatasetsResponse, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest } from "../types/BffAPI";
+import { DatasetCreationRequest, DatasetInfo } from "../types/GatekeeperAPI";
 import { AppLocalContext } from "./appLocalContext";
 import axiosInstance, { buildHeaders } from "./rpc";
 
 function toDatasetInfo(datasetRequest: CreateDatasetRequest): DatasetInfo {
-    const dataFiles = datasetRequest?.urls?.map(
-        x => ({ path: x.url } as DataFile)
-    );
-
     return {
         id: "",
         name: datasetRequest.datasetTitle ?? datasetRequest?.title ?? "none",
@@ -38,8 +34,6 @@ function toDatasetInfo(datasetRequest: CreateDatasetRequest): DatasetInfo {
         contacts: null,
         colaborators: null,
         reference: [],
-        // TODO: deprecate dataFiles, we should always use the data files in version
-        dataFiles: dataFiles ?? [],
         additional_information: [],
         level: "",
         resolution: {

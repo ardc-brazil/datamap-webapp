@@ -14,15 +14,16 @@ export default function DataExplorer(props: Props) {
   // I added this to move the .dataset.data.dataFiles to the .current_version.files
   // if the version is empty. This will be used during the transition from Remove File upload
   // to Update data files to the Datamap platform data storage.
-  if (props.dataset?.data?.dataFiles?.length && props.dataset?.current_version?.files?.length <= 0) {
-    props.dataset.current_version.files = props.dataset?.data?.dataFiles
-      ?.map((item, idx) => (
-        {
-          id: String(idx),
-          name: item.path
-        } as GetDatasetDetailsVersionFileResponse
-      ))
-  }
+  // FIX: This code was commented because now datafiles come from version. This must be fixed.
+  // if (props.dataset?.data?.dataFiles?.length && props.dataset?.current_version?.files?.length <= 0) {
+  //   props.dataset.current_version.files = props.dataset?.data?.dataFiles
+  //     ?.map((item, idx) => (
+  //       {
+  //         id: String(idx),
+  //         name: item.path
+  //       } as GetDatasetDetailsVersionFileResponse
+  //     ))
+  // }
 
   // const [dataExplorerCollapsed, setDataExplorerCollapsed] = useState(false);
   const [loadingTable, setLoadingTable] = useState(false);

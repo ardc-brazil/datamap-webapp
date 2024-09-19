@@ -24,13 +24,6 @@ export interface DatasetResponse {
     is_enabled: boolean
 }
 
-/**
- * A data file from a dataset.
- */
-export interface DataFile {
-    path: string,
-}
-
 export interface DatasetInfo {
     id: string,
     name: string,
@@ -59,7 +52,6 @@ export interface DatasetInfo {
         permission: string
     }[],
     reference: any[],
-    dataFiles: DataFile[],
     additional_information: any[],
     level: string,
     resolution: Resolution,
