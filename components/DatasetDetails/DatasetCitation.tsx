@@ -1,14 +1,17 @@
-import { ErrorMessage, Field, Form, Formik } from "formik"
-import { useState } from 'react'
-import * as Yup from 'yup'
-import { UserDetailsResponse } from "../../lib/users"
-import { GetDatasetDetailsDOIResponse, GetDatasetDetailsDOIResponseLink, GetDatasetDetailsDOIResponseState, GetDatasetDetailsResponse } from "../../types/BffAPI"
-import { CardItem } from "./CardItem"
+import { ErrorMessage, Field, Form, Formik } from "formik";
+import { useEffect, useState } from 'react';
+import { MaterialSymbol } from 'react-material-symbols';
+import 'react-material-symbols/outlined'; // Place in your root app file. There are also `sharp` and `outlined` variants.
+import * as Yup from 'yup';
+import { BFFAPI } from "../../gateways/BFFAPI";
+import { UserDetailsResponse } from "../../lib/users";
+import { CreateDOIRequest, GetDatasetDetailsDOIResponse, GetDatasetDetailsResponse } from "../../types/BffAPI";
+import Alert from "../base/Alert";
+import { CardItem } from "./CardItem";
+
+const bffGateway = new BFFAPI();
 
 interface Props {
-    // TODO: this onDOIGenerationChangeState mustn't be spread for all inner components
-    onDOIGenerationChangeState?(state: string, newDOIState: GetDatasetDetailsDOIResponse): unknown
-
     dataset: GetDatasetDetailsResponse
     user?: UserDetailsResponse
 }
@@ -16,94 +19,118 @@ interface Props {
 export default function DatasetCitation(props: Props) {
     const [editing, setEditing] = useState(false);
     const [generating, setGenerating] = useState(false);
+    const [currentDOI, setCurrentDOI] = useState(props.dataset.current_version.doi)
+    const [DOICreationMessage, setDOICreationMessage] = useState("");
 
-    function onRegisterManualDOI() {
+    function onRegisterManualDOIClick() {
         setEditing(true);
     }
 
-    function onRegisterAutoDOI() {
+    function onRegisterAutoDOIClick(): void {
         setGenerating(true);
     }
 
-    function omManualDOIFormEditionCancel() {
+    function onManualDOIFormEditionCancel() {
         setEditing(false);
     }
 
-    function onGenerationDone(state: string, newDOIState: GetDatasetDetailsDOIResponse) {
-        console.log("onGenerationDone");
+    function onManualDOICreatedWithSuccess(DOIGenerated: GetDatasetDetailsDOIResponse) {
+        setCurrentDOI(DOIGenerated);
+        setDOICreationMessage("DOI created with success.");
+        setEditing(false);
+    }
 
-        debugger;
-        props.onDOIGenerationChangeState(state, newDOIState);
+    function onAutoDOICreatedWithSuccess(DOIGenerated: GetDatasetDetailsDOIResponse) {
+        setCurrentDOI(DOIGenerated);
+        setDOICreationMessage("DOI Generated with success.");
         setGenerating(false);
     }
 
-
-
-    if (hasDOIRegistered(props?.dataset) && !editing) {
-        return <CitationDOIViewer dataset={props.dataset} user={props.user} />
-    }
-
     if (generating) {
-        return (
-            <CitationGeneratingViewer
-                dataset={props.dataset}
-                user={props.user}
-                onDOIGenerationChangeState={onGenerationDone} />
-        )
-    }
-
-    if (editing) {
-        return <CitationManualDOIFormEdition
+        return <CitationAutoDOIForm
             dataset={props.dataset}
             user={props.user}
-            omManualDOIFormEditionCancel={omManualDOIFormEditionCancel}
+            onAutoDOICreatedWithSuccess={onAutoDOICreatedWithSuccess}
         />
     }
 
-    return <CitationEmpty
+    if (editing) {
+        return <CitationManualDOIForm
+            dataset={props.dataset}
+            user={props.user}
+            onManualDOIFormEditionCancel={onManualDOIFormEditionCancel}
+            onManualDOICreatedWithSuccess={onManualDOICreatedWithSuccess}
+        />
+    }
+
+
+    return <CitationDOIViewer
         dataset={props.dataset}
         user={props.user}
-        onRegisterManualDOI={onRegisterManualDOI}
-        onGenerateDOI={onRegisterAutoDOI}
+        currentDOI={currentDOI}
+        creationMessage={DOICreationMessage}
+        onRegisterManualDOIClick={onRegisterManualDOIClick}
+        onRegisterAutoDOIClick={onRegisterAutoDOIClick}
     />
 }
 
 interface CitationGeneratingViewerProps extends Props {
-    onDOIGenerationChangeState: any
-
+    onAutoDOICreatedWithSuccess(DOIGenerated: GetDatasetDetailsDOIResponse): void
 }
-function CitationGeneratingViewer(props: CitationGeneratingViewerProps) {
-    setTimeout(() => {
-        // TODO: this a fake doi state.
-        // The real value must come from API.
-        //
-        // TODO: check error state during creation.
-        const newFakeDOIState = {
-            identifier: "10.1000/182",
-            status: GetDatasetDetailsDOIResponseState.REGISTERED,
-            linkType: GetDatasetDetailsDOIResponseLink.AUTO,
-        }
 
-        props.onDOIGenerationChangeState("done", newFakeDOIState);
-    }, 3000);
+function CitationAutoDOIForm(props: CitationGeneratingViewerProps) {
+    useEffect(() => {
+        const createDOIRequest = {
+            datasetId: props.dataset.id,
+            versionId: props.dataset.current_version.id,
+            // TODO: Create enum for this value
+            registerMode: "AUTO"
+        } as CreateDOIRequest;
+
+        bffGateway.createDOI(createDOIRequest)
+            .then(result => {
+                props.onAutoDOICreatedWithSuccess({
+                    identifier: result.identifier,
+                    status: result.status,
+                    linkType: result.mode,
+                } as GetDatasetDetailsDOIResponse);
+            })
+            .catch(reason => {
+                // TODO: improve error handler
+                console.log(reason);
+            })
+    });
+
+    function GeneratingLoadingMessage() {
+        return <p>
+            <div role="status">
+                {/* TODO: Convert it to MaterialSymbols */}
+                <MaterialSymbol icon="progress_activity" size={32} grade={-25} weight={400}
+                    className="align-middle animate-spin"
+                />
+                <span className="sr-only">Loading...</span>
+                <span className="pl-4">We are generating your DOI.</span>
+            </div>
+        </p>
+    }
 
     return (
-        <div>We are generating your DOI.</div>
+        // TODO: Show error message and create a retry button.
+        <GeneratingLoadingMessage />
     )
-
 }
 
 interface CitationEditionProps extends Props {
-    omManualDOIFormEditionCancel: any;
-
+    onManualDOIFormEditionCancel: any;
+    onManualDOICreatedWithSuccess(DOIGenerated: GetDatasetDetailsDOIResponse);
 }
+
 /**
  * Register manual citation edit form.
  * @param props 
  * @returns 
  */
-function CitationManualDOIFormEdition(props: CitationEditionProps) {
-
+function CitationManualDOIForm(props: CitationEditionProps) {
     const schema = Yup.object().shape({
         doi: Yup.object().shape({
             identifier: Yup.string()
@@ -114,8 +141,34 @@ function CitationManualDOIFormEdition(props: CitationEditionProps) {
     });
 
 
-    function onSubmit(values, { setSubmitting }) {
+    // TODO: Check if this "async" in "onSubmit" can cause problems
+    async function onSubmit(values, { setSubmitting }) {
         // TODO: implement a dataset update after manual DOI is validated
+        setSubmitting(true);
+
+        try {
+            const createDOIRequest = {
+                datasetId: props.dataset.id,
+                versionId: props.dataset.current_version.id,
+                identifier: values.doi.identifier,
+                // TODO: Create enum for this value
+                registerMode: "MANUAL"
+            } as CreateDOIRequest;
+
+            const result = await bffGateway.createDOI(createDOIRequest)
+            props.onManualDOICreatedWithSuccess({
+                identifier: result.identifier,
+                status: result.status,
+                linkType: result.mode,
+            } as GetDatasetDetailsDOIResponse);
+
+        } catch (error) {
+            // TODO: Improve error handler
+            console.log(error);
+            alert("Sorry! Error...");
+        } finally {
+            setSubmitting(false);
+        }
     }
 
     return (
@@ -147,7 +200,7 @@ function CitationManualDOIFormEdition(props: CitationEditionProps) {
                                                             id={`doi.identifier`}
                                                             name={`doi.identifier`}
                                                             className="invalid:border-error-500 border"
-                                                            placeholder="https://doi.org/10.1000/182"
+                                                            placeholder="10.1000/182"
                                                         />
                                                         <ErrorMessage
                                                             name={`doi.identifier`}
@@ -160,7 +213,7 @@ function CitationManualDOIFormEdition(props: CitationEditionProps) {
                                         </div>
                                     </div>
                                     <div className="flex w-64 h-10 gap-2 pl-4">
-                                        <CancelEditionButton onClick={props.omManualDOIFormEditionCancel} />
+                                        <CancelEditionButton onClick={props.onManualDOIFormEditionCancel} />
                                         <button type="submit" className="btn-primary btn-small" disabled={isSubmitting}>Save</button>
                                     </div>
                                 </div>
@@ -190,45 +243,16 @@ function CancelEditionButton(props) {
 }
 
 
-interface PropsCitationEmpty extends Props {
-    onGenerateDOI: any
-    onRegisterManualDOI: any;
-}
-
-/**
- * Handles a empty citation.
- * @param props 
- * @returns 
- */
-function CitationEmpty(props: PropsCitationEmpty) {
-    return (
-        <div className="text-center">
-            <p>This dataset does not have a registered DOI. Would you like to register one?</p>
-            <p><small>You can choose to manually enter an existing DOI or generate a new one automatically.</small></p>
-            <RegisterManualDOIButton onClick={props.onRegisterManualDOI} />
-            <RegisterAutoDOIButton onClick={props.onGenerateDOI} />
-        </div>
-    )
-}
-
-function RegisterManualDOIButton(props) {
-    return (
-        <button
-            className={`btn-primary-outline btn-small h-8 w-fit`}
-            onClick={props.onClick}>
-            Register Manual DOI
-        </button>
-    );
-}
-
-function RegisterAutoDOIButton(props) {
-    return (
-        <button
-            className={`btn-primary btn-small h-8 w-fit`}
-            onClick={props.onClick}>
-            Generate DOI Automatically
-        </button>
-    );
+interface CitationDOIViewerProps extends Props {
+    currentDOI: GetDatasetDetailsDOIResponse
+    // TODO: Improve creationMessage layout error.
+    // DOICreationState: {
+    //     isError: boolean,
+    //     message: string,
+    // }
+    creationMessage: string
+    onRegisterAutoDOIClick(): void
+    onRegisterManualDOIClick(): void
 }
 
 /**
@@ -238,98 +262,75 @@ function RegisterAutoDOIButton(props) {
  * @param props 
  * @returns 
  */
-function CitationDOIViewer(props: Props) {
+function CitationDOIViewer(props: CitationDOIViewerProps) {
+    const [showAlert, setShowAlert] = useState(!!props.creationMessage);
 
-    const doi = props.dataset.current_version.doi;
+    function RegisterManualDOIButton(props) {
+        return (
+            <button
+                className={`btn-primary-outline btn-small h-8 w-fit`}
+                onClick={props.onClick}>
+                Register Manual DOI
+            </button>
+        );
+    }
+
+    function RegisterAutoDOIButton(props) {
+        return (
+            <button
+                className={`btn-primary btn-small h-8 w-fit`}
+                onClick={props.onClick}>
+                Generate DOI Automatically
+            </button>
+        );
+    }
 
     function getDOIURL(doi: GetDatasetDetailsDOIResponse): string {
         return `https://doi.org/${doi.identifier}`
     }
 
-    return (
-        <div className="flex flex-row w-full items-center">
-            <p className="text-primary-500 w-full">
-                <div className="flex gap-28 py-4">
-                    <CardItem title="DOI (DIGITAL OBJECT IDENTIFIER)">
-                        <a href={getDOIURL(doi)} target="_blank">
-                            {getDOIURL(doi)}
-                        </a>
-                    </CardItem>
-                    <CardItem title="Status">
-                        {doi.status}
-                    </CardItem>
-                    <CardItem title="Navegate to next state">
-                        <button type="submit" className="btn-primary-outline btn-small" >Finadble</button>
-                    </CardItem>
+    if (props.currentDOI) {
+        return (
+            <>
+                {showAlert && <div className="flex flex-row w-full items-center">
+                    <p className="text-primary-500 w-full">
+                        {/* TODO: Handle error messages */}
+                        <Alert callout="DOI creation result" show={showAlert} closed={() => setShowAlert(false)}>
+                            <p>{props.creationMessage}</p>
+                        </Alert>
+                    </p>
                 </div>
-            </p>
-        </div>
+                }
+                <div className="flex flex-row w-full items-center">
 
-    );
-}
-
-/**
- * Depreated component.
- * The idea was show a Citation in APA or BibTeX format.
- * @param props 
- * @returns 
- */
-function CitationReference(props: Props) {
-    return (
-        <div className="flex gap-28 py-4">
-            <div>
-                <CardItem title="CITATION TYPE">
-                    <label
-                        htmlFor="apa"
-                        className="w-full cursor-pointer py-2 mx-2"
-                    >
-                        <input
-                            id="apa"
-                            type="radio"
-                            value="citation-type"
-                            name="citation-type"
-                            checked
-                            readOnly
-                            className="w-5 h-5 accent-primary-900" />
-                        <span className="ml-2 text-sm font-medium text-primary-900 align-top">
-                            APA
-                        </span>
-                    </label>
-                    <label
-                        htmlFor="apa"
-                        className="w-full cursor-pointer py-2 mx-2"
-                    >
-                        <input
-                            id="apa"
-                            type="radio"
-                            value="citation-type"
-                            name="citation-type"
-                            className="w-5 h-5 accent-primary-900" />
-                        <span className="ml-2 text-sm font-medium text-primary-900 align-top">
-                            BibTeX
-                        </span>
-                    </label>
-                </CardItem>
-
-                <div className="my-4">
-                    <fieldset className="border border-solid border-primary-300 p-3">
-                        <legend className="text-sm">Citation:</legend>
-                        <p className="text-primary-600">
-                            {props.dataset.data.references}
-                        </p>
-                    </fieldset>
+                    <p className="text-primary-500 w-full">
+                        <div className="flex gap-28 py-4">
+                            <CardItem title="DOI (DIGITAL OBJECT IDENTIFIER)">
+                                <a href={getDOIURL(props.currentDOI)} target="_blank">
+                                    {getDOIURL(props.currentDOI)}
+                                </a>
+                            </CardItem>
+                            <CardItem title="Status">
+                                {props.currentDOI.status}
+                            </CardItem>
+                            <CardItem title="Navegate to next state">
+                                <button type="submit" className="btn-primary-outline btn-small" >Finadble</button>
+                            </CardItem>
+                        </div>
+                    </p>
                 </div>
-            </div>
-        </div>
-    );
-}
-/**
- * Check if the dataset has a DOI registered.
- * @param dataset to check DOI info
- * @returns true if has DOI registered to dataset, otherwise false.
- */
-function hasDOIRegistered(dataset: GetDatasetDetailsResponse) {
-    debugger;
-    return dataset?.current_version?.doi;
-}
+            </>
+        );
+    }
 
+    return (
+        <div className="text-center">
+            {/* TODO: Improve error message layout. */}
+            <p>{props.creationMessage}</p>
+            <p>This dataset does not have a registered DOI. Would you like to register one?</p>
+            <p><small>You can choose to manually enter an existing DOI or generate a new one automatically.</small></p>
+            <RegisterManualDOIButton onClick={props.onRegisterManualDOIClick} />
+            <RegisterAutoDOIButton onClick={props.onRegisterAutoDOIClick} />
+        </div>
+    )
+}

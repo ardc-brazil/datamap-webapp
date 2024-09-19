@@ -1,0 +1,22 @@
+{
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+    "next/core-web-vitals"
+  ],
+  "rules": {
+    // TODO: Remove this warning and lint the code
+    "react-hooks/exhaustive-deps": "warn",
+    "react-hooks/rules-of-hooks": "warn",
+    "react/no-unescaped-entities": "warn",
+    "react/no-children-prop": "warn",
+    "react/display-name": "warn",
+    "no-unused-vars": "warn",
+    "no-undef": "warn",
+    "no-constant-condition": "warn",
+    "no-extra-semi": "warn",
+    "no-redeclare": "warn",
+    "no-cond-assign": "warn"
+  }
+}

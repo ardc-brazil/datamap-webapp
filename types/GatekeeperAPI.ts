@@ -77,3 +77,12 @@ interface Resolution {
     temporal: string,
     spatial: string
 }
+
+export interface DOICreationRequest {
+    mode: string
+    tenancy: string
+}
+
+export interface DOICreationResponse {
+    // TODO: How to mapping error messages in the response?
+}

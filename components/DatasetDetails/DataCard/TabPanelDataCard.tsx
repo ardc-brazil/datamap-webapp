@@ -1,19 +1,17 @@
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { isDOIManagementEnabled } from "../../../lib/featureFlags";
 import { licenseMapping } from "../../../lib/licenseMapping";
-import { CardItem } from "../CardItem";
 import DatasetAuthorsForm from "../DatasetAuthorsForm";
+import DatasetCitation from "../DatasetCitation";
 import DatasetColaboratorsForm from "../DatasetColaboratorsForm";
+import DatasetCoverageForm from "../DatasetCoverageForm";
 import DatasetLicenseForm from "../DatasetLicenseForm";
+import DatasetProvenance from "../DatasetProvenance";
 import { LoadingAnimation } from "../LoadingAnimation";
 import { TabPanel, TabPanelProps } from "../TabPanel";
 import DataExplorer from "./DataExplorer";
 import { DatasetDescription } from "./DatasetDescription";
-import { GetDatasetDetailsDOIResponse, GetDatasetDetailsResponse } from "../../../types/BffAPI";
-import DatasetCoverageForm from "../DatasetCoverageForm";
-import DatasetProvenance from "../DatasetProvenance";
-import DatasetCitation from "../DatasetCitation";
-import { isDOIManagementEnabled } from "../../../lib/featureFlags";
-import { useSession } from "next-auth/react";
 
 
 interface TabPanelDataObject {
@@ -27,10 +25,6 @@ export function TabPanelDataCard(props: TabPanelProps) {
   const [data, setData] = useState(null as TabPanelDataObject);
   const [isLoading, setLoading] = useState(false);
   const [showUsabilityPopup, setShowUsabilityPopup] = useState(false);
-
-  function onDOIGenerationChangeState(state: string, newDOIState: GetDatasetDetailsDOIResponse) {
-    props.onDOIGenerationChangeState(state, newDOIState);
-  }
 
   useEffect(() => {
     setLoading(true);
@@ -189,7 +183,6 @@ export function TabPanelDataCard(props: TabPanelProps) {
                 <DatasetCitation
                   dataset={props.dataset}
                   user={props.user}
-                  onDOIGenerationChangeState={onDOIGenerationChangeState}
                 />
               </div>
             }
