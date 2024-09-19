@@ -50,13 +50,15 @@ export default function Modal(props: ModalProps) {
                   >
                     {!props.cancelButtonText ? "Close" : props.cancelButtonText}
                   </button>
-                  <button
-                    className="btn-primary"
-                    type="button"
-                    onClick={() => props.confim()}
-                  >
-                    {props.confimButtonText}
-                  </button>
+                  {props.confim &&
+                    <button
+                      className="btn-primary"
+                      type="button"
+                      onClick={() => props.confim()}
+                    >
+                      {props.confimButtonText}
+                    </button>
+                  }
                 </div>
               </div>
             </div>

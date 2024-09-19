@@ -270,3 +270,9 @@ export interface DeleteDOIRequest {
     datasetId: string
     versionId: string
 }
+
+export interface NavigateDOIStatusRequest {
+    datasetId: string
+    versionId: string
+    status: GetDatasetDetailsDOIResponseState
+}

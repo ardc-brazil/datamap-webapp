@@ -1,4 +1,4 @@
-import { CreateDOIRequest, CreateDOIResponse, DeleteDOIRequest, ErrorMessage } from "../types/BffAPI";
+import { CreateDOIRequest, CreateDOIResponse, DeleteDOIRequest, ErrorMessage, NavigateDOIStatusRequest } from "../types/BffAPI";
 import { AppLocalContext } from "./appLocalContext";
 
 
@@ -51,13 +51,22 @@ export async function createDOI(context: AppLocalContext, req: CreateDOIRequest)
     // }
 }
 
-
 /**
  * Delete a new DOI.
  * @param request minimum info to delete a DOI.
  * @returns 
  */
 export async function deleteDOI(context: AppLocalContext, request: DeleteDOIRequest): Promise<void | ErrorMessage> {
+    // TODO: Implement GK integration   
+    console.log("Call GK API with:", request);
+}
+
+/**
+ * Navigate DOI status.
+ * @param context app context
+ * @param request minimum info to navigate DOI status
+ */
+export async function navigateDOIToStatus(context: AppLocalContext, request: NavigateDOIStatusRequest): Promise<void | ErrorMessage> {
     // TODO: Implement GK integration   
     console.log("Call GK API with:", request);
 }

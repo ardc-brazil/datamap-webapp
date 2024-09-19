@@ -3,8 +3,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import { NewContext } from "../../../lib/appLocalContext";
 import auth from "../../../lib/auth";
-import { createDOI, deleteDOI } from "../../../lib/doi";
-import { DeleteDOIRequest } from "../../../types/BffAPI";
+import { createDOI, deleteDOI, navigateDOIToStatus } from "../../../lib/doi";
+import { DeleteDOIRequest, NavigateDOIStatusRequest } from "../../../types/BffAPI";
 import { ResponseError } from "../../../types/ResponseError";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
@@ -29,7 +29,18 @@ router
             console.log(e);
             res.status(e.response.status).end();
         }
-    });
+    })
+    .put(async (req, res) => {
+        const context = await NewContext(req);
+        try {
+            await navigateDOIToStatus(context, req.body as NavigateDOIStatusRequest);
+            res.status(200).end();
+        } catch (e) {
+            console.log(e);
+            res.status(e.response.status).end();
+        }
+    })
+
 
 export default router.handler({
     onError: (err: ResponseError, req, res) => {

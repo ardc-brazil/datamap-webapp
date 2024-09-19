@@ -1,11 +1,13 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from 'react';
 import { MaterialSymbol } from 'react-material-symbols';
 import 'react-material-symbols/outlined'; // Place in your root app file. There are also `sharp` and `outlined` variants.
 import * as Yup from 'yup';
 import { BFFAPI } from "../../gateways/BFFAPI";
+import { isDOIUpdateStatusEnabled } from "../../lib/featureFlags";
 import { UserDetailsResponse } from "../../lib/users";
-import { CreateDOIRequest, DeleteDOIRequest, GetDatasetDetailsDOIResponse, GetDatasetDetailsResponse } from "../../types/BffAPI";
+import { CreateDOIRequest, DeleteDOIRequest, GetDatasetDetailsDOIResponse, GetDatasetDetailsDOIResponseState, GetDatasetDetailsResponse, NavigateDOIStatusRequest } from "../../types/BffAPI";
 import Alert from "../base/Alert";
 import Modal from "../base/PopupModal";
 import { CardItem } from "./CardItem";
@@ -18,21 +20,26 @@ interface Props {
 }
 
 export default function DatasetCitation(props: Props) {
+    const { data: session, status } = useSession();
     const [editing, setEditing] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [currentDOI, setCurrentDOI] = useState(props.dataset.current_version.doi)
     const [DOICreationMessage, setDOICreationMessage] = useState("");
+    const [showModalDOIStatusNotification, setShowModalDOIStatusNotification] = useState(false)
+    const [nextDOIStatusSelected, setNextDOIStatusSelected] = useState("")
+    const contactsRosterToUpdateDOIStatus = ["encinas@usp.br", "andrenmaia@gmail.com", "caaiomaia@gmail.com"];
 
     function onRegisterManualDOIClick() {
+        setDOICreationMessage("");
         setEditing(true);
     }
 
     function onRegisterAutoDOIClick(): void {
+        setDOICreationMessage("");
         setGenerating(true);
     }
 
     function onDeleteDOIConfirmedClick() {
-        console.log("delete doi");
         const req = {
             datasetId: props.dataset.id,
             versionId: props.dataset.current_version.id
@@ -40,11 +47,9 @@ export default function DatasetCitation(props: Props) {
 
         bffGateway.deleteDOI(req)
             .then(result => {
-                // TODO: improve success message
-                console.log("DOI delete with success", result);
-
                 // Clean the current DOI registered
                 setCurrentDOI(null);
+                setDOICreationMessage("Your DOI was deleted successfully.");
             })
             .catch(reason => {
                 // TODO: improve error message
@@ -58,14 +63,40 @@ export default function DatasetCitation(props: Props) {
 
     function onManualDOICreatedWithSuccess(DOIGenerated: GetDatasetDetailsDOIResponse) {
         setCurrentDOI(DOIGenerated);
-        setDOICreationMessage("DOI created with success.");
+        setDOICreationMessage("Your DOI has been successfully registered manually by you. You can now use this DOI to reference your dataset. Please ensure to verify all associated metadata for accuracy.");
         setEditing(false);
     }
 
     function onAutoDOICreatedWithSuccess(DOIGenerated: GetDatasetDetailsDOIResponse) {
         setCurrentDOI(DOIGenerated);
-        setDOICreationMessage("DOI Generated with success.");
+        setDOICreationMessage("Your DOI has been successfully registered automatically by Datamap. You can now use this DOI to reference your dataset. Please ensure to verify all associated metadata for accuracy.");
         setGenerating(false);
+    }
+
+    function onNavigateTo(status: GetDatasetDetailsDOIResponseState) {
+
+        if (isDOIUpdateStatusEnabled(session)) {
+            // TODO: Call API when this feature was unblocked to the users
+            const req = {
+                datasetId: props.dataset.id,
+                versionId: currentDOI.id,
+                status: status
+            } as NavigateDOIStatusRequest;
+
+            bffGateway.navigateDOIStatus(req)
+                .then(result => {
+                    // TODO: improve success message
+                    console.log("DOI status navigated with success", result);
+                    setCurrentDOI({ ...currentDOI, status: status });
+                })
+                .catch(reason => {
+                    // TODO: improve error message
+                    console.log("DOI navigate status error", reason);
+                });
+        } else {
+            setNextDOIStatusSelected(status)
+            setShowModalDOIStatusNotification(true);
+        }
     }
 
     if (generating) {
@@ -85,15 +116,69 @@ export default function DatasetCitation(props: Props) {
         />
     }
 
-    return <CitationDOIViewer
-        dataset={props.dataset}
-        user={props.user}
-        currentDOI={currentDOI}
-        creationMessage={DOICreationMessage}
-        onRegisterManualDOIClick={onRegisterManualDOIClick}
-        onRegisterAutoDOIClick={onRegisterAutoDOIClick}
-        onDeleteDOIConfirmedClick={onDeleteDOIConfirmedClick}
-    />
+
+    function getEmailToHTML(emails: string[], doi: GetDatasetDetailsDOIResponse) {
+        if (!showModalDOIStatusNotification) {
+            return
+        }
+
+        const to = emails[0]
+        const cc = emails.slice(1).join(",")
+        const subject = "DOI Status Update"
+        const body = `Please, navigate the DOI Status from "${doi.status.toString()}" to "${nextDOIStatusSelected}" for DatasetID "${props.dataset.id}".`
+        const href = `mailto:${to}?cc=${cc}&subject=${subject}&body=${body}`
+
+        return (
+            <ul>
+                <li>
+                    <p>Click here to <a href={href}>send the email</a>.
+                    </p>
+                </li>
+                <li>
+
+                    <hr className="my-8" />
+                    <article className="prose lg:prose-xl max-w-none small-font-size">
+                        <p>
+                            Your e-mail must include this basic information:
+                        </p>
+                        <pre>
+                            to: {to}<br />
+                            cc: {cc}<br />
+                            subject: {subject}<br />
+                            body: {body}<br />
+                        </pre>
+                    </article>
+                </li>
+            </ul>
+        );
+    }
+
+    return (
+        <>
+            <Modal
+                title="DOI Status Update"
+                show={showModalDOIStatusNotification}
+                confimButtonText="Yes"
+                cancel={() => setShowModalDOIStatusNotification(false)}
+            >
+                <div>
+                    <p className="font-bold">Permission Required.</p>
+                    <p>{`This action requires additional permission and validation. Please contact us via e-mail for further assistance.`}</p>
+                    {getEmailToHTML(contactsRosterToUpdateDOIStatus, currentDOI)}
+                </div>
+            </Modal>
+            <CitationDOIViewer
+                dataset={props.dataset}
+                user={props.user}
+                currentDOI={currentDOI}
+                creationMessage={DOICreationMessage}
+                onRegisterManualDOIClick={onRegisterManualDOIClick}
+                onRegisterAutoDOIClick={onRegisterAutoDOIClick}
+                onDeleteDOIConfirmedClick={onDeleteDOIConfirmedClick}
+                onNavigateTo={onNavigateTo}
+            />
+        </>
+    );
 }
 
 interface CitationGeneratingViewerProps extends Props {
@@ -276,6 +361,7 @@ interface CitationDOIViewerProps extends Props {
     onRegisterAutoDOIClick(): void
     onRegisterManualDOIClick(): void
     onDeleteDOIConfirmedClick(): void
+    onNavigateTo(status: GetDatasetDetailsDOIResponseState): void
 }
 
 /**
@@ -286,8 +372,12 @@ interface CitationDOIViewerProps extends Props {
  * @returns 
  */
 function CitationDOIViewer(props: CitationDOIViewerProps) {
-    const [showAlert, setShowAlert] = useState(!!props.creationMessage);
+    const [showAlert, setShowAlert] = useState(false);
     const [showCheckDOIDeletionModal, setShowCheckDOIDeletionModal] = useState(false);
+
+    useEffect(() => {
+        setShowAlert(!!props.creationMessage);
+    }, [props.creationMessage]);
 
     function RegisterManualDOIButton(props) {
         return (
@@ -314,23 +404,24 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
         setShowCheckDOIDeletionModal(false);
     }
 
+    function onNavigateTo(status: GetDatasetDetailsDOIResponseState) {
+        props.onNavigateTo(status);
+    }
+
     function getDOIURL(doi: GetDatasetDetailsDOIResponse): string {
         return `https://doi.org/${doi.identifier}`
     }
 
+
     if (props.currentDOI) {
         return (
             <>
-                {showAlert && <div className="flex flex-row w-full items-center">
-                    <p className="text-primary-500 w-full">
-                        {/* TODO: Handle error messages */}
-                        <Alert callout="DOI creation result" show={showAlert} closed={() => setShowAlert(false)}>
-                            <p>{props.creationMessage}</p>
-                        </Alert>
-                    </p>
-                </div>
-                }
-
+                <DOIManagementAlert
+                    callout="DOI successfully registered"
+                    creationMessage={props.creationMessage}
+                    onCloseAlert={() => setShowAlert(false)}
+                    showAlert={showAlert}
+                />
                 <Modal
                     title="DOI Deletion confirmation"
                     show={showCheckDOIDeletionModal}
@@ -355,9 +446,14 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
                             <CardItem title="Status">
                                 {props.currentDOI.status}
                             </CardItem>
-                            <CardItem title="Navegate to next state">
-                                <button type="submit" className="btn-primary btn-small">Findable</button>
-                                <button 
+                            <CardItem title="Navigate to next state">
+                                <NavigateToNextStatusButton
+                                    currentDOI={props.currentDOI}
+                                    onNavigateTo={onNavigateTo}
+                                />
+                            </CardItem>
+                            <CardItem title="Delete DOI">
+                                <button
                                     className="btn-primary btn-small bg-error-900 disabled:focus:bg-error-900 disabled:hover:bg-error-900 disabled:cursor-not-allowed"
                                     onClick={() => setShowCheckDOIDeletionModal(true)}
                                     disabled={props.currentDOI.status !== "DRAFT"}
@@ -372,14 +468,91 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
         );
     }
 
+
     return (
-        <div className="text-center">
-            {/* TODO: Improve error message layout. */}
-            <p>{props.creationMessage}</p>
-            <p>This dataset does not have a registered DOI. Would you like to register one?</p>
-            <p><small>You can choose to manually enter an existing DOI or generate a new one automatically.</small></p>
-            <RegisterManualDOIButton onClick={props.onRegisterManualDOIClick} />
-            <RegisterAutoDOIButton onClick={props.onRegisterAutoDOIClick} />
-        </div>
+        <>
+            <DOIManagementAlert
+                callout="DOI deleted successfully"
+                creationMessage={props.creationMessage}
+                onCloseAlert={() => setShowAlert(false)}
+                showAlert={showAlert}
+            />
+            <div className="prose lg:prose-xl max-w-none text-center">
+                <p>This dataset does not have a registered DOI. Would you like to register one?</p>
+                <p><small>You can choose to manually enter an existing DOI or generate a new one automatically.</small></p>
+                <RegisterManualDOIButton onClick={props.onRegisterManualDOIClick} />
+                <RegisterAutoDOIButton onClick={props.onRegisterAutoDOIClick} />
+            </div>
+        </ >
     )
+}
+
+interface DOIManagementAlertProps {
+    onCloseAlert(): void;
+    creationMessage: string;
+    callout: string;
+    showAlert: any;
+
+}
+
+function DOIManagementAlert(props: DOIManagementAlertProps) {
+    if (props.showAlert) {
+        return <div className="flex flex-row w-full items-center">
+            <p className="text-primary-500 w-full">
+                {/* TODO: Handle error messages */}
+                <Alert callout={props.callout} show={props.showAlert} closed={props.onCloseAlert}>
+                    <p>{props.creationMessage}</p>
+                </Alert>
+            </p>
+        </div>
+    }
+
+    return <></>
+}
+
+
+interface NavigateToNextStatusButtonProps {
+    onNavigateTo(status: GetDatasetDetailsDOIResponseState): void;
+    currentDOI: GetDatasetDetailsDOIResponse
+}
+
+function NavigateToNextStatusButton(props: NavigateToNextStatusButtonProps) {
+
+    function onClick() {
+
+        if (props.currentDOI.status == GetDatasetDetailsDOIResponseState.DRAFT) {
+            props.onNavigateTo(GetDatasetDetailsDOIResponseState.REGISTERED);
+            return;
+        }
+
+        if (props.currentDOI.status == GetDatasetDetailsDOIResponseState.REGISTERED) {
+            props.onNavigateTo(GetDatasetDetailsDOIResponseState.FINDABLE);
+            return;
+        }
+    }
+
+    function getButtonText(status: GetDatasetDetailsDOIResponseState) {
+        if (status == GetDatasetDetailsDOIResponseState.DRAFT) {
+            return "Registered";
+        }
+
+        return "Findable";
+    }
+
+    // Supress button show if the current DOI status is final.
+    if (props.currentDOI.status == GetDatasetDetailsDOIResponseState.FINDABLE) {
+        return <span><small>FINDABLE is a final state, is not possible to navigate to the next state</small></span>;
+    }
+
+    return (
+        <>
+            <button
+                type="submit"
+                className="btn-primary btn-small"
+                onClick={onClick}
+            >
+                {getButtonText(props.currentDOI.status)}
+            </button>
+        </>
+    );
 }
