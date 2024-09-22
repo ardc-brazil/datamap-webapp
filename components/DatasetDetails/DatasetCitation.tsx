@@ -449,17 +449,7 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
                     </div>
                 </Modal>
 
-                {/* <div className="bg-primary-400 flex gap-4 h-32 justify-between items-center">
-                    <div className="border h-16 w-16 grow bg-secondary-900">01</div>
-                    <div className="border h-16 w-16 grow bg-secondary-900">02</div>
-                    <div className="border h-16 w-16 grow bg-secondary-900">03</div>
-                    <div className="border h-16 w-16 flex-none bg-secondary-900">04</div>
-                </div> */}
-
                 <div className="w-full flex flex-row justify-start items-center space-x-16 text-primary-500">
-
-
-                    {/* <div className="flex gap-28 py-4 border"> */}
                     <CardItem title="DOI (DIGITAL OBJECT IDENTIFIER)">
                         <a href={getDOIURL(props.currentDOI)} target="_blank">
                             {getDOIURL(props.currentDOI)}
@@ -471,11 +461,11 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
                     </CardItem>
 
 
-                    {/* {!shouldHideDOIStatus(props.currentDOI) && */}
-                    <CardItem title="Status">
-                        {props.currentDOI.status}
-                    </CardItem>
-                    {/* } */}
+                    {!shouldHideDOIStatus(props.currentDOI) &&
+                        <CardItem title="Status">
+                            {props.currentDOI.status}
+                        </CardItem>
+                    }
                     {!shouldHideDOIStatusNavigation(props.currentDOI) &&
                         <CardItem title="Navigate to next state">
                             <NavigateToNextStatusButton
@@ -501,7 +491,6 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
                         </>
                     }
                 </div>
-                {/* </div> */}
             </>
         );
     }
