@@ -86,3 +86,12 @@ export interface DOICreationRequest {
 export interface DOICreationResponse {
     // TODO: How to mapping error messages in the response?
 }
+
+export interface DOIUpdateRequest {
+    state: string
+    tenancy: string
+}
+
+export interface DOIUpdateResponse {
+    new_state: string
+}

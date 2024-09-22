@@ -1,5 +1,5 @@
 import { CreateDOIRequest, CreateDOIResponse, DeleteDOIRequest, ErrorMessage, NavigateDOIStatusRequest } from "../types/BffAPI";
-import { DOICreationRequest } from "../types/GatekeeperAPI";
+import { DOICreationRequest, DOIUpdateRequest, DOIUpdateResponse } from "../types/GatekeeperAPI";
 import { AppLocalContext } from "./appLocalContext";
 import axiosInstance, { buildHeaders } from "./rpc";
 
@@ -48,7 +48,7 @@ export async function deleteDOI(context: AppLocalContext, req: DeleteDOIRequest)
     try {
         const datasetId = req.datasetId;
         const versionId = req.versionId;
-        
+
         await axiosInstance.delete(
             `/datasets/${datasetId}/versions/${versionId}/doi`,
             buildHeaders(context)
@@ -67,7 +67,30 @@ export async function deleteDOI(context: AppLocalContext, req: DeleteDOIRequest)
  * @param context app context
  * @param request minimum info to navigate DOI status
  */
-export async function navigateDOIToStatus(context: AppLocalContext, request: NavigateDOIStatusRequest): Promise<void | ErrorMessage> {
-    // TODO: Implement GK integration   
-    console.log("Call GK API with:", request);
+export async function navigateDOIToStatus(context: AppLocalContext, req: NavigateDOIStatusRequest): Promise<DOIUpdateResponse | ErrorMessage> {
+    try {
+        const datasetId = req.datasetId;
+        const versionId = req.versionId;
+        const request = {
+            state: req.state
+        } as DOIUpdateRequest;
+
+        const response = await axiosInstance.put(
+            `/datasets/${datasetId}/versions/${versionId}/doi`,
+            request,
+            buildHeaders(context)
+        );
+
+        console.log(response.data);
+
+        const result = {
+            new_state: response.data?.new_state
+        } as DOIUpdateResponse
+
+        return result;
+    } catch (error) {
+        // TODO: Improve error handler
+        console.log(error);
+        return error.response;
+    }
 }
