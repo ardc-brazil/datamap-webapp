@@ -7,13 +7,13 @@ export function ContextMenuButton(props: any) {
 
   const { ref, isComponentVisible, setIsComponentVisible } = useComponentVisible(false);
 
-  function onClick(event): void {
+  function onClick(): void {
     setIsComponentVisible(true);
   }
 
   return (
-    <div className="relative flex justify-end">
-      <button type="button" className="btn-primary-outline-basic rounded-full w-12 h-12" onClick={onClick}>
+    <div className={`relative flex justify-end ${props.className}`}>
+      <button type="button" className="btn-primary-outline-basic rounded-full w-12 h-12" onClick={onClick} disabled={props.disabled}>
         <MaterialSymbol icon="more_vert" size={32} grade={-25} weight={400} className="align-middle" />
       </button>
 
