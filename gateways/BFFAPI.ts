@@ -121,10 +121,9 @@ export class BFFAPI {
             if (response.status == 200) {
                 return response.data;
             }
-
-            console.log(response);
         }
         catch (error) {
+            // TODO: Improve error handler
             console.log(error);
         }
         return Promise.reject("Error to generate a DOI");
@@ -157,15 +156,14 @@ export class BFFAPI {
      */
     async navigateDOIStatus(request: NavigateDOIStatusRequest) {
         try {
-            const response = await axios.put(`/api/dois/`, { data: request });
+            const response = await axios.put(`/api/dois/`, request);
 
             if (response.status == 200) {
                 return response.data;
             }
-
-            console.log(response);
         }
         catch (error) {
+            // TODO: Improve error handler
             console.log(error);
         }
         return Promise.reject("Error to update navigate to a new DOI status");
