@@ -121,10 +121,9 @@ export class BFFAPI {
             if (response.status == 200) {
                 return response.data;
             }
-
-            console.log(response);
         }
         catch (error) {
+            // TODO: Improve error handler
             console.log(error);
         }
         return Promise.reject("Error to generate a DOI");

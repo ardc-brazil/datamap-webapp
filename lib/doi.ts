@@ -1,5 +1,7 @@
 import { CreateDOIRequest, CreateDOIResponse, DeleteDOIRequest, ErrorMessage, NavigateDOIStatusRequest } from "../types/BffAPI";
+import { DOICreationRequest } from "../types/GatekeeperAPI";
 import { AppLocalContext } from "./appLocalContext";
+import axiosInstance, { buildHeaders } from "./rpc";
 
 
 /**
@@ -8,47 +10,33 @@ import { AppLocalContext } from "./appLocalContext";
  * @returns CreateDOIResponse
  */
 export async function createDOI(context: AppLocalContext, req: CreateDOIRequest): Promise<CreateDOIResponse | ErrorMessage> {
-    // TODO: implement Gatekeeper API
-    // try {
-    //     const datasetId = req.datasetId;
-    //     const versionId = req.versionId;
+    try {
+        const datasetId = req.datasetId;
+        const versionId = req.versionId;
+        const request = {
+            mode: req.registerMode,
+            identifier: req.identifier,
+            tenancy: context.tenancy,
+        } as DOICreationRequest;
 
-    //     const request = {
-    //         mode: req.registerMode,
-    //         tenancy: context.tenancy,
-    //     } as DOICreationRequest;
+        const response = await axiosInstance.post(
+            `/datasets/${datasetId}/versions/${versionId}/doi`,
+            request,
+            buildHeaders(context)
+        );
 
-    //     const response = await axiosInstance.post(
-    //         `/datasets/${datasetId}/versions/${versionId}/dois`,
-    //         request,
-    //         buildHeaders(context)
-    //     );
+        const result = {
+            identifier: response.data?.identifier,
+            mode: response.data?.mode?.toString().toLowerCase(),
+            state: response.data?.state?.toLowerCase(),
+        } as CreateDOIResponse
 
-    //     return response.data;
-    // } catch (error) {
-    //     console.log(error);
-    //     return error.response;
-    // }
-
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms))
+        return result;
+    } catch (error) {
+        // TODO: Improve error handler
+        console.log(error);
+        return error.response;
     }
-
-    await sleep(2000);
-
-    // Returning a fake success
-    return {
-        id: "fake_id",
-        identifier: "1000.112/1903234",
-        status: "DRAFT",
-        mode: req.registerMode,
-    }
-
-    // Returning an error
-    // return {
-    //     code: "234",
-    //     message: "Invalid identifier"
-    // }
 }
 
 /**

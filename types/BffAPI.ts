@@ -51,7 +51,7 @@ export interface GetDatasetDetailsVersionResponse {
 export interface GetDatasetDetailsDOIResponse {
     id: string
     identifier: string
-    status: GetDatasetDetailsDOIResponseState
+    state: GetDatasetDetailsDOIResponseState
     registerMode: GetDatasetDetailsDOIResponseRegisterMode
 }
 
@@ -65,21 +65,21 @@ export enum GetDatasetDetailsDOIResponseState {
      * They can be updated to either Registered or Findable DOIs. Registered and Findable DOIs may not be 
      * returned to the Draft state, which means that changing the state of a Draft is final.
      */
-    DRAFT = "DRAFT",
+    DRAFT = "draft",
     /**
      * Registered DOIs are registered with the global handle system, but they are not indexed in DataCite
      * Commons or the Public API.
      * 
      * Registered and Findable DOIs cannot be deleted.
      */
-    REGISTERED = "REGISTERED",
+    REGISTERED = "registered",
     /**
      * Findable DOIs are registered with the global handle system just like Registered DOIs, but they are 
      * also indexed in DataCite Commons and the Public API.
      * 
      * Registered and Findable DOIs cannot be deleted.
      */
-    FINDABLE = "FINDABLE"
+    FINDABLE = "findable"
 }
 
 /**
@@ -90,13 +90,13 @@ export enum GetDatasetDetailsDOIResponseRegisterMode {
      * MANUAL means that a user set the identifier an any other information manually.
      * This DOI was not registered by Datamap.
      */
-    MANUAL = "MANUAL",
+    MANUAL = "manual",
 
     /**
      * AUTO means that a user request to the platform to register a new DOI automatically.
      * This DOI was registered by Datamap ;)
      */
-    AUTO = "AUTO",
+    AUTO = "auto",
 }
 
 export interface GetDatasetDetailsVersionFileResponse {
@@ -162,7 +162,7 @@ export interface GetDatasetsDetasetDetailsResponse {
         doi: {
             id: string
             identifier: string
-            status: GetDatasetDetailsDOIResponseState
+            state: GetDatasetDetailsDOIResponseState
             registerMode: GetDatasetDetailsDOIResponseRegisterMode
         }
     }
@@ -255,7 +255,7 @@ export interface CreateDOIRequest {
 export interface CreateDOIResponse {
     id: string
     identifier: string,
-    status: string,
+    state: string,
     mode: string,
 }
 
@@ -272,5 +272,5 @@ export interface DeleteDOIRequest {
 export interface NavigateDOIStatusRequest {
     datasetId: string
     versionId: string
-    status: GetDatasetDetailsDOIResponseState
+    state: GetDatasetDetailsDOIResponseState
 }

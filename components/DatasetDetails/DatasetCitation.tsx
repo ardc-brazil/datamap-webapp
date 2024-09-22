@@ -75,28 +75,28 @@ export default function DatasetCitation(props: Props) {
         setGenerating(false);
     }
 
-    function onNavigateTo(status: GetDatasetDetailsDOIResponseState) {
+    function onNavigateTo(state: GetDatasetDetailsDOIResponseState) {
 
         if (isDOIUpdateStatusEnabled(session)) {
             // TODO: Call API when this feature was unblocked to the users
             const req = {
                 datasetId: props.dataset.id,
                 versionId: currentDOI.id,
-                status: status
+                state: state
             } as NavigateDOIStatusRequest;
 
             bffGateway.navigateDOIStatus(req)
                 .then(result => {
                     // TODO: improve success message
                     console.log("DOI status navigated with success", result);
-                    setCurrentDOI({ ...currentDOI, status: status });
+                    setCurrentDOI({ ...currentDOI, state: state });
                 })
                 .catch(reason => {
                     // TODO: improve error message
                     console.log("DOI navigate status error", reason);
                 });
         } else {
-            setNextDOIStatusSelected(status)
+            setNextDOIStatusSelected(state)
             setShowModalDOIStatusNotification(true);
         }
     }
@@ -127,7 +127,7 @@ export default function DatasetCitation(props: Props) {
         const to = emails[0]
         const cc = emails.slice(1).join(",")
         const subject = "DOI Status Update"
-        const body = `Please, navigate the DOI Status from "${doi.status.toString()}" to "${nextDOIStatusSelected}" for DatasetID "${props.dataset.id}".`
+        const body = `Please, navigate the DOI Status from "${doi.state.toString()}" to "${nextDOIStatusSelected}" for DatasetID "${props.dataset.id}".`
         const href = `mailto:${to}?cc=${cc}&subject=${subject}&body=${body}`
 
         return (
@@ -197,9 +197,10 @@ function CitationAutoDOIForm(props: CitationGeneratingViewerProps) {
 
         bffGateway.createDOI(createDOIRequest)
             .then(result => {
+                console.log(result);
                 props.onAutoDOICreatedWithSuccess({
                     identifier: result.identifier,
-                    status: result.status,
+                    state: result.state,
                     registerMode: result.mode,
                 } as GetDatasetDetailsDOIResponse);
             })
@@ -265,7 +266,7 @@ function CitationManualDOIForm(props: CitationEditionProps) {
             const result = await bffGateway.createDOI(createDOIRequest)
             props.onManualDOICreatedWithSuccess({
                 identifier: result.identifier,
-                status: result.status,
+                state: result.state,
                 registerMode: result.mode,
             } as GetDatasetDetailsDOIResponse);
 
@@ -362,7 +363,7 @@ interface CitationDOIViewerProps extends Props {
     onRegisterAutoDOIClick(): void
     onRegisterManualDOIClick(): void
     onDeleteDOIConfirmedClick(): void
-    onNavigateTo(status: GetDatasetDetailsDOIResponseState): void
+    onNavigateTo(state: GetDatasetDetailsDOIResponseState): void
 }
 
 /**
@@ -405,8 +406,8 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
         setShowCheckDOIDeletionModal(false);
     }
 
-    function onNavigateTo(status: GetDatasetDetailsDOIResponseState) {
-        props.onNavigateTo(status);
+    function onNavigateTo(state: GetDatasetDetailsDOIResponseState) {
+        props.onNavigateTo(state);
     }
 
     function getDOIURL(doi: GetDatasetDetailsDOIResponse): string {
@@ -414,12 +415,12 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
     }
 
     function shouldHideDOIDeletion(currentDOI: GetDatasetDetailsDOIResponse): boolean {
-        return currentDOI.status == GetDatasetDetailsDOIResponseState.FINDABLE ||
-            currentDOI.status == GetDatasetDetailsDOIResponseState.REGISTERED;
+        return currentDOI.state == GetDatasetDetailsDOIResponseState.FINDABLE ||
+            currentDOI.state == GetDatasetDetailsDOIResponseState.REGISTERED;
     }
 
     function shouldHideDOIStatusNavigation(currentDOI: GetDatasetDetailsDOIResponse): boolean {
-        return currentDOI.status == GetDatasetDetailsDOIResponseState.FINDABLE ||
+        return currentDOI.state == GetDatasetDetailsDOIResponseState.FINDABLE ||
             currentDOI.registerMode == GetDatasetDetailsDOIResponseRegisterMode.MANUAL
     }
 
@@ -463,7 +464,7 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
 
                     {!shouldHideDOIStatus(props.currentDOI) &&
                         <CardItem title="Status">
-                            {props.currentDOI.status}
+                            {props.currentDOI.state}
                         </CardItem>
                     }
                     {!shouldHideDOIStatusNavigation(props.currentDOI) &&
@@ -479,7 +480,7 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
                             <div className="grow self-start" >
                                 <ContextMenuButton
                                     size={72}
-                                    disabled={props.currentDOI.status !== "DRAFT" && props.currentDOI.registerMode !== GetDatasetDetailsDOIResponseRegisterMode.MANUAL}
+                                    disabled={props.currentDOI.state !== GetDatasetDetailsDOIResponseState.DRAFT && props.currentDOI.registerMode !== GetDatasetDetailsDOIResponseRegisterMode.MANUAL}
                                 >
                                     <ContextMenuButtonItem
                                         text="Delete DOI"
@@ -494,7 +495,6 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
             </>
         );
     }
-
 
     return (
         <>
@@ -539,7 +539,7 @@ function DOIManagementAlert(props: DOIManagementAlertProps) {
 
 
 interface NavigateToNextStatusButtonProps {
-    onNavigateTo(status: GetDatasetDetailsDOIResponseState): void;
+    onNavigateTo(state: GetDatasetDetailsDOIResponseState): void;
     currentDOI: GetDatasetDetailsDOIResponse
 }
 
@@ -547,19 +547,19 @@ function NavigateToNextStatusButton(props: NavigateToNextStatusButtonProps) {
 
     function onClick() {
 
-        if (props.currentDOI.status == GetDatasetDetailsDOIResponseState.DRAFT) {
+        if (props.currentDOI.state == GetDatasetDetailsDOIResponseState.DRAFT) {
             props.onNavigateTo(GetDatasetDetailsDOIResponseState.REGISTERED);
             return;
         }
 
-        if (props.currentDOI.status == GetDatasetDetailsDOIResponseState.REGISTERED) {
+        if (props.currentDOI.state == GetDatasetDetailsDOIResponseState.REGISTERED) {
             props.onNavigateTo(GetDatasetDetailsDOIResponseState.FINDABLE);
             return;
         }
     }
 
-    function getButtonText(status: GetDatasetDetailsDOIResponseState) {
-        if (status == GetDatasetDetailsDOIResponseState.DRAFT) {
+    function getButtonText(state: GetDatasetDetailsDOIResponseState) {
+        if (state == GetDatasetDetailsDOIResponseState.DRAFT) {
             return "Registered";
         }
 
@@ -567,7 +567,7 @@ function NavigateToNextStatusButton(props: NavigateToNextStatusButtonProps) {
     }
 
     // Supress button show if the current DOI status is final.
-    if (props.currentDOI.status == GetDatasetDetailsDOIResponseState.FINDABLE) {
+    if (props.currentDOI.state == GetDatasetDetailsDOIResponseState.FINDABLE) {
         return <span><small>FINDABLE is a final state, is not possible to navigate to the next state</small></span>;
     }
 
@@ -578,7 +578,7 @@ function NavigateToNextStatusButton(props: NavigateToNextStatusButtonProps) {
                 className="btn-primary btn-small"
                 onClick={onClick}
             >
-                {getButtonText(props.currentDOI.status)}
+                {getButtonText(props.currentDOI.state)}
             </button>
         </>
     );
