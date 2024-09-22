@@ -197,7 +197,6 @@ function CitationAutoDOIForm(props: CitationGeneratingViewerProps) {
 
         bffGateway.createDOI(createDOIRequest)
             .then(result => {
-                console.log(result);
                 props.onAutoDOICreatedWithSuccess({
                     identifier: result.identifier,
                     state: result.state,
