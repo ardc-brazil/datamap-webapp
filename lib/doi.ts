@@ -44,9 +44,22 @@ export async function createDOI(context: AppLocalContext, req: CreateDOIRequest)
  * @param request minimum info to delete a DOI.
  * @returns 
  */
-export async function deleteDOI(context: AppLocalContext, request: DeleteDOIRequest): Promise<void | ErrorMessage> {
-    // TODO: Implement GK integration   
-    console.log("Call GK API with:", request);
+export async function deleteDOI(context: AppLocalContext, req: DeleteDOIRequest): Promise<void | ErrorMessage> {
+    try {
+        const datasetId = req.datasetId;
+        const versionId = req.versionId;
+        
+        await axiosInstance.delete(
+            `/datasets/${datasetId}/versions/${versionId}/doi`,
+            buildHeaders(context)
+        );
+
+        return;
+    } catch (error) {
+        // TODO: Improve error handler
+        console.log(error);
+        return error.response;
+    }
 }
 
 /**
