@@ -1,5 +1,5 @@
 import axios, { HttpStatusCode } from 'axios';
-import { APIError, ClientErrors, ErrorDetails } from "../types/APIError";
+import { APIError } from "../types/APIError";
 import { AppLocalContext } from './appLocalContext';
 
 const apiBaseURL = process.env.DATAMAP_BASE_URL;
@@ -66,13 +66,13 @@ export function httpErrorHandler(error) {
           true
         )
       } else if (statusCode === 400) {
-          handledError = new APIError(
-            "BAD_REQUEST",
-            HttpStatusCode.BadRequest,
-            "Invalid request data",
-            true,
-            response?.data?.errors
-          )
+        handledError = new APIError(
+          "BAD_REQUEST",
+          HttpStatusCode.BadRequest,
+          "Invalid request data",
+          true,
+          response?.data?.errors
+        )
       }
     } else if (request) {
       //The request was made but no response was received, 

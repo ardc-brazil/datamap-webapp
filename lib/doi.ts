@@ -1,4 +1,4 @@
-import { CreateDOIRequest, CreateDOIResponse, DeleteDOIRequest, ErrorMessage, NavigateDOIStatusRequest } from "../types/BffAPI";
+import { CreateDOIRequest, CreateDOIResponse, DeleteDOIRequest, NavigateDOIStatusRequest } from "../types/BffAPI";
 import { DOICreationRequest, DOIUpdateRequest, DOIUpdateResponse } from "../types/GatekeeperAPI";
 import { AppLocalContext } from "./appLocalContext";
 import axiosInstance, { buildHeaders } from "./rpc";
@@ -53,7 +53,7 @@ export async function deleteDOI(context: AppLocalContext, req: DeleteDOIRequest)
  * @param context app context
  * @param request minimum info to navigate DOI status
  */
-export async function navigateDOIToStatus(context: AppLocalContext, req: NavigateDOIStatusRequest): Promise<DOIUpdateResponse | ErrorMessage> {
+export async function navigateDOIToStatus(context: AppLocalContext, req: NavigateDOIStatusRequest): Promise<DOIUpdateResponse> {
     const datasetId = req.datasetId;
     const versionId = req.versionId;
     const request = {

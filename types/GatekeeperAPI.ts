@@ -82,10 +82,6 @@ export interface DOICreationRequest {
     tenancy: string
 }
 
-export interface DOICreationResponse {
-    // TODO: How to mapping error messages in the response?
-}
-
 export interface DOIUpdateRequest {
     state: string
     tenancy: string

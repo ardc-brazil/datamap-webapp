@@ -122,7 +122,6 @@ export default function DatasetCitation(props: Props) {
     function onNavigateTo(oldState: GetDatasetDetailsDOIResponseState, newState: GetDatasetDetailsDOIResponseState) {
 
         if (isDOIUpdateStatusEnabled(session)) {
-            // TODO: Call API when this feature was unblocked to the users
             const req = {
                 datasetId: props.dataset.id,
                 versionId: currentDOI.id,

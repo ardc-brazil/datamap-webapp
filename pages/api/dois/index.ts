@@ -31,6 +31,8 @@ router
 
 export default router.handler({
     onError: (err: ResponseError, req, res) => {
+        // TODO: Implement this error handler for other APIs
+        // All the endpoints should use the same httpErrorHandler
         const e = httpErrorHandler(err)
         res.status(e.httpCode).json(e);
     },
