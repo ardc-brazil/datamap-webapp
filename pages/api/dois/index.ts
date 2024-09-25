@@ -6,45 +6,32 @@ import auth from "../../../lib/auth";
 import { createDOI, deleteDOI, navigateDOIToStatus } from "../../../lib/doi";
 import { DeleteDOIRequest, NavigateDOIStatusRequest } from "../../../types/BffAPI";
 import { ResponseError } from "../../../types/ResponseError";
+import { httpErrorHandler } from "../../../lib/rpc";
+
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
 router
     .use(auth)
     .post(async (req, res) => {
-        try {
-            const context = await NewContext(req);
-            const result = await createDOI(context, req.body);
-            res.json(result);
-        } catch (error) {
-            res.status(error?.status).end()
-        }
+        const context = await NewContext(req);
+        const result = await createDOI(context, req.body);
+        res.json(result);
     })
     .delete(async (req, res) => {
         const context = await NewContext(req);
-        try {
-            await deleteDOI(context, req.body as DeleteDOIRequest);
-            res.status(200).end();
-        } catch (e) {
-            console.log(e);
-            res.status(e.response.status).end();
-        }
+        await deleteDOI(context, req.body as DeleteDOIRequest);
+        res.status(200).end();
     })
     .put(async (req, res) => {
         const context = await NewContext(req);
-        try {
-            await navigateDOIToStatus(context, req.body as NavigateDOIStatusRequest);
-            res.status(200).end();
-        } catch (e) {
-            console.log(e);
-            res.status(e.response.status).end();
-        }
+        await navigateDOIToStatus(context, req.body as NavigateDOIStatusRequest);
+        res.status(200).end();
     })
-
 
 export default router.handler({
     onError: (err: ResponseError, req, res) => {
-        console.error(err.stack);
-        res.status(err.statusCode || 500).end(err.message);
+        const e = httpErrorHandler(err)
+        res.status(e.httpCode).json(e);
     },
 });

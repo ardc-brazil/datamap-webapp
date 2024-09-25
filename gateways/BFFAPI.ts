@@ -1,4 +1,5 @@
 import axios from "axios";
+import { httpErrorHandler } from "../lib/rpc";
 import { UserDetailsResponse } from "../lib/users";
 import { CreateDatasetRequestV2, CreateDatasetResponseV2, CreateDOIRequest, CreateDOIResponse, DeleteDOIRequest, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, NavigateDOIStatusRequest, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
 
@@ -117,16 +118,10 @@ export class BFFAPI {
     async createDOI(request: CreateDOIRequest): Promise<CreateDOIResponse> {
         try {
             const response = await axios.post(`/api/dois/`, request);
-
-            if (response.status == 200) {
-                return response.data;
-            }
+            return response.data;
+        } catch (e) {
+            throw httpErrorHandler(e);
         }
-        catch (error) {
-            // TODO: Improve error handler
-            console.log(error);
-        }
-        return Promise.reject("Error to generate a DOI");
     }
 
     /**
@@ -142,12 +137,11 @@ export class BFFAPI {
                 return response.data;
             }
 
-            console.log(response);
+            return Promise.resolve();
         }
         catch (error) {
-            console.log(error);
+            throw httpErrorHandler(error);
         }
-        return Promise.reject("Error to delete a DOI");
     }
 
     /**
@@ -163,10 +157,7 @@ export class BFFAPI {
             }
         }
         catch (error) {
-            // TODO: Improve error handler
-            console.log(error);
+            throw httpErrorHandler(error);
         }
-        return Promise.reject("Error to update navigate to a new DOI status");
     }
-
 }

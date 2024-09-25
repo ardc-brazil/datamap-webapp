@@ -194,7 +194,7 @@ export default function DatasetCoverageForm(props: Props) {
 
     // Default value
     return <div className="flex flex-row w-full items-center">
-        <p className="text-primary-500 w-full">
+        <div className="text-primary-500 w-full">
             <div className="flex gap-28 py-4">
                 <CardItem title="TEMPORAL COVERAGE START DATE">
                     <Moment date={props.dataset.data.start_date} format="YYYY-MM-DD LTS z ZZ" />
@@ -212,7 +212,7 @@ export default function DatasetCoverageForm(props: Props) {
                     )}
                 </CardItem>
             </div>
-        </p>
+        </div>
         <EditButton />
     </div>
 }

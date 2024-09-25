@@ -2,7 +2,6 @@
  This the file to declare requests responses from the Gatekeeper API.
 */
 
-
 /**
  * Represents a request to dataset creation.
  * @interface

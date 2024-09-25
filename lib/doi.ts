@@ -9,34 +9,28 @@ import axiosInstance, { buildHeaders } from "./rpc";
  * @param request minimum info to create a new DOI.
  * @returns CreateDOIResponse
  */
-export async function createDOI(context: AppLocalContext, req: CreateDOIRequest): Promise<CreateDOIResponse | ErrorMessage> {
-    try {
-        const datasetId = req.datasetId;
-        const versionId = req.versionId;
-        const request = {
-            mode: req.registerMode,
-            identifier: req.identifier,
-            tenancy: context.tenancy,
-        } as DOICreationRequest;
+export async function createDOI(context: AppLocalContext, req: CreateDOIRequest): Promise<CreateDOIResponse> {
+    const datasetId = req.datasetId;
+    const versionId = req.versionId;
+    const request = {
+        mode: req.registerMode,
+        identifier: req.identifier,
+        tenancy: context.tenancy,
+    } as DOICreationRequest;
 
-        const response = await axiosInstance.post(
-            `/datasets/${datasetId}/versions/${versionId}/doi`,
-            request,
-            buildHeaders(context)
-        );
+    const response = await axiosInstance.post(
+        `/datasets/${datasetId}/versions/${versionId}/doi`,
+        request,
+        buildHeaders(context)
+    );
 
-        const result = {
-            identifier: response.data?.identifier,
-            mode: response.data?.mode?.toString().toLowerCase(),
-            state: response.data?.state?.toLowerCase(),
-        } as CreateDOIResponse
+    const result = {
+        identifier: response.data?.identifier,
+        mode: response.data?.mode?.toString().toLowerCase(),
+        state: response.data?.state?.toLowerCase(),
+    } as CreateDOIResponse
 
-        return result;
-    } catch (error) {
-        // TODO: Improve error handler
-        console.log(error);
-        return error.response;
-    }
+    return result;
 }
 
 /**
@@ -44,22 +38,14 @@ export async function createDOI(context: AppLocalContext, req: CreateDOIRequest)
  * @param request minimum info to delete a DOI.
  * @returns 
  */
-export async function deleteDOI(context: AppLocalContext, req: DeleteDOIRequest): Promise<void | ErrorMessage> {
-    try {
-        const datasetId = req.datasetId;
-        const versionId = req.versionId;
+export async function deleteDOI(context: AppLocalContext, req: DeleteDOIRequest): Promise<void> {
+    const datasetId = req.datasetId;
+    const versionId = req.versionId;
 
-        await axiosInstance.delete(
-            `/datasets/${datasetId}/versions/${versionId}/doi`,
-            buildHeaders(context)
-        );
-
-        return;
-    } catch (error) {
-        // TODO: Improve error handler
-        console.log(error);
-        return error.response;
-    }
+    await axiosInstance.delete(
+        `/datasets/${datasetId}/versions/${versionId}/doi`,
+        buildHeaders(context)
+    );
 }
 
 /**
@@ -68,29 +54,21 @@ export async function deleteDOI(context: AppLocalContext, req: DeleteDOIRequest)
  * @param request minimum info to navigate DOI status
  */
 export async function navigateDOIToStatus(context: AppLocalContext, req: NavigateDOIStatusRequest): Promise<DOIUpdateResponse | ErrorMessage> {
-    try {
-        const datasetId = req.datasetId;
-        const versionId = req.versionId;
-        const request = {
-            state: req.state
-        } as DOIUpdateRequest;
+    const datasetId = req.datasetId;
+    const versionId = req.versionId;
+    const request = {
+        state: req.state
+    } as DOIUpdateRequest;
 
-        const response = await axiosInstance.put(
-            `/datasets/${datasetId}/versions/${versionId}/doi`,
-            request,
-            buildHeaders(context)
-        );
+    const response = await axiosInstance.put(
+        `/datasets/${datasetId}/versions/${versionId}/doi`,
+        request,
+        buildHeaders(context)
+    );
 
-        console.log(response.data);
+    const result = {
+        new_state: response.data?.new_state
+    } as DOIUpdateResponse
 
-        const result = {
-            new_state: response.data?.new_state
-        } as DOIUpdateResponse
-
-        return result;
-    } catch (error) {
-        // TODO: Improve error handler
-        console.log(error);
-        return error.response;
-    }
+    return result;
 }
