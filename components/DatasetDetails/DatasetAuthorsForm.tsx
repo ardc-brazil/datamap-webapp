@@ -132,10 +132,10 @@ export default function DatasetAuthorsForm(props: Props) {
     } else if (props?.dataset?.data?.authors?.length > 0) {
         // Print the license information
         return <div className="flex flex-row w-full items-center">
-            <p className="text-primary-500 w-full">
+            <div className="text-primary-500 w-full">
                 {props.dataset?.data?.authors?.map((author, index) =>
                     <CardItem key={index} title="Author Name" className="py-2">{author.name}</CardItem>)}
-            </p>
+            </div>
             <EditButton />
         </div>
     }

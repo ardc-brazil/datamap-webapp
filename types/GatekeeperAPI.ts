@@ -2,7 +2,6 @@
  This the file to declare requests responses from the Gatekeeper API.
 */
 
-
 /**
  * Represents a request to dataset creation.
  * @interface
@@ -81,10 +80,6 @@ interface Resolution {
 export interface DOICreationRequest {
     mode: string
     tenancy: string
-}
-
-export interface DOICreationResponse {
-    // TODO: How to mapping error messages in the response?
 }
 
 export interface DOIUpdateRequest {

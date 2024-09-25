@@ -7,6 +7,7 @@ import * as Yup from 'yup';
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { isDOIUpdateStatusEnabled } from "../../lib/featureFlags";
 import { UserDetailsResponse } from "../../lib/users";
+import { APIError } from "../../types/APIError";
 import { CreateDOIRequest, DeleteDOIRequest, GetDatasetDetailsDOIResponse, GetDatasetDetailsDOIResponseRegisterMode, GetDatasetDetailsDOIResponseState, GetDatasetDetailsResponse, NavigateDOIStatusRequest } from "../../types/BffAPI";
 import Alert from "../base/Alert";
 import Modal from "../base/PopupModal";
@@ -21,23 +22,30 @@ interface Props {
     user?: UserDetailsResponse
 }
 
+interface ManagementOperationResult {
+    operation: "REGISTERED_AUTO" | "REGISTERED_MANUAL" | "DELETED" | "NAVIGATE_STATE",
+    success: boolean,
+    message: string,
+    errorDetails?: APIError
+}
+
 export default function DatasetCitation(props: Props) {
     const { data: session, status } = useSession();
     const [editing, setEditing] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [currentDOI, setCurrentDOI] = useState(props.dataset.current_version.doi)
-    const [DOICreationMessage, setDOICreationMessage] = useState("");
+    const [DOIManagementOperationResult, setDOIManagementOperationResult] = useState(null as ManagementOperationResult)
     const [showModalDOIStatusNotification, setShowModalDOIStatusNotification] = useState(false)
     const [nextDOIStatusSelected, setNextDOIStatusSelected] = useState("")
     const contactsRosterToUpdateDOIStatus = ["encinas@usp.br", "andrenmaia@gmail.com", "caaiomaia@gmail.com"];
 
     function onRegisterManualDOIClick() {
-        setDOICreationMessage("");
+        setDOIManagementOperationResult(null);
         setEditing(true);
     }
 
     function onRegisterAutoDOIClick(): void {
-        setDOICreationMessage("");
+        setDOIManagementOperationResult(null);
         setGenerating(true);
     }
 
@@ -48,14 +56,20 @@ export default function DatasetCitation(props: Props) {
         } as DeleteDOIRequest;
 
         bffGateway.deleteDOI(req)
-            .then(result => {
-                // Clean the current DOI registered
-                setCurrentDOI(null);
-                setDOICreationMessage("Your DOI was deleted successfully.");
+            .then(() => {
+                setDOIManagementOperationResult({
+                    operation: "DELETED",
+                    success: true,
+                    message: "Your DOI was deleted successfully.",
+                });
+                setCurrentDOI(null)
             })
             .catch(reason => {
-                // TODO: improve error message
-                console.log("DOI delete error", reason);
+                setDOIManagementOperationResult({
+                    operation: "DELETED",
+                    success: false,
+                    message: "Failed to delete DOI",
+                });
             });
     }
 
@@ -65,39 +79,79 @@ export default function DatasetCitation(props: Props) {
 
     function onManualDOICreatedWithSuccess(DOIGenerated: GetDatasetDetailsDOIResponse) {
         setCurrentDOI(DOIGenerated);
-        setDOICreationMessage("Your DOI has been successfully registered manually by you. You can now use this DOI to reference your dataset. Please ensure to verify all associated metadata for accuracy.");
+        setDOIManagementOperationResult({
+            operation: "REGISTERED_MANUAL",
+            success: true,
+            message: "Your DOI has been successfully registered manually by you. You can now use this DOI to reference your dataset. Please ensure to verify all associated metadata for accuracy."
+        });
+        setEditing(false);
+    }
+
+    function onManualDOICreatedWithError(error: APIError) {
+        setCurrentDOI(null);
+        setDOIManagementOperationResult({
+            operation: "REGISTERED_MANUAL",
+            success: false,
+            message: "Error",
+            errorDetails: error
+        });
         setEditing(false);
     }
 
     function onAutoDOICreatedWithSuccess(DOIGenerated: GetDatasetDetailsDOIResponse) {
         setCurrentDOI(DOIGenerated);
-        setDOICreationMessage("Your DOI has been successfully registered automatically by Datamap. You can now use this DOI to reference your dataset. Please ensure to verify all associated metadata for accuracy.");
+        setDOIManagementOperationResult({
+            operation: "REGISTERED_AUTO",
+            success: true,
+            message: "Your DOI has been successfully registered automatically by Datamap. You can now use this DOI to reference your dataset. Please ensure to verify all associated metadata for accuracy."
+        });
         setGenerating(false);
     }
 
-    function onNavigateTo(state: GetDatasetDetailsDOIResponseState) {
+    function onAutoDOICreatedWithError(error: APIError): void {
+        setCurrentDOI(null);
+        setDOIManagementOperationResult({
+            operation: "REGISTERED_AUTO",
+            success: false,
+            message: "Error",
+            errorDetails: error
+        });
+        setGenerating(false);
+    }
+
+    function onNavigateTo(oldState: GetDatasetDetailsDOIResponseState, newState: GetDatasetDetailsDOIResponseState) {
 
         if (isDOIUpdateStatusEnabled(session)) {
-            // TODO: Call API when this feature was unblocked to the users
             const req = {
                 datasetId: props.dataset.id,
                 versionId: currentDOI.id,
-                state: state
+                state: newState
             } as NavigateDOIStatusRequest;
 
             bffGateway.navigateDOIStatus(req)
-                .then(result => {
-                    // TODO: improve success message
-                    console.log("DOI status navigated with success", result);
-                    setCurrentDOI({ ...currentDOI, state: state });
+                .then(() => {
+                    setCurrentDOI({ ...currentDOI, state: newState });
+                    setDOIManagementOperationResult({
+                        operation: "NAVIGATE_STATE",
+                        success: true,
+                        message: `The state of DOI was navigates from "${oldState}" to "${newState}"`
+                    });
                 })
                 .catch(reason => {
-                    // TODO: improve error message
-                    console.log("DOI navigate status error", reason);
+                    setDOIManagementOperationResult({
+                        operation: "NAVIGATE_STATE",
+                        success: false,
+                        message: `Transition from "${oldState}" to "${newState}" is not allowed.`,
+                        errorDetails: reason
+                    });
                 });
         } else {
-            setNextDOIStatusSelected(state)
-            setShowModalDOIStatusNotification(true);
+            setNextDOIStatusSelected(newState)
+            setDOIManagementOperationResult({
+                operation: "NAVIGATE_STATE",
+                success: true,
+                message: `The state of DOI was navigates from "${oldState}" to "${newState}"`
+            });
         }
     }
 
@@ -106,6 +160,7 @@ export default function DatasetCitation(props: Props) {
             dataset={props.dataset}
             user={props.user}
             onAutoDOICreatedWithSuccess={onAutoDOICreatedWithSuccess}
+            onAutoDOICreatedWithError={onAutoDOICreatedWithError}
         />
     }
 
@@ -115,6 +170,7 @@ export default function DatasetCitation(props: Props) {
             user={props.user}
             onManualDOIFormEditionCancel={onManualDOIFormEditionCancel}
             onManualDOICreatedWithSuccess={onManualDOICreatedWithSuccess}
+            onManualDOICreatedWithError={onManualDOICreatedWithError}
         />
     }
 
@@ -173,7 +229,7 @@ export default function DatasetCitation(props: Props) {
                 dataset={props.dataset}
                 user={props.user}
                 currentDOI={currentDOI}
-                creationMessage={DOICreationMessage}
+                DOIManagementOperationResult={DOIManagementOperationResult}
                 onRegisterManualDOIClick={onRegisterManualDOIClick}
                 onRegisterAutoDOIClick={onRegisterAutoDOIClick}
                 onDeleteDOIConfirmedClick={onDeleteDOIConfirmedClick}
@@ -185,6 +241,7 @@ export default function DatasetCitation(props: Props) {
 
 interface CitationGeneratingViewerProps extends Props {
     onAutoDOICreatedWithSuccess(DOIGenerated: GetDatasetDetailsDOIResponse): void
+    onAutoDOICreatedWithError(error: APIError): void
 }
 
 function CitationAutoDOIForm(props: CitationGeneratingViewerProps) {
@@ -203,34 +260,28 @@ function CitationAutoDOIForm(props: CitationGeneratingViewerProps) {
                     registerMode: result.mode,
                 } as GetDatasetDetailsDOIResponse);
             })
-            .catch(reason => {
-                // TODO: improve error handler
-                console.log(reason);
+            .catch((reason: APIError) => {
+                props.onAutoDOICreatedWithError(reason);
             })
     });
 
-    function GeneratingLoadingMessage() {
-        return <p>
-            <div role="status">
-                {/* TODO: Convert it to MaterialSymbols */}
-                <MaterialSymbol icon="progress_activity" size={32} grade={-25} weight={400}
-                    className="align-middle animate-spin"
-                />
-                <span className="sr-only">Loading...</span>
-                <span className="pl-4">We are generating your DOI.</span>
-            </div>
-        </p>
-    }
-
     return (
-        // TODO: Show error message and create a retry button.
-        <GeneratingLoadingMessage />
+
+        <div role="status">
+            <MaterialSymbol icon="progress_activity" size={32} grade={-25} weight={400}
+                className="align-middle animate-spin"
+            />
+            <span className="sr-only">Loading...</span>
+            <span className="pl-4">We are generating your DOI.</span>
+        </div>
+
     )
 }
 
 interface CitationEditionProps extends Props {
     onManualDOIFormEditionCancel: any;
     onManualDOICreatedWithSuccess(DOIGenerated: GetDatasetDetailsDOIResponse);
+    onManualDOICreatedWithError(error: APIError): void
 }
 
 /**
@@ -248,10 +299,7 @@ function CitationManualDOIForm(props: CitationEditionProps) {
         })
     });
 
-
-    // TODO: Check if this "async" in "onSubmit" can cause problems
     async function onSubmit(values, { setSubmitting }) {
-        // TODO: implement a dataset update after manual DOI is validated
         setSubmitting(true);
 
         try {
@@ -270,9 +318,7 @@ function CitationManualDOIForm(props: CitationEditionProps) {
             } as GetDatasetDetailsDOIResponse);
 
         } catch (error) {
-            // TODO: Improve error handler
-            console.log(error);
-            alert("Sorry! Error...");
+            props.onManualDOICreatedWithError(error);
         } finally {
             setSubmitting(false);
         }
@@ -353,16 +399,11 @@ function CancelEditionButton(props) {
 
 interface CitationDOIViewerProps extends Props {
     currentDOI: GetDatasetDetailsDOIResponse
-    // TODO: Improve creationMessage layout error.
-    // DOICreationState: {
-    //     isError: boolean,
-    //     message: string,
-    // }
-    creationMessage: string
+    DOIManagementOperationResult: ManagementOperationResult
     onRegisterAutoDOIClick(): void
     onRegisterManualDOIClick(): void
     onDeleteDOIConfirmedClick(): void
-    onNavigateTo(state: GetDatasetDetailsDOIResponseState): void
+    onNavigateTo(oldState: GetDatasetDetailsDOIResponseState, newState: GetDatasetDetailsDOIResponseState): void
 }
 
 /**
@@ -377,8 +418,8 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
     const [showCheckDOIDeletionModal, setShowCheckDOIDeletionModal] = useState(false);
 
     useEffect(() => {
-        setShowAlert(!!props.creationMessage);
-    }, [props.creationMessage]);
+        setShowAlert(!!props.DOIManagementOperationResult);
+    }, [props.DOIManagementOperationResult]);
 
     function RegisterManualDOIButton(props) {
         return (
@@ -405,8 +446,8 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
         setShowCheckDOIDeletionModal(false);
     }
 
-    function onNavigateTo(state: GetDatasetDetailsDOIResponseState) {
-        props.onNavigateTo(state);
+    function onNavigateTo(oldState: GetDatasetDetailsDOIResponseState, newState: GetDatasetDetailsDOIResponseState) {
+        props.onNavigateTo(oldState, newState);
     }
 
     function getDOIURL(doi: GetDatasetDetailsDOIResponse): string {
@@ -431,8 +472,7 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
         return (
             <>
                 <DOIManagementAlert
-                    callout="DOI successfully registered"
-                    creationMessage={props.creationMessage}
+                    managementOperationResult={props.DOIManagementOperationResult}
                     onCloseAlert={() => setShowAlert(false)}
                     showAlert={showAlert}
                 />
@@ -498,8 +538,7 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
     return (
         <>
             <DOIManagementAlert
-                callout="DOI deleted successfully"
-                creationMessage={props.creationMessage}
+                managementOperationResult={props.DOIManagementOperationResult}
                 onCloseAlert={() => setShowAlert(false)}
                 showAlert={showAlert}
             />
@@ -515,21 +554,68 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
 
 interface DOIManagementAlertProps {
     onCloseAlert(): void;
-    creationMessage: string;
-    callout: string;
+    // creationMessage: string;
+    // callout: string;
     showAlert: any;
-
+    // isError?: boolean;
+    managementOperationResult: ManagementOperationResult
 }
 
 function DOIManagementAlert(props: DOIManagementAlertProps) {
-    if (props.showAlert) {
+
+    function errorCodeMapping(code: string): string {
+        switch (code) {
+            case "missing_field": return "This dataset field is required";
+            case "invalid_state": return "The DOI state is invalid for this operation";
+            default: return code;
+        }
+    }
+    function getCallout(): string {
+        switch (props?.managementOperationResult?.operation) {
+            case "NAVIGATE_STATE": return "DOI navigate to next state"
+            case "DELETED": return "DOI Deletion";
+            case "REGISTERED_AUTO": return "DOI Registration";
+            case "REGISTERED_MANUAL": return "DOI Registration";
+            default:
+                console.log("Operation not defined");
+                return "";
+        }
+    }
+
+    function ComposeErrorMessage() {
+        if (props?.managementOperationResult?.errorDetails?.httpCode == 400) {
+            const errors = props?.managementOperationResult?.errorDetails
+            return (
+                <>
+                    <p className="text-primary-900">
+                        Some of the information you provided is invalid for DOI management.
+                        Please review and correct the following dataset fields:
+                    </p>
+
+                    <ul className="text-primary-900">
+                        {errors.errors.map((x, i) =>
+                            <li key={i} className="ml-4 list-disc">
+                                {`Field "${x.field}":  ${errorCodeMapping(x.code)}`}
+                            </li>
+                        )}
+                    </ul>
+
+                </>
+            )
+        } else if (props?.managementOperationResult) {
+            return <p className="text-primary-900">{props?.managementOperationResult.message}</p>
+        }
+
+        return <p className="text-primary-900">Error to execute DOI management.</p>;
+    }
+
+    if (props.showAlert && !!props.managementOperationResult) {
         return <div className="flex flex-row w-full items-center">
-            <p className="text-primary-500 w-full">
-                {/* TODO: Handle error messages */}
-                <Alert callout={props.callout} show={props.showAlert} closed={props.onCloseAlert}>
-                    <p>{props.creationMessage}</p>
+            <div className="text-primary-500 w-full">
+                <Alert callout={getCallout()} show={props.showAlert} closed={props.onCloseAlert} isError={!props.managementOperationResult.success}>
+                    <ComposeErrorMessage />
                 </Alert>
-            </p>
+            </div>
         </div>
     }
 
@@ -538,7 +624,7 @@ function DOIManagementAlert(props: DOIManagementAlertProps) {
 
 
 interface NavigateToNextStatusButtonProps {
-    onNavigateTo(state: GetDatasetDetailsDOIResponseState): void;
+    onNavigateTo(oldState: GetDatasetDetailsDOIResponseState, newState: GetDatasetDetailsDOIResponseState): void;
     currentDOI: GetDatasetDetailsDOIResponse
 }
 
@@ -547,12 +633,12 @@ function NavigateToNextStatusButton(props: NavigateToNextStatusButtonProps) {
     function onClick() {
 
         if (props.currentDOI.state == GetDatasetDetailsDOIResponseState.DRAFT) {
-            props.onNavigateTo(GetDatasetDetailsDOIResponseState.REGISTERED);
+            props.onNavigateTo(props.currentDOI.state, GetDatasetDetailsDOIResponseState.REGISTERED);
             return;
         }
 
         if (props.currentDOI.state == GetDatasetDetailsDOIResponseState.REGISTERED) {
-            props.onNavigateTo(GetDatasetDetailsDOIResponseState.FINDABLE);
+            props.onNavigateTo(props.currentDOI.state, GetDatasetDetailsDOIResponseState.FINDABLE);
             return;
         }
     }

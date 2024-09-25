@@ -136,7 +136,7 @@ export default function DatasetProvenance(props: Props) {
 
     // Default value
     return <div className="flex flex-row w-full items-center">
-        <p className="text-primary-500 w-full">
+        <div className="text-primary-500 w-full">
             <div className="flex gap-28 py-4">
                 <CardItem title="SOURCES">
                     {!props.dataset.data.source && "No source informed."}
@@ -149,7 +149,7 @@ export default function DatasetProvenance(props: Props) {
                     {props.dataset.data.source && props.dataset.data.source_instrument}
                 </CardItem>
             </div>
-        </p>
+        </div>
         <EditButton />
     </div>
 }
