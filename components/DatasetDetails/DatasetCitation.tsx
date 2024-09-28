@@ -146,12 +146,9 @@ export default function DatasetCitation(props: Props) {
                     });
                 });
         } else {
-            setNextDOIStatusSelected(newState)
-            setDOIManagementOperationResult({
-                operation: "NAVIGATE_STATE",
-                success: true,
-                message: `The state of DOI was navigates from "${oldState}" to "${newState}"`
-            });
+            setGenerating(false)
+            setEditing(false)
+            setShowModalDOIStatusNotification(true)
         }
     }
 
@@ -173,7 +170,6 @@ export default function DatasetCitation(props: Props) {
             onManualDOICreatedWithError={onManualDOICreatedWithError}
         />
     }
-
 
     function getEmailToHTML(emails: string[], doi: GetDatasetDetailsDOIResponse) {
         if (!showModalDOIStatusNotification) {
