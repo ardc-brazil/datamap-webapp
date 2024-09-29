@@ -174,3 +174,13 @@
 .has-tooltip:hover .tooltip {
   @apply visible z-50 ;
 }
+
+.uppy-Dashboard-AddFiles {
+  min-height: 20dvw !important;
+  height: 20dvw !important;
+}
+
+.uppy-Dashboard .uppy-Dashboard-inner  {
+  min-height: 20dvw !important;
+  height: 60% !important;
+} 

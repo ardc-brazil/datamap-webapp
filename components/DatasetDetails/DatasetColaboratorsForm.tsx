@@ -172,10 +172,10 @@ export default function DatasetColaboratorsForm(props: Props) {
     } else if (props?.dataset?.data?.colaborators?.length > 0) {
         // Print the license information
         return <div className="flex flex-row w-full items-center">
-            <p className="text-primary-500 w-full">
+            <div className="text-primary-500 w-full">
                 {props?.dataset?.data?.colaborators?.map((person, index) =>
                     <CardItem key={index} title="Colaborator Name" className="py-2">{`${person.name} ${getPermissionDescription(person.permission)}`}</CardItem>)}
-            </p>
+            </div>
             <EditButton />
         </div>
     }
