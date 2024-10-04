@@ -247,7 +247,7 @@ export interface PublishDatasetVersionResponse {
 
 export interface CreateDOIRequest {
     datasetId: string
-    versionId: string
+    versionName: string
     identifier?: string
     registerMode: string
 }
@@ -261,11 +261,11 @@ export interface CreateDOIResponse {
 
 export interface DeleteDOIRequest {
     datasetId: string
-    versionId: string
+    versionName: string
 }
 
 export interface NavigateDOIStatusRequest {
     datasetId: string
-    versionId: string
+    versionName: string
     state: GetDatasetDetailsDOIResponseState
 }

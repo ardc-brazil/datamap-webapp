@@ -52,7 +52,7 @@ export default function DatasetCitation(props: Props) {
     function onDeleteDOIConfirmedClick() {
         const req = {
             datasetId: props.dataset.id,
-            versionId: props.dataset.current_version.id
+            versionName: props.dataset.current_version.name
         } as DeleteDOIRequest;
 
         bffGateway.deleteDOI(req)
@@ -124,7 +124,7 @@ export default function DatasetCitation(props: Props) {
         if (isDOIUpdateStatusEnabled(session)) {
             const req = {
                 datasetId: props.dataset.id,
-                versionId: currentDOI.id,
+                versionName: props.dataset.current_version.name,
                 state: newState
             } as NavigateDOIStatusRequest;
 
@@ -244,7 +244,7 @@ function CitationAutoDOIForm(props: CitationGeneratingViewerProps) {
     useEffect(() => {
         const createDOIRequest = {
             datasetId: props.dataset.id,
-            versionId: props.dataset.current_version.id,
+            versionName: props.dataset.current_version.name,
             registerMode: GetDatasetDetailsDOIResponseRegisterMode.AUTO
         } as CreateDOIRequest;
 
@@ -301,7 +301,7 @@ function CitationManualDOIForm(props: CitationEditionProps) {
         try {
             const createDOIRequest = {
                 datasetId: props.dataset.id,
-                versionId: props.dataset.current_version.id,
+                versionName: props.dataset.current_version.name,
                 identifier: values.doi.text,
                 registerMode: GetDatasetDetailsDOIResponseRegisterMode.MANUAL
             } as CreateDOIRequest;

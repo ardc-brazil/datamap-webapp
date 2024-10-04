@@ -11,7 +11,7 @@ import axiosInstance, { buildHeaders } from "./rpc";
  */
 export async function createDOI(context: AppLocalContext, req: CreateDOIRequest): Promise<CreateDOIResponse> {
     const datasetId = req.datasetId;
-    const versionId = req.versionId;
+    const versionName = req.versionName;
     const request = {
         mode: req.registerMode,
         identifier: req.identifier,
@@ -19,7 +19,7 @@ export async function createDOI(context: AppLocalContext, req: CreateDOIRequest)
     } as DOICreationRequest;
 
     const response = await axiosInstance.post(
-        `/datasets/${datasetId}/versions/${versionId}/doi`,
+        `/datasets/${datasetId}/versions/${versionName}/doi`,
         request,
         buildHeaders(context)
     );
@@ -40,10 +40,10 @@ export async function createDOI(context: AppLocalContext, req: CreateDOIRequest)
  */
 export async function deleteDOI(context: AppLocalContext, req: DeleteDOIRequest): Promise<void> {
     const datasetId = req.datasetId;
-    const versionId = req.versionId;
+    const versionName = req.versionName;
 
     await axiosInstance.delete(
-        `/datasets/${datasetId}/versions/${versionId}/doi`,
+        `/datasets/${datasetId}/versions/${versionName}/doi`,
         buildHeaders(context)
     );
 }
@@ -55,13 +55,13 @@ export async function deleteDOI(context: AppLocalContext, req: DeleteDOIRequest)
  */
 export async function navigateDOIToStatus(context: AppLocalContext, req: NavigateDOIStatusRequest): Promise<DOIUpdateResponse> {
     const datasetId = req.datasetId;
-    const versionId = req.versionId;
+    const versionName = req.versionName;
     const request = {
         state: req.state
     } as DOIUpdateRequest;
 
     const response = await axiosInstance.put(
-        `/datasets/${datasetId}/versions/${versionId}/doi`,
+        `/datasets/${datasetId}/versions/${versionName}/doi`,
         request,
         buildHeaders(context)
     );
