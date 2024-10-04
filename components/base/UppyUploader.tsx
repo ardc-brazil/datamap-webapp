@@ -30,6 +30,11 @@ export default function UppyUploader(props: UppyUploaderProps) {
             endpoint: getTusEndpoint(),
             removeFingerprintOnSuccess: true,
         }).on('file-added', (file) => {
+
+            if (!formikContext) {
+                return;
+            }
+
             // Add file to the formik context to validate before submit
             const formikValues = (formikContext.values as FormValues)
             formikValues?.uploadedDataFiles?.push({
@@ -41,6 +46,10 @@ export default function UppyUploader(props: UppyUploaderProps) {
             formikContext.setFieldValue("remoteFilesCount", formikValues?.uploadedDataFiles?.length, true);
         }).on('file-removed', (file, reason) => {
             if (reason === 'removed-by-user') {
+                if (!formikContext) {
+                    return;
+                }
+
                 // TODO: Implement call to remove file after uploaded.
                 // Remove file from the formik context to validate before submit
                 const formikValues = (formikContext.values as FormValues)
@@ -92,15 +101,18 @@ export default function UppyUploader(props: UppyUploaderProps) {
 
     return (
         <>
-            <ErrorMessage
-                name='remoteFilesCount'
-                component="div"
-                className="text-xs text-error-600"
-            />
+            {formikContext &&
+                <ErrorMessage
+                    name='remoteFilesCount'
+                    component="div"
+                    className="text-xs text-error-600"
+                />
+            }
             <Dashboard
                 uppy={uppy}
                 disabled={false}
-                width={"100wv"}
+                // width={"100wv"}
+                // height={"300px"}
                 proudlyDisplayPoweredByUppy={false}
                 singleFileFullScreen={false}
                 fileManagerSelectionType='both'
