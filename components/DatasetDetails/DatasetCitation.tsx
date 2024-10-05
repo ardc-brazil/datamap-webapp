@@ -26,7 +26,7 @@ interface ManagementOperationResult {
     operation: "REGISTERED_AUTO" | "REGISTERED_MANUAL" | "DELETED" | "NAVIGATE_STATE",
     success: boolean,
     message: string,
-    errorDetails?: APIError
+    apiError?: APIError
 }
 
 export default function DatasetCitation(props: Props) {
@@ -93,7 +93,7 @@ export default function DatasetCitation(props: Props) {
             operation: "REGISTERED_MANUAL",
             success: false,
             message: "Error",
-            errorDetails: error
+            apiError: error
         });
         setEditing(false);
     }
@@ -114,7 +114,7 @@ export default function DatasetCitation(props: Props) {
             operation: "REGISTERED_AUTO",
             success: false,
             message: "Error",
-            errorDetails: error
+            apiError: error
         });
         setGenerating(false);
     }
@@ -142,7 +142,7 @@ export default function DatasetCitation(props: Props) {
                         operation: "NAVIGATE_STATE",
                         success: false,
                         message: `Transition from "${oldState}" to "${newState}" is not allowed.`,
-                        errorDetails: reason
+                        apiError: reason
                     });
                 });
         } else {
@@ -577,8 +577,8 @@ function DOIManagementAlert(props: DOIManagementAlertProps) {
     }
 
     function ComposeErrorMessage() {
-        if (props?.managementOperationResult?.errorDetails?.httpCode == 400) {
-            const ex = props?.managementOperationResult?.errorDetails
+        if (props?.managementOperationResult?.apiError?.httpCode == 400) {
+            const apiError = props?.managementOperationResult?.apiError
             return (
                 <>
                     <p className="text-primary-900">
@@ -587,7 +587,7 @@ function DOIManagementAlert(props: DOIManagementAlertProps) {
                     </p>
 
                     <ul className="text-primary-900">
-                        {ex?.errors?.map((x, i) =>
+                        {apiError?.errors?.map((x, i) =>
                             <li key={i} className="ml-4 list-disc">
                                 {`Field "${x.field}":  ${errorCodeMapping(x.code)}`}
                             </li>

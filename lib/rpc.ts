@@ -69,7 +69,7 @@ export function httpErrorHandler(error) {
         handledError = new APIError(
           "BAD_REQUEST",
           HttpStatusCode.BadRequest,
-          "Invalid request data",
+          response?.data?.details,
           true,
           response?.data?.errors
         )
