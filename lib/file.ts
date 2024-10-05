@@ -48,3 +48,33 @@ export function totalDatasetVersionFilesSize(current_version: GetDatasetDetailsV
     const total = totalBytes(current_version);
     return bytesToSize(total);
 }
+
+/**
+     * Extract the file name from a full path file.
+     * @param path full path for the file
+     * @returns file name
+     * @example
+     * - /path/to/a/file.txt -> file.txt
+     */
+export function fileName(path: string): string {
+    const tokens = path.split("/");
+    return tokens[tokens.length - 1];
+}
+
+export function fileNameResolution(path: string): string {
+    const fl = fileName(path);
+
+    // If the path is a folder, also should the folder name.
+    // This is temporary for Remote Files Upload mode.
+    if (isFolder(path)) {
+        const tokens = path.split("/");
+        return tokens[tokens.length - 2];
+    }
+
+    return fl
+}
+
+export function isFolder(path: string): boolean {
+    const fl = fileName(path);
+    return fl == "**";
+}
