@@ -7,7 +7,7 @@ import * as Yup from 'yup';
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { isDOIUpdateStatusEnabled } from "../../lib/featureFlags";
 import { UserDetailsResponse } from "../../lib/users";
-import { APIError } from "../../types/APIError";
+import { APIError, ErrorDetails } from "../../types/APIError";
 import { CreateDOIRequest, DeleteDOIRequest, GetDatasetDetailsDOIResponse, GetDatasetDetailsDOIResponseRegisterMode, GetDatasetDetailsDOIResponseState, GetDatasetDetailsResponse, NavigateDOIStatusRequest } from "../../types/BffAPI";
 import Alert from "../base/Alert";
 import Modal from "../base/PopupModal";
@@ -105,7 +105,7 @@ export default function DatasetCitation(props: Props) {
             success: true,
             message: "Your DOI has been successfully registered automatically by Datamap. You can now use this DOI to reference your dataset. Please ensure to verify all associated metadata for accuracy."
         });
-        setGenerating(false);
+        setGenerating(true);
     }
 
     function onAutoDOICreatedWithError(error: APIError): void {
@@ -561,6 +561,7 @@ function DOIManagementAlert(props: DOIManagementAlertProps) {
         switch (code) {
             case "missing_field": return "This dataset field is required";
             case "invalid_state": return "The DOI state is invalid for this operation";
+            case "already_exists": return "A DOI has already been registered for this dataset"
             default: return code;
         }
     }
@@ -576,6 +577,18 @@ function DOIManagementAlert(props: DOIManagementAlertProps) {
         }
     }
 
+    function ComposeItemErrorMessage(props: { error: ErrorDetails }) {
+
+        if (props?.error?.field) {
+            return <span>
+                Field &quot;{props.error.field}&quot;:  {errorCodeMapping(props.error.code)}
+            </span>
+        }
+
+        return <span>{errorCodeMapping(props.error.code)}</span>
+
+    }
+
     function ComposeErrorMessage() {
         if (props?.managementOperationResult?.apiError?.httpCode == 400) {
             const apiError = props?.managementOperationResult?.apiError
@@ -589,7 +602,7 @@ function DOIManagementAlert(props: DOIManagementAlertProps) {
                     <ul className="text-primary-900">
                         {apiError?.errors?.map((x, i) =>
                             <li key={i} className="ml-4 list-disc">
-                                {`Field "${x.field}":  ${errorCodeMapping(x.code)}`}
+                                <ComposeItemErrorMessage error={x} />
                             </li>
                         )}
                     </ul>
