@@ -1,4 +1,5 @@
 import Uppy from "@uppy/core";
+import { Form, Formik } from "formik";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from 'react';
 import { MaterialSymbol } from "react-material-symbols";
@@ -90,7 +91,8 @@ export default function DataExplorer(props: Props) {
             <DatasetFilesList
               dataset={props.dataset}
               datasetVersion={props.dataset.current_version}
-              handleSelectFile={handleSelectFile} />
+              handleSelectFile={handleSelectFile}
+              itemsPerPage={10} />
           </div>
           <hr />
           <div className="pt-4">
@@ -162,6 +164,7 @@ export default function DataExplorer(props: Props) {
                 dataset={props.dataset}
                 datasetVersion={stagingDatasetVersion}
                 handleSelectFile={handleSelectFile}
+                itemsPerPage={5}
                 onFileRemoved={(x) =>
                   setStagingDatasetVersion(
                     {
@@ -178,12 +181,17 @@ export default function DataExplorer(props: Props) {
             New uploads
           </h2>
           <div className="" >
-            <UppyUploader
-              datasetId={props.dataset.id}
-              userId={uploadAuth?.user?.id}
-              // TODO: Check if the token is working
-              userToken={uploadAuth?.token?.jwt}
-              onUppyStateCreated={onUppyStateCreated} />
+            {/* TODO: Config Formik correcly for this new form */}
+            <Formik initialValues={{ a: "test" }} onSubmit={() => { }}>
+              <Form>
+                <UppyUploader
+                  datasetId={props.dataset.id}
+                  userId={uploadAuth?.user?.id}
+                  // TODO: Check if the token is working
+                  userToken={uploadAuth?.token?.jwt}
+                  onUppyStateCreated={onUppyStateCreated} />
+              </Form>
+            </Formik>
           </div>
         </div>
       </Drawer>
