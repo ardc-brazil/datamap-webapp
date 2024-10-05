@@ -13,7 +13,7 @@ export async function createDOI(context: AppLocalContext, req: CreateDOIRequest)
     const datasetId = req.datasetId;
     const versionName = req.versionName;
     const request = {
-        mode: req.registerMode,
+        mode: req.mode,
         identifier: req.identifier,
         tenancy: context.tenancy,
     } as DOICreationRequest;

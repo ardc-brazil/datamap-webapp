@@ -6,8 +6,14 @@ interface Props {
   title: string;
   className?: any;
   info?: string
+  hide?: boolean
 }
 export function CardItem(props: Props) {
+
+  if (props.hide) {
+    return null;
+  }
+
   return (
     <div className={`${props.className}`}>
       <div className="text-primary-400 font-semibold text-xs">

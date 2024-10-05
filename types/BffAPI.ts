@@ -52,7 +52,7 @@ export interface GetDatasetDetailsDOIResponse {
     id: string
     identifier: string
     state: GetDatasetDetailsDOIResponseState
-    registerMode: GetDatasetDetailsDOIResponseRegisterMode
+    mode: GetDatasetDetailsDOIResponseRegisterMode
 }
 
 /**
@@ -65,21 +65,21 @@ export enum GetDatasetDetailsDOIResponseState {
      * They can be updated to either Registered or Findable DOIs. Registered and Findable DOIs may not be 
      * returned to the Draft state, which means that changing the state of a Draft is final.
      */
-    DRAFT = "draft",
+    DRAFT = "DRAFT",
     /**
      * Registered DOIs are registered with the global handle system, but they are not indexed in DataCite
      * Commons or the Public API.
      * 
      * Registered and Findable DOIs cannot be deleted.
      */
-    REGISTERED = "registered",
+    REGISTERED = "REGISTERED",
     /**
      * Findable DOIs are registered with the global handle system just like Registered DOIs, but they are 
      * also indexed in DataCite Commons and the Public API.
      * 
      * Registered and Findable DOIs cannot be deleted.
      */
-    FINDABLE = "findable"
+    FINDABLE = "FINDABLE"
 }
 
 /**
@@ -90,13 +90,13 @@ export enum GetDatasetDetailsDOIResponseRegisterMode {
      * MANUAL means that a user set the identifier an any other information manually.
      * This DOI was not registered by Datamap.
      */
-    MANUAL = "manual",
+    MANUAL = "MANUAL",
 
     /**
      * AUTO means that a user request to the platform to register a new DOI automatically.
      * This DOI was registered by Datamap ;)
      */
-    AUTO = "auto",
+    AUTO = "AUTO",
 }
 
 export interface GetDatasetDetailsVersionFileResponse {
@@ -163,7 +163,7 @@ export interface GetDatasetsDetasetDetailsResponse {
             id: string
             identifier: string
             state: GetDatasetDetailsDOIResponseState
-            registerMode: GetDatasetDetailsDOIResponseRegisterMode
+            mode: GetDatasetDetailsDOIResponseRegisterMode
         }
     }
 }
@@ -249,7 +249,7 @@ export interface CreateDOIRequest {
     datasetId: string
     versionName: string
     identifier?: string
-    registerMode: string
+    mode: string
 }
 
 export interface CreateDOIResponse {
