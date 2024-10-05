@@ -192,15 +192,26 @@ export default function DatasetCoverageForm(props: Props) {
         );
     }
 
+    function isEpoch(date: Date) {
+        const d = new Date(date);
+        return d.getUTCFullYear() == 1970 &&
+            d.getUTCMonth() == 1 &&
+            d.getUTCDay() == 0;
+    }
+
     // Default value
     return <div className="flex flex-row w-full items-center">
         <div className="text-primary-500 w-full">
             <div className="flex gap-28 py-4">
                 <CardItem title="TEMPORAL COVERAGE START DATE">
-                    <Moment date={props.dataset.data.start_date} format="YYYY-MM-DD LTS z ZZ" />
+                    {!isEpoch(props.dataset.data.start_date) &&
+                        <Moment date={props.dataset.data.start_date} format="YYYY-MM-DD LTS z ZZ" />
+                    }
                 </CardItem>
                 <CardItem title="TEMPORAL COVERAGE END DATE">
-                    <Moment date={props.dataset.data.end_date} format="YYYY-MM-DD LTS z ZZ" />
+                    {!isEpoch(props.dataset.data.start_date) &&
+                        <Moment date={props.dataset.data.end_date} format="YYYY-MM-DD LTS z ZZ" />
+                    }
                 </CardItem>
                 <CardItem title="GEOSPATIAL COVERAGE">
                     {props.dataset.data.location && (
