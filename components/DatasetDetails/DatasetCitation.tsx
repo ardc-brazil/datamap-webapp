@@ -577,11 +577,18 @@ function DOIManagementAlert(props: DOIManagementAlertProps) {
         }
     }
 
+    function translateField(field: string) {
+        switch (field) {
+            case "publisher": return "Institution"
+            default: return field
+        }
+    }
+
     function ComposeItemErrorMessage(props: { error: ErrorDetails }) {
 
         if (props?.error?.field) {
             return <span>
-                Field &quot;{props.error.field}&quot;:  {errorCodeMapping(props.error.code)}
+                Field &quot;{translateField(props.error.field)}&quot;:  {errorCodeMapping(props.error.code)}
             </span>
         }
 
