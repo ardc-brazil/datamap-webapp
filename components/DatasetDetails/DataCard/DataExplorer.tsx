@@ -159,6 +159,7 @@ export default function DataExplorer(props: Props) {
                 Previously uploaded
               </h2>
               <DatasetFilesList
+                dataset={props.dataset}
                 datasetVersion={stagingDatasetVersion}
                 handleSelectFile={handleSelectFile}
                 onFileRemoved={(x) =>
