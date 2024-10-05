@@ -1,4 +1,4 @@
-import { totalDatasetVersionFilesSize } from "../../../lib/fileSize"
+import { totalDatasetVersionFilesSize } from "../../../lib/file"
 import { GetDatasetDetailsVersionResponse } from "../../../types/BffAPI"
 
 interface Props {

@@ -1,5 +1,5 @@
 import { GetDatasetDetailsVersionFileResponse, GetDatasetDetailsVersionResponse } from "../../types/BffAPI";
-import { totalDatasetVersionFilesSize } from "../fileSize";
+import { totalDatasetVersionFilesSize } from "../file";
 
 describe('bytesToSize', () => {
     test.each([

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { httpErrorHandler } from "../lib/rpc";
 import { UserDetailsResponse } from "../lib/users";
-import { CreateDatasetRequestV2, CreateDatasetResponseV2, CreateDOIRequest, CreateDOIResponse, DeleteDOIRequest, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, NavigateDOIStatusRequest, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
+import { CreateDatasetRequestV2, CreateDatasetResponseV2, CreateDOIRequest, CreateDOIResponse, DeleteDOIRequest, FileDownloadLinkRequest, FileDownloadLinkResponse, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, NavigateDOIStatusRequest, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
 
 
 /**
@@ -157,6 +157,20 @@ export class BFFAPI {
             }
         }
         catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    /**
+     * Get a URL for file download.
+     * @param request api request
+     * @returns File download link response
+     */
+    async generateTemporaryFileDownloadLink(request: FileDownloadLinkRequest): Promise<FileDownloadLinkResponse> {
+        try {
+            const response = await axios.post(`/api/filesdownload/`, request)
+            return response.data;
+        } catch (error) {
             throw httpErrorHandler(error);
         }
     }

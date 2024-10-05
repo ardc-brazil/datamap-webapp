@@ -87,7 +87,10 @@ export default function DataExplorer(props: Props) {
 
           {/* files list */}
           <div className="h-full">
-            <DatasetFilesList datasetVersion={props.dataset.current_version} handleSelectFile={handleSelectFile} />
+            <DatasetFilesList
+              dataset={props.dataset}
+              datasetVersion={props.dataset.current_version}
+              handleSelectFile={handleSelectFile} />
           </div>
           <hr />
           <div className="pt-4">
@@ -156,6 +159,7 @@ export default function DataExplorer(props: Props) {
                 Previously uploaded
               </h2>
               <DatasetFilesList
+                dataset={props.dataset}
                 datasetVersion={stagingDatasetVersion}
                 handleSelectFile={handleSelectFile}
                 onFileRemoved={(x) =>

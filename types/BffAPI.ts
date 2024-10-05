@@ -269,3 +269,14 @@ export interface NavigateDOIStatusRequest {
     versionName: string
     state: GetDatasetDetailsDOIResponseState
 }
+
+export interface FileDownloadLinkRequest {
+    fileId: string
+    versionName: string
+    datasetId: string;
+
+}
+
+export interface FileDownloadLinkResponse {
+    url: string
+}
