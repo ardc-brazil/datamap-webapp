@@ -83,7 +83,6 @@ export default function NewPage() {
 
   function handleSubmitForm(values: FormValues, actions: FormikHelpers<any>) {
     // Mapping datasetPrototyping.createDatasetResponseV2 top UpdateDatasetRequest
-    console.log(session?.user);
     datasetPrototyping.createDatasetResponseV2.data.authors = [{ name: session?.user?.name }]
     const datasetUpdateRequest = {
       id: datasetPrototyping.createDatasetResponseV2.id,
