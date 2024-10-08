@@ -1,7 +1,23 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MaterialSymbol } from "react-material-symbols";
 
-export default function Drawer(props) {
+interface DrawerProps {
+    title: string;
+    children: any;
+    show: any;
+    showCloseButton: boolean;
+    showCreateButton: boolean;
+    showClearAllButton: boolean;
+
+    onClose(): unknown;
+    onCreate(): unknown;
+    onClearAll(): unknown;
+    onOpen(): unknown;
+}
+
+export default function Drawer(props: DrawerProps) {
+
+    const [submitting, setSubmitting] = useState(false)
 
     useEffect(() => {
         props?.onOpen()
@@ -39,8 +55,30 @@ export default function Drawer(props) {
                             {/* Footer */}
                             <div className="fixed bottom-0 bg-primary-50 h-16 border-t z-[1005] border-t-primary-200 overscroll-none overflow-clip w-screen max-w-screen-md">
                                 <div className="flex justify-end items-center bg-primary-50 h-full px-4 space-x-2">
-                                    <button className="btn btn-primary-outline" onClick={props.onClearAll}>Clear all</button>
-                                    <button className="btn btn-primary" onClick={props.onCreate}>Create</button>
+                                    {props.showClearAllButton &&
+                                        <button
+                                            className="btn btn-primary-outline"
+                                            onClick={props.onClearAll}
+                                            disabled={submitting}>
+                                            Clear all
+                                        </button>
+                                    }
+                                    {props.showCreateButton &&
+                                        <button
+                                            className="btn btn-primary gap-2"
+                                            onClick={() => { setSubmitting(true); props.onCreate() }}
+                                            disabled={submitting}>
+                                            {submitting &&
+                                                <MaterialSymbol icon="progress_activity" size={22} grade={-25} weight={400}
+                                                    className="align-middle animate-spin"
+                                                />
+                                            }
+                                            Create
+                                        </button>
+                                    }
+                                    {props.showCloseButton &&
+                                        <button className="btn btn-primary-outline" onClick={props.onClose}>Close</button>
+                                    }
                                 </div>
 
                             </div>

@@ -75,7 +75,9 @@ export async function createDataset(context: AppLocalContext, datasetRequest: Cr
 export async function getDatasetBy(context: AppLocalContext, id: string): Promise<GetDatasetDetailsResponse> {
     try {
         const response = await axiosInstance.get("/datasets/" + id, buildHeaders(context));
-        return response.data as GetDatasetDetailsResponse;
+        const result = response.data as GetDatasetDetailsResponse;
+
+        return result;
     } catch (error) {
         console.log(error);
         // FIX: throw a error or encapsulate
@@ -149,20 +151,13 @@ export async function deleteDataset(context: AppLocalContext, id: string): Promi
  * @returns Response from published version
  */
 export async function publishDatasetVersion(context: AppLocalContext, request: PublishDatasetVersionRequest): Promise<PublishDatasetVersionResponse> {
-    try {
-        const datasetId = request.datasetId;
-        const versionName = request.versionName;
-        const response = await axiosInstance.put(
-            `datasets/${datasetId}/versions/${versionName}/publish`,
-            request,
-            buildHeaders(context)
-        );
+    const datasetId = request.datasetId;
+    const versionName = request.versionName;
+    const response = await axiosInstance.put(
+        `datasets/${datasetId}/versions/${versionName}/publish`,
+        request,
+        buildHeaders(context)
+    );
 
-        return response.data as PublishDatasetVersionResponse;
-    } catch (error) {
-        console.log(error);
-    }
-
-    return Promise.reject("Error on publish a databaset version");
-
+    return response.data as PublishDatasetVersionResponse;
 }

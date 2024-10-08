@@ -44,7 +44,7 @@ export interface GetDatasetDetailsVersionResponse {
     // TODO: convert design_state to Enum
     design_state: string
     is_enabled: boolean
-    files: GetDatasetDetailsVersionFileResponse[]
+    files_in: GetDatasetDetailsVersionFileResponse[]
     doi: GetDatasetDetailsDOIResponse
 }
 
@@ -158,7 +158,7 @@ export interface GetDatasetsDetasetDetailsResponse {
         name: string
         design_state: DesignState,
         is_enabled: boolean,
-        files: [],
+        files_in: [],
         doi: {
             id: string
             identifier: string
@@ -279,4 +279,19 @@ export interface FileDownloadLinkRequest {
 
 export interface FileDownloadLinkResponse {
     url: string
+}
+
+export interface CreateDraftDatasetVersionRequest {
+    datasetId: string
+    datafilesPreviouslyUploaded: GetDatasetDetailsVersionFileResponse[]
+}
+
+export interface CreateDraftDatasetVersionResponse {
+    id: string
+    name: string
+    // TODO: convert design_state to Enum
+    design_state: string
+    is_enabled: boolean
+    files: GetDatasetDetailsVersionFileResponse[]
+    doi: GetDatasetDetailsDOIResponse
 }

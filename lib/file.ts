@@ -6,8 +6,8 @@ import { GetDatasetDetailsVersionResponse } from "../types/BffAPI";
  * @returns true if the files set has size
  */
 function hasFilesSize(current_version: GetDatasetDetailsVersionResponse): boolean {
-    return current_version?.files?.length > 0 &&
-        current_version?.files?.[0].size_bytes > 0;
+    return current_version?.files_in?.length > 0 &&
+        current_version?.files_in?.[0].size_bytes > 0;
 }
 
 /**
@@ -21,7 +21,7 @@ function totalBytes(current_version: GetDatasetDetailsVersionResponse): number {
         return 0;
     }
 
-    return current_version.files.
+    return current_version.files_in.
         map(x => x.size_bytes).
         reduce((acc, size) => 0 + acc + size, 0)
 }

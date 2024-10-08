@@ -1,4 +1,5 @@
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
 import { useState } from 'react';
 import { MaterialSymbol } from "react-material-symbols";
 import { isNewVersionEnabled } from "../../../lib/featureFlags";
@@ -15,6 +16,8 @@ export default function DataExplorer(props: Props) {
   const { data: session, status } = useSession();
   const [loadingTable, setLoadingTable] = useState(false);
   const [showUploadDataModal, setShowUploadDataModal] = useState(false);
+  const router = useRouter();
+
 
   function handleSelectFile(file: GetDatasetDetailsVersionFileResponse): void {
     setLoadingTable(true);
@@ -59,7 +62,7 @@ export default function DataExplorer(props: Props) {
               <li className={`text-sm text-primary-500 font-light whitespace-nowrap my-1`}>
                 <div className="flex gap-2 items-center py-1">
                   <MaterialSymbol icon="folder" size={22} grade={-25} weight={200} className="align-middle" />
-                  <p className="text-sm py-0 my-0">{props.dataset?.current_version?.files?.length ?? 0} files</p>
+                  <p className="text-sm py-0 my-0">{props.dataset?.current_version?.files_in?.length ?? 0} files</p>
                 </div>
               </li>
               <li className={`text-sm text-primary-500 font-light whitespace-nowrap my-1`}>
@@ -83,7 +86,14 @@ export default function DataExplorer(props: Props) {
         dataset={props.dataset}
         datasetVersion={props.dataset.current_version}
         showUploadDataModal={showUploadDataModal}
-        onDrawerClose={() => setShowUploadDataModal(false)}
+        onDrawerClose={(newVersionCreated) => {
+          setShowUploadDataModal(false)
+
+          if (newVersionCreated) {
+            router.reload();
+          }
+
+        }}
       />
     </div >
   )
