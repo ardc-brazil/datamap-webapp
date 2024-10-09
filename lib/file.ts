@@ -2,26 +2,26 @@ import { GetDatasetDetailsVersionResponse } from "../types/BffAPI";
 
 /**
  * Check if the files has size_bytes available to calculate.
- * @param current_version Dataset version with files
+ * @param version Dataset version with files
  * @returns true if the files set has size
  */
-function hasFilesSize(current_version: GetDatasetDetailsVersionResponse): boolean {
-    return current_version?.files_in?.length > 0 &&
-        current_version?.files_in?.[0].size_bytes > 0;
+function hasFilesSize(version: GetDatasetDetailsVersionResponse): boolean {
+    return version?.files_in?.length > 0 &&
+        version?.files_in?.[0].size_bytes > 0;
 }
 
 /**
  * Total bytes of the file set
- * @param current_version Dataset version with files
+ * @param version Dataset version with files
  * @returns Number with total bytes of the file set
  */
-function totalBytes(current_version: GetDatasetDetailsVersionResponse): number {
+function totalBytes(version: GetDatasetDetailsVersionResponse): number {
 
-    if (!hasFilesSize(current_version)) {
+    if (!hasFilesSize(version)) {
         return 0;
     }
 
-    return current_version.files_in.
+    return version.files_in.
         map(x => x.size_bytes).
         reduce((acc, size) => 0 + acc + size, 0)
 }
@@ -41,11 +41,11 @@ export function bytesToSize(bytes: number): string {
 
 /**
  * Total dataset version files size.
- * @param current_version Dataset version with files to calculate the size.
+ * @param version Dataset version with files to calculate the size.
  * @returns String that represents the total dataset version files size.
  */
-export function totalDatasetVersionFilesSize(current_version: GetDatasetDetailsVersionResponse): string {
-    const total = totalBytes(current_version);
+export function totalDatasetVersionFilesSize(version: GetDatasetDetailsVersionResponse): string {
+    const total = totalBytes(version);
     return bytesToSize(total);
 }
 

@@ -18,6 +18,8 @@ export async function createDOI(context: AppLocalContext, req: CreateDOIRequest)
         tenancy: context.tenancy,
     } as DOICreationRequest;
 
+    console.log("versionName", versionName);
+
     const response = await axiosInstance.post(
         `/datasets/${datasetId}/versions/${versionName}/doi`,
         request,

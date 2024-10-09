@@ -1,22 +1,27 @@
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/router";
 import { useState } from 'react';
 import { MaterialSymbol } from "react-material-symbols";
 import { isNewVersionEnabled } from "../../../lib/featureFlags";
-import { GetDatasetDetailsResponse, GetDatasetDetailsVersionFileResponse } from "../../../types/BffAPI";
+import { GetDatasetDetailsResponse, GetDatasetDetailsVersionFileResponse, GetDatasetDetailsVersionResponse } from "../../../types/BffAPI";
+import NewVersionButton from "../NewVersionButton";
 import DatasetFilesList from "./DatasetFilesList";
 import DatasetVersionHandler from "./DatasetVersionHandler";
 import NewVersionDrawer from "./NewVersionDrawer";
+import Router from "next/router";
+import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
+import { get } from "http";
+import { getVersionByName } from "../../../lib/datasetVersionSelector";
 
 export interface Props {
   dataset: GetDatasetDetailsResponse
+  selectedVersionName?: string
 }
 
 export default function DataExplorer(props: Props) {
   const { data: session, status } = useSession();
   const [loadingTable, setLoadingTable] = useState(false);
   const [showUploadDataModal, setShowUploadDataModal] = useState(false);
-  const router = useRouter();
+  const [selectedDatasetVersion, setSelectedDatasetVersion] = useState(getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset))
 
 
   function handleSelectFile(file: GetDatasetDetailsVersionFileResponse): void {
@@ -44,14 +49,19 @@ export default function DataExplorer(props: Props) {
         <div className={`flex flex-col min-w-[200px] w-full`}>
           <div>
             <h6 className="font-semibold">Data explorer</h6>
-            <DatasetVersionHandler datasetVersion={props.dataset.current_version} />
+            <DatasetVersionHandler
+              datasetVersion={selectedDatasetVersion}
+              availableVersions={props.dataset.versions}
+              dataset={props.dataset}
+              onNewVersionClick={() => setShowUploadDataModal(true)}
+            />
           </div>
 
           {/* files list */}
           <div className="h-full">
             <DatasetFilesList
               dataset={props.dataset}
-              datasetVersion={props.dataset.current_version}
+              datasetVersion={selectedDatasetVersion}
               handleSelectFile={handleSelectFile}
               itemsPerPage={10} />
           </div>
@@ -62,7 +72,7 @@ export default function DataExplorer(props: Props) {
               <li className={`text-sm text-primary-500 font-light whitespace-nowrap my-1`}>
                 <div className="flex gap-2 items-center py-1">
                   <MaterialSymbol icon="folder" size={22} grade={-25} weight={200} className="align-middle" />
-                  <p className="text-sm py-0 my-0">{props.dataset?.current_version?.files_in?.length ?? 0} files</p>
+                  <p className="text-sm py-0 my-0">{getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset)?.files_in?.length ?? 0} files</p>
                 </div>
               </li>
               <li className={`text-sm text-primary-500 font-light whitespace-nowrap my-1`}>
@@ -84,37 +94,19 @@ export default function DataExplorer(props: Props) {
       </div>
       <NewVersionDrawer
         dataset={props.dataset}
-        datasetVersion={props.dataset.current_version}
+        datasetVersion={selectedDatasetVersion}
         showUploadDataModal={showUploadDataModal}
         onDrawerClose={(newVersionCreated) => {
           setShowUploadDataModal(false)
 
           if (newVersionCreated) {
-            router.reload();
+            Router.push({
+              pathname: ROUTE_PAGE_DATASETS_DETAILS({ id: props.dataset.id}),
+            });
           }
 
         }}
       />
     </div >
   )
-}
-
-
-function NewVersionButton(props) {
-  return (
-    <button type="button"
-      className="w-fit btn btn-primary-outline btn-small whitespace-nowrap rounded-3xl border-0"
-      onClick={props.onClick}
-    >
-      <div className="flex flex-row justify-center items-center">
-        <MaterialSymbol
-          className="pr-2"
-          icon="add"
-          size={16}
-          grade={-25}
-          weight={400} />
-        <span>New Version</span>
-      </div>
-    </button>
-  );
 }

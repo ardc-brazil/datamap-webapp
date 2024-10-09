@@ -1,3 +1,4 @@
+import Alert from "../../../components/base/Alert";
 import { TabPanelDataCard } from "../../../components/DatasetDetails/DataCard/TabPanelDataCard";
 import DatasetInstitution from "../../../components/DatasetDetails/DatasetInstitution";
 import DatasetMoreSettingsButton from "../../../components/DatasetDetails/DatasetMoreSettingsButton";
@@ -5,19 +6,17 @@ import { TabPanelSettings } from "../../../components/DatasetDetails/TabPanelSet
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
 import { DownloadDatafilesButton } from "../../../components/DownloadDatafilesButton";
 import LoggedLayout from "../../../components/LoggedLayout";
-import { NewContext } from "../../../lib/appLocalContext";
-import { getDatasetBy } from "../../../lib/dataset";
-import { UserDetailsResponse, canEditDataset, getUserByUID } from "../../../lib/users";
+import { UserDetailsResponse, canEditDataset } from "../../../lib/users";
 import { GetDatasetDetailsResponse } from "../../../types/BffAPI";
 
 interface Props {
   // TODO: Map this BFF response to a PageObject to avoid high coupling with the API.
   dataset: GetDatasetDetailsResponse
   user: UserDetailsResponse
+  selectedVersionName: string
 }
 
 export default function DatasetDetailsPage(props: Props) {
-
   return (
     <LoggedLayout>
       <div className="w-full">
@@ -25,7 +24,7 @@ export default function DatasetDetailsPage(props: Props) {
           <div className="flex flex-row">
             {/* Title */}
             <div className="basis-10/12">
-              <h1 className="font-extrabold">{props.dataset.name}</h1>
+              <h1 className="font-extrabold">{props.dataset.name} </h1>
               <DatasetInstitution dataset={props.dataset} user={props.user} />
             </div>
             {/* Actions */}
@@ -43,6 +42,7 @@ export default function DatasetDetailsPage(props: Props) {
               title="Data Card"
               dataset={props.dataset}
               user={props.user}
+              selectedVersionName={props.selectedVersionName}
             />
             {/* <TabPanelMetadata title="Metadata" dataset={props.dataset} /> */}
             {/* TODO: Enable discussion tab - Disabled while empty */}
@@ -57,22 +57,3 @@ export default function DatasetDetailsPage(props: Props) {
     </LoggedLayout>
   );
 }
-
-export async function getServerSideProps({ req, res, query }) {
-  const context = await NewContext(req);
-  const datasetId = query.datasetId as string;
-  const dataset = await getDatasetBy(context, datasetId);
-  const user = await getUserByUID(context);
-
-  return {
-    props: {
-      dataset,
-      user
-    }
-  };
-}
-
-DatasetDetailsPage.auth = {
-  role: "admin",
-  loading: <div>loading...</div>,
-};
