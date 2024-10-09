@@ -8,18 +8,20 @@ import { BFFAPI } from "../../gateways/BFFAPI";
 import { isDOIUpdateStatusEnabled } from "../../lib/featureFlags";
 import { UserDetailsResponse } from "../../lib/users";
 import { APIError, ErrorDetails } from "../../types/APIError";
-import { CreateDOIRequest, DeleteDOIRequest, GetDatasetDetailsDOIResponse, GetDatasetDetailsDOIResponseRegisterMode, GetDatasetDetailsDOIResponseState, GetDatasetDetailsResponse, NavigateDOIStatusRequest } from "../../types/BffAPI";
+import { CreateDOIRequest, DeleteDOIRequest, GetDatasetDetailsDOIResponse, GetDatasetDetailsDOIResponseRegisterMode, GetDatasetDetailsDOIResponseState, GetDatasetDetailsResponse, GetDatasetDetailsVersionResponse, NavigateDOIStatusRequest } from "../../types/BffAPI";
 import Alert from "../base/Alert";
 import Modal from "../base/PopupModal";
 import { ContextMenuButton } from "../ContextMenu/ContextMenuButton";
 import { ContextMenuButtonItem } from "../ContextMenu/ContextMenuButtonItem";
 import { CardItem } from "./CardItem";
+import { getVersionByName } from "../../lib/datasetVersionSelector";
 
 const bffGateway = new BFFAPI();
 
 interface Props {
     dataset: GetDatasetDetailsResponse
     user?: UserDetailsResponse
+    selectedVersionName: string
 }
 
 interface ManagementOperationResult {
@@ -30,10 +32,11 @@ interface ManagementOperationResult {
 }
 
 export default function DatasetCitation(props: Props) {
+
     const { data: session, status } = useSession();
     const [editing, setEditing] = useState(false);
     const [generating, setGenerating] = useState(false);
-    const [currentDOI, setCurrentDOI] = useState(props.dataset.current_version.doi)
+    const [currentDOI, setCurrentDOI] = useState(getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset).doi)
     const [DOIManagementOperationResult, setDOIManagementOperationResult] = useState(null as ManagementOperationResult)
     const [showModalDOIStatusNotification, setShowModalDOIStatusNotification] = useState(false)
     const [nextDOIStatusSelected, setNextDOIStatusSelected] = useState("")
@@ -52,7 +55,7 @@ export default function DatasetCitation(props: Props) {
     function onDeleteDOIConfirmedClick() {
         const req = {
             datasetId: props.dataset.id,
-            versionName: props.dataset.current_version.name
+            versionName: getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset)?.name
         } as DeleteDOIRequest;
 
         bffGateway.deleteDOI(req)
@@ -124,7 +127,7 @@ export default function DatasetCitation(props: Props) {
         if (isDOIUpdateStatusEnabled(session)) {
             const req = {
                 datasetId: props.dataset.id,
-                versionName: props.dataset.current_version.name,
+                versionName: getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset)?.name,
                 state: newState
             } as NavigateDOIStatusRequest;
 
@@ -159,6 +162,7 @@ export default function DatasetCitation(props: Props) {
             onCanceled={() => setGenerating(false)}
             onAutoDOICreatedWithSuccess={onAutoDOICreatedWithSuccess}
             onAutoDOICreatedWithError={onAutoDOICreatedWithError}
+            selectedVersionName={props.selectedVersionName}
         />
     }
 
@@ -169,7 +173,7 @@ export default function DatasetCitation(props: Props) {
             onManualDOIFormEditionCancel={onManualDOIFormEditionCancel}
             onManualDOICreatedWithSuccess={onManualDOICreatedWithSuccess}
             onManualDOICreatedWithError={onManualDOICreatedWithError}
-        />
+            selectedVersionName={props.selectedVersionName} />
     }
 
     function getEmailToHTML(emails: string[], doi: GetDatasetDetailsDOIResponse) {
@@ -231,6 +235,7 @@ export default function DatasetCitation(props: Props) {
                 onRegisterAutoDOIClick={onRegisterAutoDOIClick}
                 onDeleteDOIConfirmedClick={onDeleteDOIConfirmedClick}
                 onNavigateTo={onNavigateTo}
+                selectedVersionName={props.selectedVersionName}
             />
         </>
     );
@@ -251,7 +256,7 @@ function CitationAutoDOIForm(props: CitationAutoDOIFormProps) {
 
         const createDOIRequest = {
             datasetId: props.dataset.id,
-            versionName: props.dataset.current_version.name,
+            versionName: getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset)?.name,
             mode: GetDatasetDetailsDOIResponseRegisterMode.AUTO
         } as CreateDOIRequest;
 
@@ -329,7 +334,7 @@ function CitationManualDOIForm(props: CitationEditionProps) {
         try {
             const createDOIRequest = {
                 datasetId: props.dataset.id,
-                versionName: props.dataset.current_version.name,
+                versionName: getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset)?.name,
                 identifier: values.doi.text,
                 mode: GetDatasetDetailsDOIResponseRegisterMode.MANUAL
             } as CreateDOIRequest;
@@ -353,7 +358,7 @@ function CitationManualDOIForm(props: CitationEditionProps) {
             <Formik
                 initialValues={{
                     doi: {
-                        text: props?.dataset?.current_version?.doi?.identifier,
+                        text: getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset)?.doi?.identifier,
                     }
                 }}
                 validationSchema={schema}

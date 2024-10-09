@@ -37,6 +37,12 @@ export const ROUTE_PAGE_NOTEBOOKS_NEW = ROUTE_PAGE_NOTEBOOKS + "/new";
 export const ROUTE_PAGE_DATASETS_DETAILS = (params) => replaceIt(ROUTE_APP_CONTEXT + '/datasets/:id', params);
 
 /**
+ * Route to the datasets specific version internal page.
+ * @constant
+ */
+export const ROUTE_PAGE_DATASETS_VERSION_DETAILS = (params) => replaceIt(ROUTE_APP_CONTEXT + '/datasets/:id/versions/:versionName', params);
+
+/**
  * Route to the new datasets internal page.
  * @constant
  */

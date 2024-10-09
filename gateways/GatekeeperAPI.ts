@@ -60,17 +60,6 @@ export class GatekeeperAPI {
         // Mapping API response to local response
         const result = response.data as CreateDraftDatasetVersionResponse;
 
-        console.log("version", result);
-
-        // const result = {
-        //     id: "new_uuid",
-        //     name: "New name mocked",
-        //     design_state: "DRAFT",
-        //     doi: null,
-        //     files: request.datafilesPreviouslyUploaded,
-        //     is_enabled: true
-        // } as CreateDraftDatasetVersionResponse;
-
         return result;
     }
 }

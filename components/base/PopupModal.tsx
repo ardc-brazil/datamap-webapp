@@ -7,6 +7,7 @@ interface ModalProps {
   children: any;
   title: string;
   show?: Boolean
+  noPaddingContent?: boolean
 }
 
 export default function Modal(props: ModalProps) {
@@ -36,7 +37,7 @@ export default function Modal(props: ModalProps) {
                   </button>
                 </div>
                 {/*body*/}
-                <div className="relative p-6 flex-auto">
+                <div className={`relative flex-auto ${!props.noPaddingContent && `p-6`}`}>
                   <div className="my-4 text-primary-500 text-lg leading-relaxed">
                     {props.children}
                   </div>

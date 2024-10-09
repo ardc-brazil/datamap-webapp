@@ -46,6 +46,9 @@ export interface GetDatasetDetailsVersionResponse {
     is_enabled: boolean
     files_in: GetDatasetDetailsVersionFileResponse[]
     doi: GetDatasetDetailsDOIResponse
+    created_by: string
+    created_at: Date
+    updated_at: Date
 }
 
 export interface GetDatasetDetailsDOIResponse {
@@ -164,7 +167,10 @@ export interface GetDatasetsDetasetDetailsResponse {
             identifier: string
             state: GetDatasetDetailsDOIResponseState
             mode: GetDatasetDetailsDOIResponseRegisterMode
-        }
+        },
+        created_by: string
+        created_at: Date
+        updated_at: Date
     }
 }
 

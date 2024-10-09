@@ -32,7 +32,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
       // TODO: Create endpoints to get data quality information.
       if (props.dataset?.data) {
         setData({
-          updateFrequency: "Quarterly",
+          updateFrequency: "Quarterly"
         });
         setLoading(false);
       }
@@ -78,7 +78,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
 
           <hr className="my-4" />
 
-          <DataExplorer dataset={props.dataset} />
+          <DataExplorer dataset={props.dataset} selectedVersionName={props.selectedVersionName} />
 
           <hr className="my-4" />
           <div className="flex flex-col divide-y divide-primary-200 gap-8 mt-16 mb-16">
@@ -112,6 +112,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
                 <DatasetCitation
                   dataset={props.dataset}
                   user={props.user}
+                  selectedVersionName={props.selectedVersionName}
                 />
               </div>
             }
