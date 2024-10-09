@@ -1,7 +1,7 @@
 import { NewContext } from "../../../../lib/appLocalContext";
 import { getDatasetBy } from "../../../../lib/dataset";
 import { getUserByUID } from "../../../../lib/users";
-import DatasetDetailsPage from "../DatasetDetailsPage";
+import DatasetDetailsPage from "../../../../components/DatasetDetailsPage";
 
 export default function DatasetDetailsPageById(props) {
     return DatasetDetailsPage(props)

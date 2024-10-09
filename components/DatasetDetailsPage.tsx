@@ -1,13 +1,12 @@
-import Alert from "../../../components/base/Alert";
-import { TabPanelDataCard } from "../../../components/DatasetDetails/DataCard/TabPanelDataCard";
-import DatasetInstitution from "../../../components/DatasetDetails/DatasetInstitution";
-import DatasetMoreSettingsButton from "../../../components/DatasetDetails/DatasetMoreSettingsButton";
-import { TabPanelSettings } from "../../../components/DatasetDetails/TabPanelSettings";
-import { Tabs } from "../../../components/DatasetDetails/Tabs";
-import { DownloadDatafilesButton } from "../../../components/DownloadDatafilesButton";
-import LoggedLayout from "../../../components/LoggedLayout";
-import { UserDetailsResponse, canEditDataset } from "../../../lib/users";
-import { GetDatasetDetailsResponse } from "../../../types/BffAPI";
+import { TabPanelDataCard } from "./DatasetDetails/DataCard/TabPanelDataCard";
+import DatasetInstitution from "./DatasetDetails/DatasetInstitution";
+import DatasetMoreSettingsButton from "./DatasetDetails/DatasetMoreSettingsButton";
+import { TabPanelSettings } from "./DatasetDetails/TabPanelSettings";
+import { Tabs } from "./DatasetDetails/Tabs";
+import { DownloadDatafilesButton } from "./DownloadDatafilesButton";
+import LoggedLayout from "./LoggedLayout";
+import { UserDetailsResponse, canEditDataset } from "../lib/users";
+import { GetDatasetDetailsResponse } from "../types/BffAPI";
 
 interface Props {
   // TODO: Map this BFF response to a PageObject to avoid high coupling with the API.
