@@ -16,7 +16,7 @@ interface Props {
 export default function DatasetFilesList(props: Props) {
 
     const itemsPerPage = props.itemsPerPage;
-    const [currentFilesList, setCurrentFilesList] = useState(props.datasetVersion?.files)
+    const [currentFilesList, setCurrentFilesList] = useState(props.datasetVersion?.files_in)
     const [nameFilter, setNameFilter] = useState("")
     const [page, setPage] = useState(1);
 
@@ -28,9 +28,9 @@ export default function DatasetFilesList(props: Props) {
     // }
 
     useEffect(() => {
-        setCurrentFilesList(props.datasetVersion?.files)
+        setCurrentFilesList(props.datasetVersion?.files_in)
         onTextSearchChange(nameFilter)
-    }, [props.datasetVersion?.files])
+    }, [props.datasetVersion?.files_in])
 
 
     function getMaxPageNumber() {
@@ -54,16 +54,16 @@ export default function DatasetFilesList(props: Props) {
     function filterFiles(filterText: string) {
         setNameFilter(filterText)
         if (filterText == "") {
-            setCurrentFilesList(props.datasetVersion.files)
+            setCurrentFilesList(props.datasetVersion.files_in)
         } else {
-            const filtered = props.datasetVersion.files.filter(x => x.name.includes(filterText))
+            const filtered = props.datasetVersion.files_in.filter(x => x.name.includes(filterText))
             setCurrentFilesList(filtered)
         }
         setPage(1)
     }
 
     function shouldPaginate() {
-        return props.datasetVersion?.files?.length > itemsPerPage;
+        return props.datasetVersion?.files_in?.length > itemsPerPage;
     }
 
     return (
@@ -109,7 +109,7 @@ export default function DatasetFilesList(props: Props) {
                     <li>
                         <div className="flex justify-end items-center space-x-4">
                             <span className="text-xs">
-                                Total files: {props?.datasetVersion?.files?.length}
+                                Total files: {props?.datasetVersion?.files_in?.length}
                             </span>
                             <button
                                 className="h-8 w-24 p-2 btn whitespace-nowrap text-xs align-middle flex flex-row justify-center items-center space-x-2 hover:border hover:border-primary-200 disabled:text-primary-400 disabled:hover:border-0"

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { httpErrorHandler } from "../lib/rpc";
 import { UserDetailsResponse } from "../lib/users";
-import { CreateDatasetRequestV2, CreateDatasetResponseV2, CreateDOIRequest, CreateDOIResponse, DeleteDOIRequest, FileDownloadLinkRequest, FileDownloadLinkResponse, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, NavigateDOIStatusRequest, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
+import { CreateDatasetRequestV2, CreateDatasetResponseV2, CreateDOIRequest, CreateDOIResponse, CreateDraftDatasetVersionRequest, CreateDraftDatasetVersionResponse, DeleteDOIRequest, FileDownloadLinkRequest, FileDownloadLinkResponse, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, NavigateDOIStatusRequest, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
 
 
 /**
@@ -97,17 +97,11 @@ export class BFFAPI {
             const versionName = request.versionName;
             const response = await axios.put(`/api/versions/${versionName}`, request);
 
-            if (response.status == 200) {
-                return response.data;
-            }
-
-            console.log(response);
+            return response.data;
         }
-        catch (error) {
-            console.log(error);
+        catch (e) {
+            throw httpErrorHandler(e);
         }
-
-        return Promise.reject("Error to publish a dataset version");
     }
 
     /**
@@ -171,6 +165,24 @@ export class BFFAPI {
             const response = await axios.post(`/api/filesdownload/`, request)
             return response.data;
         } catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    /**
+     * Create dataset version in draft state
+     * @param request api request
+     * @returns A new DatasetVersion in draft state
+     */
+    async createNewDraftDatasetVersion(request: CreateDraftDatasetVersionRequest): Promise<CreateDraftDatasetVersionResponse> {
+        try {
+            const response = await axios.post(`/api/versions`, request);
+
+            if (response.status == 200) {
+                return response.data as CreateDraftDatasetVersionResponse;
+            }
+        }
+        catch (error) {
             throw httpErrorHandler(error);
         }
     }
