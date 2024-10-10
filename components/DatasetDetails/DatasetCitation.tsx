@@ -5,16 +5,16 @@ import { MaterialSymbol } from 'react-material-symbols';
 import 'react-material-symbols/outlined'; // Place in your root app file. There are also `sharp` and `outlined` variants.
 import * as Yup from 'yup';
 import { BFFAPI } from "../../gateways/BFFAPI";
+import { getVersionByName } from "../../lib/datasetVersionSelector";
 import { isDOIUpdateStatusEnabled } from "../../lib/featureFlags";
 import { UserDetailsResponse } from "../../lib/users";
 import { APIError, ErrorDetails } from "../../types/APIError";
-import { CreateDOIRequest, DeleteDOIRequest, GetDatasetDetailsDOIResponse, GetDatasetDetailsDOIResponseRegisterMode, GetDatasetDetailsDOIResponseState, GetDatasetDetailsResponse, GetDatasetDetailsVersionResponse, NavigateDOIStatusRequest } from "../../types/BffAPI";
+import { CreateDOIRequest, DeleteDOIRequest, GetDatasetDetailsDOIResponse, GetDatasetDetailsDOIResponseRegisterMode, GetDatasetDetailsDOIResponseState, GetDatasetDetailsResponse, NavigateDOIStatusRequest } from "../../types/BffAPI";
 import Alert from "../base/Alert";
 import Modal from "../base/PopupModal";
 import { ContextMenuButton } from "../ContextMenu/ContextMenuButton";
 import { ContextMenuButtonItem } from "../ContextMenu/ContextMenuButtonItem";
 import { CardItem } from "./CardItem";
-import { getVersionByName } from "../../lib/datasetVersionSelector";
 
 const bffGateway = new BFFAPI();
 
@@ -323,8 +323,9 @@ function CitationManualDOIForm(props: CitationEditionProps) {
         doi: Yup.object().shape({
             text: Yup.string()
                 .required("The indentifier is required. e.g: 10.1000/182")
-                .matches(/^10\.\d{4, 9}\/[-._;()/:A-Z0-9]+$/i,
-                    { message: "invalid format" }),
+                .matches(/^10\.\d{4,9}\/[-._;()/:A-Z0-9]+$/i,
+                    { message: "Invalid format. A valid format is e.g: 10.1000/182" }
+                ),
         })
     });
 
@@ -353,12 +354,14 @@ function CitationManualDOIForm(props: CitationEditionProps) {
         }
     }
 
+    const selectedVersion = getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset)
+
     return (
         <div>
             <Formik
                 initialValues={{
                     doi: {
-                        text: getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset)?.doi?.identifier,
+                        text: selectedVersion?.doi?.identifier ?? ""
                     }
                 }}
                 validationSchema={schema}
