@@ -21,17 +21,6 @@ export function isUppyUploadEnabled(session): boolean {
     return engUserIds.indexOf(session?.user?.uid) >= 0;
 }
 
-
-
-/**
- * Is the feature DOI Management enabled for user?
- * @param session NextAuth Session.
- * @returns True if the feature is enabled. Otherwise false.
- */
-export function isDOIManagementEnabled(session): boolean {
-    return engUserIds.indexOf(session?.user?.uid) >= 0;
-}
-
 /**
  * Is the feature DOI status upate enabled for user?
  * @param session NextAuth Session.

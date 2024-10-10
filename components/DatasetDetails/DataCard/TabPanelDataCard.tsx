@@ -1,7 +1,5 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { isDOIManagementEnabled } from "../../../lib/featureFlags";
-
 import DatasetAuthorsForm from "../DatasetAuthorsForm";
 import DatasetCitation from "../DatasetCitation";
 import DatasetColaboratorsForm from "../DatasetColaboratorsForm";
@@ -13,8 +11,8 @@ import { TabPanel, TabPanelProps } from "../TabPanel";
 import DataExplorer from "./DataExplorer";
 import { DatasetDescription } from "./DatasetDescription";
 import DatasetFreshness from "./DatasetFreshness";
-import DatasetUsability from "./DatasetUsability";
 import DatasetLicense from "./DatasetLicense";
+import DatasetUsability from "./DatasetUsability";
 
 
 interface TabPanelDataObject {
@@ -67,8 +65,8 @@ export function TabPanelDataCard(props: TabPanelProps) {
             </div>
             <div className="w-96">
               <div className="col-span-3 flex flex-col gap-2 pl-8">
-                {/* TODO: Enable Usability for a dataset */}                
-                <DatasetUsability dataset={props.dataset}/>
+                {/* TODO: Enable Usability for a dataset */}
+                <DatasetUsability dataset={props.dataset} />
                 <DatasetLicense dataset={props.dataset} />
                 <DatasetFreshness dataset={props.dataset} />
               </div>
@@ -105,17 +103,14 @@ export function TabPanelDataCard(props: TabPanelProps) {
               <h6 className="font-semibold py-4">Provenance</h6>
               <DatasetProvenance dataset={props.dataset} user={props.user} />
             </div>
-
-            {isDOIManagementEnabled(session) &&
-              <div>
-                <h6 className="font-semibold py-4">Citation</h6>
-                <DatasetCitation
-                  dataset={props.dataset}
-                  user={props.user}
-                  selectedVersionName={props.selectedVersionName}
-                />
-              </div>
-            }
+            <div>
+              <h6 className="font-semibold py-4">Citation</h6>
+              <DatasetCitation
+                dataset={props.dataset}
+                user={props.user}
+                selectedVersionName={props.selectedVersionName}
+              />
+            </div>
           </div>
         </div>
       </div>

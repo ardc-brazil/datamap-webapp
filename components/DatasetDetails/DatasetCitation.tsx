@@ -152,6 +152,7 @@ export default function DatasetCitation(props: Props) {
             setGenerating(false)
             setEditing(false)
             setShowModalDOIStatusNotification(true)
+            setNextDOIStatusSelected(newState)
         }
     }
 

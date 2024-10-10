@@ -28,8 +28,8 @@ export async function createDOI(context: AppLocalContext, req: CreateDOIRequest)
 
     const result = {
         identifier: response.data?.identifier,
-        mode: response.data?.mode?.toString().toLowerCase(),
-        state: response.data?.state?.toLowerCase(),
+        mode: response.data?.mode?.toString().toUpperCase(),
+        state: response.data?.state?.toString().toUpperCase(),
     } as CreateDOIResponse
 
     return result;
