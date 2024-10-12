@@ -6,7 +6,6 @@
     "start": "next start",
     "test": "jest",
     "testing": "jest --watch",
-    "cypress": "cypress open",
     "test:coverage": "npm run test && npm run test:coverage:report",
     "test:coverage:report": "open -a \"Google Chrome\" coverage/lcov-report/index.html"
   },
