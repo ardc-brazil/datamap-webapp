@@ -89,7 +89,7 @@ npm run test:coverage:report
 
 The jest plugin for vscode could help you to run locally and see the coverage, see more https://marketplace.visualstudio.com/items?itemName=Orta.vscode-jest
 
-### e2e tests
+### E2E Tests
 
 We're using Playwright.
 To run
@@ -106,6 +106,21 @@ To check the report results
 ```sh
 npx playwright show-report
 ```
+
+Each new test must use Page Object Model. Check more in https://playwright.dev/docs/pom.
+
+#### Test cases
+
+Keep the list of test cases up to date.
+
+- [x] Home page
+- [] Internal home page
+- [] New dataset 
+- [] Edit global info info from dataset
+- [] Register a DOI manually
+- [] Register a DOI automatically
+- [] Add new version to dataset
+
 
 ### Env Vars
 

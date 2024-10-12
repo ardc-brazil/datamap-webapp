@@ -1,24 +1,28 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
+import { DataMapHomePage as DatamapHomePage } from "./datamap-home.page";
 
 test('has title', async ({ page }) => {
-    await page.goto('http://localhost:3000/');
-
-    // Expect a title "to contain" a substring.
-    await expect(page).toHaveTitle(/DataMap/);
+    const pageObj = new DatamapHomePage(page);
+    await pageObj.goto()
+    await pageObj.assertTitle()
 });
 
 test('has welcome text', async ({ page }) => {
-    await page.goto('http://localhost:3000/');
-    await expect(page.getByRole('main')).toContainText('Scientific data analysis, for everyone.');
-    await expect(page.getByRole('main')).toContainText('DataMap');
+    const pageObj = new DatamapHomePage(page);
+
+    await pageObj.goto()
+    await pageObj.getHeaders()
 });
 
 test('has main links', async ({ page }) => {
-    await page.goto('http://localhost:3000/');
+    const pageObj = new DatamapHomePage(page);
+    await pageObj.goto()
+    await pageObj.getLinks()
+});
 
-    await expect(page.getByRole('contentinfo')).toContainText('About');
-    await expect(page.getByRole('contentinfo')).toContainText('Support');
-    await expect(page.getByRole('contentinfo')).toContainText('Data Policy');
-    await expect(page.getByRole('contentinfo')).toContainText('Research Group');
-    await expect(page.getByRole('contentinfo')).toContainText('Partners and Supporters');
+test('has sign buttons', async ({ page }) => {
+    const pageObj = new DatamapHomePage(page);
+    await pageObj.goto()
+    await pageObj.getSignButton.isVisible()
+    await pageObj.getResearchGroup.isVisible()
 });

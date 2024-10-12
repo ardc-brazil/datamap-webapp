@@ -8,6 +8,8 @@ export class DataMapHomePage {
   readonly getDataPolicy: Locator;
   readonly getResearchGroup: Locator;
   readonly getPartnersAndSupporters: Locator;
+  readonly getSignButton: Locator;
+  readonly getRegisterButton: Locator;
 
   readonly titleHeader: Locator;
   readonly SubtitleHeader: Locator;
@@ -23,6 +25,9 @@ export class DataMapHomePage {
 
     this.titleHeader = page.locator('h1', { hasText: 'DataMap' });
     this.SubtitleHeader = page.locator('h1', { hasText: 'Scientific data analysis, for everyone.' });
+
+    this.getSignButton = page.getByRole('link', { name: 'Sign in', exact: true });
+    this.getRegisterButton = page.getByRole('button', { name: 'Register' });
   }
 
   async goto() {
