@@ -91,11 +91,20 @@ The jest plugin for vscode could help you to run locally and see the coverage, s
 
 ### e2e tests
 
-Use Cypress for end-to-end tests.
-
+We're using Playwright.
+To run
+```sh
+npx playwright test --ui
 ```
-# Open cypress screen
-npm run cypress
+
+To generate new tests
+```sh
+npx playwright codegen
+```
+
+To check the report results
+```sh
+npx playwright show-report
 ```
 
 ### Env Vars
