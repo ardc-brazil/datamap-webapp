@@ -22,7 +22,7 @@
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx", "tests/datamap-home-with-pagobject.spects",
+    "**/*.tsx",
   ],
   "exclude": [
     "node_modules"
