@@ -7,7 +7,8 @@
     "test": "jest",
     "testing": "jest --watch",
     "test:coverage": "npm run test && npm run test:coverage:report",
-    "test:coverage:report": "open -a \"Google Chrome\" coverage/lcov-report/index.html"
+    "test:coverage:report": "open -a \"Google Chrome\" coverage/lcov-report/index.html",
+    "e2e": "npx playwright test"
   },
   "dependencies": {
     "@types/jest": "^29.5.12",
