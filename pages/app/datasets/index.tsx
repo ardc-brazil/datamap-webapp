@@ -34,7 +34,7 @@ function useDatasetSearch(currentSearchParameters) {
     return new URLSearchParams(c).toString();
   }
 
-  const { data, error, isLoading } = useSWR(`/api/datasets?${buildQueryStringFrom(currentSearchParameters)}`, fetcher, {
+  const { data, error, isLoading } = useSWR(`/api/datasets?minimal=true&${buildQueryStringFrom(currentSearchParameters)}`, fetcher, {
     onErrorRetry: SWRRetry,
   })
 
