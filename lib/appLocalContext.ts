@@ -27,12 +27,16 @@ export interface AppLocalContext {
 
 export async function NewContext(req: NextRequest | NextApiRequest): Promise<AppLocalContext> {
     const token = await getToken({ req: req })
-    const tenancyResolver = new TenanciesResolver();
+    // TODO: Update it when we have a tenancy selector
+    // const tenancyResolver = new TenanciesResolver();
+
+    const tenancies = buildTenancy(token)
 
     return {
         uid: token?.uid as string,
-        tenancies: buildTenancy(token),
-        tenancy: tenancyResolver.getCurrentTenancyOrDefaultFromApi(req as NextApiRequest)
+        tenancies: tenancies,
+        // tenancy: tenancyResolver.getCurrentTenancyOrDefaultFromApi(req as NextApiRequest)
+        tenancy: tenancies?.[0] ?? defaultTenancy,
     };
 }
 
