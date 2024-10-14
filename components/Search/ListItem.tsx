@@ -3,17 +3,17 @@ import { MaterialSymbol } from "react-material-symbols";
 import 'react-material-symbols/outlined'; // Place in your root app file. There are also `sharp` and `outlined` variants.
 import Moment from "react-moment";
 import { ROUTE_PAGE_DATASETS } from "../../contants/InternalRoutesConstants";
-import { totalDatasetVersionFilesSize } from "../../lib/file";
-import { GetDatasetsDetasetDetailsResponse } from "../../types/BffAPI";
+import { bytesToSize } from "../../lib/file";
+import { GetMinimalDatasetsDetasetDetailsResponse } from "../../types/BffAPI";
 import { Badge } from "./Badge";
 
 
 interface Props {
-  dataset: GetDatasetsDetasetDetailsResponse
+  dataset: GetMinimalDatasetsDetasetDetailsResponse
 }
 
 // @ts-check
-export function ListItem(props: Props) {
+export default function ListItem(props: Props) {
   return (
     <Link href={`${ROUTE_PAGE_DATASETS}/${props.dataset.id}`}>
       <div className="flex border-b border-primary-200 hover:bg-primary-100 cursor-pointer py-6">
@@ -32,7 +32,7 @@ export function ListItem(props: Props) {
           <div className="py-3 text-primary-500 text-sm">
             <Moment date={props.dataset.created_at} fromNow></Moment>
             <span className="px-2">•</span>
-            <span>{totalDatasetVersionFilesSize(props.dataset.current_version)}</span>
+            <span>{bytesToSize(props.dataset.current_version.files_size_in_bytes)}</span>
           </div>
           <p className="text-primary-700 text-xs">{
             props.dataset?.data?.description?.length > 300

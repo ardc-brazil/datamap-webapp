@@ -1,9 +1,9 @@
-import { GetDatasetsDetasetDetailsResponse } from "../../types/BffAPI";
+import { GetMinimalDatasetsDetasetDetailsResponse } from "../../types/BffAPI";
 import { ListDatasetHeader } from "./ListDatasetHeader";
-import { ListItem } from "./ListItem";
+import ListItem from "./ListItem";
 
 interface Props {
-  data: GetDatasetsDetasetDetailsResponse[]
+  data: GetMinimalDatasetsDetasetDetailsResponse[]
   requestedAt: number
 }
 

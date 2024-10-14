@@ -137,7 +137,7 @@ export interface DatasetListResponsePaged {
 }
 
 export interface GetDatasetsResponse {
-    content: GetDatasetsDetasetDetailsResponse[]
+    content: GetMinimalDatasetsDetasetDetailsResponse[]
     size: number
 }
 
@@ -171,6 +171,26 @@ export interface GetDatasetsDetasetDetailsResponse {
         created_by: string
         created_at: Date
         updated_at: Date
+    }
+}
+
+
+export interface GetMinimalDatasetsDetasetDetailsResponse {
+    id: string
+    name: string
+    design_state: DesignState
+    data: DatasetInfo
+    created_at: Date
+    current_version: {
+        id: string
+        name: string
+        design_state: DesignState,
+        is_enabled: boolean,
+        files_size_in_bytes: number,
+        files_count: number,
+        created_by: string,
+        created_at: Date,
+        updated_at: Date,
     }
 }
 
