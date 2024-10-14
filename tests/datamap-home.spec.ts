@@ -26,3 +26,9 @@ test('has sign buttons', async ({ page }) => {
     await pageObj.getSignButton.isVisible()
     await pageObj.getResearchGroup.isVisible()
 });
+
+test('navigate to signin', async ({ page }) => {
+    const pageObj = new DatamapHomePage(page);
+    await pageObj.goto()
+    await pageObj.getSignButton.click()
+});
