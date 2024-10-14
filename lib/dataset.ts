@@ -117,14 +117,6 @@ export async function getAllDataset(context: AppLocalContext, url: String): Prom
         return axiosInstance
             .get(`/datasets/?${queryString}`, buildHeaders(context))
             .then(response => {
-                const r = response?.data as GetDatasetsResponse;
-
-                // TODO: Remove this after backend response upated
-                for (const key in r.content) {
-                    r.content[key].current_version.files_size_in_bytes = 100
-                    r.content[key].current_version.files_count = 1
-                }
-
                 return response?.data as GetDatasetsResponse;
             })
             .catch(error => {
