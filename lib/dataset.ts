@@ -21,7 +21,7 @@ function toDatasetInfo(datasetRequest: CreateDatasetRequest): DatasetInfo {
         start_date: new Date(1970, 1, 1),
         end_date: new Date(1970, 1, 1),
         tags: [],
-        category: "AEROSOLS",
+        category: "",
         data_type: "",
         grid_type: "",
         location: {
