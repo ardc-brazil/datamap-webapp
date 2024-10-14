@@ -1,5 +1,4 @@
 
-import axios from "axios";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import { NewContext } from "../../../lib/appLocalContext";
