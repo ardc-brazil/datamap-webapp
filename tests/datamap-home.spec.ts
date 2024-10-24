@@ -1,34 +1,43 @@
 import { test } from '@playwright/test';
 import { DataMapHomePage as DatamapHomePage } from "./datamap-home.page";
 
-test('has title', async ({ page }) => {
-    const pageObj = new DatamapHomePage(page);
-    await pageObj.goto()
-    await pageObj.assertTitle()
-});
+test.describe.serial('DatamapHomePage', () => {
+    let page;
+    let pageObj;
 
-test('has welcome text', async ({ page }) => {
-    const pageObj = new DatamapHomePage(page);
+    test.beforeAll(async ({ browser }) => {
+        // Necessary to avoid share the cookies from other sessions
+        // and navigate automatically to the logged area.
+        page = await browser.newPage();
+        page.context().clearCookies();
 
-    await pageObj.goto()
-    await pageObj.getHeaders()
-});
+        pageObj = new DatamapHomePage(page);
+    });
 
-test('has main links', async ({ page }) => {
-    const pageObj = new DatamapHomePage(page);
-    await pageObj.goto()
-    await pageObj.getLinks()
-});
+    test('has title', async () => {
+        await pageObj.goto()
+        await pageObj.assertTitle()
+    });
 
-test('has sign buttons', async ({ page }) => {
-    const pageObj = new DatamapHomePage(page);
-    await pageObj.goto()
-    await pageObj.getSignButton.isVisible()
-    await pageObj.getResearchGroup.isVisible()
-});
+    test('has welcome text', async () => {
+        await pageObj.goto()
+        await pageObj.getHeaders()
+    });
 
-test('navigate to signin', async ({ page }) => {
-    const pageObj = new DatamapHomePage(page);
-    await pageObj.goto()
-    await pageObj.getSignButton.click()
-});
+    test('has main links', async () => {
+        await pageObj.goto()
+        await pageObj.getLinks()
+    });
+
+    test('has sign buttons', async () => {
+        await pageObj.goto()
+        await pageObj.getSignButton.isVisible()
+        await pageObj.getResearchGroup.isVisible()
+    });
+
+    test('navigate to signin', async () => {
+        await pageObj.goto()
+        await pageObj.getSignButton.click()
+    })
+
+})
