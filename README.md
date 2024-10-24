@@ -77,7 +77,7 @@ npm run testing
 ``` 
 
 To run tests and open the code coverage report on Google Chrome browser, execute:
-
+ 
 ```
 npm run test:coverage
 ```
@@ -97,6 +97,11 @@ To run
 npx playwright test --ui
 ```
 
+To run with trace
+```sh
+npx playwright test --trace on
+```
+
 To generate new tests
 ```sh
 npx playwright codegen
@@ -114,12 +119,13 @@ Each new test must use Page Object Model. Check more in https://playwright.dev/d
 Keep the list of test cases up to date.
 
 - [x] Home page
-- [] Internal home page
-- [] New dataset 
-- [] Edit global info info from dataset
-- [] Register a DOI manually
-- [] Register a DOI automatically
-- [] Add new version to dataset
+- [x] Internal home page
+- [x] Sign In
+- [ ] New dataset 
+- [ ] Edit global info info from dataset
+- [ ] Register a DOI manually
+- [ ] Register a DOI automatically
+- [ ] Add new version to dataset
 
 
 ### Env Vars
