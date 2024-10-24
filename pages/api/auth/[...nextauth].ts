@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import NextAuth, { AuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import OrcidProvider from "../../../lib/OrcidOAuthProvider";
 import { defaultTenancy } from "../../../lib/rpc";
@@ -16,6 +17,33 @@ export const authOptions: AuthOptions = {
       clientId: process.env.OAUTH_ORCID_CLIENT_ID,
       clientSecret: process.env.OAUTH_ORCID_CLIENT_SECRET,
     }),
+    CredentialsProvider({
+      id: "credentials",
+      // The name to display on the sign in form (e.g. "Sign in with...")
+      name: "Credentials",
+      // `credentials` is used to generate a form on the sign in page.
+      // You can specify which fields should be submitted, by adding keys to the `credentials` object.
+      // e.g. domain, username, password, 2FA token, etc.
+      // You can pass any HTML attribute to the <input> tag through the object.
+      credentials: {},
+      async authorize(credentials) {
+
+        const { email, password } = credentials as {
+          email: string;
+          password: string
+        };
+
+        if (email.indexOf("@local.datamap.com") > 0 && password?.length > 5) {
+          return {
+            id: crypto.randomUUID(),
+            name: email.split("@")[0],
+            email: email,
+          }
+        }
+
+        throw new Error("invalid credentials");
+      }
+    })
   ],
   // debug: true,
   callbacks: {
@@ -84,6 +112,14 @@ async function getUserByProviderAuthentication(account, token): Promise<GetUserB
       userName: account.orcid,
       email: token.email
     };
+  } else if (account.provider == "credentials") {
+    params = {
+      providerName: account.provider,
+      providerID: token.email,
+      personName: token.name,
+      userName: token.email.split('@')[0],
+      email: token.email
+    };
   } else {
     throw new Error("Invalid provider authentication: " + account.provider);
   }
@@ -101,7 +137,7 @@ async function getUserByProviderAuthentication(account, token): Promise<GetUserB
         console.log(error)
       }
     }
-  };
+  }
 
   if (!user) {
     throw new Error("User not found and not created");

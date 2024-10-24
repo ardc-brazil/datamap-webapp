@@ -4,13 +4,10 @@ import { TabPanel } from "../../../components/DatasetDetails/TabPanel";
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
 
 import { signIn } from "next-auth/react";
+import { FormEventHandler, useState } from "react";
 import { ROUTE_PAGE_SEARCH } from "../../../contants/InternalRoutesConstants";
 
 function OrcidButton(props) {
-  const appKey = "APP-1RKJOENQPVY476EF";
-  const redirectUri = "https://datamap-webapp.vercel.app/orcid-oauth-callback";
-
-
   return (
     <button
       type="button"
@@ -135,6 +132,23 @@ export default function LoginPage(props) {
               {process.env.NODE_ENV == "development" &&
                 <GithubButton callbackUrl={props.callbackUrl}>Sign in with GitHub</GithubButton>
               }
+
+              {/* 
+                This kind of login is only available for local development for automated testing purposes 
+                PLEASE: DO NOT ENABLE IT IN PRODUCTION
+              */}
+              {process.env.NODE_ENV == "development" &&
+                (
+                  <div className="px-4">
+                    <div className="my-8 flex flex-row justify-center items-center">
+                      <hr className="w-full" />
+                      <span className="px-4">or</span>
+                      <hr className="w-full" />
+                    </div>
+                    <SignInForm callbackUrl={props.callbackUrl} />
+                  </div>
+                )
+              }
               <p className="text-primary-500 text-center mt-6 text-sm">
                 No Account? &nbsp;
                 <Link
@@ -171,6 +185,50 @@ export default function LoginPage(props) {
       </div>
     </div>
   );
+}
+
+function SignInForm(props) {
+  const [userInfo, setUserInfo] = useState({ email: "", password: "" });
+  const handleSubmit: FormEventHandler<HTMLFormElement> = async (e) => {
+    // validate your userinfo
+    e.preventDefault();
+
+    console.log("props.callbackUrl", props.callbackUrl)
+
+    signIn("credentials", {
+      email: userInfo.email,
+      password: userInfo.password,
+      redirect: true,
+      callbackUrl: props.callbackUrl,
+    });
+
+  };
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2 items-center">
+        <input
+          value={userInfo.email}
+          onChange={({ target }) =>
+            setUserInfo({ ...userInfo, email: target.value })
+          }
+          type="email"
+          placeholder="john@email.com"
+          className="w-52"
+        />
+        <input
+          value={userInfo.password}
+          onChange={({ target }) =>
+            setUserInfo({ ...userInfo, password: target.value })
+          }
+          type="password"
+          placeholder="********"
+          className="w-52"
+        />
+        <input type="submit" value="Login" className="w-52" />
+      </form>
+    </div>
+  )
 }
 
 LoginPage.getInitialProps = async ({ query }) => {
