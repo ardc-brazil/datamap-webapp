@@ -34,6 +34,11 @@ export class SignInPage {
     await this.page.goto('/account/login?phase=sign-in&tenancy=datamap%2Fproduction%2Fdata-amazon');
   }
 
+  async signIn(): Promise<{ name: string, email: string }> {
+    await this.goto()
+    return await this.signWithLocalCredentialRandonUser();
+  }
+
   async signinWithOrcidToDatamap() {
     await expect(this.getSignWithOrcidButton).toBeVisible()
   }
