@@ -188,14 +188,13 @@ export default function LoginPage(props) {
 }
 
 function SignInForm(props) {
-  const [userInfo, setUserInfo] = useState({ email: "", password: "" });
+  const [userInfo, setUserInfo] = useState({ name: "", email: "", password: "" });
   const handleSubmit: FormEventHandler<HTMLFormElement> = async (e) => {
     // validate your userinfo
     e.preventDefault();
 
-    console.log("props.callbackUrl", props.callbackUrl)
-
     signIn("credentials", {
+      name: userInfo.name,
       email: userInfo.email,
       password: userInfo.password,
       redirect: true,
@@ -207,6 +206,15 @@ function SignInForm(props) {
   return (
     <div>
       <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2 items-center">
+        <input
+          value={userInfo.name}
+          onChange={({ target }) =>
+            setUserInfo({ ...userInfo, name: target.value })
+          }
+          type="name"
+          placeholder="John Doe"
+          className="w-52"
+        />
         <input
           value={userInfo.email}
           onChange={({ target }) =>
@@ -225,7 +233,7 @@ function SignInForm(props) {
           placeholder="********"
           className="w-52"
         />
-        <input type="submit" value="Login" className="w-52" />
+        <input type="submit" value="Login With Credential" className="w-52" />
       </form>
     </div>
   )

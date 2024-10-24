@@ -28,7 +28,8 @@ export const authOptions: AuthOptions = {
       credentials: {},
       async authorize(credentials) {
 
-        const { email, password } = credentials as {
+        const { name, email, password } = credentials as {
+          name: string,
           email: string;
           password: string
         };
@@ -36,7 +37,7 @@ export const authOptions: AuthOptions = {
         if (email.indexOf("@local.datamap.com") > 0 && password?.length > 5) {
           return {
             id: crypto.randomUUID(),
-            name: email.split("@")[0],
+            name: name,
             email: email,
           }
         }
