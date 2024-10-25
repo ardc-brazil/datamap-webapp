@@ -118,14 +118,7 @@ Each new test must use Page Object Model. Check more in https://playwright.dev/d
 
 Keep the list of test cases up to date.
 
-- [x] Home page
-- [x] Internal home page
-- [x] Sign In
-- [ ] New dataset 
-- [ ] Edit global info info from dataset
-- [ ] Register a DOI manually
-- [ ] Register a DOI automatically
-- [ ] Add new version to dataset
+* [Datamap - Test Cases](https://docs.google.com/spreadsheets/d/10ZiDvg-ZBkLT9gK57khzG4TiFjYgjnwJZo0jY58OHVM/edit?usp=sharing)
 
 
 ### Env Vars
