@@ -19,6 +19,8 @@ export class NewDatasetPage {
   }
 
   async assertInstructionTexts() {
+    await expect(async () => { await this.titleHeader.isVisible() }).toPass()
+    
     await expect(this.titleHeader).toBeVisible()
     await expect(this.titleHeader).toHaveText('New Dataset');
     await expect(this.subtitleHeader).toHaveText('Create a new dataset informing a title and remote data files.');

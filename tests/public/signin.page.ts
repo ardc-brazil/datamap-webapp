@@ -1,10 +1,12 @@
 
 import { faker } from '@faker-js/faker';
-import { expect, type Locator, type Page } from '@playwright/test';
-import { InternalHomePage } from "./internal-home.page";
-import { ProfilePage } from "./profile.page";
+import { APIRequestContext, expect, type Locator, type Page } from '@playwright/test';
+import { InternalHomePage } from "../app/internal-home.page";
+import { ProfilePage } from "../app/profile.page";
+import { GatekeeperTestAPI } from "../api/gatekeepr.api";
 
 export class SignInPage {
+  readonly request: APIRequestContext;
   readonly page: Page;
   readonly internalHomePage: InternalHomePage
   readonly profilePage: ProfilePage
@@ -17,8 +19,9 @@ export class SignInPage {
   readonly getPasswordInput: Locator;
   readonly getLoginButton: Locator;
 
-  constructor(page: Page) {
+  constructor(page: Page, request: APIRequestContext) {
     this.page = page;
+    this.request = request;
     this.internalHomePage = new InternalHomePage(page)
     this.profilePage = new ProfilePage(page)
 
@@ -34,9 +37,18 @@ export class SignInPage {
     await this.page.goto('/account/login?phase=sign-in&tenancy=datamap%2Fproduction%2Fdata-amazon');
   }
 
-  async signIn(): Promise<{ name: string, email: string }> {
+  async signInAsAdmin(): Promise<{ id: string, name: string, email: string }> {
     await this.goto()
-    return await this.signWithLocalCredentialRandonUser();
+    const { email } = await this.signWithLocalCredentialRandonUser();
+
+    const api = new GatekeeperTestAPI(this.request);
+    const users = await api.getUser(email)
+    const userId = users[0].id
+
+    await api.setRoleAdmin(userId)
+    await api.setLocalTestTenancy(userId)
+
+    return users[0]
   }
 
   async signinWithOrcidToDatamap() {
@@ -48,8 +60,8 @@ export class SignInPage {
   }
 
   async signWithLocalCredentialRandonUser() {
-    const name = faker.internet.displayName();
-    const email = `${faker.internet.userName()}@local.datamap.com`
+    const name = faker.person.fullName();
+    const email = `${faker.internet.email().split("@")[0]}@local.datamap.com`
     await this.signWithLocalCredential(name, email)
     return { name: name, email: email }
   }
