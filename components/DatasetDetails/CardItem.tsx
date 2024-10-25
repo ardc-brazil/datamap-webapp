@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { MaterialSymbol } from "react-material-symbols";
+import slugify from "../../lib/textProcessor";
 
 interface Props {
   children: ReactNode;
@@ -29,7 +30,7 @@ export function CardItem(props: Props) {
           </div>
         }
       </div>
-      <div className="py-2">
+      <div className="py-2" id={slugify(props.title)}>
         {props.children}
       </div>
     </div>
