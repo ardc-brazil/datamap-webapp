@@ -9,6 +9,11 @@ import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '.env.local') });
 
 /**
+ * Playwright storage state path (cookies and others)
+ */
+export const STORAGE_STATE = path.join(__dirname, 'playwright-report/.auth/user.json');
+
+/**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
@@ -18,7 +23,7 @@ export default defineConfig({
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  retries: 2,
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
@@ -30,35 +35,69 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+
+    extraHTTPHeaders: {
+      // Default options for Gatekeeper API interaction
+      'Accept': 'application/json',
+      'X-Api-Key': process.env.DATAMAP_API_KEY,
+      'X-Api-Secret': process.env.DATAMAP_API_SECRET,
+    },
   },
 
   /* Configure projects for major browsers */
   projects: [
-    // { name: 'setup', testMatch: /.*\.setup\.ts/ },
     {
-      name: 'chromium',
+      name: 'web-auth-setup',
+      testMatch: '**/auth.setup.ts',
+    },
+    {
+      name: 'app',
+      testMatch: '**/app/*.spec.ts',
+      dependencies: ['web-auth-setup'],
       use: {
         ...devices['Desktop Chrome'],
-        storageState: 'tests/.auth/user.json',
+        storageState: STORAGE_STATE,
+        trace: 'on-all-retries',
       },
-
     },
-
     {
-      name: 'firefox',
+      name: 'home',
+      testMatch: '**/public/*.spec.ts',
       use: {
-        ...devices['Desktop Firefox'],
-        storageState: 'tests/.auth/user.json',
+        ...devices['Desktop Chrome'],
+        trace: 'on-all-retries',
+      },
+    },
+    {
+      name: 'api',
+      testMatch: '**/api/*.spec.ts',
+      use: {
+        ...devices['Desktop Chrome'],
+        trace: 'on-all-retries',
+        extraHTTPHeaders: {
+          // Default options for Gatekeeper API interaction
+          'Accept': 'application/json',
+          'X-Api-Key': process.env.DATAMAP_API_KEY,
+          'X-Api-Secret': process.env.DATAMAP_API_SECRET,
+        },
       },
     },
 
-    {
-      name: 'webkit',
-      use: {
-        ...devices['Desktop Safari'],
-        storageState: 'tests/.auth/user.json',
-      },
-    },
+    // {
+    //   name: 'firefox',
+    //   use: {
+    //     ...devices['Desktop Firefox'],
+    //     storageState: 'tests/.auth/user.json',
+    //   },
+    // },
+
+    // {
+    //   name: 'webkit',
+    //   use: {
+    //     ...devices['Desktop Safari'],
+    //     storageState: 'tests/.auth/user.json',
+    //   },
+    // },
 
     /* Test against mobile viewports. */
     // {
