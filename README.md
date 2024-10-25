@@ -91,34 +91,7 @@ The jest plugin for vscode could help you to run locally and see the coverage, s
 
 ### E2E Tests
 
-We're using Playwright.
-To run
-```sh
-npx playwright test --ui
-```
-
-To run with trace
-```sh
-npx playwright test --trace on
-```
-
-To generate new tests
-```sh
-npx playwright codegen
-```
-
-To check the report results
-```sh
-npx playwright show-report
-```
-
-Each new test must use Page Object Model. Check more in https://playwright.dev/docs/pom.
-
-#### Test cases
-
-Keep the list of test cases up to date.
-
-* [Datamap - Test Cases](https://docs.google.com/spreadsheets/d/10ZiDvg-ZBkLT9gK57khzG4TiFjYgjnwJZo0jY58OHVM/edit?usp=sharing)
+We have a project for this, check: https://github.com/ardc-brazil/datamap-e2e
 
 
 ### Env Vars
