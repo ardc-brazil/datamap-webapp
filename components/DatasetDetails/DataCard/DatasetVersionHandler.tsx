@@ -67,7 +67,7 @@ function DatasetVersionSelector(props: DatasetVersionSelectorProps) {
       cancel={props.onClose}
       noPaddingContent={true}
     >
-      <div>
+      <div data-testid="dataset-version-history-modal-content">
 
         <div className="pb-4 px-6">
           <NewVersionButton onClick={props.onNewVersionClick} />
@@ -75,7 +75,7 @@ function DatasetVersionSelector(props: DatasetVersionSelectorProps) {
         <hr />
 
         <div className="h-72 w-screen max-w-3xl flex-col overflow-y-scroll overscroll-none px-6 -mb-4">
-          <ul >
+          <ul data-testid="dataset-version-history-modal-list" >
             {props?.availableVersions
               ?.sort((a, b) => new Date(b?.created_at)?.getTime() - new Date(a?.created_at)?.getTime())
               ?.map((x, i) => {
