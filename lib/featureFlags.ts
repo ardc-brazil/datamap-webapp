@@ -1,7 +1,7 @@
 
 
 const engUserIds = [
-    
+
     // André Maia
     "afb36eb1-0018-4917-a115-350b5afd23e6",
     "cbb0a683-630f-4b86-8b45-91b90a6fce1c",
@@ -27,14 +27,5 @@ export function isUppyUploadEnabled(session): boolean {
  * @returns True if the feature is enabled. Otherwise false.
  */
 export function isDOIUpdateStatusEnabled(session): boolean {
-    return engUserIds.indexOf(session?.user?.uid) >= 0;
-}
-
-/**
- * Is the feature New Dataset Version enabled for user?
- * @param session NextAuth Session.
- * @returns True if the feature is enabled. Otherwise false.
- */
-export function isNewVersionEnabled(session): boolean {
     return engUserIds.indexOf(session?.user?.uid) >= 0;
 }
