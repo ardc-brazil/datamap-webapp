@@ -48,6 +48,8 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
         setStagingDatasetVersion(props.datasetVersion)
     }
 
+    const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
+
     function onCreate() {
         setProcessState(ProcessState.CREATING);
         const request = {
@@ -66,7 +68,7 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
                 return uppyReference.upload();
             })
             // publish the new version
-            .then(uploadResult => {
+            .then(async (uploadResult) => {
                 setProcessState(ProcessState.ALL_FILES_UPLOADED);
 
                 if (uploadResult.failed.length > 0) {
@@ -80,7 +82,11 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
                     versionName: versionCreated.name,
                 } as PublishDatasetVersionRequest;
 
-                return bffGateway.publishDatasetVersion(request)
+                
+                await bffGateway.publishDatasetVersion(request)
+
+                // Sleep 1 sec to create a nice experience for users
+                await sleep(1000)
             })
             .then(() => {
                 setProcessState(ProcessState.DONE);
@@ -160,7 +166,7 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
 
 function SuccessMessage() {
     return (
-        <div className="p-8 text-center">
+        <div data-testid="new-version-success-message" className="p-8 text-center">
             <MaterialSymbol icon="check" size={96} grade={-25} weight={400} className="text-success-700" />
             <h6>Success!</h6>
             <p>Your dataset version was created successfully.</p>
@@ -170,7 +176,7 @@ function SuccessMessage() {
 
 function CreatingVersionMessage() {
     return (
-        <div className="p-8 text-center">
+        <div data-testid="new-version-creating-message" className="p-8 text-center">
             <MaterialSymbol icon="progress_activity" size={96} grade={-25} weight={400}
                 className="align-middle animate-spin"
             />
