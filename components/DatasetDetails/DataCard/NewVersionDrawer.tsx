@@ -82,11 +82,10 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
                     versionName: versionCreated.name,
                 } as PublishDatasetVersionRequest;
 
-                
-                await bffGateway.publishDatasetVersion(request)
-
                 // Sleep 1 sec to create a nice experience for users
                 await sleep(1000)
+                
+                return await bffGateway.publishDatasetVersion(request)                
             })
             .then(() => {
                 setProcessState(ProcessState.DONE);

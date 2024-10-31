@@ -8,6 +8,7 @@ interface Props {
   className?: any;
   info?: string
   hide?: boolean
+  testId?: string
 }
 export function CardItem(props: Props) {
 
@@ -16,7 +17,7 @@ export function CardItem(props: Props) {
   }
 
   return (
-    <div className={`${props.className}`}>
+    <div data-testid={props.testId} className={`${props.className}`}>
       <div className="text-primary-400 font-semibold text-xs">
         <span className="uppercase">
           {props.title}
