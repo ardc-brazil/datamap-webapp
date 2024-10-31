@@ -12,7 +12,7 @@ export function ListDataset(props: Props) {
   return (
     <div id="listDataset" className="flex flex-col mr-4 w-full">
       <ListDatasetHeader itemCount={itemCount} requestedAt={props?.requestedAt} />
-      <div className="border-t border-primary-200">
+      <div data-testid="listDataset-items" className="border-t border-primary-200">
         {props.data.map((element, index) => (
           <ListItem key={index} dataset={element} />
         ))}
