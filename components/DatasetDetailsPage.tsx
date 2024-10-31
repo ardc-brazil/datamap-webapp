@@ -23,7 +23,7 @@ export default function DatasetDetailsPage(props: Props) {
           <div className="flex flex-row">
             {/* Title */}
             <div className="basis-10/12">
-              <h1 className="font-extrabold">{props.dataset.name} </h1>
+              <h1 id="dataset-title" className="font-extrabold">{props.dataset.name} </h1>
               <DatasetInstitution dataset={props.dataset} user={props.user} />
             </div>
             {/* Actions */}
