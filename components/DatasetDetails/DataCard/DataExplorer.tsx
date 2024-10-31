@@ -1,16 +1,14 @@
 import { useSession } from "next-auth/react";
+import Router from "next/router";
 import { useState } from 'react';
 import { MaterialSymbol } from "react-material-symbols";
-import { isNewVersionEnabled } from "../../../lib/featureFlags";
-import { GetDatasetDetailsResponse, GetDatasetDetailsVersionFileResponse, GetDatasetDetailsVersionResponse } from "../../../types/BffAPI";
+import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
+import { getVersionByName } from "../../../lib/datasetVersionSelector";
+import { GetDatasetDetailsResponse, GetDatasetDetailsVersionFileResponse } from "../../../types/BffAPI";
 import NewVersionButton from "../NewVersionButton";
 import DatasetFilesList from "./DatasetFilesList";
 import DatasetVersionHandler from "./DatasetVersionHandler";
 import NewVersionDrawer from "./NewVersionDrawer";
-import Router from "next/router";
-import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
-import { get } from "http";
-import { getVersionByName } from "../../../lib/datasetVersionSelector";
 
 export interface Props {
   dataset: GetDatasetDetailsResponse
@@ -85,11 +83,9 @@ export default function DataExplorer(props: Props) {
             </ul>
           </div>
           <hr />
-          {isNewVersionEnabled(session) &&
-            <div className="pt-4">
-              <NewVersionButton onClick={() => setShowUploadDataModal(true)} />
-            </div>
-          }
+          <div className="pt-4">
+            <NewVersionButton onClick={() => setShowUploadDataModal(true)} />
+          </div>
         </div>
       </div>
       <NewVersionDrawer
@@ -101,7 +97,7 @@ export default function DataExplorer(props: Props) {
 
           if (newVersionCreated) {
             Router.push({
-              pathname: ROUTE_PAGE_DATASETS_DETAILS({ id: props.dataset.id}),
+              pathname: ROUTE_PAGE_DATASETS_DETAILS({ id: props.dataset.id }),
             });
           }
 
