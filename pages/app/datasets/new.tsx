@@ -219,7 +219,7 @@ export default function NewPage() {
                 <div className="container mx-auto max-w-3xl flex justify-end">
                   <button type="submit"
                     className="btn-primary mt-4"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !(datasetPrototyping?.createDatasetResponseV2) || !(datasetPrototyping.fileUploadAuthTokenResponse)}
                   >
                     Create Dataset
                   </button>
