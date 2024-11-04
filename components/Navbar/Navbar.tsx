@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { HiddenNav, MobileMenuItem as MobileNavbarItem } from "./MobileNavbar";
 import { ActionItemsNavBar } from "./ActionItemsNavBar";
+import { HiddenNav, MobileMenuItem as MobileNavbarItem } from "./MobileNavbar";
 
 interface Props {
   children?: React.ReactNode;
@@ -25,28 +25,10 @@ export function Navbar() {
             <img src="/img/logo.svg" alt="DataMap" className=" h-9" />
           </Link>
 
-          <nav className="hidden md:flex flex-row ml-10">
-            {/* <NavbarItem id="navbarItemSearch" href={ROUTE_PAGE_SEARCH}>
-              Search
-            </NavbarItem> */}
-            {/* <NavbarItem id="navbarItemTools" href="/tools">
-              Tools
-            </NavbarItem>
-            <NavbarItem id="navbarItemProject" href="/project">
-              Project
-            </NavbarItem> */}
-          </nav>
-
           <HiddenNav items={["Search", "Tools", "Support"]}>
-            {/* <MobileNavbarItem id="mobileNavbarItemSearch" href={ROUTE_PAGE_SEARCH}>
-              Search
-            </MobileNavbarItem> */}
-            {/* <MobileNavbarItem id="mobileNavbarItemTools" href="/tools">
-              Tools
+            <MobileNavbarItem id="mobileNavbarItemSign" href="/account/login">
+              Sign in
             </MobileNavbarItem>
-            <MobileNavbarItem id="mobileNavbarItemProject" href="/project">
-              Project
-            </MobileNavbarItem> */}
           </HiddenNav>
 
           <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0">

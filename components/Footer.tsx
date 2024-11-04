@@ -12,12 +12,12 @@ export function Footer(props: FooterProps) {
       className={`bg-secondary-900 h-fit ${props.marginTop ?? "mt-12"} `}
     >
       <div className="container mx-auto pt-24">
-        <div className="grid grid-rows-1 grid-flow-col gap-4">
+        <div className="grid grid-rows-1 md:grid-flow-col px-8 gap-4">
           <div className="row-span-2">
             <Link href="/">
-              <img src="/img/logo.svg" alt="DataMap" className="px-6 w-60 " />
+              <img src="/img/logo.svg" alt="DataMap" className="md:px-6 w-60 " />
             </Link>
-            <p className="px-12 py-8">
+            <p className="md:px-12 py-8">
               Have an account?{" "}
               <Link
                 href={{

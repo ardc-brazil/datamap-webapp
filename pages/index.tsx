@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Layout from "../components/Layout";
 import { ROUTE_PAGE_SEARCH } from "../contants/InternalRoutesConstants";
-import { ResearcherProfile } from "../components/ResearcherProfile";
 
 function TextDecorationBolder(props) {
   return (
@@ -36,11 +35,11 @@ export default function HomePage(props) {
       <div className="special-background">
         <div className="container mx-auto flex flex-row flex-wrap pt-56 pb-24">
           <div className="w-full">
-            <h1 className="font-bold text-8xl text-center pb-8">
+            <h1 className="font-bold text-7xl md:text-8xl text-center pb-8">
               <TextDecorationBolder>DataMap</TextDecorationBolder>
             </h1>
 
-            <h1 className="font-normal text-7xl text-center pb-8">
+            <h1 className="font-normal text-6xl md:text-7xl text-center pb-8">
               Scientific data analysis, for everyone.
               <br />
             </h1>

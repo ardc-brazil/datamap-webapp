@@ -4,6 +4,7 @@ import { TabPanel } from "../../../components/DatasetDetails/TabPanel";
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
 
 import { signIn } from "next-auth/react";
+import Head from "next/head";
 import { FormEventHandler, useState } from "react";
 import { ROUTE_PAGE_SEARCH } from "../../../contants/InternalRoutesConstants";
 
@@ -99,13 +100,19 @@ export default function LoginPage(props) {
 
   return (
     <div className="container mx-auto flex flex-col gap-16 mt-16">
-      <Link href="/" className="w-2/12 h-16 self-center">
+      <Head>
+        <title>DataMap</title>
+        <link rel="icon" href="/favicon.ico" />
+        <meta charSet="utf-8"></meta>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
+      </Head>
+      <Link href="/" className="w-full md:w-2/12 h-16 self-center">
         <img className="w-full h-full" src="/img/logo.svg" />
       </Link>
 
 
       {props.error &&
-        <div className="flex w-4/12 self-center items-center p-4 mb-4 text-primary-900 border-t-4 border-error-300 bg-error-50" role="alert">
+        <div className="flex w-10/12 md:w-4/12 self-center items-center p-4 mb-4 text-primary-900 border-t-4 border-error-300 bg-error-50" role="alert">
           <svg className="flex-shrink-0 w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
           </svg>
@@ -119,15 +126,10 @@ export default function LoginPage(props) {
         </div>
       }
 
-      <div className="w-4/12 h-fit border border-primary-200 self-center rounded">
+      <div className="w-10/12 md:w-4/12 h-fit border border-primary-200 self-center rounded">
         <Tabs className="py-8" defaultSelectedIndex={defaultTabIndex}>
           <TabPanel title="Sign In">
             <div className="flex flex-col">
-              {/* <button
-                type="button"
-                className="btn-primary-outline self-center font-medium text-sm px-5 py-2.5 text-center inline-flex items-center mr-2 mb-2 cursor-pointer"
-                onClick={() => signIn()}
-              >Providers</button> */}
               <OrcidButton callbackUrl={props.callbackUrl}>Sign in with ORCID</OrcidButton>
               {process.env.NODE_ENV == "development" &&
                 <GithubButton callbackUrl={props.callbackUrl}>Sign in with GitHub</GithubButton>
