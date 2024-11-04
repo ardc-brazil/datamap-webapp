@@ -14,7 +14,7 @@ router.get("/", async (request) => {
         return NextResponse.rewrite(new URL(ROUTE_PAGE_HOME, request.url))
     }
 
-    return NextResponse.rewrite(new URL("/h"))
+    return NextResponse.redirect(new URL(process.env.NEXT_PUBLIC_DATAMAP_HOMEPAGE))
 });
 
 router.all(() => {
