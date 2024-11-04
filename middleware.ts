@@ -14,8 +14,7 @@ router.get("/", async (request) => {
         return NextResponse.rewrite(new URL(ROUTE_PAGE_HOME, request.url))
     }
 
-    return NextResponse.next();
-
+    return NextResponse.rewrite(new URL("/h"))
 });
 
 router.all(() => {
