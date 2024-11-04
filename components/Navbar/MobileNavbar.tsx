@@ -57,9 +57,9 @@ export function HiddenNav(props) {
       <div
         className={`${
           isActive ? null : "hidden"
-        } md:hidden ml-8 border-b border-t border-primary-200 z-40 fixed top-16 w-full bg-primary-50 opacity-[.99]`}
+        } md:hidden fixed left-0 top-16 w-full border-b border-t border-primary-200 z-40 bg-primary-50 opacity-[.99]`}
       >
-        <ul className="flex flex-col p-4 ml-4">{props.children}</ul>
+        <ul className="flex flex-col py-4">{props.children}</ul>
       </div>
     </div>
   );
