@@ -126,14 +126,8 @@ cd datamap-webapp
 # Get the last (main) branch version
 git pull
 
-# Rebuild the image (to make sure)
-ENV_FILE_PATH=../environment/frontend.prod.env docker-compose build
-
-# Stop backend containers
-ENV_FILE_PATH=../environment/frontend.prod.env docker-compose down
-
-# Start backend
-ENV_FILE_PATH=../environment/frontend.prod.env docker-compose up -d
+# Rebuild the image and deploy the new version
+ENV_FILE_PATH=../environment/frontend.prod.env make docker-deployment
 ```
 
 ## Architecture
