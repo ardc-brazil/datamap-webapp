@@ -90,9 +90,7 @@ function EmailButton(props) {
 }
 
 export default function LoginPage(props) {
-  const router = useRouter();
   function getSelectedTabIndex() {
-    if (router?.query?.phase == "register") return 1;
     return 0;
   }
 
@@ -151,36 +149,6 @@ export default function LoginPage(props) {
                   </div>
                 )
               }
-              <p className="text-primary-500 text-center mt-6 text-sm">
-                No Account? &nbsp;
-                <Link
-                  href={{
-                    pathname: "/account/login",
-                    query: { phase: "register", tenancy: "datamap/production/data-amazon" },
-                  }}
-                  className="text-sm text-primary-800 cursor-pointer"
-                >
-                  Create one here.
-                </Link>
-              </p>
-            </div>
-          </TabPanel>
-          <TabPanel title="Register">
-            <div className="flex flex-col">
-              <OrcidButton>Register with ORCID</OrcidButton>
-              <EmailButton>Register with E-mail</EmailButton>
-              <p className="text-primary-500 text-center mt-6 text-sm">
-                Have an account?&nbsp;
-                <Link
-                  href={{
-                    pathname: "/account/login",
-                    query: { phase: "sign-in", tenancy: "datamap/production/data-amazon" },
-                  }}
-                  className="text-sm text-primary-800 cursor-pointer"
-                >
-                  Sign in
-                </Link>
-              </p>
             </div>
           </TabPanel>
         </Tabs>
