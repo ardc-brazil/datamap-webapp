@@ -16,18 +16,9 @@ export function ActionItemsNavBar() {
             pathname: "/account/login",
             query: { phase: "sign-in", tenancy: "datamap/production/data-amazon" },
           }}
-          className="btn-primary-outline mx-2"
+          className="btn-primary"
         >
           Sign in
-        </Link>
-
-        <Link
-          href={{
-            pathname: "/account/login",
-            query: { phase: "register", tenancy: "datamap/production/data-amazon" },
-          }}
-        >
-          <button className="btn-primary">Register</button>
         </Link>
       </>
     );
