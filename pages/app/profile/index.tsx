@@ -4,17 +4,18 @@ import { CardItem } from "../../../components/DatasetDetails/CardItem";
 import LoggedLayout from "../../../components/LoggedLayout";
 
 import { signOut, useSession } from "next-auth/react";
+import { ROUTE_PAGE_ERROR } from "../../../contants/InternalRoutesConstants";
 import { NewContext } from "../../../lib/appLocalContext";
 import { getUserByUID } from "../../../lib/users";
-import { ROUTE_PAGE_ERROR, ROUTE_PAGE_HOME } from "../../../contants/InternalRoutesConstants";
 
 export default function ProfilePage(props) {
   const { data: session, status } = useSession();
 
   function clickSignOut() {
-    signOut().finally(() => {
-      Router.push(ROUTE_PAGE_HOME)
-    });
+    signOut({
+      callbackUrl: process.env.NEXT_PUBLIC_DATAMAP_HOMEPAGE,
+      redirect: true,
+    })
   }
 
   if (props.error) {
