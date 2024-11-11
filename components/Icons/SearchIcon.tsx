@@ -1,6 +1,7 @@
 import React from "react";
 
 export default function SearchIcon(props) {
+  // TODO: Replace by Material Symbols
   return (
     <svg
       className={`min-w-fit w-5 h-5 inline-block fill-primary-600 ${props.className}`}

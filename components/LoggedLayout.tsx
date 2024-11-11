@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_HOME, ROUTE_PAGE_NOTEBOOKS, ROUTE_PAGE_NOTEBOOKS_NEW, ROUTE_PAGE_PROFILE } from "../contants/InternalRoutesConstants";
+import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_HOME, ROUTE_PAGE_NOTEBOOKS, ROUTE_PAGE_PROFILE } from "../contants/InternalRoutesConstants";
+import useComponentVisible from "../hooks/UseComponentVisible";
 import Head from "../node_modules/next/head";
 import AvatarIcon from "./Icons/AvatarIcon";
 import DatasetIcon from "./Icons/DatasetIcon";
-import PiechartIcon from "./Icons/PiechartIcon";
-import AvatarButton from "./Profile/AvatarButton";
-import useComponentVisible from "../hooks/UseComponentVisible";
-import NotebookIcon from "./Icons/NotebookIcon";
 import HomeIcon from "./Icons/HomeIcon";
+import NotebookIcon from "./Icons/NotebookIcon";
+import AvatarButton from "./Profile/AvatarButton";
 
 interface Props {
   children?: React.ReactNode;

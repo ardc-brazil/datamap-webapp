@@ -1,12 +1,12 @@
+import Image from "next/image";
 import Link from "next/link";
-import Router, { useRouter } from "next/router";
+import { useRouter } from "next/router";
 import { TabPanel } from "../../../components/DatasetDetails/TabPanel";
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
 
 import { signIn } from "next-auth/react";
 import Head from "next/head";
 import { FormEventHandler, useState } from "react";
-import { ROUTE_PAGE_SEARCH } from "../../../contants/InternalRoutesConstants";
 
 function OrcidButton(props) {
   return (
@@ -58,37 +58,6 @@ function GithubButton(props) {
   );
 }
 
-function EmailButton(props) {
-  function onClick() {
-    Router.push({
-      pathname: ROUTE_PAGE_SEARCH,
-    });
-  }
-  return (
-    <button
-      type="button"
-      className="btn-primary-outline self-center font-medium text-sm px-5 py-2.5 text-center inline-flex items-center mr-2 mb-2"
-      onClick={onClick}
-    >
-      <svg
-        className="w-8 h-8 mr-2 -ml-1"
-        width="327"
-        height="327"
-        viewBox="0 0 327 327"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M285.396 61.1564H40.771C35.3644 61.1564 30.1793 63.3041 26.3563 67.1271C22.5332 70.9501 20.3855 76.1353 20.3855 81.5418V244.626C20.3855 250.032 22.5332 255.217 26.3563 259.04C30.1793 262.863 35.3644 265.011 40.771 265.011H285.396C290.803 265.011 295.988 262.863 299.811 259.04C303.634 255.217 305.782 250.032 305.782 244.626V81.5418C305.782 76.1353 303.634 70.9501 299.811 67.1271C295.988 63.3041 290.803 61.1564 285.396 61.1564V61.1564ZM262.972 81.5418L163.084 150.649L63.195 81.5418H262.972ZM40.771 244.626V90.8172L157.274 171.442C158.98 172.625 161.007 173.26 163.084 173.26C165.16 173.26 167.187 172.625 168.894 171.442L285.396 90.8172V244.626H40.771Z"
-          fill="black"
-        />
-      </svg>
-
-      {props.children}
-    </button>
-  );
-}
-
 export default function LoginPage(props) {
   function getSelectedTabIndex() {
     return 0;
@@ -105,7 +74,7 @@ export default function LoginPage(props) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
       </Head>
       <Link href="/" className="w-full md:w-2/12 h-16 self-center">
-        <img className="w-full h-full" src="/img/logo.svg" />
+        <Image width={0} height={0} className="w-full h-full" src="/img/logo.svg" alt="Datamap logo" />
       </Link>
 
 
