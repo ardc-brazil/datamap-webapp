@@ -1,7 +1,0 @@
-{
-    "namespace": "br.com.datamap",
-    "type": "enum",
-    "name": "DataType",
-    "doc": "Data collection types",
-    "symbols" : ["ROUTINE", "EXPORADIC"]
-}
