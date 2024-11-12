@@ -158,7 +158,7 @@ export default function LoginPage(props) {
 }
 
 function SignInForm(props) {
-  const [userInfo, setUserInfo] = useState({ name: "", email: "", password: "" });
+  const [userInfo, setUserInfo] = useState({ name: "John Doe", email: "john-doe@local.datamap.com", password: "12345678" });
   const handleSubmit: FormEventHandler<HTMLFormElement> = async (e) => {
     // validate your userinfo
     e.preventDefault();
