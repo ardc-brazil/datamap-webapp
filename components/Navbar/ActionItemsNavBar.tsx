@@ -1,13 +1,13 @@
-import Link from "next/link";
-
-import AvatarButton from "../Profile/AvatarButton";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
+import AvatarButton from "../Profile/AvatarButton";
+
 
 export function ActionItemsNavBar() {
   const { data: session, status } = useSession();
 
   if (status == "authenticated") {
-    return <AvatarButton />;
+    return <AvatarButton />
   } else {
     return (
       <>

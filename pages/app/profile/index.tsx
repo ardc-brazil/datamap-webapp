@@ -4,12 +4,15 @@ import { CardItem } from "../../../components/DatasetDetails/CardItem";
 import LoggedLayout from "../../../components/LoggedLayout";
 
 import { signOut, useSession } from "next-auth/react";
+import { MaterialSymbol } from "react-material-symbols";
+import { useTenancyStore } from "../../../components/TenancyStore";
+import { ROUTE_PAGE_ERROR, ROUTE_PAGE_TENANCY_SELECTOR } from "../../../contants/InternalRoutesConstants";
 import { NewContext } from "../../../lib/appLocalContext";
 import { getUserByUID } from "../../../lib/users";
-import { ROUTE_PAGE_ERROR } from "../../../contants/InternalRoutesConstants";
 
 export default function ProfilePage(props) {
   const { data: session, status } = useSession();
+  const tenancySelected = useTenancyStore((state) => state.tenancySelected)
 
   function clickSignOut() {
     signOut().then((value) => {
@@ -59,6 +62,15 @@ export default function ProfilePage(props) {
             </CardItem>
             <CardItem className="py-4" title="Created At">
               {props?.data?.created_at}
+            </CardItem>
+            <CardItem className="py-4" title="Tenancy Selected">
+              <p>
+                {tenancySelected}
+              </p>
+              <button className="btn btn-primary-outline btn-small flex items-center gap-2" onClick={() => Router.push(ROUTE_PAGE_TENANCY_SELECTOR)}>
+                <MaterialSymbol icon="tenancy" grade={-25} size={22} weight={300} />
+                Select another tenancy
+              </button>
             </CardItem>
             <CardItem className="py-4" title="Tenancies">
               {props?.data?.tenancies?.length > 0 ? (
