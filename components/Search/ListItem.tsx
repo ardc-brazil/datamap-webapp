@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { MaterialSymbol } from "react-material-symbols";
-import 'react-material-symbols/outlined'; // Place in your root app file. There are also `sharp` and `outlined` variants.
 import Moment from "react-moment";
 import { ROUTE_PAGE_DATASETS } from "../../contants/InternalRoutesConstants";
 import { bytesToSize } from "../../lib/file";

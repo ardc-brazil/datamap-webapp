@@ -1,15 +1,15 @@
 import Link from "next/link";
-import { useRouter } from "next/router";
+import Router, { useRouter } from "next/router";
 import { useState } from "react";
-import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_HOME, ROUTE_PAGE_NOTEBOOKS, ROUTE_PAGE_NOTEBOOKS_NEW, ROUTE_PAGE_PROFILE } from "../contants/InternalRoutesConstants";
+import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_HOME, ROUTE_PAGE_NOTEBOOKS, ROUTE_PAGE_PROFILE, ROUTE_PAGE_TENANCY_SELECTOR } from "../contants/InternalRoutesConstants";
+import useComponentVisible from "../hooks/UseComponentVisible";
 import Head from "../node_modules/next/head";
 import AvatarIcon from "./Icons/AvatarIcon";
 import DatasetIcon from "./Icons/DatasetIcon";
-import PiechartIcon from "./Icons/PiechartIcon";
-import AvatarButton from "./Profile/AvatarButton";
-import useComponentVisible from "../hooks/UseComponentVisible";
-import NotebookIcon from "./Icons/NotebookIcon";
 import HomeIcon from "./Icons/HomeIcon";
+import NotebookIcon from "./Icons/NotebookIcon";
+import AvatarButton from "./Profile/AvatarButton";
+import { useTenancyStore } from "./TenancyStore";
 
 interface Props {
   children?: React.ReactNode;
@@ -19,9 +19,10 @@ interface Props {
   className?: string;
 }
 
-export default (props: Props) => {
+export default function LoggedLayour(props: Props) {
   const [menuClosed, setMenuClosed] = useState(false);
   const { ref, isComponentVisible, setIsComponentVisible } = useComponentVisible(false);
+  const isTenancySelected = useTenancyStore((state) => state.isTenancySelected)
 
   function toggleMenu(): void {
     setMenuClosed(!menuClosed);
@@ -29,6 +30,11 @@ export default (props: Props) => {
 
   function showCreateMenu(event): void {
     setIsComponentVisible(true);
+  }
+
+  // If no tenancy selected, request to select one
+  if (!isTenancySelected()) {
+    Router.push(ROUTE_PAGE_TENANCY_SELECTOR);
   }
 
   return (
