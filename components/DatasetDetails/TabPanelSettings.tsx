@@ -13,10 +13,10 @@ export function TabPanelSettings(props: TabPanelProps) {
   const schema = Yup.object().shape({
     name: Yup.string()
       .min(3, 'Min 3 characteres')
-      .max(50, 'Max 50 characters')
+      .max(255, 'Max 255 characters')
       .required('Required'),
     institution: Yup.string()
-      .max(50, 'Too long. Max 80 chars')
+      .max(255, 'Too long. Max 255 chars')
   });
 
   function onSubmit(values, { setSubmitting }) {
