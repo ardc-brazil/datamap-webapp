@@ -2,7 +2,6 @@ import axios from "axios";
 import Router, { useRouter } from "next/router";
 import { useState } from "react";
 import { MaterialSymbol } from "react-material-symbols";
-import 'react-material-symbols/outlined'; // Place in your root app file. There are also `sharp` and `outlined` variants.
 import { ROUTE_PAGE_DATASETS } from "../../contants/InternalRoutesConstants";
 import { ContextMenuButton } from "../ContextMenu/ContextMenuButton";
 import { ContextMenuButtonItem } from "../ContextMenu/ContextMenuButtonItem";

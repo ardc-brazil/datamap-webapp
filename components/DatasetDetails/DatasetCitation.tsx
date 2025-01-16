@@ -2,7 +2,6 @@ import { ErrorMessage, Field, Form, Formik } from "formik";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from 'react';
 import { MaterialSymbol } from 'react-material-symbols';
-import 'react-material-symbols/outlined'; // Place in your root app file. There are also `sharp` and `outlined` variants.
 import * as Yup from 'yup';
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { getVersionByName } from "../../lib/datasetVersionSelector";
