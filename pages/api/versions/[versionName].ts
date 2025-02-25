@@ -2,8 +2,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import { NewContext } from "../../../lib/appLocalContext";
-import auth from "../../../lib/auth";
 import { publishDatasetVersion } from "../../../lib/dataset";
+import middlewareChain from "../../../lib/middlewareChain";
 import { httpErrorHandler } from "../../../lib/rpc";
 import { PublishDatasetVersionRequest } from "../../../types/BffAPI";
 import { ResponseError } from "../../../types/ResponseError";
@@ -11,7 +11,7 @@ import { ResponseError } from "../../../types/ResponseError";
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
 router
-  .use(auth)
+  .use(middlewareChain)
   // PUT /versions/:versionName
   .put(async (req, res) => {
     const context = await NewContext(req);

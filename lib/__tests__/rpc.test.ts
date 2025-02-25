@@ -1,39 +1,29 @@
-import { buildHeaders, defaultTenancy } from "../rpc";
+import { describe, expect, test } from '@jest/globals';
+import { buildHeaders } from "../rpc";
 
 describe('Build header', () => {
-    it('default header', () => {
+    test('default header', () => {
         const actual = buildHeaders({
             uid: "uid",
-            tenancies: ["test-tenancy", "t2"],
+            tenancy: "datamap/testing/unit-test-local"
         })
         expect(actual).toEqual({
             headers: {
                 "X-User-Id": "uid",
-                "X-Datamap-Tenancies": "test-tenancy;t2",
+                "X-Datamap-Tenancies": "datamap/testing/unit-test-local",
             }
         })
-    }),
+    })
 
-    it('uid is empty', () => {
+    test('uid is empty', () => {
         const actual = buildHeaders({
             uid: undefined,
-            tenancies: ["test-tenancy"],
+            tenancy: ""
         })
         expect(actual).toEqual({
             headers: {
                 "X-User-Id": "",
-                "X-Datamap-Tenancies": "test-tenancy",
-            }
-        })
-    }),
-    it('tenancy is empty', () => {
-        const actual = buildHeaders({
-            uid: "uid"
-        })
-        expect(actual).toEqual({
-            headers: {
-                "X-User-Id": "uid",
-                "X-Datamap-Tenancies": defaultTenancy,
+                "X-Datamap-Tenancies": "",
             }
         })
     })

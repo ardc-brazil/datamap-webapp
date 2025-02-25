@@ -7,7 +7,7 @@ export default function DatasetDetailsPageById(props) {
     return DatasetDetailsPage(props)
 }
 
-export async function getServerSideProps({ req, res, query }) {
+export async function getServerSideProps({ req, query }) {
     const context = await NewContext(req);
     const datasetId = query.datasetId as string;
     const dataset = await getDatasetBy(context, datasetId);

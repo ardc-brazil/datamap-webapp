@@ -1,3 +1,4 @@
+import { expect, test } from '@jest/globals';
 import { isValidFilePath, isValidFolderPath } from "../paths";
 
 test.each`
@@ -14,7 +15,7 @@ test.each`
   ${"a/a"}	            | ${false}
   ${"a/a./"}	          | ${false}
 `('validPath($path)', ({ path, expected }) => {
-  expect(isValidFilePath(path)).toBe(expected);
+  expect(isValidFilePath(path as string)).toBe(expected);
 });
 
 test.each`
@@ -30,5 +31,5 @@ test.each`
   ${"a/a"}	            | ${false}
   ${"a/a./**"}	          | ${false}
 `('isValidPathForFolder($path)', ({ path, expected }) => {
-  expect(isValidFolderPath(path)).toBe(expected);
+  expect(isValidFolderPath(path as string)).toBe(expected);
 });

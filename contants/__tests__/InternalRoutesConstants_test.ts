@@ -1,4 +1,5 @@
-import { ROUTE_PAGE_DATASETS_DETAILS } from "../InternalRoutesConstants"
+import { expect, test } from '@jest/globals';
+import { ROUTE_PAGE_DATASETS_DETAILS } from "../InternalRoutesConstants";
 
 test('Replace URL', () => {
     const expectedId = 123;

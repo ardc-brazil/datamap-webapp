@@ -1,8 +1,8 @@
+import { describe, expect, test } from '@jest/globals';
 import { hydrateWithUserInfo } from "../[...nextauth]";
-import { defaultTenancy } from "../../../../lib/rpc";
 
 describe('Hydrate token with user info', () => {
-    it('default', () => {
+    test('default', () => {
         const actual = hydrateWithUserInfo({}, {
             id: "uid",
             tenancies: ["tenancy", "t2"]
@@ -16,20 +16,19 @@ describe('Hydrate token with user info', () => {
         )
     });
 
-    it('tenancies is undefined', () => {
+    test('tenancies is undefined', () => {
         const actual = hydrateWithUserInfo({}, {
             id: "uid"
         })
 
         expect(actual).toEqual(
             {
-                uid: "uid",
-                tenancies: [defaultTenancy],
+                uid: "uid"
             }
         )
     });
 
-    it('tenancies is empty', () => {
+    test('tenancies is empty', () => {
         const actual = hydrateWithUserInfo({}, {
             id: "uid",
             tenancies: [],
@@ -37,8 +36,7 @@ describe('Hydrate token with user info', () => {
 
         expect(actual).toEqual(
             {
-                uid: "uid",
-                tenancies: [defaultTenancy],
+                uid: "uid"
             }
         )
     });

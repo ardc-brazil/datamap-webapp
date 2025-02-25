@@ -5,11 +5,16 @@ import { SessionProvider, useSession } from "next-auth/react";
 import type { AppProps } from "next/app";
 import Router, { useRouter } from 'next/router';
 import 'react-material-symbols/outlined';
+import { useTenancyStore } from "../components/TenancyStore";
 
 interface CustomAppProps {
   Component: AppProps["Component"] & {
     auth: {
+      // User role to view this page
+      // This is not used yet.
       role: string
+      // The component that should be visible when the page is loading
+      loading: any
     }
   }
   pageProps: AppProps<{ session: Session }>["pageProps"]
@@ -24,7 +29,7 @@ export default function App({
   return (
     <SessionProvider session={session}  >
       {Component.auth ? (
-        <Auth>
+        <Auth authContext={Component.auth}>
           <Component {...pageProps} />
         </Auth>
       ) : (
@@ -34,7 +39,10 @@ export default function App({
   )
 }
 
-function Auth({ children }) {
+function Auth({ authContext, children }) {
+  const { data: session } = useSession();
+  const setTenancySelected = useTenancyStore((state) => state.setTenancySelected)
+  const isTenancySelected = useTenancyStore((state) => state.isTenancySelected)
 
   const router = useRouter();
 
@@ -47,7 +55,12 @@ function Auth({ children }) {
   })
 
   if (status === "loading") {
-    return <div>Loading...</div>
+    return authContext.loading
+  }
+  
+  // Set the default tenancy if the user have only one, after the login.
+  if (!isTenancySelected() && session?.user?.tenancies?.length == 1) {
+    setTenancySelected(session.user.tenancies[0]);
   }
 
   return children

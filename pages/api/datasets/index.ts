@@ -2,14 +2,14 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import { NewContext } from "../../../lib/appLocalContext";
-import auth from "../../../lib/auth";
 import { createDataset, getAllDataset } from "../../../lib/dataset";
+import middlewareChain from "../../../lib/middlewareChain";
 import { ResponseError } from "../../../types/ResponseError";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
 router
-  .use(auth)
+  .use(middlewareChain)
   .get(async (req, res) => {
     try {
       const context = await NewContext(req);

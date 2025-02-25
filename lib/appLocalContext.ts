@@ -1,8 +1,7 @@
 import { NextApiRequest } from "next";
 import { getToken } from "next-auth/jwt";
-import { NextRequest } from "next/server"
-import { defaultTenancy } from "../lib/rpc";
-import { TenanciesResolver } from "./tenancies";
+import { NextRequest } from "next/server";
+import { TENANCY_STORAGE_NAME, TenancyStore } from "../types/TenancyStore";
 
 /**
  * Represents request app context
@@ -15,7 +14,8 @@ export interface AppLocalContext {
     uid: string
 
     /**
-     * Tenancies list (string) is the list of product/application context enabled for user.
+     * @deprecated Tenancies list (string) is the list of product/application context enabled for user.
+     * Use only `tenancy` the current selected tenancy.
      */
     tenancies?: string[]
 
@@ -27,20 +27,23 @@ export interface AppLocalContext {
 
 export async function NewContext(req: NextRequest | NextApiRequest): Promise<AppLocalContext> {
     const token = await getToken({ req: req })
-    // TODO: Update it when we have a tenancy selector
-    // const tenancyResolver = new TenanciesResolver();
-
-    const tenancies = buildTenancy(token)
+    const tenancyObject = getTenancyFromCookie(req)
 
     return {
         uid: token?.uid as string,
-        tenancies: tenancies,
-        // tenancy: tenancyResolver.getCurrentTenancyOrDefaultFromApi(req as NextApiRequest)
-        tenancy: tenancies?.[0] ?? defaultTenancy,
+        tenancy: tenancyObject?.tenancySelected
     };
 }
 
+function getTenancyFromCookie(req: NextRequest | NextApiRequest) {
+    let tenancyData = ""
+    if (req.cookies && req.cookies.get && (req as NextRequest).cookies.has(TENANCY_STORAGE_NAME)) {
+        tenancyData = (req as NextRequest).cookies.get(TENANCY_STORAGE_NAME)?.value
+    } else {
+        tenancyData = (req.cookies as { [key: string]: string })[TENANCY_STORAGE_NAME] ?? null
+    }
 
-function buildTenancy(token): string[] {
-    return token?.tenancies as string[] ?? [defaultTenancy];
+    const storage = JSON.parse(tenancyData) as {}
+    const tenancyObject = (storage?.["state"] ?? "") as TenancyStore;
+    return tenancyObject;
 }

@@ -1,3 +1,4 @@
+import { describe, expect, test } from '@jest/globals';
 import { GetDatasetDetailsVersionFileResponse, GetDatasetDetailsVersionResponse } from "../../types/BffAPI";
 import { totalDatasetVersionFilesSize } from "../file";
 
@@ -31,7 +32,7 @@ describe('bytesToSize', () => {
 
 function buildVersion(sizeBytes: number): GetDatasetDetailsVersionResponse {
     return {
-        files: [
+        files_in: [
             {
                 size_bytes: sizeBytes
             } as GetDatasetDetailsVersionFileResponse

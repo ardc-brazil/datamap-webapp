@@ -1,8 +1,8 @@
-import { MaterialSymbol } from 'react-material-symbols';
+import { MaterialSymbol, SymbolCodepoints } from 'react-material-symbols';
 
 interface ContextMenuButtonItemProps {
   text?: string;
-  iconName?: string
+  iconName?: SymbolCodepoints
   children?: any;
   onClick?(): void;
 }

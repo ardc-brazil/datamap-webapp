@@ -7,7 +7,7 @@ import { signOut, useSession } from "next-auth/react";
 import { MaterialSymbol } from "react-material-symbols";
 import { useTenancyStore } from "../../../components/TenancyStore";
 import { ROUTE_PAGE_ERROR, ROUTE_PAGE_TENANCY_SELECTOR } from "../../../contants/InternalRoutesConstants";
-import { NewContext } from "../../../lib/appLocalContext";
+import { AppLocalContext, NewContext } from "../../../lib/appLocalContext";
 import { getUserByUID } from "../../../lib/users";
 
 export default function ProfilePage(props) {
@@ -118,7 +118,20 @@ export default function ProfilePage(props) {
 export async function getServerSideProps(context) {
 
   // Fetch data frm external API
-  const ctx = await NewContext(context.req);
+  let ctx = {} as AppLocalContext;
+  try {
+    ctx = await NewContext(context.req);
+  } catch (e) {
+    // Redirect to Tenancy Selector page if any error
+    // Usually, the tenancy selected is not set in the cookie
+    return {
+      redirect: {
+        destination: '/app/tenancy',
+        permanent: true,
+      }
+    }
+  }
+
   if (!ctx.uid) {
     return { props: {} }
   }
