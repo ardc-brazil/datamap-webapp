@@ -73,16 +73,8 @@ export async function createDataset(context: AppLocalContext, datasetRequest: Cr
  * @returns Dataset
  */
 export async function getDatasetBy(context: AppLocalContext, id: string): Promise<GetDatasetDetailsResponse> {
-    try {
-        const response = await axiosInstance.get("/datasets/" + id, buildHeaders(context));
-        const result = response.data as GetDatasetDetailsResponse;
-
-        return result;
-    } catch (error) {
-        console.log(error);
-        // FIX: throw a error or encapsulate
-        return error.response;
-    }
+    const response = await axiosInstance.get("/datasets/" + id, buildHeaders(context));
+    return response.data as GetDatasetDetailsResponse;
 }
 
 export async function updateDataset(context: AppLocalContext, dataset: UpdateDatasetRequest) {

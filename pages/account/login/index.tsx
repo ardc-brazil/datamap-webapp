@@ -1,11 +1,10 @@
-import Link from "next/link";
-import Router, { useRouter } from "next/router";
-import { TabPanel } from "../../../components/DatasetDetails/TabPanel";
-import { Tabs } from "../../../components/DatasetDetails/Tabs";
-
 import { signIn } from "next-auth/react";
 import Head from "next/head";
+import Link from "next/link";
+import Router from "next/router";
 import { FormEventHandler, useState } from "react";
+import { TabPanel } from "../../../components/DatasetDetails/TabPanel";
+import { Tabs } from "../../../components/DatasetDetails/Tabs";
 import { ROUTE_PAGE_SEARCH } from "../../../contants/InternalRoutesConstants";
 
 function OrcidButton(props) {
@@ -39,9 +38,6 @@ function OrcidButton(props) {
 }
 
 function GithubButton(props) {
-
-  const router = useRouter();
-
   return (
     <button
       type="button"
@@ -58,6 +54,7 @@ function GithubButton(props) {
   );
 }
 
+// eslint-disable-next-line no-unused-vars
 function EmailButton(props) {
   function onClick() {
     Router.push({

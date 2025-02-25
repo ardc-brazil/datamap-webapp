@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { MaterialSymbol } from 'react-material-symbols';
-import 'react-material-symbols/outlined'; // Place in your root app file. There are also `sharp` and `outlined` variants.
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { bytesToSize, fileNameResolution, isFolder } from "../../../lib/file";
 import { FileDownloadLinkRequest, FileDownloadLinkResponse, GetDatasetDetailsResponse, GetDatasetDetailsVersionFileResponse, GetDatasetDetailsVersionResponse } from "../../../types/BffAPI";

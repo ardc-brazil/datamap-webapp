@@ -31,6 +31,12 @@ export const ROUTE_PAGE_NOTEBOOKS = ROUTE_APP_CONTEXT + '/notebooks';
 export const ROUTE_PAGE_NOTEBOOKS_NEW = ROUTE_PAGE_NOTEBOOKS + "/new";
 
 /**
+ * Route to the tenancy selector pages
+ * @constant
+ */
+export const ROUTE_PAGE_TENANCY_SELECTOR = ROUTE_APP_CONTEXT + "/tenancy";
+
+/**
  * Route to the datasets internal page.
  * @constant
  */
@@ -73,7 +79,7 @@ function appendSearchParams(urlString: string, params: any = {}) {
     Object.entries(params).forEach(entry => {
         const [key, value] = entry;
         url.searchParams.set(key, value as string);
-      });
+    });
 
     return url.toString();
 }

@@ -45,7 +45,7 @@ function useDatasetSearch(currentSearchParameters) {
   };
 }
 
-export default function ListDatasetPage(props) {
+export default function ListDatasetPage() {
 
   const router = useRouter();
 

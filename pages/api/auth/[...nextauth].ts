@@ -3,7 +3,6 @@ import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import OrcidProvider from "../../../lib/OrcidOAuthProvider";
-import { defaultTenancy } from "../../../lib/rpc";
 import { CreateUserRequest, GetUserByProviderResponse, createUser, getUserByProviderID } from "../../../lib/users";
 
 export const authOptions: AuthOptions = {
@@ -61,10 +60,14 @@ export const authOptions: AuthOptions = {
 
       return token
     },
+
+    // eslint-disable-next-line no-unused-vars
     async session({ session, token, user }) {
       // Send properties to the client, like an access_token from a provider.
       if (session?.user) {
+        // Hydarte the user in session with ID and the available tenancies
         session.user.uid = token.uid
+        session.user.tenancies = token.tenancies
       }
       return session
     }
@@ -86,8 +89,6 @@ export function hydrateWithUserInfo(token, user: any) {
 
   if (user.tenancies?.length) {
     token.tenancies = user.tenancies as string[];
-  } else {
-    token.tenancies = [defaultTenancy];
   }
 
   return token;

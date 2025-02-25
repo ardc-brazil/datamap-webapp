@@ -1,28 +1,7 @@
 import { useSession } from 'next-auth/react';
 import LoggedLayout from '../../../components/LoggedLayout';
-
 export default function HomePage() {
-    const { data: session, status } = useSession();
-
-    // TODO: Create for to update user email if the email is fake
-    // const [userData, setUserData] = useState(null);
-
-    // useEffect(() => {
-
-    //     axios.get("/api/user")
-    //         .then(response => {
-    //             try {
-    //                 setUserData(response.data);
-    //                 console.log(userData);
-    //             } catch (error) {
-    //                 console.log(error);
-    //             }
-    //         })
-    //         .catch(error => {
-    //             console.log(error);
-    //         });
-    // }, []);
-
+    const { data: session } = useSession();
 
     return (
         <LoggedLayout noPadding={false}>

@@ -5,7 +5,6 @@ import { AppLocalContext } from './appLocalContext';
 const apiBaseURL = process.env.DATAMAP_BASE_URL;
 const apiKey = process.env.DATAMAP_API_KEY;
 const apiSecret = process.env.DATAMAP_API_SECRET;
-export const defaultTenancy = "datamap/production/data-amazon";
 
 const axiosInterceptorInstance = axios.create({
   baseURL: apiBaseURL,
@@ -21,7 +20,7 @@ export function buildHeaders(context: AppLocalContext) {
   return {
     headers: {
       "X-User-Id": context.uid ?? "",
-      "X-Datamap-Tenancies": context.tenancies?.join(";") ?? defaultTenancy,
+      "X-Datamap-Tenancies": context.tenancy,
     }
   }
 }
