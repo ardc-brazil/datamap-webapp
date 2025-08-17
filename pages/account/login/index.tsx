@@ -12,7 +12,7 @@ function OrcidButton(props) {
     <button
       type="button"
       className="btn-primary-outline self-center font-medium text-sm px-5 py-2.5 text-center inline-flex items-center mr-2 mb-2 cursor-pointer"
-      onClick={() => signIn("orcid", { callbackUrl: props.callbackUrl })}
+      onClick={() => signIn("orcid", { callbackUrl: decodeURIComponent(props.callbackUrl || "/") })}
     >
       <svg
         className="w-8 h-8 mr-2 -ml-1"
@@ -42,7 +42,7 @@ function GithubButton(props) {
     <button
       type="button"
       className="btn-primary-outline self-center font-medium text-sm px-5 py-2.5 text-center inline-flex items-center mr-2 mb-2 cursor-pointer"
-      onClick={() => signIn("github", { callbackUrl: props.callbackUrl })}
+      onClick={() => signIn("github", { callbackUrl: decodeURIComponent(props.callbackUrl || "/") })}
     >
       <svg className="w-8 h-8 mr-2 -ml-1" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <title>GitHub dark icon</title>
@@ -86,7 +86,13 @@ function EmailButton(props) {
   );
 }
 
-export default function LoginPage(props) {
+interface Props {
+  error?: string
+  callbackUrl?: string
+  isDoi?: boolean
+}
+
+export default function LoginPage(props: Props) {
   function getSelectedTabIndex() {
     return 0;
   }
@@ -106,7 +112,7 @@ export default function LoginPage(props) {
       </Link>
 
 
-      {props.error &&
+      {props.error && !props.isDoi &&
         <div className="flex w-10/12 md:w-4/12 self-center items-center p-4 mb-4 text-primary-900 border-t-4 border-error-300 bg-error-50" role="alert">
           <svg className="flex-shrink-0 w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
@@ -117,6 +123,36 @@ export default function LoginPage(props) {
             <span className="text-xs">
               Details:{props.error}
             </span>
+          </div>
+        </div>
+      }
+
+      {props.isDoi &&
+        <div className="flex w-10/12 md:w-4/12 self-center items-center p-6 mb-6 text-primary-900 border-t-4 border-primary-500 bg-primary-50 rounded-lg shadow-sm" role="alert">
+          <div className="flex-shrink-0 mr-4">
+            <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-primary-800 mb-2">
+              Access Dataset Information
+            </h3>
+            <div className="text-sm text-primary-700 space-y-2">
+              <p>
+                <strong>We detected that you were redirected from a DOI public URL.</strong>
+              </p>
+              <p>
+                To access this dataset information, you need to:
+              </p>
+              <ol className="list-decimal list-inside ml-2 space-y-1">
+                <li>Create an account or sign in with your ORCID</li>
+                <li>After authentication, you'll be automatically redirected back to the same DOI URL</li>
+              </ol>
+              <p className="mt-3 text-xs text-primary-600">
+                <strong>Note:</strong> This ensures secure access to dataset information while maintaining the DOI link functionality.
+              </p>
+            </div>
           </div>
         </div>
       }
@@ -150,7 +186,7 @@ export default function LoginPage(props) {
           </TabPanel>
         </Tabs>
       </div>
-    </div>
+    </div >
   );
 }
 
@@ -165,7 +201,7 @@ function SignInForm(props) {
       email: userInfo.email,
       password: userInfo.password,
       redirect: true,
-      callbackUrl: props.callbackUrl,
+      callbackUrl: decodeURIComponent(props.callbackUrl || "/"),
     });
 
   };
@@ -207,6 +243,6 @@ function SignInForm(props) {
 }
 
 LoginPage.getInitialProps = async ({ query }) => {
-  const { callbackUrl, error } = query
-  return { callbackUrl: (callbackUrl ?? "/"), error }
+  const { callbackUrl, error, isDoi } = query
+  return { callbackUrl: (callbackUrl ?? "/"), error, isDoi }
 }

@@ -73,15 +73,43 @@ export const ROUTE_PAGE_SEARCH = ROUTE_APP_CONTEXT + '/datasets';
  */
 export const ROUTE_PAGE_ERROR = (params) => appendSearchParams(ROUTE_APP_CONTEXT + '/error', params);
 
+/**
+ * Route to the login page.
+ * @constant
+ */
+export const ROUTE_PAGE_LOGIN = (params) => appendSearchParams('/account/login', params);
+
 function appendSearchParams(urlString: string, params: any = {}) {
-    let url = new URL(window.location.origin + urlString);
-
-    Object.entries(params).forEach(entry => {
-        const [key, value] = entry;
-        url.searchParams.set(key, value as string);
-    });
-
-    return url.toString();
+    // Check if we're in a browser environment
+    const isBrowser = typeof window !== 'undefined';
+    
+    if (isBrowser) {
+        // Client-side: use URL constructor with full origin
+        let url = new URL(window.location.origin + urlString);
+        
+        Object.entries(params).forEach(entry => {
+            const [key, value] = entry;
+            url.searchParams.set(key, value as string);
+        });
+        
+        return url.toString();
+    } else {
+        // Server-side: use hostname from params or fallback to localhost
+        const hostname = params.hostname || 'http://localhost';
+        const { hostname: _, ...queryParams } = params; // Remove hostname from query params
+        
+        const url = new URL(urlString, hostname);
+        
+        Object.entries(queryParams).forEach(entry => {
+            const [key, value] = entry;
+            console.log("===> key", key);
+            console.log("===> value", value);
+            url.searchParams.set(key, value as string);
+        });
+        
+        // Return just the pathname and search params (without the base URL)
+        return url.pathname + url.search;
+    }
 }
 
 function replaceIt(url: string, params: any = {}) {
