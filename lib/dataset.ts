@@ -13,6 +13,8 @@ function toDatasetInfo(datasetRequest: CreateDatasetRequest): DatasetInfo {
         license: "",
         description: "",
         realm: "",
+        // TODO: Remove the "version" attribute if we don't need it
+        // @ts-ignore - version property not in DatasetInfo
         version: "",
         project: "",
         source_instrument: "",
