@@ -1,6 +1,6 @@
 
 import { CreateDatasetRequest, CreateDatasetResponse, DatasetCategoryFiltersResponse, GetDatasetDetailsResponse, GetDatasetsResponse, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest } from "../types/BffAPI";
-import { DatasetCreationRequest, DatasetInfo } from "../types/GatekeeperAPI";
+import { DatasetCreationRequest, DatasetInfo, DatasetSnapshotResponse } from "../types/GatekeeperAPI";
 import { AppLocalContext } from "./appLocalContext";
 import axiosInstance, { buildHeaders } from "./rpc";
 
@@ -153,3 +153,31 @@ export async function publishDatasetVersion(context: AppLocalContext, request: P
 
     return response.data as PublishDatasetVersionResponse;
 }
+
+/**
+ * Get a dataset snapshot from Gatekeeper.
+ * @param context App context
+ * @param id dataset id
+ * @param versionName optional version name to get specific version snapshot
+ * @returns DatasetSnapshotResponse
+ */
+export async function getDatasetSnapshot(context: AppLocalContext, id: string, versionName?: string): Promise<DatasetSnapshotResponse> {
+    try {
+        let endpoint;
+        
+        // If versionName is provided, use the version-specific endpoint
+        if (versionName) {
+            endpoint = `/datasets/${id}/versions/${versionName}/snapshot`;
+        } else {
+            // Use the base snapshot endpoint for current version
+            endpoint = `/datasets/${id}/snapshot`;
+        }
+        
+        const response = await axiosInstance.get(endpoint, buildHeaders(context));
+        return response.data as DatasetSnapshotResponse;
+    } catch (error) {
+        console.log(error);
+        return Promise.reject(error?.response);
+    }
+}
+

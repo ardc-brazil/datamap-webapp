@@ -43,6 +43,12 @@ export const ROUTE_PAGE_TENANCY_SELECTOR = ROUTE_APP_CONTEXT + "/tenancy";
 export const ROUTE_PAGE_DATASETS_DETAILS = (params) => replaceIt(ROUTE_APP_CONTEXT + '/datasets/:id', params);
 
 /**
+ * Route to the datasets internal page.
+ * @constant
+ */
+export const ROUTE_PAGE_DATASETS_SNAPSHOTS_DETAILS = (params) => replaceIt('/datasets/:id', params);
+
+/**
  * Route to the datasets specific version internal page.
  * @constant
  */

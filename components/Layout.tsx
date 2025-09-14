@@ -7,9 +7,13 @@ interface Props {
   fluid?: boolean;
   footerPropsMarginTop?: boolean;
   hideFooter?: boolean;
+  bgColor?: string;
 }
 
 export default (props: Props) => {
+
+  const bgColor = props.bgColor ? props.bgColor :"bg-primary-50";
+
   return (
     <div className="">
       <Head>
@@ -23,7 +27,7 @@ export default (props: Props) => {
       <main
         className={`${
           props.fluid ? "" : "container pb-4 px-4"
-        } mx-auto bg-primary-50`}
+        } mx-auto ${bgColor}`}
       >
         {props.children}
       </main>

@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { ViewMoreOrLessButton } from "./ViewMoreOrLessButton";
 
-export function ExpansibleDiv(props: any) {
+interface ExpansibleDivProps {
+  forceExpanded: boolean;
+  children: React.ReactNode;
+  expanded?: boolean;
+}
+
+export function ExpansibleDiv(props: ExpansibleDivProps) {
   const [minHeightExpandable, setMinHeightExpandable] = useState(false);
   const [expanded, setExpanded] = useState(props.expanded);
   const ref = useRef(null);
