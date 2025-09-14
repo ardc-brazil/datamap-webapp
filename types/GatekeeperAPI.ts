@@ -31,7 +31,6 @@ export interface DatasetInfo {
     license: string,
     description: string,
     realm: string,
-    version: string,
     project: string,
     source_instrument: string,
     source: string,
@@ -89,4 +88,68 @@ export interface DOIUpdateRequest {
 
 export interface DOIUpdateResponse {
     new_state: string
+}
+
+/**
+ * Represents a response for dataset snapshot data.
+ * @interface
+ */
+export interface DatasetSnapshotResponse {
+    name: string
+    dataset_id: string
+    version_name: string
+    doi_identifier: string
+    doi_link: string
+    doi_state: string
+    publication_date: string
+    files_summary: {
+        total_files: number
+        total_size_bytes: number
+        extensions_breakdown: {
+            extension: string
+            count: number
+            total_size_bytes: number
+        }[]
+    }
+    versions: DatasetSnapshotResponseVersion[]
+    data: {
+        id: string
+        description: string
+        tags: string[]
+        level: string
+        owner: Person | null
+        realm: string
+        source: string
+        authors: Person[]
+        license: string
+        project: string
+        category: string
+        contacts: Person[] | null
+        database: string
+        end_date: string
+        location: Location
+        data_type: string
+        grid_type: string
+        reference: any[]
+        variables: any[]
+        is_enabled: boolean
+        resolution: Resolution
+        start_date: string
+        institution: string
+        colaborators: {
+            name: string
+            permission: string
+        }[] | null
+        creation_date: string
+        source_instrument: string
+        additional_information: any[]
+    }
+}
+
+export interface DatasetSnapshotResponseVersion {
+    id: string
+    name: string
+    doi_identifier: string
+    doi_state: string
+    created_at: string
 }
