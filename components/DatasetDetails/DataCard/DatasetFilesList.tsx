@@ -153,7 +153,7 @@ function FileListRowItem(props: FileListRowItemProps) {
                 dataset={props.dataset}
                 datasetVersion={props.datasetVersion}
                 file={props.file}
-                show={!props.onFileRemoved} />
+                show={false} />
             <RemoveFileButton file={props.file} onFileRemoved={props.onFileRemoved} />
         </div>
     )
