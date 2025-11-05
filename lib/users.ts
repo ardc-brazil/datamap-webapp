@@ -124,7 +124,8 @@ export async function getUserByProviderID(request: GetUserByProviderRequest): Pr
 }
 
 // TODO: Create a generic way to validade this.
-export function canEditDataset(user: UserDetailsResponse): boolean {
+export function canEditDataset(user?: UserDetailsResponse): boolean {
+    if (!user) return false;
     return user.roles.indexOf("datasets_write") >= 0
         || user.roles.indexOf("admin") >= 0;
 }
