@@ -1,21 +1,23 @@
 import { TabPanelDataCard } from "./DatasetDetails/DataCard/TabPanelDataCard";
 import DatasetInstitution from "./DatasetDetails/DatasetInstitution";
 import DatasetMoreSettingsButton from "./DatasetDetails/DatasetMoreSettingsButton";
+import { TabPanelSettings } from "./DatasetDetails/TabPanelSettings";
 import { Tabs } from "./DatasetDetails/Tabs";
-import Layout from "./Layout";
-import { UserDetailsResponse } from "../lib/users";
+import { DownloadDatafilesButton } from "./DownloadDatafilesButton";
+import LoggedLayout from "./LoggedLayout";
+import { UserDetailsResponse, canEditDataset } from "../lib/users";
 import { GetDatasetDetailsResponse } from "../types/BffAPI";
 
 interface Props {
   // TODO: Map this BFF response to a PageObject to avoid high coupling with the API.
   dataset: GetDatasetDetailsResponse
-  user?: UserDetailsResponse
-  selectedVersionName?: string
+  user: UserDetailsResponse
+  selectedVersionName: string
 }
 
 export default function DatasetDetailsPage(props: Props) {
   return (
-    <Layout>
+    <LoggedLayout>
       <div className="w-full">
         <div className="container mx-auto">
           <div className="flex flex-row">
@@ -25,6 +27,9 @@ export default function DatasetDetailsPage(props: Props) {
               <DatasetInstitution dataset={props.dataset} user={props.user} />
             </div>
             {/* Actions */}
+            <div>
+              <DownloadDatafilesButton dataset={props.dataset} />
+            </div>
             <div>
               <DatasetMoreSettingsButton dataset={props.dataset} />
             </div>
@@ -42,9 +47,12 @@ export default function DatasetDetailsPage(props: Props) {
             {/* TODO: Enable discussion tab - Disabled while empty */}
             {/* <TabPanelDiscussion title="Discussions" dataset={props.dataset} /> */}
             {/* <TabPanelDiscussion title="Discussions" dataset={props.dataset} /> */}
+            {canEditDataset(props.user) &&
+              <TabPanelSettings title="Settings" dataset={props.dataset} user={props.user} />
+            }
           </Tabs>
         </div>
       </div>
-    </Layout>
+    </LoggedLayout>
   );
 }
