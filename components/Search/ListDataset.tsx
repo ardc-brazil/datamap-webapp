@@ -2,6 +2,7 @@ import { GetMinimalDatasetsDetasetDetailsResponse } from "../../types/BffAPI";
 import { ListDatasetHeader } from "./ListDatasetHeader";
 import ListItem from "./ListItem";
 import { ListDatasetPageNavigator } from "./ListDatasetPageNavigator";
+import { PageSizeSelector } from "./PageSizeSelector";
 
 interface Props {
   data: GetMinimalDatasetsDetasetDetailsResponse[]
@@ -12,6 +13,8 @@ interface Props {
   hasNext: boolean
   hasPrevious: boolean
   onPageChange: (page: number) => void
+  pageSize: number
+  onPageSizeChange: (pageSize: number) => void
 }
 
 export function ListDataset(props: Props) {
@@ -24,8 +27,12 @@ export function ListDataset(props: Props) {
           <ListItem key={index} dataset={element} />
         ))}
       </div>
-      {props.totalPages > 1 && (
-        <div className="py-8">
+      <div className="py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <PageSizeSelector
+          pageSize={props.pageSize}
+          onPageSizeChange={props.onPageSizeChange}
+        />
+        {props.totalPages > 1 && (
           <ListDatasetPageNavigator
             currentPage={props.currentPage}
             totalPages={props.totalPages}
@@ -33,8 +40,8 @@ export function ListDataset(props: Props) {
             hasPrevious={props.hasPrevious}
             onPageChange={props.onPageChange}
           />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

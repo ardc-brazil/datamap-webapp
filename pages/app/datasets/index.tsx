@@ -67,12 +67,17 @@ export default function ListDatasetPage() {
   const [currentSearchParameters, setCurrentSearchParameters] = useState(emptyCurrentSearchParameters)
   const [lastSearchParameterDeselected, setLastSearchParameterDeselected] = useState(null as SelectedFilterValue)
   const [currentPage, setCurrentPage] = useState(1)
-  const pageSize = 20
+  const [pageSize, setPageSize] = useState(10)
 
   const { datasets, datasetsIsLoading, datasetsError } = useDatasetSearch(currentSearchParameters, currentPage, pageSize)
 
   // Reset to page 1 when search parameters change
   function resetPagination() {
+    setCurrentPage(1)
+  }
+
+  function onPageSizeChange(newPageSize: number) {
+    setPageSize(newPageSize)
     setCurrentPage(1)
   }
 
@@ -224,6 +229,8 @@ export default function ListDatasetPage() {
                     hasNext={datasets.has_next}
                     hasPrevious={datasets.has_previous}
                     onPageChange={setCurrentPage}
+                    pageSize={pageSize}
+                    onPageSizeChange={onPageSizeChange}
                   />
                 )}
               </div>
