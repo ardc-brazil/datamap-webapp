@@ -14,7 +14,7 @@ import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_ERROR } from "
 import { SWRRetry, fetcher } from "../../../lib/fetcher";
 import { GetDatasetsResponse } from "../../../types/BffAPI";
 
-function useDatasetSearch(currentSearchParameters) {
+function useDatasetSearch(currentSearchParameters, currentPage: number, pageSize: number = 20) {
 
   function buildQueryStringFrom(state: CurrentSearchParameterState) {
 
@@ -34,9 +34,11 @@ function useDatasetSearch(currentSearchParameters) {
     return new URLSearchParams(c).toString();
   }
 
-  const { data, error, isLoading } = useSWR(`/api/datasets?minimal=true&${buildQueryStringFrom(currentSearchParameters)}`, fetcher, {
-    onErrorRetry: SWRRetry,
-  })
+  const { data, error, isLoading } = useSWR(
+    `/api/datasets?minimal=true&page=${currentPage}&page_size=${pageSize}&${buildQueryStringFrom(currentSearchParameters)}`,
+    fetcher,
+    { onErrorRetry: SWRRetry }
+  )
 
   return {
     datasets: data as GetDatasetsResponse,
@@ -64,13 +66,22 @@ export default function ListDatasetPage() {
 
   const [currentSearchParameters, setCurrentSearchParameters] = useState(emptyCurrentSearchParameters)
   const [lastSearchParameterDeselected, setLastSearchParameterDeselected] = useState(null as SelectedFilterValue)
-  const { datasets, datasetsIsLoading, datasetsError } = useDatasetSearch(currentSearchParameters)
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 20
+
+  const { datasets, datasetsIsLoading, datasetsError } = useDatasetSearch(currentSearchParameters, currentPage, pageSize)
+
+  // Reset to page 1 when search parameters change
+  function resetPagination() {
+    setCurrentPage(1)
+  }
 
   if (datasetsError?.status == 401) {
     router.push(ROUTE_PAGE_ERROR(datasetsError));
   }
 
   function onTextSearchChanged(text: string) {
+    resetPagination()
     setCurrentSearchParameters({
       at: Date.now(),
       selectedFilters: {
@@ -89,6 +100,7 @@ export default function ListDatasetPage() {
 
   function onCriteriaChanged(criteria, selectedOption) {
     setLastSearchParameterDeselected(null)
+    resetPagination()
 
     // multiple
     if (selectedOption.criteriaSelected.selection === "multiple") {
@@ -141,6 +153,7 @@ export default function ListDatasetPage() {
   function onBadgesClose(selectedFilter: SelectedFilterValue): void {
     // Update state to notify last selected filters removed to all components that depends on filters.
     setLastSearchParameterDeselected(selectedFilter)
+    resetPagination()
 
     // Update current search parameters for update the dataset list
     delete currentSearchParameters.selectedFilters[selectedFilter.id];
@@ -200,8 +213,19 @@ export default function ListDatasetPage() {
               <div>
                 {datasetsError && <EmptySearch>Error to read datasets</EmptySearch>}
                 {datasetsIsLoading && <EmptySearch>Loading datasets...</EmptySearch>}
-                {datasets?.size <= 0 && <EmptySearch>No datasets found</EmptySearch>}
-                {datasets?.size > 0 && <ListDataset data={datasets.content} requestedAt={currentSearchParameters.at} />}
+                {datasets?.total_count === 0 && <EmptySearch>No datasets found</EmptySearch>}
+                {datasets?.total_count > 0 && (
+                  <ListDataset
+                    data={datasets.content}
+                    requestedAt={currentSearchParameters.at}
+                    currentPage={datasets.page}
+                    totalPages={datasets.total_pages}
+                    totalCount={datasets.total_count}
+                    hasNext={datasets.has_next}
+                    hasPrevious={datasets.has_previous}
+                    onPageChange={setCurrentPage}
+                  />
+                )}
               </div>
             </div>
           </div>
