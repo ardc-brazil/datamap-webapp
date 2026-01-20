@@ -14,7 +14,7 @@ export function PageSizeSelector(props: Props) {
   };
 
   return (
-    <div className="flex items-center gap-2 text-sm text-gray-600">
+    <div className="flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap">
       <label htmlFor="page-size-select">Show</label>
       <select
         id="page-size-select"

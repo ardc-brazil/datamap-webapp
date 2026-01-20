@@ -77,7 +77,7 @@ export function ListDatasetPageNavigator(props: Props) {
       <button
         onClick={handlePrevious}
         disabled={!hasPrevious}
-        className={`btn-primary-outline flex-none p-2 ${
+        className={`flex-none p-2 border border-primary-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 ${
           !hasPrevious ? "opacity-50 cursor-not-allowed" : ""
         }`}
         aria-label="Previous page"
@@ -103,7 +103,7 @@ export function ListDatasetPageNavigator(props: Props) {
             return (
               <span
                 key={`ellipsis-${index}`}
-                className="px-3 py-2 text-gray-500"
+                className="px-3 py-2 text-gray-500 flex items-center"
               >
                 ...
               </span>
@@ -114,18 +114,25 @@ export function ListDatasetPageNavigator(props: Props) {
           const isFirst = index === 0;
           const isLast = index === pageNumbers.length - 1;
 
-          let buttonClass = "btn-primary-outline px-4 py-2";
+          // Base classes for all buttons
+          let buttonClass = "px-4 py-2 border border-primary-300 text-sm font-medium";
 
+          // Active vs inactive styling
           if (isActive) {
-            buttonClass = "bg-primary-600 text-white px-4 py-2 border border-primary-600";
+            buttonClass += " bg-primary-600 text-white border-primary-600 z-10";
+          } else {
+            buttonClass += " bg-white text-gray-700 hover:bg-gray-50";
           }
 
-          if (isFirst && !isLast) {
-            buttonClass += " rounded-l border-r-0";
-          } else if (isLast && !isFirst) {
-            buttonClass += " rounded-r";
-          } else if (!isFirst && !isLast) {
-            buttonClass += " rounded-none border-r-0";
+          // Border radius based on position
+          if (isFirst) {
+            buttonClass += " rounded-l-md";
+          }
+          if (isLast) {
+            buttonClass += " rounded-r-md";
+          }
+          if (!isFirst) {
+            buttonClass += " -ml-px"; // Overlap borders
           }
 
           return (
@@ -145,7 +152,7 @@ export function ListDatasetPageNavigator(props: Props) {
       <button
         onClick={handleNext}
         disabled={!hasNext}
-        className={`btn-primary-outline flex-none p-2 ${
+        className={`flex-none p-2 border border-primary-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 ${
           !hasNext ? "opacity-50 cursor-not-allowed" : ""
         }`}
         aria-label="Next page"

@@ -27,7 +27,7 @@ export function ListDataset(props: Props) {
           <ListItem key={index} dataset={element} />
         ))}
       </div>
-      <div className="py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="py-8 flex flex-row items-center justify-between gap-4">
         <PageSizeSelector
           pageSize={props.pageSize}
           onPageSizeChange={props.onPageSizeChange}
