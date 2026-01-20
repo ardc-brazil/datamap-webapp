@@ -15,12 +15,12 @@ export function PageSizeSelector(props: Props) {
 
   return (
     <div className="flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap">
-      <label htmlFor="page-size-select">Show</label>
+      <label htmlFor="page-size-select" className="leading-none">Show</label>
       <select
         id="page-size-select"
         value={pageSize}
         onChange={handleChange}
-        className="border border-primary-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+        className="border border-primary-300 rounded px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
       >
         {PAGE_SIZE_OPTIONS.map((size) => (
           <option key={size} value={size}>
@@ -28,7 +28,7 @@ export function PageSizeSelector(props: Props) {
           </option>
         ))}
       </select>
-      <span>items per page</span>
+      <span className="leading-none">items per page</span>
     </div>
   );
 }
