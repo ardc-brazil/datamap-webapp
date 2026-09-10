@@ -2,6 +2,7 @@ import { useSession } from "next-auth/react";
 import Router from "next/router";
 import { MaterialSymbol } from "react-material-symbols";
 import { Navbar } from "../../../components/Navbar/Navbar";
+import { AccessPending } from "../../../components/Tenancy/AccessPending";
 import { useTenancyStore } from "../../../components/TenancyStore";
 import { ROUTE_PAGE_HOME } from "../../../contants/InternalRoutesConstants";
 import { NewContext } from "../../../lib/appLocalContext";
@@ -28,7 +29,7 @@ export default function TenancySelectorPage(props: TenancySelectorPageProps) {
                 <div className="max-w-2xl min-w-fit w-5/12 h-full">
                     <h2>Welcome, {session?.user?.name}!</h2>
                     <p className="text-primary-700">
-                        Please select a namespace below
+                        {props.data.tenancies?.length > 0 ? "Please select a namespace below" : "You are signed in, but you are not part of any namespace yet."}
                     </p>
                     <NamespaceListSelector tenancies={props.data.tenancies} onTenancySelected={onTenancySelected} />
                     {/* TODO: Decide how to present the available tenancies */}
@@ -65,11 +66,12 @@ function NamespaceListSelector(props: NamespaceListSelectorProps) {
                 </ul>
 
             ) : (
-                <i>Empty - no tenancy set for user. Talk to the Admin.</i>
+                <AccessPending />
             )}
         </div>
     )
 }
+
 
 
 interface NamespaceTreeSelectorProps {

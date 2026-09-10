@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { MaterialSymbol } from "react-material-symbols";
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { CreateDraftDatasetVersionRequest, CreateDraftDatasetVersionResponse, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, GetDatasetDetailsResponse, GetDatasetDetailsVersionResponse, PublishDatasetVersionRequest } from "../../../types/BffAPI";
+import { createVersionWithUploads, describeVersionCreationError } from "../../../lib/datasetVersionCreation";
 import Drawer from "../../base/Drawer";
 import UppyUploader from "../../base/UppyUploader";
 import DatasetFilesList from "./DatasetFilesList";
@@ -30,6 +31,7 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
     const [uppyReference, setUppyReference] = useState(null as Uppy);
     const [uploadAuth, setUploadAuth] = useState({} as FileUploadAuthTokenResponse)
     const [processState, setProcessState] = useState(ProcessState.OPEN);
+    const [errorMessage, setErrorMessage] = useState(null as string);
 
     async function onUppyStateCreated(uppy: Uppy) {
         const request = { file: { id: props.dataset.id } } as FileUploadAuthTokenRequest;
@@ -46,56 +48,51 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
 
     function onDrawerOpen() {
         setStagingDatasetVersion(props.datasetVersion)
+        setErrorMessage(null)
     }
 
     const sleep = (delay) => new Promise((resolve) => setTimeout(resolve, delay))
 
-    function onCreate() {
+    async function onCreate() {
+        setErrorMessage(null);
         setProcessState(ProcessState.CREATING);
-        const request = {
+
+        const draftRequest = {
             datasetId: props.dataset.id,
             datafilesPreviouslyUploaded: stagingDatasetVersion.files_in
         } as CreateDraftDatasetVersionRequest;
 
-        let versionCreated: CreateDraftDatasetVersionResponse;
+        try {
+            await createVersionWithUploads({
+                createDraftVersion: () =>
+                    bffGateway.createNewDraftDatasetVersion(draftRequest) as Promise<CreateDraftDatasetVersionResponse>,
 
-        // Creates the new version with
-        bffGateway
-            .createNewDraftDatasetVersion(request)
-            // starts the upload
-            .then((resp) => {
-                versionCreated = resp;
-                return uppyReference.upload();
-            })
-            // publish the new version
-            .then(async (uploadResult) => {
-                setProcessState(ProcessState.ALL_FILES_UPLOADED);
+                uploadFiles: () => uppyReference.upload(),
 
-                if (uploadResult.failed.length > 0) {
-                    console.log("upload failed", uploadResult.failed);
-                }
+                publishVersion: async (versionName: string) => {
+                    // Only claim the files are in once they actually are.
+                    setProcessState(ProcessState.ALL_FILES_UPLOADED);
 
-                const request = {
-                    datasetId: props.dataset.id,
-                    tenancies: [props.dataset.tenancy],
-                    user_id: session?.user?.uid,
-                    versionName: versionCreated.name,
-                } as PublishDatasetVersionRequest;
+                    // Sleep 1 sec to create a nice experience for users
+                    await sleep(1000);
 
-                // Sleep 1 sec to create a nice experience for users
-                await sleep(1000)
-                
-                return await bffGateway.publishDatasetVersion(request)                
-            })
-            .then(() => {
-                setProcessState(ProcessState.DONE);
-            })
-            // catch all errors
-            .catch(apiError => {
-                setProcessState(ProcessState.OPEN);
-                alert("Sorry! Error...");
-                console.log(apiError)
+                    return bffGateway.publishDatasetVersion({
+                        datasetId: props.dataset.id,
+                        tenancies: [props.dataset.tenancy],
+                        user_id: session?.user?.uid,
+                        versionName: versionName,
+                    } as PublishDatasetVersionRequest);
+                },
             });
+
+            setProcessState(ProcessState.DONE);
+        } catch (error) {
+            // The version is deliberately left unpublished: publishing it would
+            // hand the curation team a version missing the files they uploaded.
+            console.error("dataset version creation failed", error);
+            setErrorMessage(describeVersionCreationError(error));
+            setProcessState(ProcessState.OPEN);
+        }
     }
 
     return (
@@ -121,6 +118,20 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
             }
             {(processState == ProcessState.OPEN || processState == ProcessState.CREATING) &&
                 <div>
+                    {errorMessage &&
+                        <div
+                            data-testid="new-version-error-message"
+                            role="alert"
+                            className="my-4 p-4 text-primary-900 border-t-4 border-error-300 bg-error-50 rounded-b-lg"
+                        >
+                            <h6 className="font-semibold">The version was not created</h6>
+                            <p className="mt-1 text-sm">{errorMessage}</p>
+                            <p className="mt-2 text-xs text-primary-600">
+                                Nothing was published, so no version is missing files. Fix the problem above and try again.
+                            </p>
+                        </div>
+                    }
+
                     {stagingDatasetVersion?.files_in?.length > 0 &&
                         <>
                             <h2 className="py-2 text-primary-500 font-semibold text-xs uppercase border-b border-b-primary-200">

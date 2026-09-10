@@ -3,7 +3,7 @@ import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import OrcidProvider from "../../../lib/OrcidOAuthProvider";
-import { CreateUserRequest, GetUserByProviderResponse, createUser, getUserByProviderID } from "../../../lib/users";
+import { CreateUserRequest, GetUserByProviderResponse, createUser, getUserByProviderID, getUserByUID } from "../../../lib/users";
 
 export const authOptions: AuthOptions = {
   // Configure one or more authentication providers
@@ -56,6 +56,17 @@ export const authOptions: AuthOptions = {
       if (trigger == "signIn") {
         const user = await getUserByProviderAuthentication(account, token);
         token = hydrateWithUserInfo(token, user);
+      } else if (trigger == "update" && token.uid) {
+        // Roles and tenancies are granted by the team after the user signs in.
+        // Without re-reading them here the session keeps the claims from login,
+        // and being granted access looks to the user like nothing happened.
+        try {
+          const user = await getUserByUID({ uid: token.uid as string, tenancy: undefined });
+          token = hydrateWithUserInfo(token, user);
+        } catch (error) {
+          // A failed refresh must not log the user out. Keep the current claims.
+          console.error("failed to refresh session claims", error);
+        }
       }
 
       return token
@@ -89,6 +100,10 @@ export function hydrateWithUserInfo(token, user: any) {
 
   if (user.tenancies?.length) {
     token.tenancies = user.tenancies as string[];
+  } else {
+    // The user has no tenancy. Leaving a claim from a previous hydration would
+    // let a revoked session keep querying the tenancy it was removed from.
+    delete token.tenancies;
   }
 
   return token;
