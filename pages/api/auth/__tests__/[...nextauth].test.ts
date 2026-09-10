@@ -40,4 +40,33 @@ describe('Hydrate token with user info', () => {
             }
         )
     });
+
+    test('drops tenancies the user no longer has', () => {
+        // Access was revoked. Keeping the claim from the previous login would
+        // let the session go on querying a tenancy the user was removed from.
+        const actual = hydrateWithUserInfo({ uid: "uid", tenancies: ["gone"] }, {
+            id: "uid",
+            tenancies: [],
+        })
+
+        expect(actual).toEqual(
+            {
+                uid: "uid"
+            }
+        )
+    });
+
+    test('picks up a tenancy granted after login', () => {
+        const actual = hydrateWithUserInfo({ uid: "uid" }, {
+            id: "uid",
+            tenancies: ["amazonface"],
+        })
+
+        expect(actual).toEqual(
+            {
+                uid: "uid",
+                tenancies: ["amazonface"],
+            }
+        )
+    });
 })

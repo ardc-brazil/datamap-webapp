@@ -93,6 +93,9 @@ const config: Config = {
   moduleNameMapper: {
     'parse5/lib/parser/index.js':
       '<rootDir>/node_modules/hast-util-raw/node_modules/parse5/lib/parser/index.js',
+
+    // Jest cannot parse CSS.
+    '\\.(css|less|sass|scss)$': '<rootDir>/__mocks__/styleMock.js',
   },
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
@@ -182,7 +185,8 @@ const config: Config = {
 
   // A map from regular expressions to paths to transformers
   transform: {
-    '^.+\\.ts?$': 'ts-jest'
+    // tsconfig uses jsx: "preserve" for Next, so ts-jest must compile JSX here.
+    '^.+\\.tsx?$': ['ts-jest', { tsconfig: { jsx: 'react-jsx' } }]
   },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
