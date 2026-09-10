@@ -100,7 +100,6 @@ You have to create a `.env.local` file in the project root.
 
 Copy the file [.env.local.template](./.env.local.template) and replace with valid values. 
 
-Some valid values are at the [production environment](https://vercel.com/ardc-brazil/datamap-webapp/settings/environment-variables) from Vercel.
 
 ### Formik
 
