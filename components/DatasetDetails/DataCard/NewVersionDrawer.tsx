@@ -70,7 +70,6 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
                 uploadFiles: () => uppyReference.upload(),
 
                 publishVersion: async (versionName: string) => {
-                    // Only claim the files are in once they actually are.
                     setProcessState(ProcessState.ALL_FILES_UPLOADED);
 
                     // Sleep 1 sec to create a nice experience for users
@@ -87,8 +86,6 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
 
             setProcessState(ProcessState.DONE);
         } catch (error) {
-            // The version is deliberately left unpublished: publishing it would
-            // hand the curation team a version missing the files they uploaded.
             console.error("dataset version creation failed", error);
             setErrorMessage(describeVersionCreationError(error));
             setProcessState(ProcessState.OPEN);

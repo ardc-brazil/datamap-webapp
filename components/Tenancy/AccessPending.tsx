@@ -2,15 +2,7 @@ import { useSession } from "next-auth/react";
 import Router from "next/router";
 import { useState } from "react";
 
-/**
- * Shown to a user who has signed in but has not been granted access to any
- * namespace yet.
- *
- * The refresh button is the point of this component: access is granted by the
- * team after sign in, and the session carries the claims it was given at login.
- * Without it the user has to sign out and back in for a grant to take effect,
- * which reads as "the team said I have access and I still see nothing".
- */
+/** Shown when the user is signed in but has no namespace yet. */
 export function AccessPending() {
     const { update } = useSession();
     const [checking, setChecking] = useState(false);

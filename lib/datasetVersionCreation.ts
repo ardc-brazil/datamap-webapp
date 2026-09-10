@@ -1,10 +1,8 @@
 /**
  * Orchestrates creating a dataset version out of freshly uploaded files.
  *
- * This lives outside the React component on purpose. The publish step must never
- * run when a file failed to upload, and that rule is only worth having if it is
- * covered by tests — which the component itself is not, since Jest only
- * transforms `.ts` in this project.
+ * Lives outside the component so the "never publish with a failed upload" rule
+ * has a test.
  */
 
 /** Raised when at least one file did not reach the server. */
@@ -16,7 +14,6 @@ export class UploadIncompleteError extends Error {
         this.name = "UploadIncompleteError";
         this.failedFiles = failedFiles;
 
-        // Required for `instanceof` to work once TypeScript downlevels the class.
         Object.setPrototypeOf(this, UploadIncompleteError.prototype);
     }
 }
@@ -56,10 +53,7 @@ export async function createVersionWithUploads(
     return { versionName: draftVersion.name };
 }
 
-/**
- * Turns whatever went wrong into something the person on the screen can act on.
- * Never returns an empty string: a blank error box is worse than a vague one.
- */
+/** Message the person on the screen can act on. Never empty. */
 export function describeVersionCreationError(error: any): string {
     if (error instanceof UploadIncompleteError) {
         return error.message;
