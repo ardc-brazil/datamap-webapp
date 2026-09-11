@@ -1,19 +1,51 @@
-name: deploy
+name: ci
 
 on:
+  pull_request:
   push:
     branches: [main]
-  workflow_dispatch:
 
 concurrency:
-  group: deploy-production
-  cancel-in-progress: false
+  group: ci-${{ github.ref }}
+  # Never cancel a run on main: it carries the deploy, and interrupting that
+  # leaves the container down.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .tool-versions
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        run: npx jest --ci --coverage=false
+
   deploy:
+    # Why this job lives here rather than in its own workflow: two workflows on
+    # the same push run in parallel, so the deploy raced the tests and regularly
+    # finished first. `needs` only reaches jobs in the same workflow.
+    needs: [test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     # Never `pull_request`: code from a fork must not run on the production host.
     runs-on: [self-hosted, production]
     environment: production
+
+    # Serialise deploys without ever cancelling one in flight.
+    concurrency:
+      group: deploy-production-webapp
+      cancel-in-progress: false
 
     env:
       # Absolute: the runner checks out into its own workspace, so the
