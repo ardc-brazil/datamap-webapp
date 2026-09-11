@@ -60,6 +60,18 @@ jobs:
       - name: Show what is being deployed
         run: git log --oneline -1
 
+      # `docker compose down` deletes the container along with its log file, so
+      # without this every deploy erases the evidence of whatever it is fixing.
+      - name: Archive the log of the container about to be replaced
+        run: |
+          dir="${{ vars.LOG_ARCHIVE_DIR || '/home/datamap/logs' }}"
+          mkdir -p "$dir"
+          stamp=$(date -u +%Y%m%dT%H%M%SZ)
+          if docker inspect datamap_frontend >/dev/null 2>&1; then
+            docker logs -t datamap_frontend 2>&1 | gzip > "$dir/datamap_frontend-$stamp.log.gz"
+          fi
+          find "$dir" -name '*.log.gz' -mtime +30 -delete
+
       - name: Build and restart
         run: make ENV_FILE_PATH="$ENV_FILE_PATH" docker-deployment
 
