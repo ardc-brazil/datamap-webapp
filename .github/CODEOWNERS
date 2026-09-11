@@ -1,0 +1,4 @@
+# An approval from one of these two satisfies the branch protection rule; an
+# approval from anyone else does not. Both are repository admins, so either can
+# still merge without one when a change cannot wait.
+*   @cnmaia @andrenmaia

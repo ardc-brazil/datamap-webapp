@@ -1,0 +1,53 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Never `pull_request`: code from a fork must not run on the production host.
+    runs-on: [self-hosted, production]
+    environment: production
+
+    env:
+      # Absolute: the runner checks out into its own workspace, so the
+      # `../environment/...` used by hand does not resolve here.
+      ENV_FILE_PATH: ${{ vars.ENVIRONMENT_DIR || '/home/datamap/environment' }}/frontend.prod.env
+      # Must match the project the running container belongs to.
+      COMPOSE_PROJECT_NAME: datamap-webapp
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show what is being deployed
+        run: git log --oneline -1
+
+      - name: Build and restart
+        run: make ENV_FILE_PATH="$ENV_FILE_PATH" docker-deployment
+
+      - name: Wait for the site to answer
+        run: |
+          for _ in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ || true)
+            case "$code" in
+              200|30*) echo "healthy ($code)"; exit 0 ;;
+            esac
+            sleep 5
+          done
+          echo "The site did not answer within five minutes."
+          docker logs --tail 100 datamap_frontend
+          exit 1
+
+      - name: Container status
+        if: always()
+        run: docker ps --filter "name=datamap_frontend" --format "table {{.Names}}\t{{.Status}}"
+
+      - name: Logs on failure
+        if: failure()
+        run: docker logs --tail 200 datamap_frontend
