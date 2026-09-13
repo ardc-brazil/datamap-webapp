@@ -7,6 +7,7 @@ import { useTenancyStore } from "../../../components/TenancyStore";
 import { ROUTE_PAGE_HOME } from "../../../contants/InternalRoutesConstants";
 import { NewContext } from "../../../lib/appLocalContext";
 import { getUserByUID } from "../../../lib/users";
+import { logError } from "../../../lib/logging";
 
 
 interface TenancySelectorPageProps {
@@ -174,7 +175,7 @@ export async function getServerSideProps(context) {
             props: { data } as TenancySelectorPageProps
         };
     } catch (err) {
-        console.log(err)
+        logError("loading the tenancy selector failed", err);
 
         return {
             props: {}

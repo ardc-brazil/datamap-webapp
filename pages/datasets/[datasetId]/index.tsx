@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { NewContext } from "../../../lib/appLocalContext";
 import { getDatasetSnapshot } from "../../../lib/dataset";
 import { DatasetSnapshotResponse } from "../../../types/GatekeeperAPI";
+import { logError } from "../../../lib/logging";
 
 interface PublicDatasetPageProps {
     dataset: DatasetSnapshotResponse;
@@ -77,7 +78,7 @@ export async function getServerSideProps({ req, query }) {
             }
         }
     } catch (error) {
-        console.error('Error in getServerSideProps:', error);
+        logError("loading the dataset snapshot failed", error);
         const status = error?.status || 500;
         const message = error?.data?.message || 'Failed to load dataset snapshot';
         return {
