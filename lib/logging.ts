@@ -4,25 +4,17 @@
  * Deliberately the same field names as the gatekeeper's and the archivist's
  * `logging_config.py`, because a log index later reads all three together.
  *
- * Server-side only. Importing this in a component would put `async_hooks` in
- * the browser bundle.
+ * Server-side only, through `requestContext`: `async_hooks` cannot be bundled
+ * for the browser, so nothing the client can reach may import this.
  */
 
-import { AsyncLocalStorage } from "async_hooks";
+import { currentRequestId } from "./requestContext";
+
+export { currentRequestId, withRequestId } from "./requestContext";
 
 const REDACTED = "[redacted]";
 
 const SECRET_KEY = /token|secret|password|authorization|api[-_]?key|cookie/i;
-
-const requestIdStorage = new AsyncLocalStorage<string>();
-
-export function withRequestId<T>(requestId: string, run: () => T): T {
-  return requestIdStorage.run(requestId, run);
-}
-
-export function currentRequestId(): string | undefined {
-  return requestIdStorage.getStore();
-}
 
 export function redact(value: unknown, seen = new WeakSet<object>()): unknown {
   if (value === null || typeof value !== "object") {
