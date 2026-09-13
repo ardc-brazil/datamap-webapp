@@ -3,6 +3,7 @@ import { CreateDatasetRequest, CreateDatasetResponse, DatasetCategoryFiltersResp
 import { DatasetCreationRequest, DatasetInfo, DatasetSnapshotResponse } from "../types/GatekeeperAPI";
 import { AppLocalContext } from "./appLocalContext";
 import axiosInstance, { buildHeaders } from "./rpc";
+import { logError } from "./logging";
 
 function toDatasetInfo(datasetRequest: CreateDatasetRequest): DatasetInfo {
     return {
@@ -64,7 +65,7 @@ export async function createDataset(context: AppLocalContext, datasetRequest: Cr
 
         return response.data;
     } catch (error) {
-        console.log(error);
+        logError("dataset request failed", error);
         return error.response;
     }
 }
@@ -118,7 +119,7 @@ export async function getAllDataset(context: AppLocalContext, url: String): Prom
             });
 
     } catch (error) {
-        console.log(error);
+        logError("dataset request failed", error);
         return error.response;
     }
 }
@@ -132,7 +133,7 @@ export async function deleteDataset(context: AppLocalContext, id: string): Promi
     const response = await axiosInstance.delete("/datasets/" + id, buildHeaders(context));
 
     if (response.status !== 200) {
-        console.log(response);
+        logError("dataset delete refused", { status: response.status }, { status_code: response.status });
         return Promise.reject(response);
     }
 }
@@ -178,7 +179,7 @@ export async function getDatasetSnapshot(context: AppLocalContext, id: string, v
         const response = await axiosInstance.get(endpoint, buildHeaders(context));
         return response.data as DatasetSnapshotResponse;
     } catch (error) {
-        console.log(error);
+        logError("dataset snapshot request failed", error);
         return Promise.reject(error?.response);
     }
 }
