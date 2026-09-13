@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import OrcidProvider from "../../../lib/OrcidOAuthProvider";
 import { CreateUserRequest, GetUserByProviderResponse, createUser, getUserByProviderID, getUserByUID } from "../../../lib/users";
+import { logError } from "../../../lib/logging";
 
 export const authOptions: AuthOptions = {
   // Configure one or more authentication providers
@@ -65,7 +66,7 @@ export const authOptions: AuthOptions = {
           token = hydrateWithUserInfo(token, user);
         } catch (error) {
           // A failed refresh must not log the user out. Keep the current claims.
-          console.error("failed to refresh session claims", error);
+          logError("failed to refresh session claims", error);
         }
       }
 
@@ -151,7 +152,7 @@ async function getUserByProviderAuthentication(account, token): Promise<GetUserB
       try {
         user = await createUser(params);
       } catch (error) {
-        console.log(error)
+        logError("sign in failed", error)
       }
     }
   }

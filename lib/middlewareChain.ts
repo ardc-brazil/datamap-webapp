@@ -3,10 +3,13 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getToken } from "next-auth/jwt";
 import { createRouter } from "next-connect";
 import { TENANCY_STORAGE_NAME } from "../types/TenancyStore";
+import { requestLogging } from "./requestLogging";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
-const middlewareChain = router.use(auth, tenancyChecker)
+// requestLogging first: a request rejected by auth still deserves a line, and
+// the id has to exist before anything downstream can quote it.
+const middlewareChain = router.use(requestLogging, auth, tenancyChecker)
 
 async function auth(req: NextApiRequest, res: NextApiResponse, next: any) {
     const token = await getToken({ req })

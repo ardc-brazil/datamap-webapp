@@ -7,6 +7,7 @@ import middlewareChain from "../../../lib/middlewareChain";
 import { getUserByUID } from "../../../lib/users";
 import { FileUploadAuthTokenRequest, FileUploadAuthTokenResponse } from "../../../types/BffAPI";
 import { ResponseError } from "../../../types/ResponseError";
+import { logError } from "../../../lib/logging";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 const authFileUploadTokenSecret = process.env.AUTH_FILE_UPLOAD_TOKEN_SECRET;
@@ -46,7 +47,7 @@ router
 
 export default router.handler({
     onError: (err: ResponseError, req, res) => {
-        console.error(err);
+        logError("issuing an upload token failed", err);
         res.status(err.statusCode || 500).end(err.message);
     },
 });

@@ -5,6 +5,7 @@ import { NewContext } from "../../../lib/appLocalContext";
 import { deleteDataset, getDatasetCategoryFilters, updateDataset } from "../../../lib/dataset";
 import middlewareChain from "../../../lib/middlewareChain";
 import { ResponseError } from "../../../types/ResponseError";
+import { logError } from "../../../lib/logging";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
@@ -46,7 +47,7 @@ router
       await deleteDataset(context, datasetId as string);
       res.status(200).end();
     } catch (e) {
-      console.log(e);
+      logError("dataset request failed", e);
       res.status(e.response.status).end();
     }
 
@@ -54,7 +55,7 @@ router
 
 export default router.handler({
   onError: (err: ResponseError, req, res) => {
-    console.error(err.stack);
+    logError("unhandled BFF error", err);
     res.status(err.statusCode || 500).end(err.message);
   },
 });

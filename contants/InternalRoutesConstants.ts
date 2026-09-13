@@ -108,8 +108,6 @@ function appendSearchParams(urlString: string, params: any = {}) {
         
         Object.entries(queryParams).forEach(entry => {
             const [key, value] = entry;
-            console.log("===> key", key);
-            console.log("===> value", value);
             url.searchParams.set(key, value as string);
         });
         

@@ -1,6 +1,7 @@
 import axios, { HttpStatusCode } from 'axios';
 import { APIError } from "../types/APIError";
 import { AppLocalContext } from './appLocalContext';
+import { currentRequestId } from './logging';
 
 const apiBaseURL = process.env.DATAMAP_BASE_URL;
 const apiKey = process.env.DATAMAP_API_KEY;
@@ -17,10 +18,13 @@ const axiosInterceptorInstance = axios.create({
 });
 
 export function buildHeaders(context: AppLocalContext) {
+  const requestId = currentRequestId();
   return {
     headers: {
       "X-User-Id": context.uid ?? "",
       "X-Datamap-Tenancies": context.tenancy,
+      // The gatekeeper honours this, so one action reads as one id across both.
+      ...(requestId ? { "X-Request-Id": requestId } : {}),
     }
   }
 }

@@ -4,6 +4,7 @@ import { NewContext } from "../../../../../lib/appLocalContext";
 import { getDatasetSnapshot } from "../../../../../lib/dataset";
 import middlewareChain from "../../../../../lib/middlewareChain";
 import { ResponseError } from "../../../../../types/ResponseError";
+import { logError } from "../../../../../lib/logging";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
@@ -23,7 +24,7 @@ router
       
       res.json(dataset);
     } catch (error) {
-      console.error('Error fetching dataset snapshot:', error);
+      logError("fetching dataset snapshot failed", error);
       
       if (error?.response?.status) {
         res.status(error.response.status).json({
@@ -39,7 +40,7 @@ router
 
 export default router.handler({
   onError: (err: ResponseError, req, res) => {
-    console.error(err.stack);
+    logError("unhandled BFF error", err);
     res.status(err.statusCode || 500).json({
       error: err.message || 'Internal server error'
     });

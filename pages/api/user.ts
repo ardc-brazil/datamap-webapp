@@ -5,6 +5,7 @@ import { NewContext } from "../../lib/appLocalContext";
 import middlewareChain from "../../lib/middlewareChain";
 import { getUserByUID } from "../../lib/users";
 import { ResponseError } from "../../types/ResponseError";
+import { logError } from "../../lib/logging";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
@@ -18,7 +19,7 @@ router
 
 export default router.handler({
   onError: (err: ResponseError, req, res) => {
-    console.error(err.stack);
+    logError("unhandled BFF error", err);
     res.status(err.statusCode || 500).end(err.message);
   },
 });
