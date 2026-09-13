@@ -23,6 +23,12 @@ export interface AppLocalContext {
      * Current tenancy selected from user.
      */
     tenancy: string
+
+    /**
+     * Correlates this request with the gatekeeper's log lines for it. Stamped
+     * on the request by `requestLogging`.
+     */
+    requestId?: string
 }
 
 export async function NewContext(req: NextRequest | NextApiRequest): Promise<AppLocalContext> {
@@ -31,7 +37,8 @@ export async function NewContext(req: NextRequest | NextApiRequest): Promise<App
 
     return {
         uid: token?.uid as string,
-        tenancy: tenancyObject?.tenancySelected
+        tenancy: tenancyObject?.tenancySelected,
+        requestId: req.headers?.["x-request-id"] as string
     };
 }
 

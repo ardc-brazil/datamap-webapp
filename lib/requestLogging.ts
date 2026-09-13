@@ -1,7 +1,8 @@
 import { randomUUID } from "crypto";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { logAccess, withRequestId } from "./logging";
+import { logAccess } from "./logging";
+import { withRequestId } from "./requestContext";
 
 /**
  * Gives every BFF request an id and writes one access line for it.
@@ -17,6 +18,10 @@ export async function requestLogging(
   next: () => Promise<unknown>
 ): Promise<unknown> {
   const requestId = (req.headers["x-request-id"] as string) || randomUUID();
+  // Stamped back on the request so `NewContext` can put it on the context, which
+  // is how it reaches the gatekeeper. `rpc.ts` cannot read the async storage:
+  // the browser bundle imports it.
+  req.headers["x-request-id"] = requestId;
   res.setHeader("X-Request-Id", requestId);
 
   const started = Date.now();

@@ -31,6 +31,12 @@ jobs:
       - name: Run tests
         run: npx jest --ci --coverage=false
 
+      # The gate has to run what the deploy runs. `tsc` and `jest` both passed
+      # on a tree whose production build failed: `lib/rpc.ts` is pulled into the
+      # client bundle and had picked up a Node-only import. The deploy found it.
+      - name: Production build
+        run: npx next build
+
   deploy:
     # Why this job lives here rather than in its own workflow: two workflows on
     # the same push run in parallel, so the deploy raced the tests and regularly
