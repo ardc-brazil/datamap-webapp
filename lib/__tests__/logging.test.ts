@@ -56,11 +56,6 @@ describe("a log line", () => {
 });
 
 describe("an axios failure", () => {
-  /**
-   * `console.log(error)` prints error.config.headers, and the BFF's axios
-   * instance carries X-Api-Key and X-Api-Secret on every request. Proven: the
-   * three secrets below all appear in util.inspect of a real axios error.
-   */
   async function anAxiosError() {
     const instance = axios.create({
       baseURL: "http://127.0.0.1:1/",

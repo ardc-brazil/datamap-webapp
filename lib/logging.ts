@@ -1,12 +1,4 @@
-/**
- * One logging shape for the BFF: JSON, no credentials, correlatable.
- *
- * Deliberately the same field names as the gatekeeper's and the archivist's
- * `logging_config.py`, because a log index later reads all three together.
- *
- * Server-side only, through `requestContext`: `async_hooks` cannot be bundled
- * for the browser, so nothing the client can reach may import this.
- */
+// Server-side only: imports `requestContext`, which the browser cannot bundle.
 
 import { currentRequestId } from "./requestContext";
 
@@ -36,13 +28,8 @@ export function redact(value: unknown, seen = new WeakSet<object>()): unknown {
   );
 }
 
-/**
- * What may be logged about a failed call.
- *
- * Never the error itself: the BFF's axios instance carries X-Api-Key and
- * X-Api-Secret on every request, and printing an axios error prints
- * `error.config.headers` with them.
- */
+// Never the error itself: an axios error holds `config.headers`, and this
+// service's axios carries X-Api-Key and X-Api-Secret on every request.
 export function describeError(error: unknown): Record<string, unknown> {
   if (error === null || error === undefined) {
     return { message: String(error) };
@@ -70,8 +57,7 @@ export function describeError(error: unknown): Record<string, unknown> {
     return { message: error.message, name: error.name };
   }
 
-  // Not everything thrown is an Error. `String(someObject)` is "[object
-  // Object]", which is how a status code stops being a status code.
+  // `String(someObject)` is "[object Object]", which loses the fields.
   if (typeof error === "object") {
     return redact(error) as Record<string, unknown>;
   }

@@ -170,8 +170,7 @@ const config: Config = {
   // ],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
-  // `.next` holds compiled copies of the test files after a build, and jest
-  // runs them as suites that cannot work.
+  // `.next` holds compiled copies of the test files after a build.
   testPathIgnorePatterns: ["/node_modules/", "/.next/"],
 
   // The regexp pattern or array of patterns that Jest uses to detect test files
