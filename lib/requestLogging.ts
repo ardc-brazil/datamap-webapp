@@ -4,23 +4,14 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { logAccess } from "./logging";
 import { withRequestId } from "./requestContext";
 
-/**
- * Gives every BFF request an id and writes one access line for it.
- *
- * The id goes out to the gatekeeper on every call (see `buildHeaders` in
- * `rpc.ts`), which honours an incoming `X-Request-Id`. One action by a
- * researcher therefore reads as one id across the browser, this service and
- * the API.
- */
 export async function requestLogging(
   req: NextApiRequest,
   res: NextApiResponse,
   next: () => Promise<unknown>
 ): Promise<unknown> {
   const requestId = (req.headers["x-request-id"] as string) || randomUUID();
-  // Stamped back on the request so `NewContext` can put it on the context, which
-  // is how it reaches the gatekeeper. `rpc.ts` cannot read the async storage:
-  // the browser bundle imports it.
+  // Stamped back on the request: `rpc.ts` reads it from the context, because
+  // the browser bundle imports that module and cannot read the async storage.
   req.headers["x-request-id"] = requestId;
   res.setHeader("X-Request-Id", requestId);
 

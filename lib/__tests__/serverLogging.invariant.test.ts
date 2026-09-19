@@ -1,21 +1,9 @@
 import { readdirSync, readFileSync, statSync } from "fs";
 import { join } from "path";
 
-/**
- * The BFF's axios instance carries X-Api-Key and X-Api-Secret on every request,
- * so `console.log(error)` prints them: an axios error holds `config.headers`.
- * Proven in logging.test.ts against a real axios error.
- *
- * Server-side code therefore goes through `logError`, which decides what may be
- * said about a failure. This is the check that keeps it that way, because the
- * next `console.log(error)` will look perfectly reasonable in review.
- */
-
 const SERVER_SIDE = ["lib", join("pages", "api")];
 
-// A page's getServerSideProps runs on the server and reaches the same
-// credentialed axios instance. Two of them were logging axios errors, and the
-// first version of this check looked only at `lib` and `pages/api`.
+// getServerSideProps runs on the server and reaches the same axios instance.
 const SERVER_RENDERED = /export\s+(async\s+)?function\s+(getServerSideProps|getStaticProps)|export\s+const\s+(getServerSideProps|getStaticProps)/;
 
 function sourceFiles(dir: string): string[] {

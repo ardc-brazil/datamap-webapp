@@ -31,9 +31,7 @@ jobs:
       - name: Run tests
         run: npx jest --ci --coverage=false
 
-      # The gate has to run what the deploy runs. `tsc` and `jest` both passed
-      # on a tree whose production build failed: `lib/rpc.ts` is pulled into the
-      # client bundle and had picked up a Node-only import. The deploy found it.
+      # The deploy builds the image; `tsc` and `jest` do not run webpack.
       - name: Production build
         run: npx next build
 
