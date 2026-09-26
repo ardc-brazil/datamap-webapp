@@ -111,6 +111,28 @@ See more <https://formik.org/>
 We are organizing the constants of the project in a `{Category}Contants.ts` file and well documented, following this idea:
 https://dev.to/amirfakour/tips-to-use-constants-file-in-typescript-27je
 
+### Metrics
+
+Prometheus metrics are served on **port 9095** (`METRICS_PORT`), started once
+per server process by `instrumentation.ts`. The port is not published: Prometheus
+scrapes `datamap_frontend:9095` over the docker network, so the metrics never
+reach the internet through nginx.
+
+- BFF requests (`datamap_http_*`), recorded by `lib/requestLogging.ts` under the
+  route template, e.g. `/api/datasets/[datasetId]`.
+- Calls to the gatekeeper (`datamap_external_request_duration_seconds`), timed
+  by an axios interceptor in `lib/rpc.ts`.
+- Sign-ins by provider (`datamap_webapp_logins_total`).
+- What the browser experiences: Web Vitals, page views, uncaught errors and the
+  features people use. `lib/telemetryClient.ts` batches them to
+  `POST /api/telemetry`, which counts them and writes one `web.telemetry` log
+  line per batch. That endpoint is public, so it accepts only the pages, events
+  and vitals listed in `contants/TelemetryConstants.ts`; a new page has to be
+  added there (a test fails until it is).
+
+The metric names are a contract shared with the other services and the Grafana
+dashboards: gatekeeper `docs/rfcs/005-platform-metrics-and-dashboards.md`.
+
 ### Deploying
 
 > **WARNING:** The current deployment process causes downtime for services.
