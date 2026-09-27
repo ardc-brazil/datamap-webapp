@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { logAccess } from "./logging";
+import { getMetrics, routeOf } from "./metrics";
 import { withRequestId } from "./requestContext";
 
 export async function requestLogging(
@@ -18,17 +19,31 @@ export async function requestLogging(
   const started = Date.now();
   // Path only: a query string can carry anything the caller put there.
   const path = (req.url ?? "").split("?")[0];
+  const method = req.method ?? "";
+  const metrics = getMetrics();
+  metrics.inProgress.labels(method).inc();
 
   return withRequestId(requestId, async () => {
     try {
       return await next();
     } finally {
-      logAccess({
-        method: req.method ?? "",
-        path,
-        statusCode: res.statusCode,
-        durationMs: Date.now() - started,
-      });
+      const durationMs = Date.now() - started;
+      const route = routeOf(req.url, req.query ?? {});
+      metrics.inProgress.labels(method).dec();
+      metrics.recordRequest(
+        method,
+        route,
+        res.statusCode,
+        durationMs / 1000,
+        declaredLength(req.headers["content-length"]),
+        declaredLength(res.getHeader?.("content-length"))
+      );
+      logAccess({ method, path, route, statusCode: res.statusCode, durationMs });
     }
   });
+}
+
+function declaredLength(header: unknown): number | undefined {
+  const value = Number(Array.isArray(header) ? header[0] : header);
+  return header !== undefined && Number.isFinite(value) ? value : undefined;
 }

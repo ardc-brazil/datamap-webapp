@@ -1,6 +1,7 @@
 import axios, { HttpStatusCode } from 'axios';
 import { APIError } from "../types/APIError";
 import { AppLocalContext } from './appLocalContext';
+import { callOutcome, operationOf, recordExternalCall } from './externalCalls';
 
 const apiBaseURL = process.env.DATAMAP_BASE_URL;
 const apiKey = process.env.DATAMAP_API_KEY;
@@ -15,6 +16,37 @@ const axiosInterceptorInstance = axios.create({
     "X-Api-Secret": apiSecret
   }
 });
+
+const STARTED_AT = Symbol("startedAt");
+
+type TimedConfig = { method?: string; url?: string; [STARTED_AT]?: number };
+
+function recordCall(config: TimedConfig | undefined, status: number | undefined, error?: { code?: string }) {
+  const startedAt = config?.[STARTED_AT];
+  if (startedAt === undefined) return;
+  recordExternalCall(
+    "gatekeeper",
+    operationOf(config?.method, config?.url),
+    callOutcome(status, error),
+    (Date.now() - startedAt) / 1000
+  );
+}
+
+axiosInterceptorInstance.interceptors.request.use((config) => {
+  (config as TimedConfig)[STARTED_AT] = Date.now();
+  return config;
+});
+
+axiosInterceptorInstance.interceptors.response.use(
+  (response) => {
+    recordCall(response.config, response.status);
+    return response;
+  },
+  (error) => {
+    recordCall(error?.config, error?.response?.status, error ?? {});
+    return Promise.reject(error);
+  }
+);
 
 export function buildHeaders(context: AppLocalContext) {
   return {

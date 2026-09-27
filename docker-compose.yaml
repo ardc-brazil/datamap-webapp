@@ -17,6 +17,9 @@ services:
       - ${ENV_FILE_PATH}
     ports:
       - '3000:3000'
+    # Prometheus scrapes this over the docker network; it is never published.
+    expose:
+      - '9095'
     networks:
       - gatekeeper_gatekeeper-network
 

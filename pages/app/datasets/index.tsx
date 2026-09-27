@@ -12,6 +12,7 @@ import Alert from "../../../components/base/Alert";
 import { CurrentSearchParameterState, SelectedFilterValue } from "../../../components/types/FilterOption";
 import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_ERROR } from "../../../contants/InternalRoutesConstants";
 import { SWRRetry, fetcher } from "../../../lib/fetcher";
+import { trackUiEvent } from "../../../lib/telemetryClient";
 import { GetDatasetsResponse } from "../../../types/BffAPI";
 
 function useDatasetSearch(currentSearchParameters, currentPage: number, pageSize: number = 20) {
@@ -86,6 +87,7 @@ export default function ListDatasetPage() {
   }
 
   function onTextSearchChanged(text: string) {
+    trackUiEvent("search")
     resetPagination()
     setCurrentSearchParameters({
       at: Date.now(),
@@ -104,6 +106,7 @@ export default function ListDatasetPage() {
   }
 
   function onCriteriaChanged(criteria, selectedOption) {
+    trackUiEvent("filter_applied")
     setLastSearchParameterDeselected(null)
     resetPagination()
 

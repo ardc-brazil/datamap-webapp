@@ -83,12 +83,14 @@ function emit(level: string, logger: string, message: string, extra: Record<stri
 export function logAccess(access: {
   method: string;
   path: string;
+  route?: string;
   statusCode: number;
   durationMs: number;
 }): void {
   emit("INFO", "bff.access", "request", {
     method: access.method,
     path: access.path,
+    route: access.route,
     status_code: access.statusCode,
     duration_ms: Math.round(access.durationMs * 10) / 10,
   });
@@ -104,4 +106,8 @@ export function logError(
 
 export function logInfo(message: string, extra: Record<string, unknown> = {}): void {
   emit("INFO", "bff", message, extra);
+}
+
+export function logTelemetry(extra: Record<string, unknown>): void {
+  emit("INFO", "web.telemetry", "browser telemetry", extra);
 }

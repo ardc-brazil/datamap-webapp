@@ -1,4 +1,5 @@
 import { currentRequestId } from "../logging";
+import { getMetrics } from "../metrics";
 import { requestLogging } from "../requestLogging";
 
 function captureStdout(): { lines: string[]; restore: () => void } {
@@ -98,5 +99,33 @@ describe("the BFF request middleware", () => {
 
     expect((raised as Error).message).toBe("boom");
     expect(captured.lines.some((line) => line.includes("bff.access"))).toBe(true);
+  });
+  it("counts the request under its route template, not the path with the id", async () => {
+    const captured = captureStdout();
+    try {
+      await requestLogging(
+        fakeReq({ url: "/api/versions/2?datasetId=a", query: { versionName: "2", datasetId: "a" } }),
+        fakeRes(200),
+        async () => undefined
+      );
+    } finally {
+      captured.restore();
+    }
+
+    const text = await getMetrics().registry.metrics();
+    expect(text).toContain('route="/api/versions/[versionName]"');
+    expect(JSON.parse(captured.lines[0]).route).toBe("/api/versions/[versionName]");
+  });
+
+  it("is no longer in progress once it has answered", async () => {
+    const captured = captureStdout();
+    try {
+      await requestLogging(fakeReq({ method: "PATCH" }), fakeRes(), async () => undefined);
+    } finally {
+      captured.restore();
+    }
+
+    const { values } = await getMetrics().inProgress.get();
+    expect(values.find((sample) => sample.labels.method === "PATCH")?.value ?? 0).toBe(0);
   });
 });

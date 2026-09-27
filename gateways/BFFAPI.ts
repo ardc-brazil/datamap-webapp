@@ -1,5 +1,6 @@
 import axios from "axios";
 import { httpErrorHandler } from "../lib/rpc";
+import { trackUiEvent } from "../lib/telemetryClient";
 import { UserDetailsResponse } from "../lib/users";
 import { CreateDatasetRequestV2, CreateDatasetResponseV2, CreateDOIRequest, CreateDOIResponse, CreateDraftDatasetVersionRequest, CreateDraftDatasetVersionResponse, DeleteDOIRequest, FileDownloadLinkRequest, FileDownloadLinkResponse, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, NavigateDOIStatusRequest, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
 
@@ -18,6 +19,7 @@ export class BFFAPI {
             const response = await axios.post("/api/datasets", request);
 
             if (response.status == 200) {
+                trackUiEvent("dataset_created");
                 return response.data as CreateDatasetResponseV2;
             }
 
@@ -97,6 +99,8 @@ export class BFFAPI {
             const versionName = request.versionName;
             const response = await axios.put(`/api/versions/${versionName}`, request);
 
+            trackUiEvent("version_published");
+
             return response.data;
         }
         catch (e) {
@@ -112,6 +116,7 @@ export class BFFAPI {
     async createDOI(request: CreateDOIRequest): Promise<CreateDOIResponse> {
         try {
             const response = await axios.post(`/api/dois/`, request);
+            trackUiEvent("doi_created");
             return response.data;
         } catch (e) {
             throw httpErrorHandler(e);
@@ -162,6 +167,7 @@ export class BFFAPI {
      */
     async generateTemporaryFileDownloadLink(request: FileDownloadLinkRequest): Promise<FileDownloadLinkResponse> {
         try {
+            trackUiEvent("download_clicked");
             const response = await axios.post(`/api/filesdownload/`, request)
             return response.data;
         } catch (error) {
@@ -179,6 +185,7 @@ export class BFFAPI {
             const response = await axios.post(`/api/versions`, request);
 
             if (response.status == 200) {
+                trackUiEvent("version_created");
                 return response.data as CreateDraftDatasetVersionResponse;
             }
         }

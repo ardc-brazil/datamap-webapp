@@ -5,6 +5,7 @@ import { Dashboard } from '@uppy/react';
 import Tus from '@uppy/tus';
 import { ErrorMessage, useFormikContext } from "formik";
 import { useEffect, useState } from 'react';
+import { trackUiEvent } from '../../lib/telemetryClient';
 
 interface UppyUploaderProps {
     datasetId?: string
@@ -44,6 +45,12 @@ export default function UppyUploader(props: UppyUploaderProps) {
             })
 
             formikContext.setFieldValue("remoteFilesCount", formikValues?.uploadedDataFiles?.length, true);
+        }).on('upload', () => {
+            trackUiEvent("upload_started");
+        }).on('upload-success', () => {
+            trackUiEvent("upload_completed");
+        }).on('upload-error', () => {
+            trackUiEvent("upload_failed");
         }).on('file-removed', (file, reason) => {
             if (reason === 'removed-by-user') {
                 if (!formikContext) {

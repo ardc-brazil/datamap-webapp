@@ -6,6 +6,7 @@ import { AccessPending } from "../../../components/Tenancy/AccessPending";
 import { useTenancyStore } from "../../../components/TenancyStore";
 import { ROUTE_PAGE_HOME } from "../../../contants/InternalRoutesConstants";
 import { NewContext } from "../../../lib/appLocalContext";
+import { trackUiEvent } from "../../../lib/telemetryClient";
 import { getUserByUID } from "../../../lib/users";
 import { logError } from "../../../lib/logging";
 
@@ -19,6 +20,7 @@ export default function TenancySelectorPage(props: TenancySelectorPageProps) {
     const setTenancySelected = useTenancyStore((state) => state.setTenancySelected)
 
     function onTenancySelected(tenancy) {
+        trackUiEvent("tenancy_switched")
         setTenancySelected(tenancy)
         Router.push(ROUTE_PAGE_HOME)
     }

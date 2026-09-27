@@ -5,6 +5,7 @@ import GithubProvider from "next-auth/providers/github";
 import OrcidProvider from "../../../lib/OrcidOAuthProvider";
 import { CreateUserRequest, GetUserByProviderResponse, createUser, getUserByProviderID, getUserByUID } from "../../../lib/users";
 import { logError } from "../../../lib/logging";
+import { getMetrics } from "../../../lib/metrics";
 
 export const authOptions: AuthOptions = {
   // Configure one or more authentication providers
@@ -42,6 +43,7 @@ export const authOptions: AuthOptions = {
           }
         }
 
+        getMetrics().recordLogin("credentials", "failure");
         throw new Error("invalid credentials");
       }
     })
@@ -83,6 +85,11 @@ export const authOptions: AuthOptions = {
       }
       return session
     }
+  },
+  events: {
+    async signIn({ account }) {
+      getMetrics().recordLogin(account?.provider ?? "unknown", "success");
+    },
   },
   pages: {
     signIn: '/account/login?phase=sign-in',
