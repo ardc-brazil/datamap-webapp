@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Moment from "react-moment";
+import { EmbargoBadge } from "../Embargo/EmbargoBadge";
 import { ROUTE_PAGE_DATASETS } from "../../contants/InternalRoutesConstants";
 import { bytesToSize } from "../../lib/file";
 import { GetMinimalDatasetsDetasetDetailsResponse } from "../../types/BffAPI";
@@ -47,7 +48,9 @@ export default function ListItem(props: Props) {
           </span>
         </div>
         <div className="self-start">
-          <DesignStatePill state={props.dataset.current_version.design_state} />
+          {props.dataset.embargo?.active
+            ? <EmbargoBadge embargo={props.dataset.embargo} compact />
+            : <DesignStatePill state={props.dataset.current_version.design_state} />}
         </div>
       </div>
     </Link>

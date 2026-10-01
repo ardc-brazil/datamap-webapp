@@ -1,6 +1,8 @@
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import Router from "next/router";
 import { useState } from "react";
+import { ROUTE_PAGE_DATASETS_SHARED } from "../../contants/InternalRoutesConstants";
 
 /** Shown when the user is signed in but has no namespace yet. */
 export function AccessPending() {
@@ -31,6 +33,10 @@ export function AccessPending() {
             <p className="text-sm text-primary-700 mt-2 mb-0">
                 Once they tell you it is done, use the button below — there is no need
                 to sign out and back in.
+            </p>
+            <p className="text-sm text-primary-700 mt-2 mb-0">
+                If a researcher shared a dataset with you, it is already in{" "}
+                <Link href={ROUTE_PAGE_DATASETS_SHARED} className="text-sm font-semibold underline underline-offset-2">Shared with me</Link>.
             </p>
             <button
                 type="button"
