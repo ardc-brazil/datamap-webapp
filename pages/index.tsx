@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HomeHero } from "../components/Home/HomeHero";
 import Layout from "../components/Layout";
 import { ROUTE_PAGE_SEARCH } from "../contants/InternalRoutesConstants";
 
@@ -43,8 +44,7 @@ function FeatureSection(props) {
 export default function HomePage(props) {
   return (
     <Layout fluid={true}>
-      <div className="flex flex-col items-center text-center gap-7 px-8 pt-28 md:pt-40 pb-24">
-        <img src="/img/brand/datamap-mark.svg" alt="DataMap" className="w-24 h-24 md:w-[7.5rem] md:h-[7.5rem]" />
+      <HomeHero>
         <h1 className="m-0 max-w-[900px] text-5xl md:text-7xl leading-[1.05] font-semibold tracking-[-0.03em]">
           Scientific data analysis, for everyone.
         </h1>
@@ -66,7 +66,7 @@ export default function HomePage(props) {
             Sign in with ORCID
           </Link>
         </div>
-      </div>
+      </HomeHero>
 
       <div className="container mx-auto px-8">
         <div className="h-px bg-primary-200" />
