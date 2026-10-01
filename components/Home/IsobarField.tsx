@@ -182,12 +182,12 @@ export function IsobarField({ className = "" }: { className?: string }) {
         const emphasis = step % 4 === 0;
         context.beginPath();
         traceLevel(step * LEVEL_STEP);
-        context.strokeStyle = `rgba(${INK}, ${emphasis ? 0.3 : 0.13})`;
+        context.strokeStyle = `rgba(${INK}, ${emphasis ? 0.16 : 0.07})`;
         context.lineWidth = emphasis ? 1.1 : 0.8;
         context.stroke();
       }
 
-      context.fillStyle = `rgba(${INK}, 0.5)`;
+      context.fillStyle = `rgba(${INK}, 0.28)`;
       context.font = "600 12px ui-monospace, SFMono-Regular, Menlo, monospace";
       context.textAlign = "center";
       context.textBaseline = "middle";
