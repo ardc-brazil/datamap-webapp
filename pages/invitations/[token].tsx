@@ -2,6 +2,7 @@ import { getToken } from "next-auth/jwt";
 import { InvitationCard } from "../../components/Invitation/InvitationCard";
 import { BareLayout } from "../../components/Public/BareLayout";
 import { invitationPageProps } from "../../lib/invitationPage";
+import { rethrowSafely } from "../../lib/logging";
 import { getInvitationPreview } from "../../lib/share";
 import { InvitationPreview } from "../../types/GatekeeperAPI";
 
@@ -28,7 +29,7 @@ export async function getServerSideProps({ req, query }) {
         preview = await getInvitationPreview(token);
     } catch (error) {
         if (error?.response?.status !== 404) {
-            throw error;
+            rethrowSafely("invitation page failed", error);
         }
     }
     const session = await getToken({ req });

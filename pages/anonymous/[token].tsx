@@ -8,6 +8,7 @@ import { REDACTED } from "../../contants/EmbargoConstants";
 import { authorCount, latestVersion } from "../../lib/anonymousMetadata";
 import { anonymousPageProps } from "../../lib/anonymousPage";
 import { bytesToSize } from "../../lib/file";
+import { rethrowSafely } from "../../lib/logging";
 import { getAnonymousPage } from "../../lib/share";
 import { AnonymousPageActive, AnonymousPageEnded } from "../../types/GatekeeperAPI";
 
@@ -70,6 +71,6 @@ export async function getServerSideProps({ query }) {
         if (error?.response?.status === 404) {
             return { notFound: true };
         }
-        throw error;
+        rethrowSafely("anonymous page failed", error);
     }
 }

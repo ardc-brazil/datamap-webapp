@@ -5,6 +5,7 @@ import {
   logAccess,
   logError,
   redact,
+  rethrowSafely,
   withRequestId,
 } from "../logging";
 
@@ -179,5 +180,43 @@ describe("the request id", () => {
     withRequestId("req-1", () => undefined);
 
     expect(currentRequestId()).toBeUndefined();
+  });
+});
+
+describe("rethrowSafely", () => {
+  it("throws a plain error carrying only the given message, not the original error", () => {
+    const original = {
+      isAxiosError: true,
+      message: "Request failed",
+      config: { url: "/invitations/AbC123-_xyz", headers: { "X-Api-Secret": "hunter2" } },
+    };
+
+    let thrown: unknown;
+    captureStdout(() => {
+      try {
+        rethrowSafely("invitation page failed", original);
+      } catch (error) {
+        thrown = error;
+      }
+    });
+
+    expect(thrown).toBeInstanceOf(Error);
+    expect((thrown as Error).message).toBe("invitation page failed");
+    expect(JSON.stringify(thrown)).not.toContain("hunter2");
+  });
+
+  it("logs the original error before throwing", () => {
+    const lines = captureStdout(() => {
+      try {
+        rethrowSafely("anonymous page failed", { isAxiosError: true, message: "boom", config: {} });
+      } catch {
+        // asserted separately
+      }
+    });
+
+    const entry = JSON.parse(lines[0]);
+    expect(entry.level).toBe("ERROR");
+    expect(entry.message).toBe("anonymous page failed");
+    expect((entry.error as Record<string, unknown>).message).toBe("boom");
   });
 });

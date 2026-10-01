@@ -104,6 +104,13 @@ export function logError(
   emit("ERROR", "bff", message, { ...extra, error: describeError(error) });
 }
 
+// For getServerSideProps: Next.js prints a rethrown error with console.error,
+// and an AxiosError carries credentials and tokens the caller must not expose.
+export function rethrowSafely(message: string, error: unknown): never {
+  logError(message, error);
+  throw new Error(message);
+}
+
 export function logInfo(message: string, extra: Record<string, unknown> = {}): void {
   emit("INFO", "bff", message, extra);
 }
