@@ -62,4 +62,11 @@ describe("ManualDoiConfirmation", () => {
         expect(onCancel).toHaveBeenCalled();
         expect(onConfirm).not.toHaveBeenCalled();
     });
+
+    test("while the request is sending, the confirm button is disabled", () => {
+        render(<ManualDoiConfirmation {...base} gate="ends_embargo" onConfirm={jest.fn()} onCancel={jest.fn()} sending />);
+
+        const button = screen.getByRole("button", { name: "End embargo and register DOI" }) as HTMLButtonElement;
+        expect(button.disabled).toBe(true);
+    });
 });

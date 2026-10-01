@@ -71,6 +71,21 @@ describe("EndEmbargoDialog", () => {
 
         await waitFor(() => expect(endEmbargo).toHaveBeenCalledWith("d1"));
     });
+
+    test("a second click while the request is in flight sends only one", async () => {
+        let resolve: (value: unknown) => void;
+        endEmbargo.mockReturnValue(new Promise((r) => { resolve = r; }));
+        render(<EndEmbargoDialog dataset={dataset} show onClose={jest.fn()} />);
+
+        const button = screen.getByRole("button", { name: "End embargo" });
+        fireEvent.click(button);
+        fireEvent.click(button);
+
+        expect(endEmbargo).toHaveBeenCalledTimes(1);
+        expect((button as HTMLButtonElement).disabled).toBe(true);
+        resolve({ active: false });
+        await waitFor(() => expect(reload).toHaveBeenCalled());
+    });
 });
 
 describe("EmbargoModeDialog", () => {

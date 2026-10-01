@@ -22,6 +22,7 @@ export default function DataExplorer(props: Props) {
   const [loadingTable, setLoadingTable] = useState(false);
   const [showUploadDataModal, setShowUploadDataModal] = useState(false);
   const [selectedDatasetVersion, setSelectedDatasetVersion] = useState(getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset))
+  const canEdit = props.dataset.access?.can_edit !== false
 
 
   function handleSelectFile(file: GetDatasetDetailsVersionFileResponse): void {
@@ -49,6 +50,7 @@ export default function DataExplorer(props: Props) {
             availableVersions={props.dataset.versions}
             dataset={props.dataset}
             onNewVersionClick={() => setShowUploadDataModal(true)}
+            canEdit={canEdit}
           />
           <span className="flex items-center gap-1.5">
             <MaterialSymbol icon="folder" size={16} grade={-25} weight={200} />
@@ -57,7 +59,7 @@ export default function DataExplorer(props: Props) {
               : <>{getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset)?.files_in?.length ?? 0} files · {totalDatasetVersionFilesSize(selectedDatasetVersion)}</>
             }
           </span>
-          {props.dataset.access?.can_edit !== false && <NewVersionButton onClick={() => setShowUploadDataModal(true)} />}
+          {canEdit && <NewVersionButton onClick={() => setShowUploadDataModal(true)} />}
         </div>
       </div>
 

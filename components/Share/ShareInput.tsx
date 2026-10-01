@@ -10,6 +10,7 @@ import { PersonInitial } from "./PersonInitial";
 interface Props {
     datasetId: string
     tenancyName: string
+    busy?: boolean
     onGrant(request: GrantRequest): Promise<void>
 }
 
@@ -44,6 +45,9 @@ export function ShareInput(props: Props) {
     }, [debounced, props.datasetId, bffGateway]);
 
     async function grant(request: GrantRequest) {
+        if (props.busy) {
+            return;
+        }
         await props.onGrant(request);
         setText("");
         setSuggestions([]);
@@ -93,6 +97,7 @@ export function ShareInput(props: Props) {
                     <button
                         type="button"
                         className={option}
+                        disabled={props.busy}
                         onClick={() => grant(target.kind === "email" ? { email: target.value, level } : { orcid: target.value, level })}
                     >
                         <PersonInitial pendingIcon={target.kind === "email" ? "mail" : "badge"} />
@@ -113,7 +118,7 @@ export function ShareInput(props: Props) {
                     <ul className="m-0 p-0 list-none">
                         {suggestions.map((user) => (
                             <li key={user.id}>
-                                <button type="button" aria-label={`${user.name} ${user.email}`} className={option} onClick={() => grant({ user_id: user.id, level })}>
+                                <button type="button" aria-label={`${user.name} ${user.email}`} className={option} disabled={props.busy} onClick={() => grant({ user_id: user.id, level })}>
                                     <PersonInitial name={user.name} />
                                     <span className="flex flex-col min-w-0">
                                         <span className={SHARE_PERSON_NAME_CLASS}><Highlighted name={user.name} typed={text.trim()} /></span>

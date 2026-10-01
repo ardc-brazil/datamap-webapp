@@ -30,8 +30,13 @@ function Consequences(props: { items: string[] }) {
 function useAction(onClose: () => void) {
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
+    const [busy, setBusy] = useState(false);
 
     async function run(action: () => Promise<unknown>) {
+        if (busy) {
+            return;
+        }
+        setBusy(true);
         setError(null);
         try {
             await action();
@@ -39,17 +44,19 @@ function useAction(onClose: () => void) {
             router.reload();
         } catch (e) {
             setError(messageForApiError(e));
+        } finally {
+            setBusy(false);
         }
     }
 
-    return { error, setError, run };
+    return { error, setError, busy, run };
 }
 
 export function ExtendEmbargoDialog(props: DialogProps) {
     const [bffGateway] = useState(() => new BFFAPI());
     const [date, setDate] = useState("");
     const [reason, setReason] = useState("");
-    const { error, setError, run } = useAction(props.onClose);
+    const { error, setError, busy, run } = useAction(props.onClose);
     const now = new Date();
     const embargo = props.dataset.embargo;
     if (!embargo) {
@@ -75,6 +82,7 @@ export function ExtendEmbargoDialog(props: DialogProps) {
             cancelButtonText="Cancel"
             cancel={props.onClose}
             confim={confirm}
+            confirmDisabled={busy}
             maxWidthClassName="max-w-[440px]"
         >
             <div className="flex flex-col gap-4">
@@ -96,7 +104,7 @@ export function ExtendEmbargoDialog(props: DialogProps) {
 
 export function EndEmbargoDialog(props: DialogProps) {
     const [bffGateway] = useState(() => new BFFAPI());
-    const { error, run } = useAction(props.onClose);
+    const { error, busy, run } = useAction(props.onClose);
     const { data } = useSWR(props.show ? `/api/datasets/${props.dataset.id}/share` : null, fetcher);
     const people = (data as ShareState)?.permissions?.length ?? 0;
     const tenancy = tenancyDisplayName(props.dataset.tenancy);
@@ -113,6 +121,7 @@ export function EndEmbargoDialog(props: DialogProps) {
             destructive
             cancel={props.onClose}
             confim={() => run(() => bffGateway.endEmbargo(props.dataset.id))}
+            confirmDisabled={busy}
             maxWidthClassName="max-w-[440px]"
         >
             <div className="flex flex-col gap-4">
@@ -131,7 +140,7 @@ export function EndEmbargoDialog(props: DialogProps) {
 
 export function EmbargoModeDialog(props: DialogProps) {
     const [bffGateway] = useState(() => new BFFAPI());
-    const { error, run } = useAction(props.onClose);
+    const { error, busy, run } = useAction(props.onClose);
     const visible = props.dataset.embargo?.metadata_visible === true;
     const tenancy = tenancyDisplayName(props.dataset.tenancy);
 
@@ -143,6 +152,7 @@ export function EmbargoModeDialog(props: DialogProps) {
             cancelButtonText="Cancel"
             cancel={props.onClose}
             confim={() => run(() => bffGateway.setEmbargoMode(props.dataset.id, { metadata_visible: !visible }))}
+            confirmDisabled={busy}
             maxWidthClassName="max-w-[440px]"
         >
             <div className="flex flex-col gap-4">
@@ -161,7 +171,7 @@ export function EmbargoModeDialog(props: DialogProps) {
 export function EmbargoNoteDialog(props: DialogProps) {
     const [bffGateway] = useState(() => new BFFAPI());
     const [note, setNote] = useState(props.dataset.embargo?.note ?? "");
-    const { error, run } = useAction(props.onClose);
+    const { error, busy, run } = useAction(props.onClose);
 
     return (
         <Modal
@@ -171,6 +181,7 @@ export function EmbargoNoteDialog(props: DialogProps) {
             cancelButtonText="Cancel"
             cancel={props.onClose}
             confim={() => run(() => bffGateway.setEmbargoNote(props.dataset.id, { note: note.trim() || null }))}
+            confirmDisabled={busy}
             maxWidthClassName="max-w-[440px]"
         >
             <div className="flex flex-col gap-1.5">

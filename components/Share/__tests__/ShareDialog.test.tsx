@@ -95,6 +95,24 @@ describe("ShareDialog", () => {
         expect(screen.getByText("Works until the dataset is published, then leads to the public page · view count shown in Share, viewers stay anonymous")).toBeTruthy();
     });
 
+    test("a second click on Create link while the request is in flight sends only one", async () => {
+        shareState = stateWith();
+        let resolve: (value: unknown) => void;
+        createAnonymousLink.mockReturnValue(new Promise((r) => { resolve = r; }));
+        render(<ShareDialog dataset={embargoed} show onClose={jest.fn()} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "New anonymous link" }));
+        fireEvent.change(screen.getByLabelText(/Label/), { target: { value: "JGR Atmospheres, round 2" } });
+        const createButton = screen.getByRole("button", { name: "Create link" });
+        fireEvent.click(createButton);
+        fireEvent.click(createButton);
+
+        expect(createAnonymousLink).toHaveBeenCalledTimes(1);
+        expect((createButton as HTMLButtonElement).disabled).toBe(true);
+        resolve({ id: "r1", link: "https://datamap.pcs.usp.br/anonymous/tok" });
+        await waitFor(() => expect(mutate).toHaveBeenCalled());
+    });
+
     test("removing access asks first and says what happens", async () => {
         shareState = stateWith();
         revokePermission.mockResolvedValue(undefined);

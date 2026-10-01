@@ -411,6 +411,7 @@ function CitationManualDOIForm(props: CitationEditionProps) {
                 identifier={pendingIdentifier ?? ""}
                 tenancyName={tenancyDisplayName(props.dataset.tenancy)}
                 show={pendingIdentifier !== null}
+                sending={sending}
                 onConfirm={() => send(pendingIdentifier)}
                 onCancel={() => setPendingIdentifier(null)}
                 onSetEmbargo={props.dataset.access?.can_manage_embargo ? () => { setPendingIdentifier(null); setSettingEmbargo(true); } : undefined}

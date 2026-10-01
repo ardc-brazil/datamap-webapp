@@ -25,6 +25,7 @@ export function ShareDialog(props: Props) {
     const [bffGateway] = useState(() => new BFFAPI());
     const session = useSession();
     const [error, setError] = useState<string | null>(null);
+    const [busy, setBusy] = useState(false);
     const [oneTime, setOneTime] = useState<{ link: string, kind: "anonymous" | "invitation" } | null>(null);
     const [newLink, setNewLink] = useState(false);
     const [removing, setRemoving] = useState<SharePermission | null>(null);
@@ -39,6 +40,10 @@ export function ShareDialog(props: Props) {
     }
 
     async function run<T>(action: () => Promise<T>): Promise<T | undefined> {
+        if (busy) {
+            return undefined;
+        }
+        setBusy(true);
         setError(null);
         try {
             const result = await action();
@@ -47,6 +52,8 @@ export function ShareDialog(props: Props) {
         } catch (e) {
             setError(messageForApiError(e));
             return undefined;
+        } finally {
+            setBusy(false);
         }
     }
 
@@ -73,7 +80,7 @@ export function ShareDialog(props: Props) {
                     </div>
 
                     <div className="flex flex-col gap-4 px-6 pb-5 overflow-y-auto">
-                        <ShareInput datasetId={datasetId} tenancyName={tenancyDisplayName(props.dataset.tenancy)} onGrant={onGrant} />
+                        <ShareInput datasetId={datasetId} tenancyName={tenancyDisplayName(props.dataset.tenancy)} onGrant={onGrant} busy={busy} />
                         {error && <p role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
                         {loadError && <p className="m-0 text-sm text-danger-700">The people with access could not be loaded.</p>}
                         {state &&
@@ -108,6 +115,7 @@ export function ShareDialog(props: Props) {
 
             <NewAnonymousLinkDialog
                 show={newLink}
+                busy={busy}
                 onCancel={() => setNewLink(false)}
                 onCreate={async (label) => {
                     const result = await run(() => bffGateway.createAnonymousLink(datasetId, label));

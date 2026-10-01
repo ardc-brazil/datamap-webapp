@@ -6,6 +6,7 @@ import Modal from "../base/PopupModal";
 
 interface Props {
     show: boolean
+    busy?: boolean
     onCreate(label: string): Promise<void>
     onCancel(): void
 }
@@ -21,11 +22,15 @@ export function NewAnonymousLinkDialog(props: Props) {
             cancelButtonText="Cancel"
             cancel={() => { setLabel(""); props.onCancel(); }}
             confim={async () => {
+                if (props.busy) {
+                    return;
+                }
                 if (label.trim()) {
                     await props.onCreate(label.trim());
                     setLabel("");
                 }
             }}
+            confirmDisabled={props.busy}
             maxWidthClassName="max-w-[520px]"
         >
             <div className="flex flex-col gap-4">

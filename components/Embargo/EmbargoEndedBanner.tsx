@@ -12,11 +12,16 @@ export function EmbargoEndedBanner(props: { dataset: GetDatasetDetailsResponse }
     const router = useRouter();
     const [confirming, setConfirming] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [promoting, setPromoting] = useState(false);
     const doi = props.dataset.current_version?.doi;
     const registered = doi?.state === GetDatasetDetailsDOIResponseState.REGISTERED;
     const tenancy = tenancyDisplayName(props.dataset.tenancy);
 
     async function promote() {
+        if (promoting) {
+            return;
+        }
+        setPromoting(true);
         setError(null);
         try {
             await bffGateway.navigateDOIStatus({
@@ -28,6 +33,8 @@ export function EmbargoEndedBanner(props: { dataset: GetDatasetDetailsResponse }
             router.reload();
         } catch (e) {
             setError(messageForApiError(e));
+        } finally {
+            setPromoting(false);
         }
     }
 
@@ -68,6 +75,7 @@ export function EmbargoEndedBanner(props: { dataset: GetDatasetDetailsResponse }
                 cancelButtonText="Not yet"
                 cancel={() => setConfirming(false)}
                 confim={promote}
+                confirmDisabled={promoting}
                 maxWidthClassName="max-w-[440px]"
             >
                 <ul className="m-0 p-0 list-none flex flex-col gap-2.5 text-sm leading-[21px] text-primary-700">

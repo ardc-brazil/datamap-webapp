@@ -40,7 +40,8 @@ export function SetEmbargoDialog(props: { dataset: GetDatasetDetailsResponse, sh
             confimButtonText="Set embargo"
             cancelButtonText="Cancel"
             cancel={props.onClose}
-            confim={() => formik.submitForm()}
+            confim={() => { if (!formik.isSubmitting) formik.submitForm(); }}
+            confirmDisabled={formik.isSubmitting}
             maxWidthClassName="max-w-2xl"
         >
             <FormikProvider value={formik}>
