@@ -37,6 +37,26 @@ axiosInterceptorInstance.interceptors.request.use((config) => {
   return config;
 });
 
+const RETRYABLE_CODES = new Set(["ECONNREFUSED", "ECONNRESET", "EAI_AGAIN"]);
+
+/**
+ * A deploy replaces the two API instances one at a time, so for a moment one is
+ * started but not yet listening. Only a request that never reached the API, and
+ * only one whose repetition cannot create or change anything.
+ */
+export function shouldRetry(error: {
+  code?: string;
+  response?: unknown;
+  config?: { method?: string; __retried?: boolean };
+}): boolean {
+  const config = error?.config;
+  if (!config || config.__retried) return false;
+  if (error?.response) return false;
+  if (!RETRYABLE_CODES.has(error?.code ?? "")) return false;
+  const method = (config.method ?? "get").toLowerCase();
+  return method === "get" || method === "head";
+}
+
 axiosInterceptorInstance.interceptors.response.use(
   (response) => {
     recordCall(response.config, response.status);
@@ -44,6 +64,12 @@ axiosInterceptorInstance.interceptors.response.use(
   },
   (error) => {
     recordCall(error?.config, error?.response?.status, error ?? {});
+
+    if (shouldRetry(error)) {
+      error.config.__retried = true;
+      return axiosInterceptorInstance.request(error.config);
+    }
+
     return Promise.reject(error);
   }
 );
