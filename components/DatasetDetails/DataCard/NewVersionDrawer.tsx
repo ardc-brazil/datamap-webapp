@@ -94,7 +94,7 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
 
     return (
         <Drawer
-            title="Upload Data"
+            title="New version"
             show={props.showUploadDataModal}
             onOpen={onDrawerOpen}
             onClose={() => {
@@ -119,11 +119,11 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
                         <div
                             data-testid="new-version-error-message"
                             role="alert"
-                            className="my-4 p-4 text-primary-900 border-t-4 border-error-300 bg-error-50 rounded-b-lg"
+                            className="mb-5 p-4 text-primary-900 border border-primary-200 border-l-4 border-l-error-600 bg-primary-0 rounded-md"
                         >
-                            <h6 className="font-semibold">The version was not created</h6>
-                            <p className="mt-1 text-sm">{errorMessage}</p>
-                            <p className="mt-2 text-xs text-primary-600">
+                            <h6 className="m-0 text-sm font-semibold">The version was not created</h6>
+                            <p className="mt-1 mb-0 text-sm text-primary-700">{errorMessage}</p>
+                            <p className="mt-2 mb-0 text-xs text-primary-500">
                                 Nothing was published, so no version is missing files. Fix the problem above and try again.
                             </p>
                         </div>
@@ -131,7 +131,7 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
 
                     {stagingDatasetVersion?.files_in?.length > 0 &&
                         <>
-                            <h2 className="py-2 text-primary-500 font-semibold text-xs uppercase border-b border-b-primary-200">
+                            <h2 className="m-0 pb-2 text-[11px] leading-4 tracking-[0.08em] uppercase font-semibold text-primary-500">
                                 Previously uploaded
                             </h2>
                             <DatasetFilesList
@@ -150,7 +150,7 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
                         </>
                     }
 
-                    <h2 className="py-2 text-primary-500 font-semibold text-xs uppercase">
+                    <h2 className="m-0 pt-6 pb-2 text-[11px] leading-4 tracking-[0.08em] uppercase font-semibold text-primary-500">
                         New uploads
                     </h2>
                     <div className="" >
@@ -173,22 +173,26 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
 
 function SuccessMessage() {
     return (
-        <div data-testid="new-version-success-message" className="p-8 text-center">
-            <MaterialSymbol icon="check" size={96} grade={-25} weight={400} className="text-success-700" />
-            <h6>Success!</h6>
-            <p>Your dataset version was created successfully.</p>
+        <div data-testid="new-version-success-message" className="flex flex-col items-center gap-2 px-8 py-12 text-center">
+            <span className="flex items-center justify-center h-12 w-12 rounded-full bg-[#dcfce7] text-[#14532d]">
+                <MaterialSymbol icon="check" size={24} grade={-25} weight={400} />
+            </span>
+            <h6 className="m-0 pt-2 text-base font-semibold text-primary-900">Version created</h6>
+            <p className="m-0 text-sm text-primary-600">Your dataset version was created successfully.</p>
         </div>
     )
 }
 
 function CreatingVersionMessage() {
     return (
-        <div data-testid="new-version-creating-message" className="p-8 text-center">
-            <MaterialSymbol icon="progress_activity" size={96} grade={-25} weight={400}
-                className="align-middle animate-spin"
-            />
-            <h6>Your dataset version is being created</h6>
-            <p>If your dataset is public, users will see the previous version during processing.</p>
+        <div data-testid="new-version-creating-message" className="flex flex-col items-center gap-2 px-8 py-12 text-center">
+            <span className="flex items-center justify-center h-12 w-12 rounded-full bg-primary-100 text-primary-700">
+                <MaterialSymbol icon="progress_activity" size={24} grade={-25} weight={400}
+                    className="animate-spin"
+                />
+            </span>
+            <h6 className="m-0 pt-2 text-base font-semibold text-primary-900">Your dataset version is being created</h6>
+            <p className="m-0 text-sm text-primary-600">If your dataset is public, users will see the previous version during processing.</p>
         </div>
     )
 }

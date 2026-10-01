@@ -107,7 +107,7 @@ export default function UppyUploader(props: UppyUploaderProps) {
     }
 
     return (
-        <>
+        <div className="datamap-uppy w-full flex flex-col gap-2">
             {formikContext &&
                 <ErrorMessage
                     name='remoteFilesCount'
@@ -115,11 +115,57 @@ export default function UppyUploader(props: UppyUploaderProps) {
                     className="text-xs text-error-600"
                 />
             }
+            <style jsx global>{`
+                .datamap-uppy .uppy-Dashboard-inner {
+                    background-color: #ffffff;
+                    border: 1px dashed #9ca3af;
+                    border-radius: 8px;
+                    font-family: var(--font-inter), Inter, system-ui, sans-serif;
+                }
+                .datamap-uppy .uppy-Dashboard-innerWrap {
+                    border-radius: 8px;
+                }
+                .datamap-uppy .uppy-Dashboard-AddFiles {
+                    border: 0;
+                }
+                .datamap-uppy .uppy-Dashboard-AddFiles-title {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 10px;
+                    font-size: 15px;
+                    line-height: 23px;
+                    font-weight: 400;
+                    color: #374151;
+                }
+                .datamap-uppy .uppy-Dashboard-AddFiles-title::before {
+                    content: "upload_file";
+                    font-family: 'Material Symbols Outlined';
+                    font-size: 36px;
+                    line-height: 1;
+                    color: #6b7280;
+                    font-variation-settings: 'FILL' 0, 'wght' 200, 'GRAD' -25, 'opsz' 40;
+                }
+                .datamap-uppy .uppy-Dashboard-browse {
+                    color: #0b0b0c;
+                    font-weight: 600;
+                    text-decoration: underline;
+                }
+                .datamap-uppy .uppy-Dashboard-browse:hover,
+                .datamap-uppy .uppy-Dashboard-browse:focus {
+                    color: #4b5563;
+                    border-bottom: 0;
+                }
+                .datamap-uppy .uppy-Dashboard-note {
+                    font-size: 13px;
+                    color: #9ca3af;
+                }
+            `}</style>
             <Dashboard
                 uppy={uppy}
                 disabled={false}
-                // width={"100wv"}
-                // height={"300px"}
+                width="100%"
+                height={260}
                 proudlyDisplayPoweredByUppy={false}
                 singleFileFullScreen={false}
                 fileManagerSelectionType='both'
@@ -131,6 +177,6 @@ export default function UppyUploader(props: UppyUploaderProps) {
                 showRemoveButtonAfterComplete={true}
                 hideUploadButton={true}
             />
-        </>
+        </div>
     )
 }

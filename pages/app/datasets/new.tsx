@@ -3,8 +3,6 @@ import { ErrorMessage, Field, Form, Formik, FormikHelpers } from "formik";
 import { useSession } from "next-auth/react";
 import Router from "next/router";
 import { useEffect, useState } from "react";
-import { TabPanel } from "../../../components/DatasetDetails/TabPanel";
-import { Tabs } from "../../../components/DatasetDetails/Tabs";
 import LayoutFullScreen from "../../../components/LayoutFullScreen";
 import LoggedLayout from "../../../components/LoggedLayout";
 import Alert from "../../../components/base/Alert";
@@ -150,82 +148,79 @@ export default function NewPage() {
       >
         {({ isSubmitting, values, setFieldTouched }) => (
           <Form>
-            <LayoutFullScreen >
-              <div className="max-w-2xl h-full">
+            <LayoutFullScreen title="New dataset" hint="Add a title and the data files to create it">
+              <div className="flex flex-col gap-10">
                 <Alert callout="Success" show={showSuccessAlert} closed={onAlertClose}>
                   <p className="font-bold">The dataset '{datasetCreateResponse?.name}' was created with success!</p>
                   <p>Now, you must fill in the maximum of details about the dataset to facilitate the future
                     searches and the data quality of the data platform.</p>
                 </Alert>
-                <h2 className="font-bold">New Dataset</h2>
-                <p>Create a new dataset informing a title and remote data files.</p>
-                <p className="text-xs">
-                  A dataset refers to a collection of data that is organized and
-                  structured for a specific purpose. It can consist of various types of
-                  information such as text, numbers, images, audio, or video.
-                </p>
 
-                <div className="mt-8">
-                  <h6 className=" font-bold">Dataset Identification</h6>
-                  <p className="text-xs">
-                    Give a unique name for your dataset that will be easy to identify and understand the meaning and possible uses for it.
+                <div className="flex flex-col gap-2.5">
+                  <h2 className="m-0 text-[30px] leading-[1.2] font-semibold tracking-tight text-primary-900">Create a dataset</h2>
+                  <p className="m-0 text-[15px] leading-[23px] text-primary-600">
+                    Give it a title and add the data files. You can fill in authors, license, coverage and the rest of the metadata after it's created.
                   </p>
-                  <div className="my-2">
-                    <label
-                      htmlFor="datasetTitle"
-                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                    >
-                      Dataset title
-                    </label>
-
-                    <Field
-                      type="text"
-                      id="datasetTitle"
-                      name="datasetTitle"
-                      placeholder="Enter dataset title"
-                      className="invalid:border-error-500"
-                      onKeyDown={e => { e.key === 'Enter' && e.preventDefault() }}
-                    />
-                    <ErrorMessage
-                      name="datasetTitle"
-                      component="div"
-                      className="text-xs text-error-600"
-                    />
-
-                  </div>
-
-                  <h6 className="font-bold">Data files</h6>
-                  <p className="text-xs">
-                    Your dataset is composed of data files. You have to list all data files that compose your dataset using the options bellow.
-                  </p>
-                  <div className="my-2">
-                    <Tabs>
-                      <TabPanel title="File">
-                        <div className="grid grid-cols-1 place-items-center py-2 h-64">
-                          <UppyUploader
-                            datasetId={datasetPrototyping?.createDatasetResponseV2?.id}
-                            userId={datasetPrototyping?.fileUploadAuthTokenResponse?.user?.id}
-                            userToken={datasetPrototyping?.fileUploadAuthTokenResponse?.token?.jwt}
-                            onUppyStateCreated={onUppyStateCreated} />
-                        </div>
-                      </TabPanel>
-                    </Tabs>
-                  </div>
                 </div>
-                <br />
+
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="datasetTitle"
+                    className="m-0 text-sm font-semibold text-primary-900"
+                  >
+                    Title
+                  </label>
+
+                  <Field
+                    type="text"
+                    id="datasetTitle"
+                    name="datasetTitle"
+                    placeholder="Enter dataset title"
+                    className="h-11 py-0 px-3.5 bg-primary-0 border border-primary-300 rounded-md text-[15px] placeholder:text-primary-400 invalid:border-error-500"
+                    onKeyDown={e => { e.key === 'Enter' && e.preventDefault() }}
+                  />
+                  <ErrorMessage
+                    name="datasetTitle"
+                    component="div"
+                    className="text-xs text-error-600"
+                  />
+                  <span className="text-[13px] leading-[19px] text-primary-500">
+                    Give a unique name for your dataset that will be easy to identify and understand the meaning and possible uses for it.
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-wrap justify-between items-baseline gap-2">
+                    <span className="text-sm font-semibold text-primary-900">Data files</span>
+                    <span className="text-[13px] text-primary-500">Resumable uploads</span>
+                  </div>
+                  <UppyUploader
+                    datasetId={datasetPrototyping?.createDatasetResponseV2?.id}
+                    userId={datasetPrototyping?.fileUploadAuthTokenResponse?.user?.id}
+                    userToken={datasetPrototyping?.fileUploadAuthTokenResponse?.token?.jwt}
+                    onUppyStateCreated={onUppyStateCreated} />
+                </div>
               </div>
 
-              <div className="w-full h-24 border-t border-primary-200 ">
-                <div className="container mx-auto max-w-3xl flex justify-end">
+              <div className="mx-auto w-full max-w-[640px] h-full px-4 sm:px-0 flex justify-between items-center gap-4">
+                <span className="text-[13px] text-primary-500">
+                  {values.remoteFilesCount} {values.remoteFilesCount === 1 ? "file" : "files"}
+                </span>
+                <div className="flex gap-2">
+                  <button type="button"
+                    className="btn-primary-outline m-0"
+                    onClick={() => Router.back()}
+                  >
+                    Cancel
+                  </button>
                   <button type="submit"
-                    className="btn-primary mt-4"
+                    className="btn-primary m-0"
                     disabled={isSubmitting || !(datasetPrototyping?.createDatasetResponseV2) || !(datasetPrototyping.fileUploadAuthTokenResponse)}
                   >
-                    Create Dataset
+                    Create dataset
                   </button>
                 </div>
               </div>
-
             </LayoutFullScreen>
           </Form>
         )}

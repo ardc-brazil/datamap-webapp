@@ -21,16 +21,16 @@ export function Checkbox(props: Props) {
 
   return (
     <div className="flex items-center">
-      <label htmlFor={props.optionSelected.id} className="w-full cursor-pointer py-2">
+      <label htmlFor={props.optionSelected.id} className="flex items-center gap-2.5 w-full cursor-pointer m-0 py-[5px] font-normal">
         <input
           id={props.optionSelected.id}
           type="checkbox"
           name={`checkbox-component-${props.parentId}`}
           checked={props.checked}
-          className="w-5 h-5 accent-primary-900"
+          className="w-4 h-4 p-0 flex-none rounded-[3px] accent-primary-900"
           onChange={toggleSelected}
         />
-        <span className="ml-2 text-sm font-medium text-primary-900 align-top">
+        <span className="text-sm leading-5 text-primary-700">
           {props.children}
         </span>
       </label>

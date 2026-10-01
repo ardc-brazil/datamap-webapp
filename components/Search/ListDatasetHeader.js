@@ -1,9 +1,9 @@
 
 export function ListDatasetHeader(props) {
   return (
-    <div className="flex justify-between">
-      <p><span data-testid="dataset-count-items">{props.itemCount}</span> Results</p>
-      <p><small>Requested at: {new Date(props.requestedAt).toLocaleString()}</small></p>
+    <div className="flex justify-between items-baseline pb-3 text-[13px] text-primary-500">
+      <span><span data-testid="dataset-count-items" className="font-semibold text-primary-900">{props.itemCount}</span> results</span>
+      <span>Requested at {new Date(props.requestedAt).toLocaleString()}</span>
       {/* <div>
         <label htmlFor="sortbySelector">
           <span className=" px-2 ">Sort by:</span>

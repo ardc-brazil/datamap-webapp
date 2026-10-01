@@ -14,13 +14,13 @@ export function PageSizeSelector(props: Props) {
   };
 
   return (
-    <div className="flex items-baseline gap-2 text-sm text-gray-600 whitespace-nowrap">
-      <label htmlFor="page-size-select">Show</label>
+    <div className="flex items-baseline gap-2 text-[13px] text-primary-500 whitespace-nowrap">
+      <label htmlFor="page-size-select" className="inline m-0 text-[13px] font-normal text-primary-500">Show</label>
       <select
         id="page-size-select"
         value={pageSize}
         onChange={handleChange}
-        className="border border-primary-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+        className="w-auto border border-primary-300 rounded-md pl-2.5 pr-8 py-1 bg-primary-0 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
       >
         {PAGE_SIZE_OPTIONS.map((size) => (
           <option key={size} value={size}>

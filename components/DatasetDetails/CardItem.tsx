@@ -17,8 +17,8 @@ export function CardItem(props: Props) {
   }
 
   return (
-    <div data-testid={props.testId} className={`${props.className}`}>
-      <div className="text-primary-400 font-semibold text-xs">
+    <div data-testid={props.testId} className={`${props.className ?? ""}`}>
+      <div className="text-[11px] leading-4 tracking-[0.08em] font-semibold text-primary-500">
         <span className="uppercase">
           {props.title}
         </span>
@@ -31,7 +31,7 @@ export function CardItem(props: Props) {
           </div>
         }
       </div>
-      <div className="py-2" id={slugify(props.title)}>
+      <div className="pt-1 text-sm text-primary-900" id={slugify(props.title)}>
         {props.children}
       </div>
     </div>

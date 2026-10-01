@@ -119,7 +119,7 @@ export function ListDatasetPageNavigator(props: Props) {
 
           // Active vs inactive styling
           if (isActive) {
-            buttonClass += " bg-primary-600 text-white border-primary-600 z-10";
+            buttonClass += " bg-primary-900 text-primary-50 border-primary-900 z-10";
           } else {
             buttonClass += " bg-white text-gray-700 hover:bg-gray-50";
           }

@@ -192,32 +192,35 @@ export default function ListDatasetPage() {
 
   return (
     <LoggedLayout>
-      <div className="container mx-auto">
+      <div className="w-full max-w-5xl mx-auto">
         <Alert callout="Dataset deleted" show={router?.query?.deleteDatasetName as unknown as boolean} closed={onAlertClose}>
           <p>The dataset <b>'{router?.query?.deleteDatasetName}'</b> was deleted with success!</p>
         </Alert>
 
-        <h2>Datasets</h2>
-        <p className="text-primary-700">
-          Explore, analyze, and share quality data. Learn more about data types,
-          creating, and collaborating.
-        </p>
+        <div className="flex flex-wrap justify-between items-end gap-6">
+          <div>
+            <h2 className="m-0 text-3xl leading-tight">Datasets</h2>
+            <p className="mt-2 mb-0 text-[15px] leading-[23px] text-primary-600">
+              Explore, analyze, and share quality data. Learn more about data types,
+              creating, and collaborating.
+            </p>
+          </div>
+          <Link href={ROUTE_PAGE_DATASETS_NEW} className="btn-primary m-0 flex-none hover:text-primary-50">
+            + New dataset
+          </Link>
+        </div>
 
-        <Link href={ROUTE_PAGE_DATASETS_NEW}>
-          <button className="btn-primary mt-2">+ New Dataset</button>
-        </Link>
-
-        <div className="mt-8 mb-4 max-w-4xl">
+        <div className="mt-7 mb-4">
           <TextSearchBar onTextSearchChanged={onTextSearchChanged} />
           <FilterBadges
             currentSearchParameterState={currentSearchParameters}
             onClose={onBadgesClose} />
         </div>
 
-        <div className="border-primary-200 mt-8">
-          <div className="flex flex-row gap-4">
+        <div className="mt-7">
+          <div className="flex flex-row gap-8">
             <FilterCriteriaList onCriteriaChanged={onCriteriaChanged} lastSearchParameterDeselected={lastSearchParameterDeselected} />
-            <div className="col-span-9 basis-full px-4 min-h-screen">
+            <div className="basis-full min-w-0 min-h-screen">
               <div>
                 {datasetsError && <EmptySearch>Error to read datasets</EmptySearch>}
                 {datasetsIsLoading && <EmptySearch>Loading datasets...</EmptySearch>}

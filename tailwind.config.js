@@ -8,19 +8,29 @@ module.exports = {
 	theme: {
 		fontFamily: {
 			sans: [
+				'var(--font-inter)',
 				'Inter',
 				'system-ui',
 				'sans-serif'
 			],
 			display: [
+				'var(--font-inter)',
 				'Inter',
 				'system-ui',
 				'sans-serif'
 			],
 			body: [
+				'var(--font-inter)',
 				'Inter',
 				'system-ui',
 				'sans-serif'
+			],
+			mono: [
+				'ui-monospace',
+				'SFMono-Regular',
+				'Menlo',
+				'Consolas',
+				'monospace'
 			]
 		},
 		colors: {
@@ -28,7 +38,7 @@ module.exports = {
 			transparent: 'transparent',
 			primary: {
 				'0': "#ffffff",
-				'50': '#f9fafb',
+				'50': '#fafaf9',
 				'100': '#f3f4f6',
 				'200': '#e5e7eb',
 				'300': '#d1d5db',
@@ -37,7 +47,7 @@ module.exports = {
 				'600': '#4b5563',
 				'700': '#374151',
 				'800': '#1f2937',
-				'900': '#111827'
+				'900': '#0b0b0c'
 			},
 			secondary: {
 				'50': '#FBFCFC',

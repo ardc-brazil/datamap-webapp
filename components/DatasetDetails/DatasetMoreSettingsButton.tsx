@@ -49,23 +49,31 @@ export default function DatasetMoreSettingsButton(props: any) {
     return (
 
         <>
-            <ContextMenuButton size={72}>
+            <ContextMenuButton
+                size={48}
+                iconName="more_horiz"
+                iconSize={20}
+                buttonClassName="flex items-center justify-center w-[38px] h-[38px] rounded-md border border-primary-300 bg-primary-0 text-primary-700 hover:bg-primary-100 transition-colors"
+            >
                 {/* TODO: Add button for new version to be added on future */}
                 {/* <ContextMenuButtonItem text="New version" iconName="note_add" />
                 <hr /> */}
-                <ContextMenuButtonItem text="Delete dataset" onClick={trashOnClick} iconName="delete" />
+                <ContextMenuButtonItem text="Delete dataset" onClick={trashOnClick} iconName="delete" destructive />
             </ContextMenuButton>
             <Modal
-                title="Confirm Deletion"
+                title="Delete dataset"
                 show={showModal}
                 confimButtonText="Delete"
                 cancelButtonText="Cancel"
                 cancel={() => setShowModal(false)}
                 confim={confirmDelete}
+                destructive
             >
-                <div className="flex flex-row">
-                    <MaterialSymbol icon="warning" size={96} grade={-25} weight={200} className="inline-block px-8" />
-                    <p>Deletion is irreversible and any public or private Notebooks using this dataset will no longer be executable. Are you sure you want to permanently delete this dataset?</p>
+                <div className="flex flex-row items-start gap-3">
+                    <span className="flex flex-none items-center justify-center h-9 w-9 rounded-full bg-primary-100 text-error-600">
+                        <MaterialSymbol icon="warning" size={20} grade={-25} weight={400} />
+                    </span>
+                    <p className="m-0 text-sm leading-5 text-primary-700">Deletion is irreversible and any public or private Notebooks using this dataset will no longer be executable. Are you sure you want to permanently delete this dataset?</p>
                 </div>
             </Modal>
         </>

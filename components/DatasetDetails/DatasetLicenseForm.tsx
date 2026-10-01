@@ -1,10 +1,13 @@
 import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { useState } from 'react';
 import * as Yup from 'yup';
+import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_LABEL_CLASS, EDIT_FORM_SELECT_CLASS, EMPTY_VALUE_CLASS } from "../../contants/EditFormConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { getAllLicensesIds, licenseMapping } from "../../lib/licenseMapping";
 import { UserDetailsResponse, canEditDataset } from "../../lib/users";
 import { GetDatasetDetailsResponse, UpdateDatasetRequest } from "../../types/BffAPI";
+import { EditFormActions } from "./EditFormActions";
+import { TextActionButton } from "./TextActionButton";
 
 interface Props {
     dataset: GetDatasetDetailsResponse
@@ -54,7 +57,7 @@ export default function DatasetLicenseForm(props: Props) {
     }
 
     function EditButton() {
-        return <button className={`${(editing || !canEdit) && "hidden"} btn-primary-outline btn-small h-8 w-16`} onClick={handleEditClick}>Edit</button>
+        return <TextActionButton hidden={editing || !canEdit} className="flex-none" onClick={handleEditClick}>Edit</TextActionButton>
     }
 
     if (editing || props.alwaysEdition) {
@@ -65,50 +68,46 @@ export default function DatasetLicenseForm(props: Props) {
                 onSubmit={onSubmit}
             >
                 {({ isSubmitting, values, setFieldTouched }) => (
-                    <Form>
-                        <div className="flex flex-row items-center">
-                            <div className="w-full h-12">
-                                <Field
-                                    type="text"
-                                    id="license"
-                                    name="license"
-                                    className="invalid:border-error-500"
-                                    as="select"
-                                >
-                                    {getAllLicensesIds().map((lic, i) => {
-                                        return <option key={i} value={lic}>{licenseMapping[lic]}</option>
-                                    })}
-                                </Field>
+                    <Form className="w-full">
+                        <div className="max-w-md">
+                            <label htmlFor="license" className={EDIT_FORM_LABEL_CLASS}>License</label>
+                            <Field
+                                type="text"
+                                id="license"
+                                name="license"
+                                className={EDIT_FORM_SELECT_CLASS}
+                                as="select"
+                            >
+                                {getAllLicensesIds().map((lic, i) => {
+                                    return <option key={i} value={lic}>{licenseMapping[lic]}</option>
+                                })}
+                            </Field>
 
-                                <ErrorMessage
-                                    name="license"
-                                    component="div"
-                                    className="text-xs text-error-600"
-                                />
-                            </div>
-                            <div className="flex w-64 h-10 gap-2 pl-4">
-                                <button type="button" className="btn-primary-outline btn-small" onClick={handleCancelClick}>Cancel</button>
-                                <button type="submit" className="btn-primary btn-small" disabled={isSubmitting}>Save</button>
-                            </div>
+                            <ErrorMessage
+                                name="license"
+                                component="div"
+                                className={EDIT_FORM_ERROR_CLASS}
+                            />
                         </div>
+                        <EditFormActions onCancel={handleCancelClick} isSubmitting={isSubmitting} />
                     </Form>
                 )}
             </Formik>
         );
     } else if (props.dataset.data.license) {
         // Print the license information
-        return <div className="flex flex-row w-full items-center">
-            <p className="text-primary-500 w-full">
+        return <div className="flex flex-row w-full items-start justify-between gap-4">
+            <span className="w-full text-primary-900">
                 {licenseMapping[props.dataset.data.license]}
-            </p>
+            </span>
             <EditButton />
         </div>
     }
 
     // when no license is informed
     return (
-        <div className="flex flex-row w-full items-center">
-            <p className="text-primary-500 italic w-full">
+        <div className="flex flex-row w-full items-start justify-between gap-4">
+            <p className={`${EMPTY_VALUE_CLASS} w-full`}>
                 Informe a license for your dataset
             </p>
             <EditButton />

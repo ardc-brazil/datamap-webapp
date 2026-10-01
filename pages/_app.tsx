@@ -3,6 +3,7 @@ import "../styles/globals.css";
 import { Session } from "next-auth";
 import { SessionProvider, useSession } from "next-auth/react";
 import type { AppProps } from "next/app";
+import { Inter } from "next/font/google";
 import Router, { useRouter } from 'next/router';
 import { useReportWebVitals } from "next/web-vitals";
 import { useEffect } from "react";
@@ -23,6 +24,8 @@ interface CustomAppProps {
   pageProps: AppProps<{ session: Session }>["pageProps"]
 }
 
+const inter = Inter({ subsets: ["latin"], display: "swap" });
+
 // Use of the <SessionProvider> is mandatory to allow components that call
 // `useSession()` anywhere in your application to access the `session` object.
 export default function App({
@@ -33,6 +36,11 @@ export default function App({
 
   return (
     <SessionProvider session={session}  >
+      <style jsx global>{`
+        :root {
+          --font-inter: ${inter.style.fontFamily};
+        }
+      `}</style>
       {Component.auth ? (
         <Auth authContext={Component.auth}>
           <Component {...pageProps} />

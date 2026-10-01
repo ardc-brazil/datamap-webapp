@@ -1,7 +1,7 @@
 export function ViewMoreOrLessButton(props) {
   return (
     <button
-      className="btn-primary-outline btn-small whitespace-nowrap rounded-3xl border-0"
+      className="mt-2 inline-flex items-center whitespace-nowrap text-[13px] font-medium text-primary-600 hover:text-primary-900 transition-colors"
       onClick={props.toggleView}
     >
       <svg

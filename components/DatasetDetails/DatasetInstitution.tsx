@@ -1,9 +1,12 @@
 import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { useState } from 'react';
 import * as Yup from 'yup';
+import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_INPUT_CLASS } from "../../contants/EditFormConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { UserDetailsResponse, canEditDataset } from "../../lib/users";
 import { GetDatasetDetailsResponse, UpdateDatasetRequest } from "../../types/BffAPI";
+import { EditFormActions } from "./EditFormActions";
+import { TextActionButton } from "./TextActionButton";
 
 interface Props {
     dataset: GetDatasetDetailsResponse
@@ -53,7 +56,7 @@ export default function DatasetInstitution(props: Props) {
     }
 
     function EditButton() {
-        return <button className={`${!canEdit && "hidden"} text-primary-400 hover:text-primary-500 underline pl-2`} onClick={handleEditClick}>Edit</button>
+        return <TextActionButton hidden={!canEdit} className="pl-2" onClick={handleEditClick}>Edit</TextActionButton>
     }
 
     // in edition mode
@@ -66,27 +69,24 @@ export default function DatasetInstitution(props: Props) {
                 onSubmit={onSubmit}
             >
                 {({ isSubmitting, values, setFieldTouched }) => (
-                    <Form>
-                        <div className="flex flex-row items-center">
-                            <div className="w-full h-12">
+                    <Form className="basis-full w-full max-w-2xl">
+                        <div className="flex flex-row flex-wrap items-start gap-2">
+                            <div className="min-w-0 flex-1 sm:min-w-[22rem]">
                                 <Field
                                     type="text"
                                     id="institution"
                                     name="institution"
+                                    aria-label="Institution"
                                     placeholder="What is the institution owner of this dataset?"
-                                    className="invalid:border-error-500"
-
+                                    className={EDIT_FORM_INPUT_CLASS.replace("h-10", "h-9")}
                                 />
                                 <ErrorMessage
                                     name="institution"
                                     component="div"
-                                    className="text-xs text-error-600"
+                                    className={EDIT_FORM_ERROR_CLASS}
                                 />
                             </div>
-                            <div className="flex w-64 h-10 gap-2 pl-4">
-                                <button type="button" className="btn-primary-outline btn-small" onClick={handleCancelClick}>Cancel</button>
-                                <button type="submit" className="btn-primary btn-small" disabled={isSubmitting}>Save</button>
-                            </div>
+                            <EditFormActions className="flex flex-none gap-2" onCancel={handleCancelClick} isSubmitting={isSubmitting} />
                         </div>
                     </Form>
                 )}
@@ -94,17 +94,17 @@ export default function DatasetInstitution(props: Props) {
         );
     } else if (props.dataset.data.institution) {
         // Print the institution information
-        return <p className="text-primary-500">
+        return <span>
             {props.dataset.data.institution}
             <EditButton />
-        </p>
+        </span>
     } else {
 
         // when no institution is informed
         return (
-            <p className="text-primary-500">
+            <span className="text-primary-500">
                 Add a institution <EditButton />
-            </p>
+            </span>
         );
     }
 }

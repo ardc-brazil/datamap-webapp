@@ -5,6 +5,7 @@ import { Tab } from "./Tab";
 interface TabsProps extends Props {
   onTabChanged?(tabId: number): void;
   className?: string;
+  headerClassName?: string;
   defaultSelectedIndex?: number;
 }
 export function Tabs(props: TabsProps) {
@@ -21,8 +22,8 @@ export function Tabs(props: TabsProps) {
 
   return (
     <div>
-      <div className="text-sm font-medium text-center border-b border-primary-300">
-        <ul className="flex flex-wrap -mb-px">
+      <div className={`border-b border-primary-200 ${props.headerClassName ?? ""}`}>
+        <ul className="flex flex-wrap gap-6 -mb-px">
           {React.Children.map(props.children, (child: any, index) => {
             return (
               <Tab

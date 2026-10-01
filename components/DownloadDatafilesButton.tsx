@@ -1,5 +1,6 @@
 import { TabPanel } from "./DatasetDetails/TabPanel";
 import { Tabs } from "./DatasetDetails/Tabs";
+import { MaterialSymbol } from "react-material-symbols";
 import useComponentVisible from "../hooks/UseComponentVisible";
 
 export function DownloadDatafilesButton(props: any) {
@@ -32,15 +33,15 @@ export function DownloadDatafilesButton(props: any) {
   }
 
   return (
-    <div className="relative w-96 flex justify-end">
-      <button type="button" className="btn-primary whitespace-nowrap" onClick={handleDataFilesButtonClick}
+    <div className="relative flex justify-end">
+      <button type="button" className="inline-flex items-center gap-2 h-[38px] px-3.5 rounded-md bg-primary-900 text-primary-50 text-sm font-semibold whitespace-nowrap hover:bg-primary-800 transition-colors disabled:opacity-50" onClick={handleDataFilesButtonClick}
         disabled={!props.dataset.dataFiles || props.dataset.dataFiles?.length <= 0}>
-        Data Files &#x290B;
-
+        <MaterialSymbol icon="download" size={18} grade={-25} weight={400} />
+        Data files
       </button>
 
-      <div ref={ref} className={`${!isComponentVisible && "hidden"} absolute top-12 bg-primary-50 w-full border border-primary-200 shadow-sm shadow-primary-300 rounded-md`}>
-        <Tabs className="px-4 pb-4">
+      <div ref={ref} className={`${!isComponentVisible && "hidden"} absolute top-12 right-0 z-10 bg-primary-0 w-96 border border-primary-200 shadow-sm rounded-lg pt-3`}>
+        <Tabs className="px-4 pb-4" headerClassName="px-4">
           <TabPanel title="Remote files">
             <div className="text-left">
               <p className="text-sm">You can copy the dataset folder directly from the server.</p>

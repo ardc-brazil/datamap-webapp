@@ -7,9 +7,9 @@ export function FilterCriteria(props) {
   var content = buildContentFrom(props.criteria, props.onCriteriaChanged, props.lastSearchParameterDeselected);
 
   return (
-    <div className="grid grid-cols-1 py-2">
-      <div className="mb-2 max-h-56 overflow-y-auto">
-        <p className="pb-2 font-bold text-sm">{props.criteria.title}</p>
+    <div className="flex flex-col">
+      <div className="max-h-56 overflow-y-auto">
+        <p className="m-0 mb-1.5 text-[13px] leading-[18px] font-semibold text-primary-900">{props.criteria.title}</p>
         {content}
       </div>
     </div>

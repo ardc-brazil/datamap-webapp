@@ -1,11 +1,13 @@
 import { ArrayHelpers, ErrorMessage, Field, FieldArray, Form, Formik } from 'formik';
 import { useState } from 'react';
 import * as Yup from 'yup';
+import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_HINT_CLASS, EDIT_FORM_INPUT_CLASS, EDIT_FORM_LABEL_CLASS, EDIT_FORM_SELECT_CLASS, EMPTY_VALUE_CLASS } from "../../contants/EditFormConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { UserDetailsResponse, canEditDataset } from "../../lib/users";
 import { GetDatasetDetailsResponse, UpdateDatasetRequest } from "../../types/BffAPI";
 import CloseButton from '../base/CloseButton';
-import { CardItem } from "./CardItem";
+import { EditFormActions } from "./EditFormActions";
+import { TextActionButton } from "./TextActionButton";
 
 interface Props {
     dataset: GetDatasetDetailsResponse
@@ -63,7 +65,7 @@ export default function DatasetColaboratorsForm(props: Props) {
     }
 
     function EditButton() {
-        return <button className={`${(editing || !canEdit) && "hidden"} btn-primary-outline btn-small h-8 w-16`} onClick={handleEditClick}>Edit</button>
+        return <TextActionButton hidden={editing || !canEdit} className="flex-none" onClick={handleEditClick}>Edit</TextActionButton>
     }
 
     function getPermissionDescription(permission: string) {
@@ -89,101 +91,91 @@ export default function DatasetColaboratorsForm(props: Props) {
                 onSubmit={onSubmit}
             >
                 {({ isSubmitting, values }) => (
-                    <Form>
-                        <div className="flex flex-row items-center">
-                            <div className="w-full">
-                                <FieldArray name="colaborators">
-                                    {(arrayHelpers: ArrayHelpers) => {
-                                        return (
-                                            <div className="flex">
-                                                <div className="w-full">
-                                                    <p className="text-primary-500 italic w-full">
-                                                        {infoText}
-                                                    </p>
+                    <Form className="w-full">
+                        <FieldArray name="colaborators">
+                            {(arrayHelpers: ArrayHelpers) => {
+                                return (
+                                    <div className="w-full">
+                                        <p className={EDIT_FORM_HINT_CLASS}>
+                                            {infoText}
+                                        </p>
 
-                                                    {values.colaborators?.length > 0 &&
-                                                        values.colaborators.map((item: any, index: number) => {
-                                                            return (
-                                                                <div className="py-2" key={index}>
+                                        <div className="flex flex-col gap-3 pt-3">
+                                            {values.colaborators?.length > 0 &&
+                                                values.colaborators.map((item: any, index: number) => {
+                                                    return (
+                                                        <div className="flex items-start gap-2" key={index}>
+                                                            <div className="min-w-0 flex-1">
+                                                                <label htmlFor={`colaborators.${index}.name`} className={EDIT_FORM_LABEL_CLASS}>Name</label>
+                                                                <Field
+                                                                    id={`colaborators.${index}.name`}
+                                                                    name={`colaborators.${index}.name`}
+                                                                    className={EDIT_FORM_INPUT_CLASS}
+                                                                    placeholder="Informe a name for a colaborator"
+                                                                />
+                                                                <ErrorMessage
+                                                                    name={`colaborators.${index}.name`}
+                                                                    component="div"
+                                                                    className={EDIT_FORM_ERROR_CLASS}
+                                                                />
+                                                            </div>
+                                                            <div className="w-36 flex-none">
+                                                                <label htmlFor={`colaborators.${index}.permission`} className={EDIT_FORM_LABEL_CLASS}>Permission</label>
+                                                                <Field
+                                                                    type="text"
+                                                                    id={`colaborators.${index}.permission`}
+                                                                    name={`colaborators.${index}.permission`}
+                                                                    className={EDIT_FORM_SELECT_CLASS}
+                                                                    as="select"
+                                                                >
+                                                                    <option value="">Select</option>
+                                                                    <option value="owner">Owner</option>
+                                                                    <option value="can_view">Can view</option>
+                                                                    <option value="can_edit">Can edit</option>
+                                                                </Field>
+                                                                <ErrorMessage
+                                                                    name={`colaborators.${index}.permission`}
+                                                                    component="div"
+                                                                    className={EDIT_FORM_ERROR_CLASS}
+                                                                />
+                                                            </div>
+                                                            <div className="pt-[26px]">
+                                                                <CloseButton label="Remove collaborator" onClick={() => arrayHelpers.remove(index)} />
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                })
+                                            }
+                                        </div>
 
-                                                                    <div className="flex items-center gap-2">
-                                                                        <div className="w-full">
-                                                                            <label htmlFor={`colaborators.${index}.name`}>Name</label>
-                                                                            <Field
-                                                                                id={`colaborators.${index}.name`}
-                                                                                name={`colaborators.${index}.name`}
-                                                                                className="invalid:border-error-500 border"
-                                                                                placeholder="Informe a name for a colaborator"
-                                                                            />
-                                                                            <ErrorMessage
-                                                                                name={`colaborators.${index}.name`}
-                                                                                component="div"
-                                                                                className="text-xs text-error-600"
-                                                                            />
-                                                                        </div>
-                                                                        <div className="mx-4 w-36">
-                                                                            <label htmlFor={`colaborators.${index}.name`}>Permission</label>
-                                                                            <Field
-                                                                                type="text"
-                                                                                id={`colaborators.${index}.permission`}
-                                                                                name={`colaborators.${index}.permission`}
-                                                                                className="invalid:border-error-500"
-                                                                                as="select"
-                                                                            >
-                                                                                <option value="">Select</option>
-                                                                                <option value="owner">Owner</option>
-                                                                                <option value="can_view">Can view</option>
-                                                                                <option value="can_edit">Can edit</option>
-                                                                            </Field>
-                                                                            <ErrorMessage
-                                                                                name={`colaborators.${index}.permission`}
-                                                                                component="div"
-                                                                                className="text-xs text-error-600"
-                                                                            />
-                                                                        </div>
-                                                                        <div className="flex items-center justify-center w-16">
-                                                                            <CloseButton onClick={() => arrayHelpers.remove(index)} />
-                                                                        </div>
-                                                                    </div>
+                                        <button type="button" className="mt-3 text-[13px] font-semibold text-primary-700 hover:text-primary-900" onClick={() => arrayHelpers.push({})}>+ Add collaborator</button>
 
-
-                                                                </div>
-                                                            )
-                                                        })
-                                                    }
-
-                                                    <button type="button" onClick={() => arrayHelpers.push({})}>+ Add Colaborator</button>
-
-                                                </div>
-                                                <div className="flex w-64 h-10 gap-2 pl-4">
-                                                    <button type="button" className="btn-primary-outline btn-small" onClick={handleCancelClick}>Cancel</button>
-                                                    <button type="submit" className="btn-primary btn-small" disabled={isSubmitting}>Save</button>
-                                                </div>
-                                            </div>
-                                        )
-                                    }}
-                                </FieldArray>
-                            </div>
-                        </div>
+                                        <EditFormActions onCancel={handleCancelClick} isSubmitting={isSubmitting} />
+                                    </div>
+                                )
+                            }}
+                        </FieldArray>
                     </Form>
                 )}
             </Formik>
         );
     } else if (props?.dataset?.data?.colaborators?.length > 0) {
         // Print the license information
-        return <div className="flex flex-row w-full items-center">
-            <div className="text-primary-500 w-full">
+        return <div className="flex flex-row w-full items-start justify-between gap-4">
+            <ul className="w-full flex flex-col gap-1 text-primary-900">
                 {props?.dataset?.data?.colaborators?.map((person, index) =>
-                    <CardItem key={index} title="Colaborator Name" className="py-2">{`${person.name} ${getPermissionDescription(person.permission)}`}</CardItem>)}
-            </div>
+                    <li key={index}>
+                        {person.name} <span className="text-primary-500">{getPermissionDescription(person.permission)}</span>
+                    </li>)}
+            </ul>
             <EditButton />
         </div>
     }
 
     // when no license is informed
     return (
-        <div className="flex flex-row w-full items-center">
-            <p className="text-primary-500 italic w-full">
+        <div className="flex flex-row w-full items-start justify-between gap-4">
+            <p className={`${EMPTY_VALUE_CLASS} w-full`}>
                 {infoText}
             </p>
             <EditButton />
