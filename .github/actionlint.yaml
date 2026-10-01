@@ -1,0 +1,4 @@
+# The deploy runs on the production host, which carries this label.
+self-hosted-runner:
+  labels:
+    - production

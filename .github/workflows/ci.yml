@@ -52,9 +52,10 @@ jobs:
       cancel-in-progress: false
 
     env:
-      # Absolute: the runner checks out into its own workspace, so the
-      # `../environment/...` used by hand does not resolve here.
-      ENV_FILE_PATH: ${{ vars.ENVIRONMENT_DIR || '/home/datamap/environment' }}/frontend.prod.env
+      # ENV_FILE_PATH is exported by the decrypt step below, from runner.temp,
+      # which does not exist in a job's env context. A step running before it
+      # fails on an empty path rather than reading some other file.
+      #
       # Must match the project the running container belongs to.
       COMPOSE_PROJECT_NAME: datamap-webapp
 
@@ -63,6 +64,24 @@ jobs:
 
       - name: Show what is being deployed
         run: git log --oneline -1
+
+      - name: Install the pinned sops
+        run: bash scripts/install_sops.sh
+
+      # --input-type: sops infers the format from the extension, and `.env.sops`
+      # is not one it knows. umask first, not chmod after: creating the file
+      # readable leaves a window.
+      - name: Decrypt the environment
+        run: |
+          umask 077
+          mkdir -p "$RUNNER_TEMP/env"
+          "$HOME/bin/sops" --decrypt --input-type dotenv --output-type dotenv \
+            secrets/production/frontend.env.sops \
+            > "$RUNNER_TEMP/env/frontend.env"
+          ls -l "$RUNNER_TEMP/env/frontend.env"
+          echo "ENV_FILE_PATH=$RUNNER_TEMP/env/frontend.env" >> "$GITHUB_ENV"
+        env:
+          SOPS_AGE_KEY_FILE: /home/datamap/.config/sops/age/keys.txt
 
       # `docker compose down` deletes the container along with its log file, so
       # without this every deploy erases the evidence of whatever it is fixing.
@@ -95,6 +114,12 @@ jobs:
       - name: Container status
         if: always()
         run: docker ps --filter "name=datamap_frontend" --format "table {{.Names}}\t{{.Status}}"
+
+      # Always, including after a failure: the runner's temp directory outlives
+      # a failed job long enough to matter.
+      - name: Remove the decrypted environment
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/env"
 
       - name: Logs on failure
         if: failure()
