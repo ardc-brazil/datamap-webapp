@@ -10,11 +10,23 @@ const UUID = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$
 const NUMBER = /^\d+$/;
 const TIMEOUT_CODES = new Set(["ECONNABORTED", "ETIMEDOUT"]);
 
-// secrets.token_urlsafe(32) tokens, not ids: one segment per resource, literals excepted.
+// secrets.token_urlsafe(32) tokens, not ids: one top-level route, literals excepted.
+// Anchored so a nested route sharing the resource name (e.g. /users/{id}/invitations/claim)
+// is never touched, regardless of an /api or /api/vN prefix.
 const TOP_LEVEL_TOKEN_LITERALS: Record<string, Set<string>> = {
   invitations: new Set(["accept"]),
   anonymous: new Set(),
 };
+
+export function maskPathTokens(path: string): string {
+  for (const [resource, literals] of Object.entries(TOP_LEVEL_TOKEN_LITERALS)) {
+    const match = path.match(new RegExp(`^((?:/api(?:/v\\d+)?)?/${resource}/)([^/?]+)`, "i"));
+    if (match && !literals.has(match[2])) {
+      return path.slice(0, match[1].length) + "{token}" + path.slice(match[1].length + match[2].length);
+    }
+  }
+  return path;
+}
 
 export function operationOf(method: string | undefined, url: string | undefined): string {
   let path = (url ?? "").split("?")[0];
@@ -23,6 +35,7 @@ export function operationOf(method: string | undefined, url: string | undefined)
   } catch {
     // Relative to the axios baseURL, which is what it usually is.
   }
+  path = maskPathTokens(path);
 
   const segments = path.split("/");
   const templated = segments.map((segment, index) => {
@@ -32,9 +45,8 @@ export function operationOf(method: string | undefined, url: string | undefined)
     if (segments[index - 1] === "providers" && segments[index - 2] === "users") {
       return "{provider}";
     }
-    const parent = segments[index - 1];
-    if (index === 2 && parent in TOP_LEVEL_TOKEN_LITERALS && !TOP_LEVEL_TOKEN_LITERALS[parent].has(segment)) {
-      return "{token}";
+    if (segment === "{token}") {
+      return segment;
     }
     if (UUID.test(segment)) {
       return "{id}";

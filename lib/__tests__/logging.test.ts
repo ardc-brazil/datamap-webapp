@@ -106,6 +106,56 @@ describe("an axios failure", () => {
     expect(JSON.stringify(described)).not.toContain('"s"');
   });
 
+  it("masks an invitation token in the url, which is a credential too", () => {
+    const error = {
+      isAxiosError: true,
+      message: "Request failed",
+      config: { url: "/api/v1/invitations/AbC123-_xyz", method: "get" },
+    };
+
+    const described = describeError(error) as Record<string, unknown>;
+
+    expect(described.url).toMatch(/\/invitations\/\{token\}$/);
+    expect(JSON.stringify(described)).not.toContain("AbC123-_xyz");
+  });
+
+  it("masks an anonymous link token in the url", () => {
+    const error = {
+      isAxiosError: true,
+      message: "Request failed",
+      config: { url: "/api/v1/anonymous/AbC123-_xyz", method: "get" },
+    };
+
+    const described = describeError(error) as Record<string, unknown>;
+
+    expect(described.url).toMatch(/\/anonymous\/\{token\}$/);
+    expect(JSON.stringify(described)).not.toContain("AbC123-_xyz");
+  });
+
+  it("keeps the invitations/accept url literal", () => {
+    const error = {
+      isAxiosError: true,
+      message: "Request failed",
+      config: { url: "/invitations/accept", method: "post" },
+    };
+
+    const described = describeError(error) as Record<string, unknown>;
+
+    expect(described.url).toBe("/invitations/accept");
+  });
+
+  it("leaves an unrelated url with a UUID untouched", () => {
+    const error = {
+      isAxiosError: true,
+      message: "Request failed",
+      config: { url: "/datasets/7a9b5d5e-fa6d-4c18-a42c-34f28f1b2c3d", method: "get" },
+    };
+
+    const described = describeError(error) as Record<string, unknown>;
+
+    expect(described.url).toBe("/datasets/7a9b5d5e-fa6d-4c18-a42c-34f28f1b2c3d");
+  });
+
   it("logs as an error line with the fields worth querying", async () => {
     const error = await anAxiosError();
 

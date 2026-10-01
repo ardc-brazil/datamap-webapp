@@ -1,5 +1,6 @@
 // Server-side only: imports `requestContext`, which the browser cannot bundle.
 
+import { maskPathTokens } from "./externalCalls";
 import { currentRequestId } from "./requestContext";
 
 export { currentRequestId, withRequestId } from "./requestContext";
@@ -44,12 +45,13 @@ export function describeError(error: unknown): Record<string, unknown> {
   };
 
   if (candidate.isAxiosError) {
+    const url = candidate.config?.url;
     return {
       message: candidate.message,
       code: candidate.code,
       status: candidate.response?.status,
       method: candidate.config?.method,
-      url: candidate.config?.url,
+      url: url === undefined ? undefined : maskPathTokens(url),
     };
   }
 
