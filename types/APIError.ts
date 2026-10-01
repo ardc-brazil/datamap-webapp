@@ -1,4 +1,4 @@
-export type HttpCode = 200 | 300 | 400 | 401 | 404 | 500;
+export type HttpCode = 200 | 300 | 400 | 401 | 403 | 404 | 409 | 500;
 
 export interface ErrorDetails {
     code: string,

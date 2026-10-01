@@ -132,6 +132,20 @@ export function httpErrorHandler(error) {
           true,
           response?.data?.errors
         )
+      } else if (statusCode === 403) {
+        handledError = new APIError(
+          "FORBIDDEN",
+          HttpStatusCode.Forbidden,
+          "user not allowed to perform the operation",
+          true
+        )
+      } else if (statusCode === 409) {
+        handledError = new APIError(
+          "CONFLICT",
+          HttpStatusCode.Conflict,
+          response?.data?.detail,
+          true
+        )
       }
     } else if (request) {
       //The request was made but no response was received, 
