@@ -1,13 +1,15 @@
 import { ArrayHelpers, ErrorMessage, Field, FieldArray, Form, Formik } from 'formik';
 import { useState } from 'react';
 import * as Yup from 'yup';
-import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_HINT_CLASS, EDIT_FORM_INPUT_CLASS, EDIT_FORM_LABEL_CLASS, EDIT_FORM_SELECT_CLASS, EMPTY_VALUE_CLASS } from "../../contants/EditFormConstants";
+import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_HINT_CLASS, EDIT_FORM_INPUT_CLASS, EDIT_FORM_LABEL_CLASS, EMPTY_VALUE_CLASS } from "../../contants/EditFormConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { UserDetailsResponse, canEditDataset } from "../../lib/users";
 import { GetDatasetDetailsResponse, UpdateDatasetRequest } from "../../types/BffAPI";
 import CloseButton from '../base/CloseButton';
 import { EditFormActions } from "./EditFormActions";
 import { TextActionButton } from "./TextActionButton";
+
+export const CONTRIBUTORS_ACCESS_NOTE = "Listing someone here credits them; it does not give them access. To give someone access to this dataset, use Share.";
 
 interface Props {
     dataset: GetDatasetDetailsResponse
@@ -36,7 +38,6 @@ export default function DatasetColaboratorsForm(props: Props) {
                     name: Yup.string()
                         .max(255, "Name should be less than 255 characters")
                         .required("Name is required."),
-                    permission: Yup.string().required("Select one")
                 })
             )
     });
@@ -68,19 +69,6 @@ export default function DatasetColaboratorsForm(props: Props) {
         return <TextActionButton hidden={editing || !canEdit} className="flex-none" onClick={handleEditClick}>Edit</TextActionButton>
     }
 
-    function getPermissionDescription(permission: string) {
-        if (permission === "owner") {
-            return "(Owner)";
-        } else if (permission === "can_view") {
-            return "(Viewer)";
-        } else if (permission === "can_edit") {
-            return "(Editor)";
-        }
-
-        return "";
-    }
-
-
     if (editing || props.alwaysEdition) {
         return (
             <Formik
@@ -99,6 +87,9 @@ export default function DatasetColaboratorsForm(props: Props) {
                                         <p className={EDIT_FORM_HINT_CLASS}>
                                             {infoText}
                                         </p>
+                                        <p className={EDIT_FORM_HINT_CLASS}>
+                                            {CONTRIBUTORS_ACCESS_NOTE}
+                                        </p>
 
                                         <div className="flex flex-col gap-3 pt-3">
                                             {values.colaborators?.length > 0 &&
@@ -111,30 +102,10 @@ export default function DatasetColaboratorsForm(props: Props) {
                                                                     id={`colaborators.${index}.name`}
                                                                     name={`colaborators.${index}.name`}
                                                                     className={EDIT_FORM_INPUT_CLASS}
-                                                                    placeholder="Informe a name for a colaborator"
+                                                                    placeholder="Name of a contributor"
                                                                 />
                                                                 <ErrorMessage
                                                                     name={`colaborators.${index}.name`}
-                                                                    component="div"
-                                                                    className={EDIT_FORM_ERROR_CLASS}
-                                                                />
-                                                            </div>
-                                                            <div className="w-36 flex-none">
-                                                                <label htmlFor={`colaborators.${index}.permission`} className={EDIT_FORM_LABEL_CLASS}>Permission</label>
-                                                                <Field
-                                                                    type="text"
-                                                                    id={`colaborators.${index}.permission`}
-                                                                    name={`colaborators.${index}.permission`}
-                                                                    className={EDIT_FORM_SELECT_CLASS}
-                                                                    as="select"
-                                                                >
-                                                                    <option value="">Select</option>
-                                                                    <option value="owner">Owner</option>
-                                                                    <option value="can_view">Can view</option>
-                                                                    <option value="can_edit">Can edit</option>
-                                                                </Field>
-                                                                <ErrorMessage
-                                                                    name={`colaborators.${index}.permission`}
                                                                     component="div"
                                                                     className={EDIT_FORM_ERROR_CLASS}
                                                                 />
@@ -165,7 +136,7 @@ export default function DatasetColaboratorsForm(props: Props) {
             <ul className="w-full flex flex-col gap-1 text-primary-900">
                 {props?.dataset?.data?.colaborators?.map((person, index) =>
                     <li key={index}>
-                        {person.name} <span className="text-primary-500">{getPermissionDescription(person.permission)}</span>
+                        {person.name}
                     </li>)}
             </ul>
             <EditButton />
