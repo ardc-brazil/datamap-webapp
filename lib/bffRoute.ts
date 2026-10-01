@@ -12,7 +12,10 @@ export function bffHandler(router: ReturnType<typeof bffRouter>) {
     return router.handler({
         onError: (err: ResponseError, req, res) => {
             const e = httpErrorHandler(err);
-            res.status(e.httpCode).json(e);
+            res.status(e.httpCode).json({ name: e.name, httpCode: e.httpCode, detail: e.detail ?? e.message, errors: e.errors });
+        },
+        onNoMatch: (req, res) => {
+            res.status(405).end(`Method ${req.method} not allowed`);
         },
     });
 }

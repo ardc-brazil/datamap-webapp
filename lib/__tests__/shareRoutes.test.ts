@@ -2,10 +2,17 @@ jest.mock("next-auth/jwt", () => ({ getToken: jest.fn(async () => ({ uid: "u1" }
 jest.mock("../share");
 
 import { AxiosError, AxiosHeaders } from "axios";
+import { getToken } from "next-auth/jwt";
 import shareHandler from "../../pages/api/datasets/[datasetId]/share/index";
 import permissionHandler from "../../pages/api/datasets/[datasetId]/share/permissions/[userId]";
 import acceptHandler from "../../pages/api/invitations/accept";
 import { acceptInvitation, getShareState, grantAccess, revokePermission } from "../share";
+
+function gatekeeperError(status: number, data: unknown) {
+    return new AxiosError("gatekeeper", "ERR", undefined, {}, {
+        status, data, statusText: "", headers: {}, config: { headers: new AxiosHeaders() },
+    } as any);
+}
 
 function fakeRes() {
     const res: any = { statusCode: 200, headers: {} };
@@ -83,5 +90,49 @@ describe("the share BFF routes", () => {
         const res = await send(acceptHandler, "POST", {}, { token: "t" });
 
         expect(res.statusCode).toBe(409);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ detail: "invitation_already_accepted" }));
+    });
+
+    test("a gatekeeper 400 with a detail passes the detail through", async () => {
+        jest.mocked(acceptInvitation).mockRejectedValue(gatekeeperError(400, { detail: "invitation_expired" }));
+
+        const res = await send(acceptHandler, "POST", {}, { token: "t" });
+
+        expect(res.statusCode).toBe(400);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ detail: "invitation_expired" }));
+    });
+
+    test("a gatekeeper 422 keeps its status and detail", async () => {
+        const detail = [{ loc: ["body", "token"], msg: "field required", type: "value_error.missing" }];
+        jest.mocked(acceptInvitation).mockRejectedValue(gatekeeperError(422, { detail }));
+
+        const res = await send(acceptHandler, "POST", {}, {});
+
+        expect(res.statusCode).toBe(422);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ detail }));
+    });
+
+    test("a gatekeeper 404 is forwarded as 404", async () => {
+        jest.mocked(getShareState).mockRejectedValue(gatekeeperError(404, { detail: "Not Found" }));
+
+        const res = await send(shareHandler, "GET", { datasetId: "missing" });
+
+        expect(res.statusCode).toBe(404);
+    });
+
+    test("an unauthenticated caller gets 401 and the gatekeeper is not called", async () => {
+        jest.mocked(getShareState).mockClear();
+        jest.mocked(getToken).mockResolvedValueOnce(null);
+
+        const res = await send(shareHandler, "GET", { datasetId: "d1" });
+
+        expect(res.statusCode).toBe(401);
+        expect(getShareState).not.toHaveBeenCalled();
+    });
+
+    test("an unsupported method answers 405", async () => {
+        const res = await send(acceptHandler, "GET", {});
+
+        expect(res.statusCode).toBe(405);
     });
 });
