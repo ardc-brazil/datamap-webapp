@@ -79,6 +79,8 @@ interface Resolution {
 export interface DOICreationRequest {
     mode: string
     tenancy: string
+    identifier?: string
+    end_embargo?: boolean
 }
 
 export interface DOIUpdateRequest {

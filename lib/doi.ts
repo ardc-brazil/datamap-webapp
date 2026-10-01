@@ -16,6 +16,7 @@ export async function createDOI(context: AppLocalContext, req: CreateDOIRequest)
         mode: req.mode,
         identifier: req.identifier,
         tenancy: context.tenancy,
+        ...(req.endEmbargo ? { end_embargo: true } : {}),
     } as DOICreationRequest;
 
 

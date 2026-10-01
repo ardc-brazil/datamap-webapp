@@ -289,6 +289,7 @@ export interface CreateDOIRequest {
     versionName: string
     identifier?: string
     mode: string
+    endEmbargo?: boolean
 }
 
 export interface CreateDOIResponse {
