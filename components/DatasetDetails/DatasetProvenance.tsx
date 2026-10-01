@@ -19,7 +19,7 @@ export default function DatasetProvenance(props: Props) {
     const bffGateway = new BFFAPI();
     const infoText = "Add provenance information from your dataset.";
     const [editing, setEditing] = useState(false);
-    const canEdit = canEditDataset(props.user);
+    const canEdit = canEditDataset(props.user, props.dataset);
 
     function handleEditClick(event): void {
         setEditing(true);

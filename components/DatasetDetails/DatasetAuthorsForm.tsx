@@ -19,7 +19,7 @@ export default function DatasetAuthorsForm(props: Props) {
     const bffGateway = new BFFAPI();
     const infoText = "Credit people who helped create the data.";
     const [editing, setEditing] = useState(false);
-    const canEdit = canEditDataset(props.user);
+    const canEdit = canEditDataset(props.user, props.dataset);
 
     function handleEditClick(event): void {
         setEditing(true);

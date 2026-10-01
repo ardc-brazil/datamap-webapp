@@ -19,7 +19,7 @@ export default function DatasetColaboratorsForm(props: Props) {
     const bffGateway = new BFFAPI();
     const infoText = "Add collaborators who are responsible for maintaining the dataset including being available for questions from users.";
     const [editing, setEditing] = useState(false);
-    const canEdit = canEditDataset(props.user);
+    const canEdit = canEditDataset(props.user, props.dataset);
 
     function handleEditClick(event): void {
         setEditing(true);
