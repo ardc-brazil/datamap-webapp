@@ -2,6 +2,7 @@ import Link from "next/link";
 import Router from "next/router";
 import LoggedLayout from "../../../components/LoggedLayout";
 
+import { SIGN_OUT_CALLBACK_URL } from "../../../lib/authRoutes";
 import { signOut, useSession } from "next-auth/react";
 import { MaterialSymbol } from "react-material-symbols";
 import { useTenancyStore } from "../../../components/TenancyStore";
@@ -14,13 +15,11 @@ export default function ProfilePage(props) {
   const tenancySelected = useTenancyStore((state) => state.tenancySelected)
 
   function clickSignOut() {
-    signOut().then((value) => {
-      Router.push("/");
-    });
+    signOut({ callbackUrl: SIGN_OUT_CALLBACK_URL });
   }
 
   if (props.error) {
-    Router.push(ROUTE_PAGE_ERROR(props.error));
+    Router.replace(ROUTE_PAGE_ERROR(props.error));
     return <></>
   }
 

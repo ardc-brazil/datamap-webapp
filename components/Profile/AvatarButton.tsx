@@ -1,3 +1,4 @@
+import { SIGN_OUT_CALLBACK_URL } from "../../lib/authRoutes";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import Router from "next/router";
@@ -24,9 +25,7 @@ export default function AvatarButton(props) {
   }, []);
 
   function clickSignOut() {
-    signOut().then((value) => {
-      Router.push("/");
-    });
+    signOut({ callbackUrl: SIGN_OUT_CALLBACK_URL });
   }
 
   function onError(currentTarget) {

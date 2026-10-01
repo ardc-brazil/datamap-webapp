@@ -9,6 +9,7 @@ import { useReportWebVitals } from "next/web-vitals";
 import { useEffect } from "react";
 import 'react-material-symbols/outlined';
 import { useTenancyStore } from "../components/TenancyStore";
+import { loginUrlFor } from "../lib/authRoutes";
 import { reportWebVital, setCurrentPage, startTelemetry, trackPageView } from "../lib/telemetryClient";
 
 interface CustomAppProps {
@@ -82,7 +83,7 @@ function Auth({ authContext, children }) {
   const { status } = useSession({
     required: true,
     onUnauthenticated() {
-      Router.push("/account/login?error=SessionRequired&callbackUrl=" + router.pathname);
+      Router.replace(loginUrlFor(router.asPath));
     },
   })
 

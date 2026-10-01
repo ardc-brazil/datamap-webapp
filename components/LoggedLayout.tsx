@@ -33,7 +33,7 @@ export default function LoggedLayour(props: Props) {
 
   // If no tenancy selected, request to select one
   if (!isTenancySelected()) {
-    Router.push(ROUTE_PAGE_TENANCY_SELECTOR);
+    Router.replace(ROUTE_PAGE_TENANCY_SELECTOR);
   }
 
   return (
