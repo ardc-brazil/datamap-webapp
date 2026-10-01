@@ -3,6 +3,20 @@ import { httpErrorHandler } from "../lib/rpc";
 import { trackUiEvent } from "../lib/telemetryClient";
 import { UserDetailsResponse } from "../lib/users";
 import { CreateDatasetRequestV2, CreateDatasetResponseV2, CreateDOIRequest, CreateDOIResponse, CreateDraftDatasetVersionRequest, CreateDraftDatasetVersionResponse, DeleteDOIRequest, FileDownloadLinkRequest, FileDownloadLinkResponse, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, NavigateDOIStatusRequest, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
+import {
+    AcceptInvitationResponse,
+    CreatedAnonymousLink,
+    DatasetEmbargo,
+    EmbargoModeRequest,
+    EmbargoNoteRequest,
+    ExtendEmbargoRequest,
+    GrantRequest,
+    GrantResult,
+    PermissionLevel,
+    SetEmbargoRequest,
+    SharePermission,
+    ShareUser,
+} from "../types/GatekeeperAPI";
 
 
 /**
@@ -190,6 +204,133 @@ export class BFFAPI {
             }
         }
         catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    async setEmbargo(datasetId: string, request: SetEmbargoRequest): Promise<DatasetEmbargo> {
+        try {
+            const response = await axios.put(`/api/datasets/${datasetId}/embargo`, request);
+            trackUiEvent("embargo_set");
+            return response.data as DatasetEmbargo;
+        } catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    async extendEmbargo(datasetId: string, request: ExtendEmbargoRequest): Promise<DatasetEmbargo> {
+        try {
+            const response = await axios.post(`/api/datasets/${datasetId}/embargo/extend`, request);
+            trackUiEvent("embargo_extended");
+            return response.data as DatasetEmbargo;
+        } catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    async endEmbargo(datasetId: string): Promise<DatasetEmbargo> {
+        try {
+            const response = await axios.post(`/api/datasets/${datasetId}/embargo/end`, {});
+            return response.data as DatasetEmbargo;
+        } catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    async setEmbargoMode(datasetId: string, request: EmbargoModeRequest): Promise<DatasetEmbargo> {
+        try {
+            const response = await axios.put(`/api/datasets/${datasetId}/embargo/mode`, request);
+            return response.data as DatasetEmbargo;
+        } catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    async setEmbargoNote(datasetId: string, request: EmbargoNoteRequest): Promise<DatasetEmbargo> {
+        try {
+            const response = await axios.put(`/api/datasets/${datasetId}/embargo/note`, request);
+            return response.data as DatasetEmbargo;
+        } catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    async searchShareCandidates(datasetId: string, q: string): Promise<ShareUser[]> {
+        try {
+            const response = await axios.get(`/api/datasets/${datasetId}/share/candidates?q=${encodeURIComponent(q)}`);
+            return response.data as ShareUser[];
+        } catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    async grantAccess(datasetId: string, request: GrantRequest): Promise<GrantResult> {
+        try {
+            const response = await axios.post(`/api/datasets/${datasetId}/share`, request);
+            trackUiEvent("dataset_shared");
+            return response.data as GrantResult;
+        } catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    async changePermissionLevel(datasetId: string, userId: string, level: PermissionLevel): Promise<SharePermission> {
+        try {
+            const response = await axios.put(`/api/datasets/${datasetId}/share/permissions/${userId}`, { level });
+            return response.data as SharePermission;
+        } catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    async revokePermission(datasetId: string, userId: string): Promise<void> {
+        try {
+            await axios.delete(`/api/datasets/${datasetId}/share/permissions/${userId}`);
+        } catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    async revokeInvitation(datasetId: string, invitationId: string): Promise<void> {
+        try {
+            await axios.delete(`/api/datasets/${datasetId}/share/invitations/${invitationId}`);
+        } catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    async regenerateInvitationLink(datasetId: string, invitationId: string): Promise<{ link: string }> {
+        try {
+            const response = await axios.post(`/api/datasets/${datasetId}/share/invitations/${invitationId}/link`, {});
+            return response.data as { link: string };
+        } catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    async createAnonymousLink(datasetId: string, label: string): Promise<CreatedAnonymousLink> {
+        try {
+            const response = await axios.post(`/api/datasets/${datasetId}/anonymous-links`, { label });
+            trackUiEvent("anonymous_link_created");
+            return response.data as CreatedAnonymousLink;
+        } catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    async revokeAnonymousLink(datasetId: string, linkId: string): Promise<void> {
+        try {
+            await axios.delete(`/api/datasets/${datasetId}/anonymous-links/${linkId}`);
+        } catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    async acceptInvitation(token: string): Promise<AcceptInvitationResponse> {
+        try {
+            const response = await axios.post(`/api/invitations/accept`, { token });
+            return response.data as AcceptInvitationResponse;
+        } catch (error) {
             throw httpErrorHandler(error);
         }
     }
