@@ -28,7 +28,7 @@ describe('messageForApiError', () => {
             "embargo_too_long", "embargo_until_in_past", "embargo_dataset_published", "embargo_already_active",
             "embargo_not_active", "embargo_until_not_later", "embargo_active",
             "share_target_required", "share_target_ambiguous", "invalid_email", "invalid_orcid",
-            "already_has_access", "cannot_share_with_owner", "invalid_level",
+            "already_has_access", "cannot_share_with_owner", "invalid_level", "unknown_user",
             "embargo_manual_doi", "embargo_manual_doi_ends_embargo",
         ];
         expect(codes.filter((code) => !EMBARGO_ERROR_MESSAGES[code])).toEqual([]);
