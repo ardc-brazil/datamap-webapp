@@ -34,7 +34,7 @@ router
       }
     } catch (error) {
       if (error?.status) {
-        res.status(error?.status).end();
+        res.status(error?.status ?? 502).end();
       } else {
         res.status(500).end();
       }

@@ -29,7 +29,7 @@ router
       const result = await createDataset(context, req.body);
       res.json(result);
     } catch (error) {
-      res.status(error?.status).end()
+      res.status(error?.status ?? 502).end()
     }
   });
 
