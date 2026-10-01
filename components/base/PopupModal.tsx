@@ -11,6 +11,7 @@ interface ModalProps {
   noPaddingContent?: boolean
   destructive?: boolean
   maxWidthClassName?: string
+  hideCancel?: boolean
 }
 
 export default function Modal(props: ModalProps) {
@@ -50,13 +51,15 @@ export default function Modal(props: ModalProps) {
             {props.children}
           </div>
           <div className="flex flex-none items-center justify-end gap-2 px-5 py-3 border-t border-primary-200">
-            <button
-              className="h-9 px-3.5 rounded-md border border-primary-300 bg-primary-0 text-primary-900 text-[13px] font-semibold whitespace-nowrap hover:bg-primary-100 transition-colors"
-              type="button"
-              onClick={() => props.cancel()}
-            >
-              {!props.cancelButtonText ? "Close" : props.cancelButtonText}
-            </button>
+            {!props.hideCancel &&
+              <button
+                className="h-9 px-3.5 rounded-md border border-primary-300 bg-primary-0 text-primary-900 text-[13px] font-semibold whitespace-nowrap hover:bg-primary-100 transition-colors"
+                type="button"
+                onClick={() => props.cancel()}
+              >
+                {!props.cancelButtonText ? "Close" : props.cancelButtonText}
+              </button>
+            }
             {props.confim &&
               <button
                 className={`h-9 px-3.5 rounded-md text-[13px] font-semibold whitespace-nowrap transition-colors ${confirmColors}`}

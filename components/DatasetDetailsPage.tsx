@@ -5,6 +5,7 @@ import { TabPanelSettings } from "./DatasetDetails/TabPanelSettings";
 import { Tabs } from "./DatasetDetails/Tabs";
 import { DownloadDatafilesButton } from "./DownloadDatafilesButton";
 import LoggedLayout from "./LoggedLayout";
+import { ShareButton } from "./Share/ShareButton";
 import { getVersionByName } from "../lib/datasetVersionSelector";
 import { totalDatasetVersionFilesSize } from "../lib/file";
 import { UserDetailsResponse, canEditDataset } from "../lib/users";
@@ -67,6 +68,7 @@ export default function DatasetDetailsPage(props: Props) {
               </div>
             </div>
             <div className="flex flex-none items-center gap-2">
+              {props.dataset.access?.can_share && <ShareButton dataset={props.dataset} />}
               <DownloadDatafilesButton dataset={props.dataset} />
               <DatasetMoreSettingsButton dataset={props.dataset} />
             </div>
