@@ -1,14 +1,12 @@
 import Router from "next/router";
 import { useState } from "react";
 import { MaterialSymbol } from "react-material-symbols";
-import Moment from "react-moment";
 import { ROUTE_PAGE_DATASETS_DETAILS, ROUTE_PAGE_DATASETS_VERSION_DETAILS } from "../../../contants/InternalRoutesConstants";
-import { totalDatasetVersionFilesSize } from "../../../lib/file";
 import { GetDatasetDetailsResponse, GetDatasetDetailsVersionResponse } from "../../../types/BffAPI";
 import Modal from "../../base/PopupModal";
 import NewVersionButton from "../NewVersionButton";
-import { version } from "os";
 import { isLastVersionForDataset } from "../../../lib/datasetVersionSelector";
+import { DatasetVersionSelectorItem } from "./DatasetVersionSelectorItem";
 
 interface Props {
   onNewVersionClick(): void
@@ -24,13 +22,14 @@ export default function DatasetVersionHandler(props: Props) {
 
   return (
     <>
-      <button onClick={() => setShowDatasetVersionHistory(true)}>
-        <span className="text-sm underline cursor-pointer">
-          Version {props.datasetVersion.name}
-        </span>
+      <button
+        type="button"
+        className="flex items-center gap-1.5 rounded-md border border-primary-300 bg-primary-0 pl-2.5 pr-2 py-[5px] text-[13px] font-medium text-primary-900 hover:bg-primary-100 transition-colors"
+        onClick={() => setShowDatasetVersionHistory(true)}
+      >
+        Version {props.datasetVersion.name}
+        <MaterialSymbol icon="expand_more" size={16} grade={-25} weight={400} />
       </button>
-      {" "}
-      <span className="text-primary-500 no-underline">({totalDatasetVersionFilesSize(props.datasetVersion)})</span>
       <DatasetVersionSelector
         show={showDatasetVersionHistory}
         onVersionSelected={function (selectedVersionName: string): void {
@@ -40,6 +39,7 @@ export default function DatasetVersionHandler(props: Props) {
         availableVersions={props.availableVersions}
         onNewVersionClick={props.onNewVersionClick}
         dataset={props.dataset}
+        currentVersion={props.datasetVersion}
       />
     </ >
   )
@@ -50,6 +50,7 @@ interface DatasetVersionSelectorProps {
   show: Boolean
   availableVersions: GetDatasetDetailsVersionResponse[]
   dataset: GetDatasetDetailsResponse
+  currentVersion?: GetDatasetDetailsVersionResponse
 
   onNewVersionClick(): void
   onClose(): void;
@@ -60,28 +61,35 @@ function DatasetVersionSelector(props: DatasetVersionSelectorProps) {
   return (
 
     <Modal
-      title="History"
+      title="Version history"
       confimButtonText="Close"
-      cancelButtonText="Cancel"
+      cancelButtonText="Close"
       show={props.show}
       cancel={props.onClose}
       noPaddingContent={true}
+      maxWidthClassName="max-w-xl"
     >
       <div data-testid="dataset-version-history-modal-content">
 
-        <div className="pb-4 px-6">
+        <div className="flex items-center justify-between gap-4 px-5 py-3 border-b border-primary-200">
+          <span className="text-[11px] leading-4 tracking-[0.08em] uppercase font-semibold text-primary-500">
+            {props?.availableVersions?.length ?? 0} {props?.availableVersions?.length === 1 ? "version" : "versions"}
+          </span>
           <NewVersionButton onClick={props.onNewVersionClick} />
         </div>
-        <hr />
 
-        <div className="h-72 w-screen max-w-3xl flex-col overflow-y-scroll overscroll-none px-6 -mb-4">
-          <ul data-testid="dataset-version-history-modal-list" >
+        <div className="max-h-80 overflow-y-auto overscroll-contain">
+          <ul data-testid="dataset-version-history-modal-list" className="m-0 p-0 list-none">
             {props?.availableVersions
               ?.sort((a, b) => new Date(b?.created_at)?.getTime() - new Date(a?.created_at)?.getTime())
               ?.map((x, i) => {
                 return (
-
-                  <VersionSelectorItem key={i} dataset={props.dataset} version={x} />
+                  <VersionSelectorItem
+                    key={i}
+                    dataset={props.dataset}
+                    version={x}
+                    selected={!!props.currentVersion && x.id === props.currentVersion.id}
+                  />
                 )
               })}
           </ul>
@@ -92,38 +100,7 @@ function DatasetVersionSelector(props: DatasetVersionSelectorProps) {
   )
 }
 
-function VersionSelectorItem(props: { dataset: GetDatasetDetailsResponse, version: GetDatasetDetailsVersionResponse }) {
-
-  function GetUpdateText() {
-    if (props.version.name === "1") {
-      return (
-        <span className="text-xs">
-          Initial release
-        </span>
-      )
-    }
-
-    return (
-      <span className="text-xs">
-        Updated <Moment date={props.version.updated_at} format="YYYY-MM-DD" />
-      </span>
-    )
-  }
-
-  function GetDOIText() {
-    if (!props.version?.doi) {
-      return null
-    }
-
-    return (
-      <>
-        <span>·</span>
-        <span className="text-xs">
-          doi: {props.version?.doi?.identifier}
-        </span>
-      </>
-    );
-  }
+function VersionSelectorItem(props: { dataset: GetDatasetDetailsResponse, version: GetDatasetDetailsVersionResponse, selected: boolean }) {
 
   function onSelectedVersion() {
     if (isLastVersionForDataset(props.dataset, props.version)) {
@@ -138,25 +115,11 @@ function VersionSelectorItem(props: { dataset: GetDatasetDetailsResponse, versio
   }
 
   return (
-    <li
-      onClick={onSelectedVersion}
-      className="h-22 border-b border-b-primary-200 p-4 flex flex-row items-center h-full hover:bg-primary-100 cursor-pointer gap-4">
-      <div className="flex items-center justify-center h-14 w-14">
-        <MaterialSymbol icon="stacks" size={48} className="px-1" />
-      </div>
-      <div className="w-full flex flex-col">
-        <div className="flex flex-row justify-between">
-          <span className="text-base font-body text-primary-900">Version {props.version.name} </span>
-          <span className="text-xs font-body">
-            <Moment date={props.version.created_at} fromNow></Moment>
-          </span>
-        </div>
-
-        <div className="flex flex-row items-center justify-start gap-2">
-          <GetUpdateText />
-          <GetDOIText />
-        </div>
-      </div>
-    </li>
+    <DatasetVersionSelectorItem
+      dataset={props.dataset}
+      version={props.version}
+      selected={props.selected}
+      onSelectedVersion={onSelectedVersion}
+    />
   )
 }

@@ -14,12 +14,12 @@ export function DateInput(props: DateInputProps) {
   }
 
   return (
-    <div>
-      <span>{props.option.text}</span>
+    <div className="mb-1.5">
+      {props.option.text && <span className="block mb-1 text-xs text-primary-500">{props.option.text}</span>}
       <input
         key={props.option.id}
         type="date"
-        className="form-input block"
+        className="block w-full h-9 px-2.5 py-0 text-sm rounded-md border border-primary-300 bg-primary-0 text-primary-900"
         value={props.value}
         onChange={onDateChanged}
       />

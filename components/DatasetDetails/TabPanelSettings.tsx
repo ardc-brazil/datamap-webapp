@@ -45,83 +45,76 @@ export function TabPanelSettings(props: TabPanelProps) {
 
   return (
     <TabPanel title={props.title}>
-      <h5>Settings</h5>
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-10 items-start pt-2">
+        <section className="flex flex-col gap-3 min-w-0">
+          <div>
+            <h2 className="m-0 text-lg leading-snug tracking-[-0.01em]">General</h2>
+            <p className="m-0 mt-1 text-sm text-primary-600">The name and owner institution shown on the dataset page and in citations.</p>
+          </div>
 
-      <h6 className="font-bold py-4">General</h6>
+          <Formik
+            initialValues={{
+              name: props.dataset.name,
+              institution: props.dataset.data.institution,
+            }}
+            validationSchema={schema}
+            onSubmit={onSubmit}
+          >
+            {({ isSubmitting, values, setFieldTouched }) => (
+              <Form className="rounded-lg border border-primary-200 bg-primary-0">
 
-      <Formik
-        initialValues={{
-          name: props.dataset.name,
-          institution: props.dataset.data.institution,
-        }}
-        validationSchema={schema}
-        onSubmit={onSubmit}
-      >
-        {({ isSubmitting, values, setFieldTouched }) => (
-          <Form>
+                {/* TODO: Avoid duplicated form */}
+                <div className="flex flex-col gap-5 p-5">
+                  <SettingsField
+                    name="name"
+                    label="Name"
+                    placeholder="e.g. GoAmazon 2014/5 — Aerosol size distribution, T3 site"
+                    help="Identify the campaign, the measurement and the site."
+                  />
+                  <SettingsField
+                    name="institution"
+                    label="Institution"
+                    placeholder="What is the institution owner of this dataset?"
+                  />
+                  {/* TODO: Define how visibility will work */}
+                </div>
 
-            {/* TODO: Avoid duplicated form */}
-            <div className="flex flex-col items-start max-w-3xl">
-              <div className="w-full py-4">
-                <label htmlFor="name">Name</label>
-                <Field
-                  type="text"
-                  id="name"
-                  name="name"
-                  placeholder="What is the institution owner of this dataset?"
-                  className="invalid:border-error-500"
+                <div className="flex items-center justify-end gap-2 border-t border-primary-200 bg-primary-50 px-5 py-3 rounded-b-lg">
+                  <button type="submit" className="btn-primary m-0" disabled={isSubmitting}>Save changes</button>
+                </div>
+              </Form>
+            )}
+          </Formik>
+        </section>
 
-                />
-                <ErrorMessage
-                  name="name"
-                  component="div"
-                  className="text-xs text-error-600"
-                />
-              </div>
-              <div className="w-full py-4">
-                <label htmlFor="institution">Institution</label>
-                <Field
-                  type="text"
-                  id="institution"
-                  name="institution"
-                  placeholder="What is the institution owner of this dataset?"
-                  className="invalid:border-error-500"
-
-                />
-                <ErrorMessage
-                  name="institution"
-                  component="div"
-                  className="text-xs text-error-600"
-                />
-              </div>
-              {/* TODO: Define how visibility will work */}
-              {/* <div className="w-48 py-4">
-                <label htmlFor="visibility">Visibility</label>
-                <Field
-                  type="text"
-                  id="visibility"
-                  name="visibility"
-                  className="invalid:border-error-500"
-                  as="select"
-                >
-                  <option value="private">Private</option>
-                  <option value="public">Public</option>
-                  </Field>
-                <ErrorMessage
-                  name="institution"
-                  component="div"
-                  className="text-xs text-error-600"
-                />
-              </div> */}
-
-              <div className="flex h-24 items-center w-full">
-                <button type="submit" className="btn-primary" disabled={isSubmitting}>Save Changes</button>
-              </div>
-            </div>
-          </Form>
-        )}
-      </Formik>
-
+        <aside className="rounded-lg border border-primary-200 bg-primary-0 p-4 flex flex-col gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-500">About settings</span>
+          <p className="m-0 text-[13px] leading-[19px] text-primary-700">
+            Changes apply to every version of this dataset. Authors, license, coverage and the rest of the metadata are edited from the Data card tab.
+          </p>
+        </aside>
+      </div>
     </TabPanel>
+  );
+}
+
+function SettingsField(props: { name: string, label: string, placeholder?: string, help?: string }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={props.name} className="m-0 text-[13px] font-semibold text-primary-900">{props.label}</label>
+      <Field
+        type="text"
+        id={props.name}
+        name={props.name}
+        placeholder={props.placeholder}
+        className="h-11 px-3.5 py-0 text-sm rounded-md border border-primary-300 bg-primary-0 invalid:border-error-500"
+      />
+      {props.help && <span className="text-[13px] leading-[19px] text-primary-500">{props.help}</span>}
+      <ErrorMessage
+        name={props.name}
+        component="div"
+        className="text-xs text-error-600"
+      />
+    </div>
   );
 }

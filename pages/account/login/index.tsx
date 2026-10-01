@@ -100,15 +100,14 @@ export default function LoginPage(props: Props) {
   const defaultTabIndex = getSelectedTabIndex();
 
   return (
-    <div className="container mx-auto flex flex-col gap-16 mt-16">
+    <div className="container mx-auto flex flex-col gap-6 mt-16 pb-16">
       <Head>
         <title>DataMap</title>
-        <link rel="icon" href="/favicon.ico" />
         <meta charSet="utf-8"></meta>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
       </Head>
-      <Link href="/" className="w-full md:w-2/12 h-16 self-center">
-        <img className="w-full h-full" src="/img/logo.svg" />
+      <Link href="/" className="self-center">
+        <img className="h-36" src="/img/brand/datamap-lockup-stacked-2x.png" alt="DataMap" />
       </Link>
 
 
@@ -157,8 +156,8 @@ export default function LoginPage(props: Props) {
         </div>
       }
 
-      <div className="w-10/12 md:w-4/12 h-fit border border-primary-200 self-center rounded">
-        <Tabs className="py-8" defaultSelectedIndex={defaultTabIndex}>
+      <div className="w-10/12 md:w-4/12 h-fit border border-primary-200 self-center rounded-lg bg-primary-0">
+        <Tabs className="py-8" headerClassName="px-6 pt-5" defaultSelectedIndex={defaultTabIndex}>
           <TabPanel title="Sign In">
             <div className="flex flex-col">
               <OrcidButton callbackUrl={props.callbackUrl}>Sign in with ORCID</OrcidButton>

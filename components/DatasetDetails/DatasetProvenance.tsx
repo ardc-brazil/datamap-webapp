@@ -1,10 +1,13 @@
 import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { useState } from 'react';
 import * as Yup from 'yup';
+import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_HINT_CLASS, EDIT_FORM_INPUT_CLASS, EDIT_FORM_LABEL_CLASS, EMPTY_VALUE_CLASS } from "../../contants/EditFormConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { UserDetailsResponse, canEditDataset } from "../../lib/users";
 import { GetDatasetDetailsResponse, UpdateDatasetRequest } from "../../types/BffAPI";
 import { CardItem } from "./CardItem";
+import { EditFormActions } from "./EditFormActions";
+import { TextActionButton } from "./TextActionButton";
 
 interface Props {
     dataset: GetDatasetDetailsResponse
@@ -62,7 +65,7 @@ export default function DatasetProvenance(props: Props) {
     }
 
     function EditButton() {
-        return <button className={`${(editing || !canEdit) && "hidden"} btn-primary-outline btn-small h-8 w-16`} onClick={handleEditClick}>Edit</button>
+        return <TextActionButton hidden={editing || !canEdit} className="flex-none" onClick={handleEditClick}>Edit</TextActionButton>
     }
 
     if (editing || props.alwaysEdition) {
@@ -78,56 +81,41 @@ export default function DatasetProvenance(props: Props) {
                 onSubmit={onSubmit}
             >
                 {({ isSubmitting, values }) => (
-                    <Form>
-                        <div className="flex flex-row items-center">
-                            <div className="w-full">
-                                <div className="flex">
-                                    <div className="w-full">
-                                        <p className="text-primary-500 italic w-full">
-                                            {infoText}
-                                        </p>
-                                        <div className="py-2" >
-                                            <div className="flex flex-col items-center gap-2">
-                                                <div className="flex items-center w-full gap-2">
-                                                    <div className="w-full">
-                                                        <label htmlFor={`provenance.source`}>Source</label>
-                                                        <Field
-                                                            id={`provenance.source`}
-                                                            name={`provenance.source`}
-                                                            className="invalid:border-error-500 border"
-                                                            placeholder="NOAA, NASA, ARM"
-                                                        />
-                                                        <ErrorMessage
-                                                            name={`provenance.source`}
-                                                            component="div"
-                                                            className="text-xs text-error-600"
-                                                        />
-                                                    </div>
-                                                    <div className="w-full">
-                                                        <label htmlFor={`provenance.instrument`}>Instrument</label>
-                                                        <Field
-                                                            id={`provenance.instrument`}
-                                                            name={`provenance.instrument`}
-                                                            className="invalid:border-error-500 border"
-                                                            placeholder="Condensation Particle Counter, MPL, SONDE"
-                                                        />
-                                                        <ErrorMessage
-                                                            name={`provenance.instrument`}
-                                                            component="div"
-                                                            className="text-xs text-error-600"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex w-64 h-10 gap-2 pl-4">
-                                        <button type="button" className="btn-primary-outline btn-small" onClick={handleCancelClick}>Cancel</button>
-                                        <button type="submit" className="btn-primary btn-small" disabled={isSubmitting}>Save</button>
-                                    </div>
-                                </div>
+                    <Form className="w-full">
+                        <p className={EDIT_FORM_HINT_CLASS}>
+                            {infoText}
+                        </p>
+                        <div className="grid grid-cols-1 gap-3 pt-3">
+                            <div className="min-w-0">
+                                <label htmlFor={`provenance.source`} className={EDIT_FORM_LABEL_CLASS}>Source</label>
+                                <Field
+                                    id={`provenance.source`}
+                                    name={`provenance.source`}
+                                    className={EDIT_FORM_INPUT_CLASS}
+                                    placeholder="NOAA, NASA, ARM"
+                                />
+                                <ErrorMessage
+                                    name={`provenance.source`}
+                                    component="div"
+                                    className={EDIT_FORM_ERROR_CLASS}
+                                />
+                            </div>
+                            <div className="min-w-0">
+                                <label htmlFor={`provenance.instrument`} className={EDIT_FORM_LABEL_CLASS}>Instrument</label>
+                                <Field
+                                    id={`provenance.instrument`}
+                                    name={`provenance.instrument`}
+                                    className={EDIT_FORM_INPUT_CLASS}
+                                    placeholder="Condensation Particle Counter, MPL, SONDE"
+                                />
+                                <ErrorMessage
+                                    name={`provenance.instrument`}
+                                    component="div"
+                                    className={EDIT_FORM_ERROR_CLASS}
+                                />
                             </div>
                         </div>
+                        <EditFormActions onCancel={handleCancelClick} isSubmitting={isSubmitting} />
                     </Form>
                 )}
             </Formik>
@@ -135,20 +123,18 @@ export default function DatasetProvenance(props: Props) {
     }
 
     // Default value
-    return <div className="flex flex-row w-full items-center">
-        <div className="text-primary-500 w-full">
-            <div className="flex gap-28 py-4">
-                <CardItem title="SOURCES">
-                    {!props.dataset.data.source && "No source informed."}
-                    {props.dataset.data.source && props.dataset.data.source}
-                </CardItem>
-            </div>
-            <div className="flex gap-28 py-4">
-                <CardItem title="Source instrument">
-                    {!props.dataset.data.source && "No instrument informed."}
-                    {props.dataset.data.source && props.dataset.data.source_instrument}
-                </CardItem>
-            </div>
+    return <div className="flex flex-row w-full items-start justify-between gap-4">
+        <div className="w-full flex flex-col gap-3">
+            <CardItem title="SOURCES">
+                {props.dataset.data.source
+                    ? props.dataset.data.source
+                    : <p className={EMPTY_VALUE_CLASS}>No source informed.</p>}
+            </CardItem>
+            <CardItem title="Source instrument">
+                {props.dataset.data.source_instrument
+                    ? props.dataset.data.source_instrument
+                    : <p className={EMPTY_VALUE_CLASS}>No instrument informed.</p>}
+            </CardItem>
         </div>
         <EditButton />
     </div>

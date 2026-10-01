@@ -25,10 +25,9 @@ export function FilterCriteriaList(props) {
 
   return (
 
-    <div className="flex-none min-w-[15rem] max-w-[15rem] border-primary-200">
-      <p className="pl-4">Filter By</p>
-      <hr className="border-primary-200" />
-      <div className="pt-6 divide-y divide-solid divide-primary-200">
+    <div className="flex-none w-[220px]">
+      <p className="m-0 pb-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-primary-500">Filter by</p>
+      <div className="flex flex-col gap-5">
 
         {datasetCategoryFiltersIsLoading && <p className="text-sm">Loading dynamic filters</p>}
         {datasetCategoryFiltersError && <p className="text-sm">Error to read dynamic filters</p>}

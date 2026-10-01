@@ -20,7 +20,7 @@ interface Props {
 export function ListDataset(props: Props) {
   const itemCount = props.totalCount;
   return (
-    <div id="listDataset" className="flex flex-col mr-4 w-full">
+    <div id="listDataset" className="flex flex-col w-full">
       <ListDatasetHeader itemCount={itemCount} requestedAt={props?.requestedAt} />
       <div data-testid="listDataset-items" className="border-t border-primary-200">
         {props.data.map((element, index) => (

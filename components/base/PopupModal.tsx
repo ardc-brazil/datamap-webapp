@@ -1,3 +1,4 @@
+import { MaterialSymbol } from "react-material-symbols";
 
 interface ModalProps {
   confimButtonText: string;
@@ -8,65 +9,66 @@ interface ModalProps {
   title: string;
   show?: Boolean
   noPaddingContent?: boolean
+  destructive?: boolean
+  maxWidthClassName?: string
 }
 
 export default function Modal(props: ModalProps) {
 
+  if (!props.show) {
+    return null;
+  }
+
+  const confirmColors = props.destructive
+    ? "bg-error-600 hover:bg-error-700 text-primary-0"
+    : "bg-primary-900 hover:bg-primary-800 text-primary-50";
+
   return (
     <>
-      {props.show ? (
-        <>
-          <div
-            className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none bg-primary-500/70"
-          >
-            <div className="relative w-auto my-6 mx-auto max-w-3xl">
-              {/*content*/}
-              <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-primary-50 outline-none focus:outline-none">
-                {/*header*/}
-                <div className="flex items-start justify-between p-5 border-b border-solid border-primary-200 rounded-t">
-                  <h3 className="text-3xl font-semibold">
-                    {props.title}
-                  </h3>
-                  <button
-                    className="p-1 ml-auto bg-transparent border-0 text-primary-900 float-right text-3xl leading-none font-semibold outline-none focus:outline-none"
-                    onClick={() => props.cancel()}
-                  >
-                    <span className="text-primary-900 h-6 w-6 text-2xl block outline-none focus:outline-none">
-                      ×
-                    </span>
-                  </button>
-                </div>
-                {/*body*/}
-                <div className={`relative flex-auto ${!props.noPaddingContent && `p-6`}`}>
-                  <div className="my-4 text-primary-500 text-lg leading-relaxed">
-                    {props.children}
-                  </div>
-                </div>
-                {/*footer*/}
-                <div className="flex items-center justify-end p-6 border-t border-solid border-primary-200 rounded-b">
-                  <button
-                    className="text-primary-500 background-transparent font-bold uppercase px-6 py-2 text-sm outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                    type="button"
-                    onClick={() => props.cancel()}
-                  >
-                    {!props.cancelButtonText ? "Close" : props.cancelButtonText}
-                  </button>
-                  {props.confim &&
-                    <button
-                      className="btn-primary"
-                      type="button"
-                      onClick={() => props.confim()}
-                    >
-                      {props.confimButtonText}
-                    </button>
-                  }
-                </div>
-              </div>
-            </div>
+      <div className="fixed inset-0 z-40 bg-primary-900/40" aria-hidden="true"></div>
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 outline-none focus:outline-none"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="popup-modal-title"
+      >
+        <div className={`relative flex flex-col w-full ${props.maxWidthClassName ?? "max-w-lg"} max-h-[calc(100vh-2rem)] bg-primary-0 border border-primary-200 rounded-lg shadow-xl shadow-primary-900/10 outline-none focus:outline-none`}>
+          <div className="flex flex-none items-center justify-between gap-4 pl-5 pr-3 py-3.5 border-b border-primary-200">
+            <h3 id="popup-modal-title" className="m-0 text-lg leading-7 font-semibold tracking-[-0.01em] text-primary-900">
+              {props.title}
+            </h3>
+            <button
+              type="button"
+              aria-label="Close"
+              className="flex items-center justify-center h-8 w-8 rounded-md text-primary-500 hover:bg-primary-100 hover:text-primary-900 transition-colors"
+              onClick={() => props.cancel()}
+            >
+              <MaterialSymbol icon="close" size={20} grade={-25} weight={400} />
+            </button>
           </div>
-          <div className="opacity-25 fixed inset-0 z-40 bg-primary-900"></div>
-        </>
-      ) : null}
+          <div className={`relative flex-auto min-h-0 overflow-y-auto text-sm leading-5 text-primary-700 ${props.noPaddingContent ? "" : "px-5 py-4"}`}>
+            {props.children}
+          </div>
+          <div className="flex flex-none items-center justify-end gap-2 px-5 py-3 border-t border-primary-200">
+            <button
+              className="h-9 px-3.5 rounded-md border border-primary-300 bg-primary-0 text-primary-900 text-[13px] font-semibold whitespace-nowrap hover:bg-primary-100 transition-colors"
+              type="button"
+              onClick={() => props.cancel()}
+            >
+              {!props.cancelButtonText ? "Close" : props.cancelButtonText}
+            </button>
+            {props.confim &&
+              <button
+                className={`h-9 px-3.5 rounded-md text-[13px] font-semibold whitespace-nowrap transition-colors ${confirmColors}`}
+                type="button"
+                onClick={() => props.confim()}
+              >
+                {props.confimButtonText}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
     </>
   );
 }

@@ -1,4 +1,4 @@
-
+import { FactRow } from "./FactRow";
 
 /**
  * Dataset freshness, how frequently the dataset info is updated.
@@ -10,8 +10,7 @@ export default function DatasetFreshness(props) {
     const updateFrquency = null;
   
     return (
-      <div>
-        <h6 className="font-semibold">Expected update frequency</h6>
+      <FactRow label="Update frequency">
         {/* TODO: Update the updateFrequency information
           Possibilities:
             - Unspecified
@@ -23,7 +22,7 @@ export default function DatasetFreshness(props) {
             - Daily
             - Hourly
           */}
-        <p>{updateFrquency ?? "Never"}</p>
-      </div>
+        {updateFrquency ?? "Never"}
+      </FactRow>
     );
   }

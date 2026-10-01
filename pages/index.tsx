@@ -2,130 +2,100 @@ import Link from "next/link";
 import Layout from "../components/Layout";
 import { ROUTE_PAGE_SEARCH } from "../contants/InternalRoutesConstants";
 
-function TextDecorationBolder(props) {
-  return (
-    <span
-      className={`underline decoration-secondary-900 decoration-8 underline-offset-4 ${props.className}`}
-    >
-      {props.children}
-    </span>
-  );
-}
+const CATEGORIES = [
+  "Aerosols",
+  "Atmospheric State",
+  "Cloud Properties",
+  "Radiometric",
+  "Surface Properties",
+  "Subsoil and groundwater properties",
+  "Renewable Energy",
+];
 
 function SearchCategory(props) {
   return (
-    <Link href={ROUTE_PAGE_SEARCH}>
-      <div className="bg-secondary-300 rounded-xl h-48 relative group cursor-pointer">
-        <div className=" grid grid-cols-1 gap-4 place-items-center h-full bg-secondary-400 rounded-xl transition ease-in delay-150 duration-300 opacity-0 group-hover:opacity-100 border-2 border-secondary-900">
-          <div>
-            <p className="text-lg text-center">{props.children}</p>
-          </div>
-        </div>
-        <button className="text-lg font-normal w-full h-full p-8 border-secondary-300 bg-secondary-300 rounded-xl absolute inset-0 transition ease-out delay-150 group-hover:opacity-0">
-          {props.children}
-        </button>
-      </div>
+    <Link
+      href={ROUTE_PAGE_SEARCH}
+      className={`flex items-end min-h-[7.5rem] p-5 rounded-lg text-[17px] leading-6 font-medium text-primary-900 hover:text-primary-900 transition-colors ${props.highlight
+        ? "bg-secondary-500 hover:bg-secondary-900"
+        : "bg-primary-0 border border-primary-200 hover:border-primary-400"
+        }`}
+    >
+      {props.children}
     </Link>
+  );
+}
+
+function FeatureSection(props) {
+  return (
+    <section className="py-20 md:py-[7.5rem] flex flex-col gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-[5fr_7fr] gap-6 md:gap-16 items-start">
+        <h2 className="m-0 text-3xl md:text-[40px] leading-[1.1] font-semibold tracking-[-0.025em]">
+          {props.title}
+        </h2>
+        <p className="m-0 text-lg leading-[29px] text-primary-700">{props.children}</p>
+      </div>
+      {props.extra}
+    </section>
   );
 }
 
 export default function HomePage(props) {
   return (
     <Layout fluid={true}>
-      <div className="special-background">
-        <div className="container mx-auto flex flex-row flex-wrap pt-56 pb-24">
-          <div className="w-full">
-            <h1 className="font-bold text-7xl md:text-8xl text-center pb-8">
-              <TextDecorationBolder>DataMap</TextDecorationBolder>
-            </h1>
-
-            <h1 className="font-normal text-6xl md:text-7xl text-center pb-8">
-              Scientific data analysis, for everyone.
-              <br />
-            </h1>
-          </div>
-          {/* <div className="py-12 px-8 md:basis-7/12 bg-primary-50 drop-shadow-2xl">
-            <h1 className="md:display-2 sm:display-4 font-medium">
-              Precisando analisar dados científicos? Use o&nbsp;
-              <TextDecorationBolder>DataMap.</TextDecorationBolder>
-            </h1>
-          </div>*/}
+      <div className="flex flex-col items-center text-center gap-7 px-8 pt-28 md:pt-40 pb-24">
+        <img src="/img/brand/datamap-mark.svg" alt="DataMap" className="w-24 h-24 md:w-[7.5rem] md:h-[7.5rem]" />
+        <h1 className="m-0 max-w-[900px] text-5xl md:text-7xl leading-[1.05] font-semibold tracking-[-0.03em]">
+          Scientific data analysis, for everyone.
+        </h1>
+        <p className="m-0 max-w-[680px] text-xl md:text-[22px] leading-8 text-primary-700">
+          Find, catalog and analyse environmental datasets from Brazil and the
+          world — versioned, citable and open to your research group.
+        </p>
+        <div className="flex flex-wrap justify-center gap-3 mt-2">
+          <Link href={ROUTE_PAGE_SEARCH} className="btn-primary text-[15px] px-5 py-3 m-0 hover:text-primary-50">
+            Browse datasets
+          </Link>
+          <Link
+            href={{
+              pathname: "/account/login",
+              query: { phase: "sign-in", tenancy: "datamap/production/data-amazon" },
+            }}
+            className="btn-primary-outline text-[15px] px-5 py-3 m-0"
+          >
+            Sign in with ORCID
+          </Link>
         </div>
-        <div className="py-12 bg-gradient-to-t from-primary-50 h-40"></div>
       </div>
+
       <div className="container mx-auto px-8">
-        <section className="mb-40">
-          <p className="display-4 text-center">
-            With DataMap you can find environmental datasets from diverse
-            sources of data from Brazil and the World.
-          </p>
-        </section>
-        <section className="mb-40">
-          <h1 className="py-8">
-            <TextDecorationBolder className="font-normal">
-              Catalog Datasets
-            </TextDecorationBolder>
-          </h1>
-
-          <p className="text-xl">
-            Our platform provides a centralized hub where researchers can easily
-            catalog and organize all their datasets related to various research
-            projects and campaigns. With intuitive and user-friendly tools, you
-            can effortlessly upload, label, and categorize your datasets,
-            ensuring quick access and efficient data management.
-          </p>
-        </section>
-
-        <section className="mb-40">
-          <h1 className="py-8">
-            <TextDecorationBolder className="font-normal">
-              Powerful Search
-            </TextDecorationBolder>
-          </h1>
-
-          <p className="text-xl">
-            We understand that the ability to find and understand your cataloged
-            datasets is crucial for your research success. That's why our
-            platform boasts a robust and highly flexible search service.
-            Seamlessly navigate through your data repository using advanced
-            search filters, metadata tags, and custom keywords. Discover hidden
-            correlations, uncover insights, and retrieve specific datasets with
-            unparalleled ease.
-          </p>
-          <p>
-            Search foravailable categories or do an advanced search in our tool.
-          </p>
-
-          <div className="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-1 gap-4 py-4">
-            <SearchCategory>Aerosols</SearchCategory>
-            <SearchCategory>Atmospheric State</SearchCategory>
-            <SearchCategory>Cloud Properties</SearchCategory>
-            <SearchCategory>Radiometric</SearchCategory>
-            <SearchCategory>Surface Properties</SearchCategory>
-            <SearchCategory>Subsoil and groundwater properties</SearchCategory>
-            <SearchCategory>Renewable Energy</SearchCategory>
-          </div>
-        </section>
-
-        <section className="mb-40">
-          <h1 className="py-8">
-            <TextDecorationBolder className="font-normal">
-              Process and Analyse
-            </TextDecorationBolder>
-          </h1>
-
-          <p className="text-xl">
-            We take data processing and analysis to new heights with our
-            seamless Jupyter Notebook integration. No need to switch between
-            applications or download files; you can now process all the
-            information from your datasets directly within the web application.
-            Leverage the full power of Jupyter Notebooks' interactive and
-            collaborative environment, harnessing its rich libraries and tools
-            for data exploration, visualization, and advanced analytics.
-            Experience unparalleled convenience and efficiency as you work with
-            your datasets in real-time.
-          </p>
-        </section>
+        <div className="h-px bg-primary-200" />
+        <FeatureSection title="Catalog datasets">
+          A centralized hub where researchers catalog and organize datasets
+          from research projects and campaigns. Upload, label and categorize
+          your data, with versions and a DOI for each release.
+        </FeatureSection>
+        <div className="h-px bg-primary-200" />
+        <FeatureSection
+          title="Powerful search"
+          extra={
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {CATEGORIES.map((category) => (
+                <SearchCategory key={category}>{category}</SearchCategory>
+              ))}
+              <SearchCategory highlight>All datasets →</SearchCategory>
+            </div>
+          }
+        >
+          Navigate the repository with filters, metadata tags and keywords.
+          Search by category, measurement, datastream, site or source — or
+          start from one of the categories below.
+        </FeatureSection>
+        <div className="h-px bg-primary-200" />
+        <FeatureSection title="Process and analyse">
+          Open any dataset in a Jupyter notebook without downloading files or
+          switching applications, and work with the data where it lives.
+        </FeatureSection>
       </div>
     </Layout>
   );

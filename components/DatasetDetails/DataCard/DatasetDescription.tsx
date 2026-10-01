@@ -5,6 +5,8 @@ import remarkGfm from "remark-gfm";
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { UserDetailsResponse, canEditDataset } from "../../../lib/users";
 import { GetDatasetDetailsResponse, UpdateDatasetRequest } from "../../../types/BffAPI";
+import { EditFormActions } from "../EditFormActions";
+import { TextActionButton } from "../TextActionButton";
 import { ExpansibleDiv } from "./ExpansibleDiv";
 
 interface Props {
@@ -52,10 +54,10 @@ export function DatasetDescription(props: Props) {
     }
 
     return <ExpansibleDiv forceExpanded={editingDescription}>
-        <div>
-            <div className="flex">
-                <h5 className="w-full">About Dataset</h5>
-                <button className={`${(editingDescription || !canEdit) && "hidden"} btn-primary-outline btn-small w-16 h-8`} onClick={handleEditDescription}>Edit</button>
+        <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+                <h2 className="m-0 text-lg leading-7 font-semibold tracking-[-0.01em] text-primary-900">About</h2>
+                <TextActionButton hidden={editingDescription || !canEdit} onClick={handleEditDescription}>Edit</TextActionButton>
             </div>
             {editingDescription
                 ? (
@@ -63,18 +65,19 @@ export function DatasetDescription(props: Props) {
                         <div>
                             {/* TODO: Use Formik */}
                             <TextareaAutosize autoFocus
+                                minRows={4}
+                                aria-label="Description"
+                                placeholder="Describe the dataset. Markdown is supported."
+                                className="block w-full px-3 py-2.5 bg-primary-0 border border-primary-300 rounded-md text-sm leading-6 text-primary-900 placeholder:text-primary-400"
                                 value={textContent}
                                 onChange={e => setTextContent(e.target.value)} />
                         </div>
 
-                        <div className="flex flex-row justify-end py-4">
-                            <button className="btn-primary-outline btn-small w-fit" onClick={handleCancelEditing}>Cancel</button>
-                            <button className="btn-primary btn-small w-fit" onClick={handleSave}>Save</button>
-                        </div>
+                        <EditFormActions onCancel={handleCancelEditing} onSave={handleSave} />
                     </div>
                 )
                 : (
-                    <article className="prose lg:prose-xl max-w-none small-font-size">
+                    <article className="prose max-w-none text-[15px] leading-6 text-primary-700">
                         {textContent
                             ? (<ReactMarkdown
                                 children={textContent}

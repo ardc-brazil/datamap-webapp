@@ -8,18 +8,15 @@ interface NewVersionButtonProps {
 export default function NewVersionButton(props: NewVersionButtonProps) {
     return (
         <button type="button"
-            className="w-fit btn btn-primary-outline btn-small whitespace-nowrap rounded-3xl border-0"
+            className="w-fit inline-flex items-center gap-1.5 h-8 pl-2.5 pr-3 rounded-md border border-primary-300 bg-primary-0 text-[13px] font-semibold text-primary-900 whitespace-nowrap hover:bg-primary-100 transition-colors"
             onClick={props.onClick}
         >
-            <div className="flex flex-row justify-center items-center">
-                <MaterialSymbol
-                    className="pr-2"
-                    icon="add"
-                    size={16}
-                    grade={-25}
-                    weight={400} />
-                <span>New Version</span>
-            </div>
+            <MaterialSymbol
+                icon="add"
+                size={18}
+                grade={-25}
+                weight={400} />
+            <span>New version</span>
         </button>
     );
 }

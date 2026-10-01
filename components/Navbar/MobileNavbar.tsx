@@ -13,7 +13,7 @@ export function MobileMenuItem(props: Props) {
       <a
         id={props.id}
         href={props.href}
-        className="block py-2 pr-4 pl-3 rounded hover:bg-gray-100 md:hover:bg-transparent"
+        className="block py-2 px-6 text-sm font-medium text-primary-700 hover:bg-primary-100 hover:text-primary-900"
         onClick={props.clicked}
       >
         {props.children}
@@ -33,7 +33,7 @@ export function HiddenNav(props) {
       <button
         data-collapse-toggle="navbar-default"
         type="button"
-        className="md:hidden inline-flex items-center p-2 ml-3 text-sm text-primary-900 rounded  hover:bg-primary-50 focus:outline-none focus:ring-primary-900 active:bg-primary-50"
+        className="md:hidden inline-flex items-center p-2 ml-3 text-sm text-primary-900 rounded-md hover:bg-primary-100 focus:outline-none focus:ring-primary-900 active:bg-primary-50"
         aria-controls="navbar-default"
         aria-expanded="false"
         onClick={toggleClass}

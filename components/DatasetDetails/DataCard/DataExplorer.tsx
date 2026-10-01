@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { MaterialSymbol } from "react-material-symbols";
 import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
 import { getVersionByName } from "../../../lib/datasetVersionSelector";
+import { totalDatasetVersionFilesSize } from "../../../lib/file";
 import { GetDatasetDetailsResponse, GetDatasetDetailsVersionFileResponse } from "../../../types/BffAPI";
 import NewVersionButton from "../NewVersionButton";
 import DatasetFilesList from "./DatasetFilesList";
@@ -31,63 +32,36 @@ export default function DataExplorer(props: Props) {
   }
 
   return (
-    <div>
-      <h4>Data Explorer</h4>
-      <div className="flex gap-4 p-2 overflow-x-clip">
+    <div className="flex flex-col gap-3">
 
-        {/* TODO: Review the best way to present this information. */}
-        {/* <FileDescriptor
-          selectedFile={selectedFile}
-          loadingTable={loadingTable}
-        /> */}
+      {/* TODO: Review the best way to present this information. */}
+      {/* <FileDescriptor
+        selectedFile={selectedFile}
+        loadingTable={loadingTable}
+      /> */}
 
-        {/* Data Explorer */}
-        {/* <div className={`${dataExplorerCollapsed && "hidden"} flex flex-col min-w-[200px] w-72`}> */}
-        {/* <div className={`flex flex-col min-w-[200px] w-72`}> */}
-        <div className={`flex flex-col min-w-[200px] w-full`}>
-          <div>
-            <h6 className="font-semibold">Data explorer</h6>
-            <DatasetVersionHandler
-              datasetVersion={selectedDatasetVersion}
-              availableVersions={props.dataset.versions}
-              dataset={props.dataset}
-              onNewVersionClick={() => setShowUploadDataModal(true)}
-            />
-          </div>
-
-          {/* files list */}
-          <div className="h-full">
-            <DatasetFilesList
-              dataset={props.dataset}
-              datasetVersion={selectedDatasetVersion}
-              handleSelectFile={handleSelectFile}
-              itemsPerPage={10} />
-          </div>
-          <hr />
-          <div className="pt-4">
-            <h6 className="font-semibold">Summary</h6>
-            <ul className="list-none py-2 overflow-x-auto">
-              <li className={`text-sm text-primary-500 font-light whitespace-nowrap my-1`}>
-                <div className="flex gap-2 items-center py-1">
-                  <MaterialSymbol icon="folder" size={22} grade={-25} weight={200} className="align-middle" />
-                  <p className="text-sm py-0 my-0">{getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset)?.files_in?.length ?? 0} files</p>
-                </div>
-              </li>
-              <li className={`text-sm text-primary-500 font-light whitespace-nowrap my-1`}>
-                <div className="flex gap-2 items-center py-1">
-                  {/* <img src="/img/icon-columns.svg" className="w-4 h-4" /> */}
-                  <MaterialSymbol icon="view_column" size={22} grade={-25} weight={200} className="align-middle" />
-                  <p className="text-sm py-0 my-0">10 columns</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-          <hr />
-          <div className="pt-4">
-            <NewVersionButton onClick={() => setShowUploadDataModal(true)} />
-          </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="m-0 text-lg leading-7 font-semibold tracking-[-0.01em] text-primary-900">Files</h2>
+        <div className="flex flex-wrap items-center gap-4 text-[13px] text-primary-600">
+          <DatasetVersionHandler
+            datasetVersion={selectedDatasetVersion}
+            availableVersions={props.dataset.versions}
+            dataset={props.dataset}
+            onNewVersionClick={() => setShowUploadDataModal(true)}
+          />
+          <span className="flex items-center gap-1.5">
+            <MaterialSymbol icon="folder" size={16} grade={-25} weight={200} />
+            {getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset)?.files_in?.length ?? 0} files · {totalDatasetVersionFilesSize(selectedDatasetVersion)}
+          </span>
+          <NewVersionButton onClick={() => setShowUploadDataModal(true)} />
         </div>
       </div>
+
+      <DatasetFilesList
+        dataset={props.dataset}
+        datasetVersion={selectedDatasetVersion}
+        handleSelectFile={handleSelectFile}
+        itemsPerPage={10} />
       <NewVersionDrawer
         dataset={props.dataset}
         datasetVersion={selectedDatasetVersion}

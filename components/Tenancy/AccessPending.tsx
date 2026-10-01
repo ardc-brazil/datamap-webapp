@@ -21,14 +21,14 @@ export function AccessPending() {
     }
 
     return (
-        <div data-testid="access-pending" className="py-6">
-            <h6 className="font-semibold">Your access is not set up yet</h6>
-            <p className="text-primary-700 mt-2">
+        <div data-testid="access-pending" className="rounded-lg border border-primary-200 bg-primary-0 p-6">
+            <h5 className="m-0">Your access is not set up yet</h5>
+            <p className="text-sm text-primary-700 mt-2 mb-0">
                 Your account was created, but it has not been added to any namespace.
                 Someone from the Data Team needs to grant you access before you can
                 see or upload data.
             </p>
-            <p className="text-primary-700 mt-2">
+            <p className="text-sm text-primary-700 mt-2 mb-0">
                 Once they tell you it is done, use the button below — there is no need
                 to sign out and back in.
             </p>
@@ -36,7 +36,7 @@ export function AccessPending() {
                 type="button"
                 onClick={checkAgain}
                 disabled={checking}
-                className="mt-6 px-4 py-2 rounded bg-primary-600 text-white disabled:opacity-60"
+                className="btn-primary m-0 mt-4"
             >
                 {checking ? "Checking..." : "I already have access — check again"}
             </button>

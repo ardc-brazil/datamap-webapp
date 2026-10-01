@@ -1,9 +1,13 @@
+import { MaterialSymbol } from "react-material-symbols";
+
 export default function CloseButton(props) {
     return <button
-        className="rounded-full h-6 w-6 bg-primary-200 hover:bg-primary-300 text-primary-700 hover:text-primary-900 text-sm font-bold"
+        className="flex flex-none items-center justify-center h-10 w-10 rounded-md text-primary-500 hover:bg-primary-100 hover:text-primary-900 transition-colors"
         type="button"
+        aria-label={props.label ?? "Remove"}
+        title={props.label ?? "Remove"}
         onClick={props.onClick}
     >
-        x
+        <MaterialSymbol icon="close" size={18} grade={-25} weight={400} />
     </button>;
 }

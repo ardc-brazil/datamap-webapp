@@ -1,4 +1,5 @@
 import { licenseMapping } from "../../../lib/licenseMapping";
+import { FactRow } from "./FactRow";
 
 /**
  * Dataset license viewer.
@@ -6,10 +7,7 @@ import { licenseMapping } from "../../../lib/licenseMapping";
  * @returns react component
  */
 export default function DatasetLicense(props) {
-    return <div>
-      <h6 className="font-semibold">License</h6>
-      <p>{props.dataset.data.license ? licenseMapping[props.dataset.data.license] : "Unknow"}</p>
-    </div>;
+    return <FactRow label="License">
+      {props.dataset.data.license ? licenseMapping[props.dataset.data.license] : "Unknow"}
+    </FactRow>;
   }
-  
-  

@@ -1,26 +1,22 @@
 import { GetDatasetDetailsResponse, GetDatasetDetailsVersionResponse } from "@/types/BffAPI";
-import { MaterialSymbol } from "react-material-symbols";
 import Moment from "react-moment";
 
 
 interface DatasetVersionSelectorItemProps {
   dataset: GetDatasetDetailsResponse,
   version: GetDatasetDetailsVersionResponse
+  selected?: boolean
   onSelectedVersion: () => void
 }
 
 export function DatasetVersionSelectorItem(props: DatasetVersionSelectorItemProps) {
   function GetUpdateText() {
     if (props.version.name === "1") {
-      return (
-        <span className="text-xs">
-          Initial release
-        </span>
-      )
+      return <span>Initial release</span>
     }
 
     return (
-      <span className="text-xs">
+      <span>
         Updated <Moment date={props.version.updated_at} format="YYYY-MM-DD" />
       </span>
     )
@@ -33,8 +29,8 @@ export function DatasetVersionSelectorItem(props: DatasetVersionSelectorItemProp
 
     return (
       <>
-        <span>·</span>
-        <span className="text-xs">
+        <span aria-hidden="true">·</span>
+        <span className="font-mono text-xs break-all">
           doi: {props.version?.doi?.identifier}
         </span>
       </>
@@ -45,23 +41,26 @@ export function DatasetVersionSelectorItem(props: DatasetVersionSelectorItemProp
   return (
     <li
       onClick={props.onSelectedVersion}
-      className="h-22 border-b border-b-primary-200 p-4 flex flex-row items-center h-full hover:bg-primary-100 cursor-pointer gap-4">
-      <div className="flex items-center justify-center h-14 w-14">
-        <MaterialSymbol icon="stacks" size={48} className="px-1" />
-      </div>
-      <div className="w-full flex flex-col">
-        <div className="flex flex-row justify-between">
-          <span className="text-base font-body text-primary-900">Version {props.version.name} </span>
-          <span className="text-xs font-body">
-            <Moment date={props.version.created_at} fromNow></Moment>
-          </span>
+      aria-current={props.selected ? "true" : undefined}
+      className={`flex items-start justify-between gap-4 px-5 py-3 border-b border-primary-100 last:border-b-0 cursor-pointer transition-colors ${props.selected ? "bg-secondary-500" : "hover:bg-primary-50"}`}
+    >
+      <div className="min-w-0 flex flex-col gap-0.5">
+        <div className="flex items-center gap-2">
+          <span className="text-sm leading-5 font-semibold text-primary-900">Version {props.version.name}</span>
+          {props.selected &&
+            <span className="inline-flex px-2 py-px rounded-full bg-primary-900 text-primary-50 text-[11px] leading-4 font-semibold">
+              Current
+            </span>
+          }
         </div>
-
-        <div className="flex flex-row items-center justify-start gap-2">
+        <div className="flex flex-wrap items-baseline gap-x-1.5 text-[13px] leading-5 text-primary-500">
           <GetUpdateText />
           <GetDOIText />
         </div>
       </div>
+      <span className="flex-none text-[13px] leading-5 text-primary-500 whitespace-nowrap">
+        <Moment date={props.version.created_at} fromNow></Moment>
+      </span>
     </li>
   )
 }
