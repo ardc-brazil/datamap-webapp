@@ -184,3 +184,14 @@ export async function getDatasetSnapshot(context: AppLocalContext, id: string, v
     }
 }
 
+/**
+ * Datasets the user holds a permission on, in any tenancy.
+ */
+export async function getSharedDatasets(context: AppLocalContext, query: { [key: string]: string | string[] }): Promise<GetDatasetsResponse> {
+    const response = await axiosInstance.get("/datasets/", {
+        ...buildHeaders(context),
+        params: { ...query, minimal: "true", shared: "true" },
+    });
+    return response.data as GetDatasetsResponse;
+}
+
