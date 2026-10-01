@@ -60,6 +60,30 @@ export const ROUTE_PAGE_DATASETS_VERSION_DETAILS = (params) => replaceIt(ROUTE_A
  */
 export const ROUTE_PAGE_DATASETS_NEW = ROUTE_PAGE_DATASETS + "/new";
 
+/**
+ * Route to the datasets shared with the user.
+ * @constant
+ */
+export const ROUTE_PAGE_DATASETS_SHARED = ROUTE_PAGE_DATASETS + "/shared";
+
+/**
+ * Route to the anonymous page.
+ * @constant
+ */
+export const ROUTE_PAGE_ANONYMOUS = (params) => replaceIt('/anonymous/:token', params);
+
+/**
+ * Route to the invitation acceptance page.
+ * @constant
+ */
+export const ROUTE_PAGE_INVITATION = (params) => replaceIt('/invitations/:token', params);
+
+/**
+ * Route a DOI resolves to.
+ * @constant
+ */
+export const ROUTE_PAGE_DOI_LANDING = (params) => replaceIt('/doi/datasets/:id/versions/:versionName', params);
+
 
 /**
  * Route to the user profile internal page.

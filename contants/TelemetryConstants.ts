@@ -11,6 +11,7 @@ export const PAGES: readonly string[] = [
   "/app/datasets/[datasetId]",
   "/app/datasets/[datasetId]/versions/[versionName]",
   "/app/datasets/new",
+  "/app/datasets/shared",
   "/app/error",
   "/app/home",
   "/app/notebooks",
@@ -18,12 +19,15 @@ export const PAGES: readonly string[] = [
   "/app/tenancy",
   "/datasets/[datasetId]",
   "/design-system",
+  "/doi/datasets/[datasetId]/versions/[versionName]",
+  "/invitations/[token]",
   "/orcid-oauth-callback",
   "/project/about",
   "/project/data-policy",
   "/project/partners-and-supporters",
   "/project/research-group",
   "/project/support",
+  "/anonymous/[token]",
   "/tools",
 ];
 
@@ -39,6 +43,10 @@ export const UI_EVENTS = [
   "version_published",
   "doi_created",
   "tenancy_switched",
+  "embargo_set",
+  "embargo_extended",
+  "dataset_shared",
+  "anonymous_link_created",
 ] as const;
 
 export type UiEvent = (typeof UI_EVENTS)[number];
