@@ -1,3 +1,5 @@
+jest.mock("../../../../lib/share", () => ({ claimInvitations: jest.fn() }));
+
 import { describe, expect, test } from '@jest/globals';
 import { hydrateWithUserInfo } from "../[...nextauth]";
 
@@ -70,3 +72,28 @@ describe('Hydrate token with user info', () => {
         )
     });
 })
+
+import { claimPendingInvitations } from "../[...nextauth]";
+import { claimInvitations } from "../../../../lib/share";
+
+describe('claiming pending invitations at sign-in', () => {
+    test('claims for the user who signed in', async () => {
+        jest.mocked(claimInvitations).mockResolvedValue({ accepted: [] });
+
+        await claimPendingInvitations("u1");
+
+        expect(claimInvitations).toHaveBeenCalledWith("u1");
+    });
+
+    test('a failure never blocks the sign-in', async () => {
+        jest.mocked(claimInvitations).mockRejectedValue(new Error("gatekeeper down"));
+        const original = process.stdout.write;
+        // @ts-ignore
+        process.stdout.write = () => true;
+        try {
+            await expect(claimPendingInvitations("u1")).resolves.toBeUndefined();
+        } finally {
+            process.stdout.write = original;
+        }
+    });
+});

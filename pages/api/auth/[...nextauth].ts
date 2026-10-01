@@ -6,6 +6,7 @@ import OrcidProvider from "../../../lib/OrcidOAuthProvider";
 import { CreateUserRequest, GetUserByProviderResponse, createUser, getUserByProviderID, getUserByUID } from "../../../lib/users";
 import { logError } from "../../../lib/logging";
 import { getMetrics } from "../../../lib/metrics";
+import { claimInvitations } from "../../../lib/share";
 
 export const authOptions: AuthOptions = {
   // Configure one or more authentication providers
@@ -59,6 +60,7 @@ export const authOptions: AuthOptions = {
       if (trigger == "signIn") {
         const user = await getUserByProviderAuthentication(account, token);
         token = hydrateWithUserInfo(token, user);
+        await claimPendingInvitations(user.id);
       } else if (trigger == "update" && token.uid) {
         // Roles and tenancies are granted by the team after the user signs in.
         // Without re-reading them here the session keeps the claims from login,
@@ -115,6 +117,15 @@ export function hydrateWithUserInfo(token, user: any) {
   }
 
   return token;
+}
+
+export async function claimPendingInvitations(uid: string): Promise<void> {
+  try {
+    await claimInvitations(uid);
+  } catch (error) {
+    // A failed claim must not block the sign-in; the invitation link still works.
+    logError("claiming pending invitations failed", error);
+  }
 }
 
 async function getUserByProviderAuthentication(account, token): Promise<GetUserByProviderResponse> {
