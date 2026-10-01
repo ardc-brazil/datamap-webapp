@@ -46,9 +46,7 @@ product is named after.
 
 ## Why this and not something else
 
-The brief was "something more elaborate — a parallax, or a nice effect — that
-matches what the site is". Generic options (particles, gradients, a globe)
-would fit any SaaS. An isobar map only fits a platform for atmospheric data,
+Generic options (particles, gradients, a globe) would fit any SaaS. An isobar map only fits a platform for atmospheric data,
 and it grows out of the mark rather than sitting next to it.
 
 The visual language stays the site's: monochrome ink on the off-white
