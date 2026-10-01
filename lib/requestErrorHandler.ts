@@ -9,8 +9,14 @@ import { ROUTE_PAGE_DATASETS_DETAILS, ROUTE_PAGE_DATASETS_VERSION_DETAILS, ROUTE
  * @returns Redirect object for 401 errors, throws other errors
  */
 export function handleDatasetRequestErrors(error: any, req: any, datasetId: string, versionName?: string) {
+    const status = error?.status ?? error?.statusCode ?? error?.response?.status;
+
+    if (status === 404) {
+        return { notFound: true as const };
+    }
+
     // Only redirect to login for 401 (unauthenticated) errors
-    if (error.status === 401 || error.statusCode === 401) {
+    if (status === 401) {
         // Generate current URL based on whether we have a version or not
         const currentUrl = versionName 
             ? ROUTE_PAGE_DATASETS_VERSION_DETAILS({ id: datasetId, versionName })

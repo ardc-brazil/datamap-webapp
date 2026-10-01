@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import { NewContext } from "../../../lib/appLocalContext";
 import { createDOI, deleteDOI, navigateDOIToStatus } from "../../../lib/doi";
-import middlewareChain from "../../../lib/middlewareChain";
+import { authOnlyChain } from "../../../lib/middlewareChain";
 import { httpErrorHandler } from "../../../lib/rpc";
 import { DeleteDOIRequest, NavigateDOIStatusRequest } from "../../../types/BffAPI";
 import { ResponseError } from "../../../types/ResponseError";
@@ -12,7 +12,7 @@ import { ResponseError } from "../../../types/ResponseError";
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
 router
-    .use(middlewareChain)
+    .use(authOnlyChain)
     .post(async (req, res) => {
         const context = await NewContext(req);
         const result = await createDOI(context, req.body);

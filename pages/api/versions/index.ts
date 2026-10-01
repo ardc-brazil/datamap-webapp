@@ -3,14 +3,14 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import { GatekeeperAPI } from "../../../gateways/GatekeeperAPI";
 import { NewContext } from "../../../lib/appLocalContext";
-import middlewareChain from "../../../lib/middlewareChain";
+import { authOnlyChain } from "../../../lib/middlewareChain";
 import { httpErrorHandler } from "../../../lib/rpc";
 import { ResponseError } from "../../../types/ResponseError";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
 router
-    .use(middlewareChain)
+    .use(authOnlyChain)
     .post(async (req, res) => {
         const gatekeeperAPI = new GatekeeperAPI();
         const context = await NewContext(req);
