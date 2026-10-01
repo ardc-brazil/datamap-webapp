@@ -3,13 +3,17 @@ import { ErrorMessage, Field, Form, Formik, FormikHelpers } from "formik";
 import { useSession } from "next-auth/react";
 import Router from "next/router";
 import { useEffect, useState } from "react";
+import { EmbargoChoice } from "../../../components/Embargo/EmbargoChoice";
 import LayoutFullScreen from "../../../components/LayoutFullScreen";
 import LoggedLayout from "../../../components/LoggedLayout";
+import { useTenancyStore } from "../../../components/TenancyStore";
 import Alert from "../../../components/base/Alert";
 import Modal from "../../../components/base/PopupModal";
 import UppyUploader from "../../../components/base/UppyUploader";
 import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
+import { embargoRequestFrom, toEmbargoUntil, validateEmbargoDate } from "../../../lib/embargoDates";
+import { formatShortDate, tenancyDisplayName } from "../../../lib/embargoDisplay";
 import {
   CreateDatasetResponseV2,
   FileUploadAuthTokenRequest,
@@ -26,6 +30,7 @@ interface DatasetPrototyping {
 export default function NewPage() {
   const bffGateway = new BFFAPI();
   const { data: session } = useSession();
+  const tenancySelected = useTenancyStore((state) => state.tenancySelected);
   const [showModal, setShowModal] = useState(false);
   const [datasetCreateResponse, setDatasetCreateResponse] = useState(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
@@ -46,7 +51,10 @@ export default function NewPage() {
     datasetTitle: '',
     urls: [{ url: '', confirmed: false }],
     uploadedDataFiles: [],
-    remoteFilesCount: 0
+    remoteFilesCount: 0,
+    embargoMode: 'none',
+    embargoUntil: '',
+    embargoNote: ''
   };
 
   function onAlertClose(): void {
@@ -62,6 +70,13 @@ export default function NewPage() {
     const confirmed = values.urls.filter(x => x && x.confirmed);
     if (confirmed.length <= 0 && values?.uploadedDataFiles?.length <= 0) {
       errors.remoteFilesCount = 'You have to informe almost one remote file.';
+    }
+
+    if (values.embargoMode && values.embargoMode !== "none") {
+      const message = validateEmbargoDate(values.embargoUntil, new Date());
+      if (message) {
+        errors.embargoUntil = message;
+      }
     }
 
     return errors;
@@ -90,7 +105,13 @@ export default function NewPage() {
       is_enabled: true,
     } as UpdateDatasetRequest;
 
-    uploadFiles()
+    const embargoRequest = embargoRequestFrom(values);
+    const datasetId = datasetPrototyping.createDatasetResponseV2.id;
+
+    (embargoRequest
+      ? bffGateway.setEmbargo(datasetId, { ...embargoRequest, note: values.embargoNote?.trim() || null })
+      : Promise.resolve(null))
+      .then(() => uploadFiles())
       .then(() => updateDataset(datasetUpdateRequest))
       .then(() => {
         // Mapping to PublishDatasetVersionRequest
@@ -200,11 +221,14 @@ export default function NewPage() {
                     userToken={datasetPrototyping?.fileUploadAuthTokenResponse?.token?.jwt}
                     onUppyStateCreated={onUppyStateCreated} />
                 </div>
+
+                <EmbargoChoice tenancyName={tenancyDisplayName(tenancySelected)} />
               </div>
 
               <div className="mx-auto w-full max-w-[640px] h-full px-4 sm:px-0 flex justify-between items-center gap-4">
                 <span className="text-[13px] text-primary-500">
                   {values.remoteFilesCount} {values.remoteFilesCount === 1 ? "file" : "files"}
+                  {values.embargoMode !== "none" && values.embargoUntil && ` · embargo until ${formatShortDate(toEmbargoUntil(values.embargoUntil))}`}
                 </span>
                 <div className="flex gap-2">
                   <button type="button"
