@@ -4,7 +4,7 @@ import { TabPanel } from "./TabPanel";
 import { useRouter } from "next/router";
 import * as Yup from 'yup';
 import { BFFAPI } from "../../gateways/BFFAPI";
-import { canEditDataset } from "../../lib/users";
+import { canEditDataset, canSeeAccessHistory } from "../../lib/users";
 import { UpdateDatasetRequest } from "../../types/BffAPI";
 import { TabPanelProps } from "./TabPanel";
 import { AccessHistory } from "../Embargo/AccessHistory";
@@ -89,7 +89,7 @@ export function TabPanelSettings(props: TabPanelProps) {
         }
         <EmbargoSettingsSection dataset={props.dataset} />
         <AccessSummary dataset={props.dataset} />
-        {canEditDataset(props.user, props.dataset) && <AccessHistory datasetId={props.dataset.id} />}
+        {canSeeAccessHistory(props.user, props.dataset) && <AccessHistory datasetId={props.dataset.id} />}
       </div>
     </TabPanel>
   );

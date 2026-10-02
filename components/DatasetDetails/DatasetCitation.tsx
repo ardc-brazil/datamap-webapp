@@ -10,7 +10,7 @@ import { getVersionByName } from "../../lib/datasetVersionSelector";
 import { tenancyDisplayName } from "../../lib/embargoDisplay";
 import { manualDoiGate } from "../../lib/embargoState";
 import { isDOIUpdateStatusEnabled } from "../../lib/featureFlags";
-import { UserDetailsResponse } from "../../lib/users";
+import { UserDetailsResponse, canEditDataset } from "../../lib/users";
 import { APIError, ErrorDetails } from "../../types/APIError";
 import { CreateDOIRequest, DeleteDOIRequest, GetDatasetDetailsDOIResponse, GetDatasetDetailsDOIResponseRegisterMode, GetDatasetDetailsDOIResponseState, GetDatasetDetailsResponse, NavigateDOIStatusRequest } from "../../types/BffAPI";
 import Alert from "../base/Alert";
@@ -458,6 +458,7 @@ interface CitationDOIViewerProps extends Props {
 function CitationDOIViewer(props: CitationDOIViewerProps) {
     const [showAlert, setShowAlert] = useState(false);
     const [showCheckDOIDeletionModal, setShowCheckDOIDeletionModal] = useState(false);
+    const canEdit = props.user || props.dataset.access ? canEditDataset(props.user, props.dataset) : false;
 
     useEffect(() => {
         setShowAlert(!!props.DOIManagementOperationResult);
@@ -504,7 +505,8 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
     }
 
     function shouldHideDOIStatusNavigation(currentDOI: GetDatasetDetailsDOIResponse): boolean {
-        return currentDOI.state === GetDatasetDetailsDOIResponseState.FINDABLE ||
+        return !canEdit ||
+            currentDOI.state === GetDatasetDetailsDOIResponseState.FINDABLE ||
             currentDOI.mode === GetDatasetDetailsDOIResponseRegisterMode.MANUAL
     }
 
@@ -557,7 +559,7 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
                         />
                     </CardItem>
 
-                    {!shouldHideDOIDeletion(props.currentDOI) &&
+                    {canEdit && !shouldHideDOIDeletion(props.currentDOI) &&
                         <>
                             <div className="grow self-start" >
                                 <ContextMenuButton
@@ -589,7 +591,10 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
                 onCloseAlert={() => setShowAlert(false)}
                 showAlert={showAlert}
             />
-            <div className="flex flex-col items-start gap-1">
+            {!canEdit &&
+                <p className="m-0 text-sm leading-5 text-primary-900">This dataset does not have a registered DOI.</p>
+            }
+            {canEdit && <div className="flex flex-col items-start gap-1">
                 <p className="m-0 text-sm leading-5 text-primary-900">
                     This dataset does not have a registered DOI. Would you like to register one?
                 </p>
@@ -600,7 +605,7 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
                     <RegisterManualDOIButton onClick={props.onRegisterManualDOIClick} />
                     <RegisterAutoDOIButton onClick={props.onRegisterAutoDOIClick} />
                 </div>
-            </div>
+            </div>}
         </ >
     )
 }

@@ -131,3 +131,9 @@ export function canEditDataset(user: UserDetailsResponse, dataset?: { access?: D
     return user.roles.indexOf("datasets_write") >= 0
         || user.roles.indexOf("admin") >= 0;
 }
+export function canSeeAccessHistory(user: UserDetailsResponse, dataset?: { access?: DatasetAccess }): boolean {
+    if (dataset?.access) {
+        return dataset.access.level === "owner" || dataset.access.level === "write";
+    }
+    return canEditDataset(user, dataset);
+}
