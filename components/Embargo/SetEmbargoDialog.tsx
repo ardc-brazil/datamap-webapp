@@ -14,8 +14,9 @@ export function SetEmbargoDialog(props: { dataset: GetDatasetDetailsResponse, sh
     const [bffGateway] = useState(() => new BFFAPI());
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
+    const membersCanEdit = props.dataset.members_can_edit !== false;
     const formik = useFormik({
-        initialValues: { embargoMode: "hidden", embargoUntil: "", embargoNote: "" },
+        initialValues: { embargoMode: "hidden", embargoUntil: "", embargoNote: "", membersCanEdit },
         validate: (values) => {
             const message = validateEmbargoDate(values.embargoUntil, new Date());
             return message ? { embargoUntil: message } : {};
@@ -23,6 +24,9 @@ export function SetEmbargoDialog(props: { dataset: GetDatasetDetailsResponse, sh
         onSubmit: async (values) => {
             setError(null);
             try {
+                if (values.membersCanEdit !== membersCanEdit) {
+                    await bffGateway.setMembersAccess(props.dataset.id, { members_can_edit: values.membersCanEdit });
+                }
                 const request = embargoRequestFrom(values as any);
                 await bffGateway.setEmbargo(props.dataset.id, { ...request, note: values.embargoNote.trim() || null });
                 props.onClose();

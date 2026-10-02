@@ -10,6 +10,7 @@ interface FormValues {
     embargoMode?: "none" | "open" | "hidden"
     embargoUntil?: string
     embargoNote?: string
+    membersCanEdit?: boolean
 }
 
 interface DatafilePath {

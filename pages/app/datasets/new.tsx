@@ -59,7 +59,8 @@ export default function NewPage() {
     remoteFilesCount: 0,
     embargoMode: 'none',
     embargoUntil: '',
-    embargoNote: ''
+    embargoNote: '',
+    membersCanEdit: true
   };
 
   function onAlertClose(): void {
@@ -116,7 +117,12 @@ export default function NewPage() {
     setEmbargoError(null);
     finishDatasetCreation({
       setEmbargo: embargoRequest
-        ? () => bffGateway.setEmbargo(datasetId, { ...embargoRequest, note: values.embargoNote?.trim() || null })
+        ? async () => {
+          if (values.membersCanEdit === false) {
+            await bffGateway.setMembersAccess(datasetId, { members_can_edit: false });
+          }
+          return bffGateway.setEmbargo(datasetId, { ...embargoRequest, note: values.embargoNote?.trim() || null });
+        }
         : null,
       embargoAlreadySet: embargoSetUntil !== null,
       onEmbargoSet: () => { setEmbargoSetUntil(embargoRequest?.until ?? null); },
