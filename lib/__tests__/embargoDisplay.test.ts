@@ -94,4 +94,11 @@ describe("describeAccessEvent", () => {
     test("an early end by an external DOI says so", () => {
         expect(describeAccessEvent(entry({ event_type: "ended_early", note: "manual DOI" })).detail).toBe("by registering an external DOI");
     });
+
+    test("what members can do, either way", () => {
+        expect(describeAccessEvent(entry({ event_type: "members_access_changed", old_value: { members_can_edit: true }, new_value: { members_can_edit: false } })))
+            .toEqual({ icon: "edit_off", who: "Luciana Rizzo", what: "made the dataset read only for members of the workspace", detail: "was read and edit" });
+        expect(describeAccessEvent(entry({ event_type: "members_access_changed", old_value: { members_can_edit: false }, new_value: { members_can_edit: true } })))
+            .toEqual({ icon: "edit", who: "Luciana Rizzo", what: "let members of the workspace edit the dataset", detail: "was read only" });
+    });
 });

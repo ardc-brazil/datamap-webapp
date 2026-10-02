@@ -51,4 +51,20 @@ describe("EmbargoEndedBanner", () => {
 
         expect(screen.getByRole("status").textContent).toContain("The dataset has no DOI to promote");
     });
+
+    test("it says what members got back, by default read and edit", () => {
+        render(<EmbargoEndedBanner dataset={dataset} />);
+
+        expect(screen.getByRole("status").textContent)
+            .toContain("Members of Data Amazon can read and edit this dataset again; the people you shared it with keep their access.");
+    });
+
+    test("with members read-only, editing stays with the people shared with", () => {
+        render(<EmbargoEndedBanner dataset={{ ...dataset, members_can_edit: false }} />);
+
+        const banner = screen.getByRole("status");
+        expect(banner.textContent)
+            .toContain("Members of Data Amazon can read this dataset; editing stays with the people you shared it with.");
+        expect(banner.textContent).not.toContain("can read and edit");
+    });
 });
