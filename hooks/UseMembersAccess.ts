@@ -11,6 +11,15 @@ export function useMembersAccess(datasetId: string, afterSave?: () => Promise<un
     const [error, setError] = useState<string | null>(null);
     const busyRef = useRef(false);
 
+    async function refresh() {
+        try {
+            await afterSave?.();
+            await router.replace(router.asPath, undefined, { scroll: false });
+        } catch {
+            // The change is saved; a cancelled navigation or a failed refetch is not an error to report.
+        }
+    }
+
     async function save(membersCanEdit: boolean) {
         if (busyRef.current) {
             return;
@@ -20,9 +29,8 @@ export function useMembersAccess(datasetId: string, afterSave?: () => Promise<un
         setError(null);
         try {
             await bffGateway.setMembersAccess(datasetId, { members_can_edit: membersCanEdit });
-            await afterSave?.();
-            await router.replace(router.asPath, undefined, { scroll: false });
             setEditing(false);
+            await refresh();
         } catch (e) {
             setError(messageForApiError(e));
         } finally {

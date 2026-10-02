@@ -238,6 +238,22 @@ describe("ShareDialog", () => {
         expect(screen.getByRole("dialog", { name: "Share" })).toBeTruthy();
     });
 
+    test("a saved change closes the members dialog even when the page refresh is cancelled", async () => {
+        shareState = stateWith({ tenancy: { name: "Data Amazon", path: "datamap/production/data-amazon", members: 14, members_can_edit: true } });
+        setMembersAccess.mockResolvedValue({ members_can_edit: false, access: { level: "owner" } });
+        replace.mockRejectedValueOnce({ cancelled: true });
+        render(<ShareDialog dataset={{ ...open, access: { level: "owner" }, members_can_edit: true }} show onClose={jest.fn()} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Change what members of Data Amazon can do" }));
+        fireEvent.click(screen.getByRole("radio", { name: /Read only/ }));
+        fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+        await waitFor(() => expect(replace).toHaveBeenCalled());
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: "What members of Data Amazon can do" })).toBeNull());
+        expect(screen.queryByRole("alert")).toBeNull();
+        expect(screen.getByRole("dialog", { name: "Share" })).toBeTruthy();
+    });
+
     test("during an embargo the row says what members get afterwards", () => {
         shareState = stateWith({ tenancy: null });
         render(<ShareDialog dataset={{ ...embargoed, access: { level: "owner" }, members_can_edit: false }} show onClose={jest.fn()} />);

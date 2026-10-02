@@ -2,7 +2,7 @@ import Uppy from "@uppy/core";
 import { ErrorMessage, Field, Form, Formik, FormikHelpers } from "formik";
 import { useSession } from "next-auth/react";
 import Router from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EmbargoChoice } from "../../../components/Embargo/EmbargoChoice";
 import LayoutFullScreen from "../../../components/LayoutFullScreen";
 import LoggedLayout from "../../../components/LoggedLayout";
@@ -41,6 +41,7 @@ export default function NewPage() {
   const [uppyReference, setUppyReference] = useState(null as Uppy);
   const [embargoError, setEmbargoError] = useState(null as string | null);
   const [embargoSetUntil, setEmbargoSetUntil] = useState(null as string | null);
+  const membersCanEditSent = useRef(true);
 
   function datasetCreated(datasetResponse: any): void {
     setShowModal(true);
@@ -118,8 +119,9 @@ export default function NewPage() {
     finishDatasetCreation({
       setEmbargo: embargoRequest
         ? async () => {
-          if (values.membersCanEdit === false) {
-            await bffGateway.setMembersAccess(datasetId, { members_can_edit: false });
+          if (values.membersCanEdit !== membersCanEditSent.current) {
+            await bffGateway.setMembersAccess(datasetId, { members_can_edit: values.membersCanEdit });
+            membersCanEditSent.current = values.membersCanEdit;
           }
           return bffGateway.setEmbargo(datasetId, { ...embargoRequest, note: values.embargoNote?.trim() || null });
         }

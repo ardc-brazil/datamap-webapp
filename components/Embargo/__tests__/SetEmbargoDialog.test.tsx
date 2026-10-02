@@ -63,6 +63,39 @@ describe("SetEmbargoDialog", () => {
         expect(setMembersAccess).not.toHaveBeenCalled();
     });
 
+    test("after a failed embargo, flipping the members' setting back sends it again on the retry", async () => {
+        setEmbargo.mockRejectedValueOnce({ httpCode: 400, errors: [{ code: "embargo_until_in_past" }] });
+        render(<SetEmbargoDialog dataset={dataset} show onClose={jest.fn()} />);
+        pickDate();
+
+        fireEvent.click(screen.getByRole("button", { name: "Change what members of Data Amazon can do" }));
+        await act(async () => {
+            fireEvent.click(screen.getByRole("radio", { name: /Read only/ }));
+            fireEvent.click(screen.getByRole("button", { name: "Save" }));
+        });
+        await act(async () => {
+            fireEvent.click(screen.getByRole("button", { name: "Set embargo" }));
+        });
+        await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
+        expect(setMembersAccess).toHaveBeenCalledTimes(1);
+        expect(setMembersAccess).toHaveBeenCalledWith("d1", { members_can_edit: false });
+
+        fireEvent.click(screen.getByRole("button", { name: "Change what members of Data Amazon can do" }));
+        await act(async () => {
+            fireEvent.click(screen.getByRole("radio", { name: /Read and edit/ }));
+            fireEvent.click(screen.getByRole("button", { name: "Save" }));
+        });
+        expect(screen.getByText("When the embargo ends, members of Data Amazon can read and edit again.")).toBeTruthy();
+        await act(async () => {
+            fireEvent.click(screen.getByRole("button", { name: "Set embargo" }));
+        });
+
+        await waitFor(() => expect(setEmbargo).toHaveBeenCalledTimes(2));
+        expect(setMembersAccess).toHaveBeenCalledTimes(2);
+        expect(setMembersAccess).toHaveBeenLastCalledWith("d1", { members_can_edit: true });
+        expect(setMembersAccess.mock.invocationCallOrder[1]).toBeLessThan(setEmbargo.mock.invocationCallOrder[1]);
+    });
+
     test("a dataset already read-only starts from read-only", () => {
         render(<SetEmbargoDialog dataset={{ ...dataset, members_can_edit: false }} show onClose={jest.fn()} />);
 
