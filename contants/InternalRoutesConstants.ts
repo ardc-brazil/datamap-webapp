@@ -84,7 +84,6 @@ export const ROUTE_PAGE_INVITATION = (params) => replaceIt('/invitations/:token'
  */
 export const ROUTE_PAGE_DOI_LANDING = (params) => replaceIt('/doi/datasets/:id/versions/:versionName', params);
 
-
 /**
  * Route to the user profile internal page.
  * @constant

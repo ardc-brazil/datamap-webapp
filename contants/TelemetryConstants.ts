@@ -7,6 +7,7 @@ export const PAGES: readonly string[] = [
   "/404",
   "/500",
   "/account/login",
+  "/anonymous/[token]",
   "/app/datasets",
   "/app/datasets/[datasetId]",
   "/app/datasets/[datasetId]/versions/[versionName]",
@@ -27,7 +28,6 @@ export const PAGES: readonly string[] = [
   "/project/partners-and-supporters",
   "/project/research-group",
   "/project/support",
-  "/anonymous/[token]",
   "/tools",
 ];
 
