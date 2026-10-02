@@ -119,9 +119,10 @@ export default function NewPage() {
     finishDatasetCreation({
       setEmbargo: embargoRequest
         ? async () => {
-          if (values.membersCanEdit !== membersCanEditSent.current) {
-            await bffGateway.setMembersAccess(datasetId, { members_can_edit: values.membersCanEdit });
-            membersCanEditSent.current = values.membersCanEdit;
+          const membersCanEdit = values.membersCanEdit !== false;
+          if (membersCanEdit !== membersCanEditSent.current) {
+            await bffGateway.setMembersAccess(datasetId, { members_can_edit: membersCanEdit });
+            membersCanEditSent.current = membersCanEdit;
           }
           return bffGateway.setEmbargo(datasetId, { ...embargoRequest, note: values.embargoNote?.trim() || null });
         }
