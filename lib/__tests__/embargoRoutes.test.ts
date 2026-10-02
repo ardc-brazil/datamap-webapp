@@ -23,17 +23,27 @@ function fakeRes() {
     return res;
 }
 
-async function send(handler: any, method: string, query: Record<string, string>, body: unknown = undefined) {
+async function send(handler: any, method: string, query: Record<string, string>, body: unknown = undefined, lines: string[] = []) {
     const res = fakeRes();
     const original = process.stdout.write;
     // @ts-ignore
-    process.stdout.write = () => true;
+    process.stdout.write = (chunk: string) => {
+        lines.push(String(chunk));
+        return true;
+    };
     try {
         await handler({ method, url: "/api/x", headers: {}, cookies: {}, query, body } as any, res);
     } finally {
         process.stdout.write = original;
     }
     return res;
+}
+
+function errorLines(lines: string[]) {
+    return lines
+        .filter((line) => line.trim().length > 0)
+        .map((line) => JSON.parse(line))
+        .filter((entry) => entry.level === "ERROR");
 }
 
 describe("the embargo BFF routes", () => {
@@ -82,5 +92,31 @@ describe("the routes the design adds", () => {
 
         expect(res.statusCode).toBe(200);
         expect(res.json).toHaveBeenCalledWith({ items: [] });
+    });
+});
+
+describe("a failing route", () => {
+    test("a server failure answers 500 and logs one error line", async () => {
+        jest.mocked(setEmbargo).mockRejectedValue(new Error("gatekeeper down"));
+        const lines: string[] = [];
+
+        const res = await send(embargoHandler, "PUT", { datasetId: "d1" }, { until: "2026-12-01T23:59:59+00:00" }, lines);
+
+        expect(res.statusCode).toBe(500);
+        const errors = errorLines(lines);
+        expect(errors).toHaveLength(1);
+        expect(errors[0].message).toBe("bff route failed");
+    });
+
+    test("a refusal the user can act on is answered without an error line", async () => {
+        jest.mocked(setEmbargo).mockRejectedValue(
+            Object.assign(new Error("refused"), { isAxiosError: true, response: { status: 400, data: { errors: [{ code: "embargo_too_long" }] } } })
+        );
+        const lines: string[] = [];
+
+        const res = await send(embargoHandler, "PUT", { datasetId: "d1" }, { until: "2027-12-01T23:59:59+00:00" }, lines);
+
+        expect(res.statusCode).toBe(400);
+        expect(errorLines(lines)).toHaveLength(0);
     });
 });
