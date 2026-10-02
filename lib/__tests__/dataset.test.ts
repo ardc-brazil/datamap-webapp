@@ -143,6 +143,19 @@ describe('Dataset Gateway test', () => {
                 params: { page: "2", page_size: "20", minimal: "true", shared: "true" },
             });
         });
+
+        test("forwards only the paging, whatever else the query carries", async () => {
+            jest.mocked(buildHeaders).mockReturnValue({ headers: { "X-User-Id": "u1" } } as any);
+            mockAxiosGet.mockResolvedValue({ data: { content: [], total_count: 0 } });
+            const context = { uid: "u1", tenancy: undefined };
+
+            await getSharedDatasets(context, { page: "1", page_size: "10", shared: "false", minimal: "false", user_id: "someone-else" });
+
+            expect(mockAxiosGet).toHaveBeenCalledWith("/datasets/", {
+                headers: { "X-User-Id": "u1" },
+                params: { page: "1", page_size: "10", minimal: "true", shared: "true" },
+            });
+        });
     })
 })
 

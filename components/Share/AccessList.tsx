@@ -13,7 +13,6 @@ import { PersonInitial } from "./PersonInitial";
 
 interface Props {
     state: ShareState
-    embargoActive: boolean
     me?: string
     busy?: boolean
     onChangeLevel(userId: string, level: PermissionLevel): void

@@ -95,7 +95,6 @@ export function ShareDialog(props: Props) {
                         {state &&
                             <AccessList
                                 state={state}
-                                embargoActive={embargoActive}
                                 me={(session?.data?.user as any)?.uid}
                                 busy={busy}
                                 onChangeLevel={(userId, level: PermissionLevel) => run(() => bffGateway.changePermissionLevel(datasetId, userId, level))}

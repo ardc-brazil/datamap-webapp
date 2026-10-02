@@ -22,7 +22,6 @@ const state: any = {
 function renderList(overrides: any = {}, handlers: any = {}) {
     render(<AccessList
         state={{ ...state, ...overrides }}
-        embargoActive
         onChangeLevel={handlers.onChangeLevel ?? jest.fn()}
         onRemove={handlers.onRemove ?? jest.fn()}
         onRevokeInvitation={handlers.onRevokeInvitation ?? jest.fn()}

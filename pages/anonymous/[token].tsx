@@ -45,7 +45,7 @@ export default function AnonymousPage(props: Props) {
                     <section className="flex flex-col gap-2.5">
                         <h2 className="m-0 text-base font-semibold text-primary-900">About</h2>
                         <article className="prose max-w-none text-[15px] leading-6 text-primary-700">
-                            <ReactMarkdown children={description} remarkPlugins={[remarkGfm]} />
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{description}</ReactMarkdown>
                         </article>
                     </section>
                 }

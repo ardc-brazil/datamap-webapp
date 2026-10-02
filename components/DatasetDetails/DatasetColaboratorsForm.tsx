@@ -119,7 +119,7 @@ export default function DatasetColaboratorsForm(props: Props) {
                                             }
                                         </div>
 
-                                        <button type="button" className="mt-3 text-[13px] font-semibold text-primary-700 hover:text-primary-900" onClick={() => arrayHelpers.push({})}>+ Add collaborator</button>
+                                        <button type="button" className="mt-3 text-[13px] font-semibold text-primary-700 hover:text-primary-900" onClick={() => arrayHelpers.push({ name: "" })}>+ Add collaborator</button>
 
                                         <EditFormActions onCancel={handleCancelClick} isSubmitting={isSubmitting} />
                                     </div>
