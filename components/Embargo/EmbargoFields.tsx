@@ -1,13 +1,17 @@
 import { ErrorMessage, Field, useFormikContext } from "formik";
+import { useState } from "react";
 import { MaterialSymbol } from "react-material-symbols";
 import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_INPUT_CLASS } from "../../contants/EditFormConstants";
 import { maxEmbargoDate, minEmbargoDate, toEmbargoUntil } from "../../lib/embargoDates";
 import { daysFromToday, formatShortDate } from "../../lib/embargoDisplay";
+import { membersAfterEmbargoLine } from "../../lib/membersAccess";
+import { MembersAccessDialog } from "../Share/MembersAccessDialog";
 
 interface Values {
     embargoMode: string
     embargoUntil: string
     embargoNote: string
+    membersCanEdit?: boolean
 }
 
 const MEMBER_OPTIONS = [
@@ -17,6 +21,8 @@ const MEMBER_OPTIONS = [
 
 export function EmbargoFields(props: { tenancyName: string, disabled?: boolean }) {
     const { values, setFieldValue } = useFormikContext<Values>();
+    const [changingMembers, setChangingMembers] = useState(false);
+    const membersCanEdit = values.membersCanEdit !== false;
     const now = new Date();
     const max = maxEmbargoDate(now);
     const days = values.embargoUntil ? daysFromToday(values.embargoUntil, now) : null;
@@ -56,6 +62,29 @@ export function EmbargoFields(props: { tenancyName: string, disabled?: boolean }
                     })}
                 </div>
             </fieldset>
+            <p className="m-0 -mt-2 text-xs leading-[17px] text-primary-600">
+                {membersAfterEmbargoLine(props.tenancyName, membersCanEdit)}{" "}
+                <button
+                    type="button"
+                    aria-label={`Change what members of ${props.tenancyName} can do`}
+                    disabled={props.disabled}
+                    onClick={() => setChangingMembers(true)}
+                    className="font-semibold text-primary-900 underline underline-offset-2 disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
+                >
+                    Change
+                </button>
+            </p>
+            <MembersAccessDialog
+                show={changingMembers}
+                tenancyName={props.tenancyName}
+                membersCanEdit={membersCanEdit}
+                embargoActive
+                onCancel={() => setChangingMembers(false)}
+                onSave={(value) => {
+                    setFieldValue("membersCanEdit", value);
+                    setChangingMembers(false);
+                }}
+            />
             <div className="flex gap-2.5 items-start rounded-md bg-embargo-100 px-3 py-2.5 text-xs leading-[18px] text-embargo-800">
                 <MaterialSymbol icon="info" size={18} grade={-25} weight={400} className="flex-none" aria-hidden="true" />
                 <span>

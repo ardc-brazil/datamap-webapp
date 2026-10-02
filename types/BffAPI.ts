@@ -39,6 +39,7 @@ export interface GetDatasetDetailsResponse {
     embargo?: DatasetEmbargo | null
     access?: DatasetAccess
     owner?: DatasetOwner | null
+    members_can_edit?: boolean
 }
 
 export interface GetDatasetDetailsVersionResponse {
@@ -205,6 +206,7 @@ export interface GetMinimalDatasetsDetasetDetailsResponse {
     }
     embargo?: DatasetEmbargo | null
     access?: DatasetAccess
+    members_can_edit?: boolean
 }
 
 export interface CreateDatasetRequestV2 {

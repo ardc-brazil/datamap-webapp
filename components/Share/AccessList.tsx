@@ -18,6 +18,14 @@ interface Props {
     onChangeLevel(userId: string, level: PermissionLevel): void
     onRemove(permission: SharePermission): void
     onRevokeInvitation(invitationId: string): void
+    members?: MembersRow | null
+    onChangeMembers?(): void
+}
+
+export interface MembersRow {
+    tenancyName: string
+    detail: string
+    canChange: boolean
 }
 
 function permissionDetail(permission: SharePermission): string {
@@ -35,19 +43,6 @@ export function AccessList(props: Props) {
         <section className="flex flex-col gap-1" aria-labelledby="access-list-title">
             <h4 id="access-list-title" className={`${SHARE_SECTION_LABEL_CLASS} pb-1.5`}>Who has access</h4>
             <ul className="m-0 p-0 list-none">
-                {props.state.tenancy &&
-                    <li className={SHARE_ROW_CLASS}>
-                        <span aria-hidden="true" className="flex items-center justify-center h-8 w-8 rounded-full bg-secondary-500 text-primary-900">
-                            <MaterialSymbol icon="groups" size={18} grade={-25} weight={400} />
-                        </span>
-                        <span className="flex flex-col min-w-0">
-                            <span className={SHARE_PERSON_NAME_CLASS}>Members of {props.state.tenancy.name}</span>
-                            <span className={SHARE_PERSON_DETAIL_CLASS}>{props.state.tenancy.members} people · workspace default</span>
-                        </span>
-                        <span className="text-[13px] font-medium text-primary-500">Can read</span>
-                    </li>
-                }
-
                 <li className={SHARE_ROW_CLASS}>
                     <PersonInitial name={owner.name} owner />
                     <span className="flex flex-col min-w-0">
@@ -102,6 +97,29 @@ export function AccessList(props: Props) {
                         </li>
                     );
                 })}
+
+                {props.members &&
+                    <li className={SHARE_ROW_CLASS}>
+                        <span aria-hidden="true" className="flex items-center justify-center h-8 w-8 rounded-full bg-secondary-500 text-primary-900">
+                            <MaterialSymbol icon="groups" size={18} grade={-25} weight={400} />
+                        </span>
+                        <span className="flex flex-col min-w-0">
+                            <span className={SHARE_PERSON_NAME_CLASS}>Members of {props.members.tenancyName}</span>
+                            <span className={SHARE_PERSON_DETAIL_CLASS}>{props.members.detail}</span>
+                        </span>
+                        {props.members.canChange
+                            ? <button
+                                type="button"
+                                aria-label={`Change what members of ${props.members.tenancyName} can do`}
+                                className="text-[13px] font-medium text-primary-600 hover:underline underline-offset-2 disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
+                                disabled={props.busy}
+                                onClick={() => props.onChangeMembers?.()}
+                            >
+                                Change
+                            </button>
+                            : <span></span>}
+                    </li>
+                }
             </ul>
         </section>
     );

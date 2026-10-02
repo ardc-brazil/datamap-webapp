@@ -12,6 +12,7 @@ import {
     revokePermission,
     revokeAnonymousLink,
     searchShareCandidates,
+    setMembersAccess,
 } from "../share";
 import axiosInstance, { buildHeaders } from "../rpc";
 
@@ -122,5 +123,15 @@ describe("invitation preview", () => {
 
         expect(await getInvitationPreview("tok/1")).toEqual(preview);
         expect(axiosInstance.get).toHaveBeenCalledWith("/invitations/tok%2F1");
+    });
+});
+
+describe("members' access", () => {
+    test("is set with the user's headers", async () => {
+        const answer = { members_can_edit: false, access: { level: "owner" } };
+        mockPut.mockResolvedValue({ data: answer });
+
+        expect(await setMembersAccess(context, "d1", { members_can_edit: false })).toEqual(answer);
+        expect(mockPut).toHaveBeenCalledWith("/datasets/d1/members-access", { members_can_edit: false }, headers);
     });
 });

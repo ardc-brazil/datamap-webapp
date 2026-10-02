@@ -4,12 +4,15 @@ import { MaterialSymbol } from "react-material-symbols";
 import useSWR from "swr";
 import { messageForApiError } from "../../contants/EmbargoConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
+import { useMembersAccess } from "../../hooks/UseMembersAccess";
 import { tenancyDisplayName } from "../../lib/embargoDisplay";
+import { canChangeMembersAccess, membersAccessDetail, membersCanEditOf } from "../../lib/membersAccess";
 import { fetcher } from "../../lib/fetcher";
 import { GetDatasetDetailsResponse } from "../../types/BffAPI";
 import { GrantRequest, PermissionLevel, SharePermission, ShareState } from "../../types/GatekeeperAPI";
 import { AccessList } from "./AccessList";
 import { AnonymousLinksSection } from "./AnonymousLinksSection";
+import { MembersAccessDialog } from "./MembersAccessDialog";
 import { NewAnonymousLinkDialog } from "./NewAnonymousLinkDialog";
 import { OneTimeLinkDialog } from "./OneTimeLinkDialog";
 import { RemoveAccessDialog } from "./RemoveAccessDialog";
@@ -35,10 +38,21 @@ export function ShareDialog(props: Props) {
 
     const { data, error: loadError, mutate } = useSWR(props.show ? `/api/datasets/${datasetId}/share` : null, fetcher);
     const state = data as ShareState;
+    const membersAccess = useMembersAccess(datasetId, () => mutate());
 
     if (!props.show) {
         return null;
     }
+
+    const tenancyName = tenancyDisplayName(props.dataset.tenancy);
+    const membersCanEdit = membersCanEditOf(props.dataset, state);
+    const membersRow = props.dataset.tenancy && (state?.tenancy || embargoActive)
+        ? {
+            tenancyName,
+            canChange: canChangeMembersAccess(props.dataset),
+            detail: membersAccessDetail({ membersCanEdit, embargoActive, members: state?.tenancy?.members ?? null }),
+        }
+        : null;
 
     async function run<T>(action: () => Promise<T>): Promise<T | undefined> {
         if (busyRef.current) {
@@ -89,7 +103,7 @@ export function ShareDialog(props: Props) {
                     </div>
 
                     <div className="flex flex-col gap-4 px-6 pb-5 overflow-y-auto">
-                        <ShareInput datasetId={datasetId} tenancyName={tenancyDisplayName(props.dataset.tenancy)} onGrant={onGrant} busy={busy} />
+                        <ShareInput datasetId={datasetId} tenancyName={tenancyName} onGrant={onGrant} busy={busy} />
                         {error && <p role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
                         {loadError && <p className="m-0 text-sm text-danger-700">The people with access could not be loaded.</p>}
                         {state &&
@@ -100,6 +114,8 @@ export function ShareDialog(props: Props) {
                                 onChangeLevel={(userId, level: PermissionLevel) => run(() => bffGateway.changePermissionLevel(datasetId, userId, level))}
                                 onRemove={(permission) => setRemoving(permission)}
                                 onRevokeInvitation={(id) => run(() => bffGateway.revokeInvitation(datasetId, id))}
+                                members={membersRow}
+                                onChangeMembers={membersAccess.open}
                             />
                         }
                         {state && embargoActive &&
@@ -146,6 +162,16 @@ export function ShareDialog(props: Props) {
                         setRemoving(null);
                     }
                 }}
+            />
+            <MembersAccessDialog
+                show={membersAccess.editing}
+                tenancyName={tenancyName}
+                membersCanEdit={membersCanEdit}
+                embargoActive={embargoActive}
+                busy={membersAccess.busy}
+                error={membersAccess.error}
+                onCancel={membersAccess.close}
+                onSave={membersAccess.save}
             />
         </>
     );

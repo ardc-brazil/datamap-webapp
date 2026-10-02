@@ -1,6 +1,6 @@
 import { FormikProvider, useFormik } from "formik";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { EDIT_FORM_ERROR_CLASS } from "../../contants/EditFormConstants";
 import { messageForApiError } from "../../contants/EmbargoConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
@@ -14,8 +14,9 @@ export function SetEmbargoDialog(props: { dataset: GetDatasetDetailsResponse, sh
     const [bffGateway] = useState(() => new BFFAPI());
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
+    const membersCanEditSent = useRef(props.dataset.members_can_edit !== false);
     const formik = useFormik({
-        initialValues: { embargoMode: "hidden", embargoUntil: "", embargoNote: "" },
+        initialValues: { embargoMode: "hidden", embargoUntil: "", embargoNote: "", membersCanEdit: membersCanEditSent.current },
         validate: (values) => {
             const message = validateEmbargoDate(values.embargoUntil, new Date());
             return message ? { embargoUntil: message } : {};
@@ -23,6 +24,10 @@ export function SetEmbargoDialog(props: { dataset: GetDatasetDetailsResponse, sh
         onSubmit: async (values) => {
             setError(null);
             try {
+                if (values.membersCanEdit !== membersCanEditSent.current) {
+                    await bffGateway.setMembersAccess(props.dataset.id, { members_can_edit: values.membersCanEdit });
+                    membersCanEditSent.current = values.membersCanEdit;
+                }
                 const request = embargoRequestFrom(values as any);
                 await bffGateway.setEmbargo(props.dataset.id, { ...request, note: values.embargoNote.trim() || null });
                 props.onClose();

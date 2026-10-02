@@ -65,3 +65,9 @@ describe("the embargo telemetry", () => {
     }
   });
 });
+
+describe("members' access", () => {
+  it("accepts its ui event", () => {
+    expect(uiEventLabel("members_access_changed")).toBe("members_access_changed");
+  });
+});

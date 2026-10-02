@@ -4,6 +4,7 @@ import { MaterialSymbol } from "react-material-symbols";
 import { messageForApiError } from "../../contants/EmbargoConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { formatShortDate, tenancyDisplayName } from "../../lib/embargoDisplay";
+import { membersOutcomeSentence } from "../../lib/membersAccess";
 import { GetDatasetDetailsDOIResponseState, GetDatasetDetailsResponse } from "../../types/BffAPI";
 import Modal from "../base/PopupModal";
 
@@ -52,6 +53,10 @@ export function EmbargoEndedBanner(props: { dataset: GetDatasetDetailsResponse }
                     <div className="flex gap-2.5">
                         <MaterialSymbol icon="check_circle" size={18} grade={-25} weight={400} fill className="flex-none text-success-500" aria-hidden="true" />
                         <span>Files are available to every member of {tenancy}.</span>
+                    </div>
+                    <div className="flex gap-2.5">
+                        <MaterialSymbol icon="check_circle" size={18} grade={-25} weight={400} fill className="flex-none text-success-500" aria-hidden="true" />
+                        <span>{membersOutcomeSentence(tenancy, props.dataset.members_can_edit !== false)}</span>
                     </div>
                     <div className="flex gap-2.5">
                         <MaterialSymbol icon="radio_button_unchecked" size={18} grade={-25} weight={400} className="flex-none text-primary-400" aria-hidden="true" />

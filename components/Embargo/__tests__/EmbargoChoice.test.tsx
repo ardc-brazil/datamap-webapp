@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 import { describe, expect, test } from '@jest/globals';
-import { act, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { Form, Formik } from "formik";
 import { EmbargoChoice } from "../EmbargoChoice";
 
@@ -77,5 +77,22 @@ describe("EmbargoChoice", () => {
         expect((screen.getByRole("radio", { name: /Open to the workspace/ }) as HTMLInputElement).disabled).toBe(true);
         expect((screen.getByRole("radio", { name: /Under embargo/ }) as HTMLInputElement).disabled).toBe(true);
         expect(screen.getByRole("status").textContent).toBe("Embargo set until Dec 15, 2026; change it in Settings after creation");
+    });
+
+    test("a line under the members choice says what they get afterwards, and Change switches it", async () => {
+        renderChoice();
+
+        await clickRadio(/Under embargo/);
+
+        expect(screen.getByText("When the embargo ends, members of Data Amazon can read and edit again.")).toBeTruthy();
+        fireEvent.click(screen.getByRole("button", { name: "Change what members of Data Amazon can do" }));
+        expect(screen.getByText("Members have no access while the embargo lasts. This decides what they get when it ends.")).toBeTruthy();
+        await act(async () => {
+            fireEvent.click(screen.getByRole("radio", { name: /Read only/ }));
+            fireEvent.click(screen.getByRole("button", { name: "Save" }));
+        });
+
+        expect(screen.getByText("When the embargo ends, members of Data Amazon can read but not edit.")).toBeTruthy();
+        expect(screen.queryByRole("dialog", { name: "What members of Data Amazon can do" })).toBeNull();
     });
 });

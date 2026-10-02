@@ -79,10 +79,40 @@ describe("AccessList", () => {
         expect(onRevokeInvitation).toHaveBeenCalledWith("i1");
     });
 
-    test("without an embargo the workspace is the first row", () => {
-        renderList({ tenancy: { name: "Data Amazon", path: "datamap/production/data-amazon", members: 14 } });
+    test("the members row comes last, after the people it refers to", () => {
+        render(<AccessList
+            state={state}
+            members={{ tenancyName: "Data Amazon", detail: "14 people · can read · editing limited to the people above", canChange: false }}
+            onChangeLevel={jest.fn()}
+            onRemove={jest.fn()}
+            onRevokeInvitation={jest.fn()}
+        />);
 
-        expect(screen.getByText("Members of Data Amazon")).toBeTruthy();
-        expect(screen.getByText("14 people · workspace default")).toBeTruthy();
+        const rows = screen.getAllByRole("listitem");
+        expect(rows[rows.length - 1].textContent).toContain("Members of Data Amazon");
+        expect(screen.getByText("14 people · can read · editing limited to the people above")).toBeTruthy();
+        expect(screen.queryByRole("button", { name: /Change what members/ })).toBeNull();
+    });
+
+    test("the owner changes what members can do from the row", () => {
+        const onChangeMembers = jest.fn();
+        render(<AccessList
+            state={state}
+            members={{ tenancyName: "Data Amazon", detail: "14 people · can read and edit", canChange: true }}
+            onChangeMembers={onChangeMembers}
+            onChangeLevel={jest.fn()}
+            onRemove={jest.fn()}
+            onRevokeInvitation={jest.fn()}
+        />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Change what members of Data Amazon can do" }));
+
+        expect(onChangeMembers).toHaveBeenCalled();
+    });
+
+    test("without a members row, the state's tenancy is not shown on its own", () => {
+        renderList({ tenancy: { name: "Data Amazon", path: "datamap/production/data-amazon", members: 14, members_can_edit: true } });
+
+        expect(screen.queryByText("Members of Data Amazon")).toBeNull();
     });
 });

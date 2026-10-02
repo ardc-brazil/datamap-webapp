@@ -92,6 +92,10 @@ export function describeAccessEvent(entry: AccessHistoryEntry): { icon: string, 
                 : { icon: "visibility_off", who, what: "hid the dataset from members", detail: "was visible" };
         case "note_changed":
             return { icon: "edit_note", who, what: after.note ? "changed the note" : "removed the note", detail: quoted(after.note) };
+        case "members_access_changed":
+            return after.members_can_edit
+                ? { icon: "edit", who, what: "let members of the workspace edit the dataset", detail: "was read only" }
+                : { icon: "edit_off", who, what: "made the dataset read only for members of the workspace", detail: "was read and edit" };
         case "permission_granted":
             return entry.old_value
                 ? { icon: "manage_accounts", who, what: `changed ${subject}'s access to ${after.level}`, detail: "" }

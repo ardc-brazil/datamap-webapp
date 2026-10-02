@@ -49,4 +49,13 @@ describe("BFFAPI embargo and sharing", () => {
 
         expect(axios.get).toHaveBeenCalledWith("/api/datasets/d1/share/candidates?q=ana%20souza");
     });
+
+    test("changing what members can do calls the BFF and records the event", async () => {
+        const answer = { members_can_edit: false, access: { level: "owner" } };
+        jest.mocked(axios.put).mockResolvedValue({ status: 200, data: answer });
+
+        expect(await bff.setMembersAccess("d1", { members_can_edit: false })).toEqual(answer);
+        expect(axios.put).toHaveBeenCalledWith("/api/datasets/d1/members-access", { members_can_edit: false });
+        expect(trackUiEvent).toHaveBeenCalledWith("members_access_changed");
+    });
 });
