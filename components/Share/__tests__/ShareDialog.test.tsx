@@ -5,12 +5,13 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 const grantAccess = jest.fn() as any;
 const createAnonymousLink = jest.fn() as any;
 const revokePermission = jest.fn() as any;
+const revokeAnonymousLink = jest.fn() as any;
 const searchShareCandidates = jest.fn() as any;
 const mutate = jest.fn();
 let shareState: any;
 
 jest.mock("../../../gateways/BFFAPI", () => ({
-    BFFAPI: jest.fn().mockImplementation(() => ({ grantAccess, createAnonymousLink, revokePermission, searchShareCandidates })),
+    BFFAPI: jest.fn().mockImplementation(() => ({ grantAccess, createAnonymousLink, revokePermission, revokeAnonymousLink, searchShareCandidates })),
 }));
 jest.mock("swr", () => ({
     __esModule: true,
@@ -124,6 +125,30 @@ describe("ShareDialog", () => {
         fireEvent.click(screen.getByRole("button", { name: "Remove access" }));
 
         await waitFor(() => expect(revokePermission).toHaveBeenCalledWith("d1", "u2"));
+    });
+
+    test("while removing access is pending, the confirm is disabled, other actions are dropped, and the dialog stays open until it resolves", async () => {
+        shareState = stateWith({
+            anonymous_links: [{ id: "r1", label: "Reviewers", token_hint: null, created_at: "2026-09-20T10:00:00+00:00", revoked_at: null, views: { count: 0, first_at: null, last_at: null } }],
+        });
+        let resolve: (value: unknown) => void;
+        revokePermission.mockReturnValue(new Promise((r) => { resolve = r; }));
+        render(<ShareDialog dataset={embargoed} show onClose={jest.fn()} />);
+
+        fireEvent.change(screen.getByLabelText("Access for Alan Calheiros"), { target: { value: "remove" } });
+        const confirmButton = screen.getByRole("button", { name: "Remove access" });
+        fireEvent.click(confirmButton);
+        fireEvent.click(confirmButton);
+
+        expect(revokePermission).toHaveBeenCalledTimes(1);
+        expect((confirmButton as HTMLButtonElement).disabled).toBe(true);
+
+        fireEvent.click(screen.getByRole("button", { name: "Revoke Reviewers" }));
+        expect(revokeAnonymousLink).not.toHaveBeenCalled();
+        expect(screen.getByRole("dialog", { name: "Remove access?" })).toBeTruthy();
+
+        resolve(undefined);
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: "Remove access?" })).toBeNull());
     });
 
     test("a refusal is shown in words", async () => {

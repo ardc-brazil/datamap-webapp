@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { MaterialSymbol } from "react-material-symbols";
 import useSWR from "swr";
@@ -26,6 +26,7 @@ export function ShareDialog(props: Props) {
     const session = useSession();
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
+    const busyRef = useRef(false);
     const [oneTime, setOneTime] = useState<{ link: string, kind: "anonymous" | "invitation" } | null>(null);
     const [newLink, setNewLink] = useState(false);
     const [removing, setRemoving] = useState<SharePermission | null>(null);
@@ -40,9 +41,10 @@ export function ShareDialog(props: Props) {
     }
 
     async function run<T>(action: () => Promise<T>): Promise<T | undefined> {
-        if (busy) {
+        if (busyRef.current) {
             return undefined;
         }
+        busyRef.current = true;
         setBusy(true);
         setError(null);
         try {
@@ -53,6 +55,7 @@ export function ShareDialog(props: Props) {
             setError(messageForApiError(e));
             return undefined;
         } finally {
+            busyRef.current = false;
             setBusy(false);
         }
     }
@@ -88,6 +91,7 @@ export function ShareDialog(props: Props) {
                                 state={state}
                                 embargoActive={embargoActive}
                                 me={(session?.data?.user as any)?.uid}
+                                busy={busy}
                                 onChangeLevel={(userId, level: PermissionLevel) => run(() => bffGateway.changePermissionLevel(datasetId, userId, level))}
                                 onRemove={(permission) => setRemoving(permission)}
                                 onRevokeInvitation={(id) => run(() => bffGateway.revokeInvitation(datasetId, id))}
@@ -97,6 +101,7 @@ export function ShareDialog(props: Props) {
                             <div className="border-t border-primary-200 pt-4">
                                 <AnonymousLinksSection
                                     links={state.anonymous_links}
+                                    busy={busy}
                                     onNew={() => setNewLink(true)}
                                     onRevoke={(id) => run(() => bffGateway.revokeAnonymousLink(datasetId, id))}
                                 />
@@ -127,10 +132,14 @@ export function ShareDialog(props: Props) {
             <RemoveAccessDialog
                 permission={removing}
                 embargoActive={embargoActive}
+                busy={busy}
                 onCancel={() => setRemoving(null)}
-                onConfirm={(permission) => {
-                    setRemoving(null);
-                    run(() => bffGateway.revokePermission(datasetId, permission.user.id));
+                onConfirm={async (permission) => {
+                    const wasBusy = busyRef.current;
+                    await run(() => bffGateway.revokePermission(datasetId, permission.user.id));
+                    if (!wasBusy) {
+                        setRemoving(null);
+                    }
                 }}
             />
         </>

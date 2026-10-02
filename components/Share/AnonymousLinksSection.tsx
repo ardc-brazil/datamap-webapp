@@ -5,6 +5,7 @@ import { AnonymousLink } from "../../types/GatekeeperAPI";
 
 interface Props {
     links: AnonymousLink[]
+    busy?: boolean
     onNew(): void
     onRevoke(linkId: string): void
 }
@@ -44,7 +45,7 @@ export function AnonymousLinksSection(props: Props) {
                                 <MaterialSymbol icon="visibility" size={16} grade={-25} weight={400} className="text-primary-500" />
                                 {link.views.count}
                             </span>
-                            <button type="button" aria-label={`Revoke ${link.label}`} className={SHARE_DANGER_ACTION_CLASS} onClick={() => props.onRevoke(link.id)}>
+                            <button type="button" aria-label={`Revoke ${link.label}`} className={SHARE_DANGER_ACTION_CLASS} disabled={props.busy} onClick={() => props.onRevoke(link.id)}>
                                 Revoke
                             </button>
                         </span>

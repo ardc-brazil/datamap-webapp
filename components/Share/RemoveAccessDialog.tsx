@@ -4,6 +4,7 @@ import { SharePermission } from "../../types/GatekeeperAPI";
 interface Props {
     permission: SharePermission | null
     embargoActive: boolean
+    busy?: boolean
     onConfirm(permission: SharePermission): void
     onCancel(): void
 }
@@ -20,6 +21,7 @@ export function RemoveAccessDialog(props: Props) {
             destructive
             cancel={props.onCancel}
             confim={() => permission && props.onConfirm(permission)}
+            confirmDisabled={props.busy}
             maxWidthClassName="max-w-[440px]"
         >
             {permission &&

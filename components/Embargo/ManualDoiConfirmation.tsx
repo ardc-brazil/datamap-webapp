@@ -25,7 +25,7 @@ function Consequences(props: { items: string[] }) {
 export function ManualDoiConfirmation(props: Props) {
     if (props.gate === "owner_only") {
         return (
-            <Modal title="Only the owner can do this" show={props.show} confimButtonText="" cancelButtonText="Close" cancel={props.onCancel} cancelDisabled={props.sending} maxWidthClassName="max-w-[440px]">
+            <Modal title="Only the owner can do this" show={props.show} confimButtonText="" cancelButtonText="Close" cancel={props.onCancel} maxWidthClassName="max-w-[440px]">
                 <p className="m-0 text-sm leading-[21px] text-primary-700">
                     A DOI minted outside DataMap ends the embargo. Only the owner of this dataset can end its embargo.
                     To keep the embargo, generate the DOI with DataMap instead.

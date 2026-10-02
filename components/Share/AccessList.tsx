@@ -15,6 +15,7 @@ interface Props {
     state: ShareState
     embargoActive: boolean
     me?: string
+    busy?: boolean
     onChangeLevel(userId: string, level: PermissionLevel): void
     onRemove(permission: SharePermission): void
     onRevokeInvitation(invitationId: string): void
@@ -66,8 +67,9 @@ export function AccessList(props: Props) {
                         </span>
                         <select
                             aria-label={`Access for ${permission.user.name}`}
-                            className="w-auto h-8 border-0 bg-transparent pl-1 pr-7 text-[13px] font-medium text-primary-900 focus:ring-0"
+                            className="w-auto h-8 border-0 bg-transparent pl-1 pr-7 text-[13px] font-medium text-primary-900 focus:ring-0 disabled:opacity-50"
                             value={permission.level}
+                            disabled={props.busy}
                             onChange={(e) => e.target.value === "remove"
                                 ? props.onRemove(permission)
                                 : props.onChangeLevel(permission.user.id, e.target.value as PermissionLevel)}
@@ -93,6 +95,7 @@ export function AccessList(props: Props) {
                                 type="button"
                                 aria-label={`Revoke invitation for ${who}`}
                                 className={SHARE_DANGER_ACTION_CLASS}
+                                disabled={props.busy}
                                 onClick={() => props.onRevokeInvitation(invitation.id)}
                             >
                                 Revoke

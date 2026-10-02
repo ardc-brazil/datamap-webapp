@@ -6,6 +6,6 @@ export const SHARE_PERSON_NAME_CLASS = "text-sm font-medium text-primary-900 tru
 
 export const SHARE_PERSON_DETAIL_CLASS = "text-xs text-primary-500 truncate";
 
-export const SHARE_DANGER_ACTION_CLASS = "text-[13px] font-medium text-danger-700 hover:underline underline-offset-2";
+export const SHARE_DANGER_ACTION_CLASS = "text-[13px] font-medium text-danger-700 hover:underline underline-offset-2 disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed";
 
 export const SHARE_LEVEL_LABELS: Record<string, string> = { read: "Can read", write: "Can write" };

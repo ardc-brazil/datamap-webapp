@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import useSWR from "swr";
 import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_INPUT_CLASS } from "../../contants/EditFormConstants";
 import { messageForApiError } from "../../contants/EmbargoConstants";
@@ -31,11 +31,13 @@ function useAction(onClose: () => void) {
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
+    const busyRef = useRef(false);
 
     async function run(action: () => Promise<unknown>) {
-        if (busy) {
+        if (busyRef.current) {
             return;
         }
+        busyRef.current = true;
         setBusy(true);
         setError(null);
         try {
@@ -45,6 +47,7 @@ function useAction(onClose: () => void) {
         } catch (e) {
             setError(messageForApiError(e));
         } finally {
+            busyRef.current = false;
             setBusy(false);
         }
     }
