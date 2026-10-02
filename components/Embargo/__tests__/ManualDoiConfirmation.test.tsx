@@ -43,6 +43,18 @@ describe("ManualDoiConfirmation", () => {
         expect(onConfirm).toHaveBeenCalled();
     });
 
+    test("the owner who may set an embargo can still dismiss the dialog, with X or Cancel", () => {
+        const onCancel = jest.fn();
+        const onSetEmbargo = jest.fn();
+        render(<ManualDoiConfirmation {...base} gate="blocks_future_embargo" onConfirm={jest.fn()} onCancel={onCancel} onSetEmbargo={onSetEmbargo} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Close" }));
+        fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+        expect(onCancel).toHaveBeenCalledTimes(2);
+        expect(onSetEmbargo).not.toHaveBeenCalled();
+    });
+
     test("someone who may not set an embargo just cancels", () => {
         const onCancel = jest.fn();
         render(<ManualDoiConfirmation {...base} gate="blocks_future_embargo" onConfirm={jest.fn()} onCancel={onCancel} />);

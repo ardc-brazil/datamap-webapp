@@ -67,8 +67,8 @@ export function ManualDoiConfirmation(props: Props) {
             title="Register external DOI?"
             show={props.show}
             confimButtonText="Register DOI"
-            cancelButtonText={props.onSetEmbargo ? "Set an embargo first" : "Cancel"}
-            cancel={props.onSetEmbargo ?? props.onCancel}
+            cancelButtonText="Cancel"
+            cancel={props.onCancel}
             confim={props.onConfirm}
             confirmDisabled={props.sending}
             cancelDisabled={props.sending}
@@ -77,6 +77,16 @@ export function ManualDoiConfirmation(props: Props) {
             <div className="flex flex-col gap-3">
                 <p className="m-0 font-mono text-[13px] text-primary-500">{props.identifier}</p>
                 <p className="m-0 text-sm leading-[21px] text-primary-700">After this, the dataset can no longer be put under embargo.</p>
+                {props.onSetEmbargo &&
+                    <button
+                        type="button"
+                        disabled={props.sending}
+                        onClick={() => props.onSetEmbargo()}
+                        className="self-start p-0 bg-transparent border-0 text-[13px] font-semibold text-primary-900 underline underline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Set an embargo first
+                    </button>
+                }
             </div>
         </Modal>
     );
