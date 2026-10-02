@@ -12,6 +12,8 @@ import {
     ExtendEmbargoRequest,
     GrantRequest,
     GrantResult,
+    MembersAccessRequest,
+    MembersAccessResponse,
     PermissionLevel,
     SetEmbargoRequest,
     SharePermission,
@@ -250,6 +252,16 @@ export class BFFAPI {
         try {
             const response = await axios.put(`/api/datasets/${datasetId}/embargo/note`, request);
             return response.data as DatasetEmbargo;
+        } catch (error) {
+            throw httpErrorHandler(error);
+        }
+    }
+
+    async setMembersAccess(datasetId: string, request: MembersAccessRequest): Promise<MembersAccessResponse> {
+        try {
+            const response = await axios.put(`/api/datasets/${datasetId}/members-access`, request);
+            trackUiEvent("members_access_changed");
+            return response.data as MembersAccessResponse;
         } catch (error) {
             throw httpErrorHandler(error);
         }

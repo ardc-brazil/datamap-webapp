@@ -47,6 +47,7 @@ export const UI_EVENTS = [
   "embargo_extended",
   "dataset_shared",
   "anonymous_link_created",
+  "members_access_changed",
 ] as const;
 
 export type UiEvent = (typeof UI_EVENTS)[number];

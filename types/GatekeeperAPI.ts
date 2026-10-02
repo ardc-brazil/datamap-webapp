@@ -278,6 +278,7 @@ export interface ShareTenancy {
     name: string
     path: string
     members: number
+    members_can_edit: boolean
 }
 
 /** @interface */
@@ -378,4 +379,15 @@ export interface AccessHistoryEntry {
 /** @interface */
 export interface AccessHistoryResponse {
     items: AccessHistoryEntry[]
+}
+
+/** @interface */
+export interface MembersAccessRequest {
+    members_can_edit: boolean
+}
+
+/** @interface */
+export interface MembersAccessResponse {
+    members_can_edit: boolean
+    access: DatasetAccess
 }

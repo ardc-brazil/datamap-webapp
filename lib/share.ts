@@ -5,6 +5,8 @@ import {
     GrantRequest,
     GrantResult,
     InvitationPreview,
+    MembersAccessRequest,
+    MembersAccessResponse,
     PermissionLevel,
     AnonymousPageResponse,
     SharePermission,
@@ -77,4 +79,9 @@ export async function claimInvitations(uid: string): Promise<ClaimInvitationsRes
 export async function getInvitationPreview(token: string): Promise<InvitationPreview> {
     const response = await axiosInstance.get(`/invitations/${encodeURIComponent(token)}`);
     return response.data as InvitationPreview;
+}
+
+export async function setMembersAccess(context: AppLocalContext, datasetId: string, request: MembersAccessRequest): Promise<MembersAccessResponse> {
+    const response = await axiosInstance.put(`/datasets/${datasetId}/members-access`, request, buildHeaders(context));
+    return response.data as MembersAccessResponse;
 }
