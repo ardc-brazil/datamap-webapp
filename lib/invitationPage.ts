@@ -11,3 +11,10 @@ export function invitationPageProps(preview: InvitationPreview | null, token: st
     }
     return { props: { token, preview, account } };
 }
+
+export function invitationAccount(session: { uid?: unknown, email?: unknown, name?: unknown } | null): string | null {
+    if (!session?.uid) {
+        return null;
+    }
+    return ((session.email ?? session.name) as string | undefined) || "this account";
+}

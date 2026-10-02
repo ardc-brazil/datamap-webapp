@@ -1,7 +1,7 @@
 import { getToken } from "next-auth/jwt";
 import { InvitationCard } from "../../components/Invitation/InvitationCard";
 import { BareLayout } from "../../components/Public/BareLayout";
-import { invitationPageProps } from "../../lib/invitationPage";
+import { invitationAccount, invitationPageProps } from "../../lib/invitationPage";
 import { rethrowSafely } from "../../lib/logging";
 import { getInvitationPreview } from "../../lib/share";
 import { InvitationPreview } from "../../types/GatekeeperAPI";
@@ -33,6 +33,5 @@ export async function getServerSideProps({ req, query }) {
         }
     }
     const session = await getToken({ req });
-    const account = session?.uid ? ((session.email ?? session.name) as string) ?? null : null;
-    return invitationPageProps(preview, token, account);
+    return invitationPageProps(preview, token, invitationAccount(session));
 }

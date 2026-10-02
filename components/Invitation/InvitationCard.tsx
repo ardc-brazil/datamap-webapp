@@ -3,7 +3,7 @@ import Link from "next/link";
 import Router from "next/router";
 import { useState } from "react";
 import { GENERIC_ERROR_MESSAGE } from "../../contants/EmbargoConstants";
-import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_DETAILS, ROUTE_PAGE_INVITATION } from "../../contants/InternalRoutesConstants";
+import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_DETAILS, ROUTE_PAGE_DATASETS_SHARED, ROUTE_PAGE_INVITATION } from "../../contants/InternalRoutesConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { loginUrlFor } from "../../lib/authRoutes";
 import { formatShortDate } from "../../lib/embargoDisplay";
@@ -31,6 +31,18 @@ export function InvitationCard(props: Props) {
     const [error, setError] = useState<string | null>(null);
     const preview = props.preview;
     const here = ROUTE_PAGE_INVITATION({ token: props.token });
+
+    if (preview.state === "accepted" && props.account) {
+        return (
+            <div role="status" className="flex flex-col gap-3 text-center items-center">
+                <h1 className="m-0 text-[26px] leading-[1.2] font-semibold tracking-[-0.02em] text-primary-900">Invitation accepted</h1>
+                <p className="m-0 max-w-[440px] text-[15px] leading-6 text-primary-700">
+                    {preview.inviter_name} shared {preview.dataset_name} with you. You&apos;ll find it in{" "}
+                    <Link href={ROUTE_PAGE_DATASETS_SHARED} className="font-medium text-primary-900 underline underline-offset-2">Shared with me</Link>.
+                </p>
+            </div>
+        );
+    }
 
     if (preview.state === "accepted") {
         return (

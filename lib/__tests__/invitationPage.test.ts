@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { invitationPageProps } from "../invitationPage";
+import { invitationAccount, invitationPageProps } from "../invitationPage";
 
 const pending: any = { state: "pending", dataset_name: "GoAmazon", inviter_name: "Luciana Rizzo", owner_name: "Luciana Rizzo", level: "read", invited_as: "fernanda@inpe.br", embargo_until: null, accepted_at: null };
 
@@ -24,5 +24,24 @@ describe("invitationPageProps", () => {
 
     test("a revoked or unknown invitation is not found", () => {
         expect(invitationPageProps(null, "tok", "x@y.z")).toEqual({ notFound: true });
+    });
+});
+
+describe("invitationAccount", () => {
+    test("names the signed-in account by email, then by name", () => {
+        expect(invitationAccount({ uid: "u1", email: "fernanda.lima@gmail.com", name: "Fernanda" })).toBe("fernanda.lima@gmail.com");
+        expect(invitationAccount({ uid: "u1", name: "Fernanda Lima" })).toBe("Fernanda Lima");
+    });
+
+    test("a signed-in session with neither email nor name still counts as signed in, so the login never loops", () => {
+        const account = invitationAccount({ uid: "u1" });
+
+        expect(account).toBe("this account");
+        expect(invitationPageProps(pending, "tok", account)).toEqual({ props: { token: "tok", preview: pending, account: "this account" } });
+    });
+
+    test("no session, or one without a uid, is not signed in", () => {
+        expect(invitationAccount(null)).toBeNull();
+        expect(invitationAccount({ email: "x@y.z" })).toBeNull();
     });
 });
