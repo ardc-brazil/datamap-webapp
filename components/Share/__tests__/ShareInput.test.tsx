@@ -39,7 +39,7 @@ describe("ShareInput", () => {
     });
 
     test("picking a suggestion grants to that user at the chosen level", async () => {
-        const onGrant = (jest.fn() as any).mockResolvedValue(undefined);
+        const onGrant = (jest.fn() as any).mockResolvedValue(true);
         render(<ShareInput datasetId="d1" tenancyName="Data Amazon" onGrant={onGrant} />);
 
         fireEvent.change(screen.getByLabelText("Access level"), { target: { value: "write" } });
@@ -51,7 +51,7 @@ describe("ShareInput", () => {
     });
 
     test("a full email is offered as an invitation, without searching", async () => {
-        const onGrant = (jest.fn() as any).mockResolvedValue(undefined);
+        const onGrant = (jest.fn() as any).mockResolvedValue(true);
         render(<ShareInput datasetId="d1" tenancyName="Data Amazon" onGrant={onGrant} />);
 
         type("joao.silva@inpe.br");
@@ -63,7 +63,7 @@ describe("ShareInput", () => {
     });
 
     test("an ORCID URL is offered as an invitation by ORCID", async () => {
-        const onGrant = (jest.fn() as any).mockResolvedValue(undefined);
+        const onGrant = (jest.fn() as any).mockResolvedValue(true);
         render(<ShareInput datasetId="d1" tenancyName="Data Amazon" onGrant={onGrant} />);
 
         type("https://orcid.org/0000-0002-1825-0097");

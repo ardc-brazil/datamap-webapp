@@ -60,11 +60,17 @@ export function ShareDialog(props: Props) {
         }
     }
 
-    async function onGrant(request: GrantRequest) {
+    async function onGrant(request: GrantRequest): Promise<boolean> {
         const result = await run(() => bffGateway.grantAccess(datasetId, request));
         if (result?.kind === "invitation" && !result.invitation.email) {
             setOneTime({ link: result.link, kind: "invitation" });
         }
+        return result !== undefined;
+    }
+
+    function close() {
+        setError(null);
+        props.onClose();
     }
 
     return (
@@ -77,7 +83,7 @@ export function ShareDialog(props: Props) {
                             <h3 id="share-dialog-title" className="m-0 text-lg font-semibold tracking-[-0.01em] text-primary-900">Share</h3>
                             <span className="text-[13px] text-primary-500 truncate">{props.dataset.name}{embargoActive ? "" : " · not under embargo"}</span>
                         </div>
-                        <button type="button" aria-label="Close" onClick={props.onClose} className="text-primary-500 hover:text-primary-900">
+                        <button type="button" aria-label="Close" onClick={close} className="text-primary-500 hover:text-primary-900">
                             <MaterialSymbol icon="close" size={20} grade={-25} weight={400} />
                         </button>
                     </div>
@@ -113,7 +119,7 @@ export function ShareDialog(props: Props) {
                         <span className="text-xs leading-[17px] text-primary-500">
                             {embargoActive ? "Access continues after the embargo ends" : "Anonymous links are available under embargo"}
                         </span>
-                        <button type="button" onClick={props.onClose} className="h-9 px-4 rounded-md bg-primary-900 text-primary-50 text-sm font-semibold hover:bg-primary-800">Done</button>
+                        <button type="button" onClick={close} className="h-9 px-4 rounded-md bg-primary-900 text-primary-50 text-sm font-semibold hover:bg-primary-800">Done</button>
                     </div>
                 </div>
             </div>

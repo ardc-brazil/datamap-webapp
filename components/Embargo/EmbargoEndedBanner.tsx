@@ -15,6 +15,7 @@ export function EmbargoEndedBanner(props: { dataset: GetDatasetDetailsResponse }
     const [promoting, setPromoting] = useState(false);
     const doi = props.dataset.current_version?.doi;
     const registered = doi?.state === GetDatasetDetailsDOIResponseState.REGISTERED;
+    const draft = doi?.state === GetDatasetDetailsDOIResponseState.DRAFT;
     const tenancy = tenancyDisplayName(props.dataset.tenancy);
 
     async function promote() {
@@ -56,7 +57,9 @@ export function EmbargoEndedBanner(props: { dataset: GetDatasetDetailsResponse }
                         <MaterialSymbol icon="radio_button_unchecked" size={18} grade={-25} weight={400} className="flex-none text-primary-400" aria-hidden="true" />
                         {registered
                             ? <span>Nothing is public yet. The DOI <span className="font-mono text-[13px]">{doi.identifier}</span> is <strong className="font-semibold">registered but not findable</strong>: it resolves, but DataCite doesn&apos;t index it, so the dataset won&apos;t appear in DataCite search or in services that harvest from it, and there&apos;s no public page.</span>
-                            : <span>Nothing is public yet. The dataset has no DOI to promote: create one in the Citation section, then make it findable.</span>}
+                            : draft
+                                ? <span>Nothing is public yet. The DOI <span className="font-mono text-[13px]">{doi.identifier}</span> is still a draft. Finish registering the DOI in the Citation section, then make it findable.</span>
+                                : <span>Nothing is public yet. The dataset has no DOI to promote: create one in the Citation section, then make it findable.</span>}
                     </div>
                 </div>
                 <span className="text-[13px] text-primary-500">Promoting it publishes the public page with the authors; anonymous links then lead there. Nothing does this for you.</span>

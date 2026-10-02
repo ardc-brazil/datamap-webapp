@@ -30,7 +30,7 @@ export function NewAnonymousLinkDialog(props: Props) {
                     setLabel("");
                 }
             }}
-            confirmDisabled={props.busy}
+            confirmDisabled={props.busy || !label.trim()}
             maxWidthClassName="max-w-[520px]"
         >
             <div className="flex flex-col gap-4">

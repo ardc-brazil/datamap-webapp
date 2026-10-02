@@ -11,7 +11,7 @@ interface Props {
     datasetId: string
     tenancyName: string
     busy?: boolean
-    onGrant(request: GrantRequest): Promise<void>
+    onGrant(request: GrantRequest): Promise<boolean>
 }
 
 function Highlighted(props: { name: string, typed: string }) {
@@ -48,9 +48,10 @@ export function ShareInput(props: Props) {
         if (props.busy) {
             return;
         }
-        await props.onGrant(request);
-        setText("");
-        setSuggestions([]);
+        if (await props.onGrant(request)) {
+            setText("");
+            setSuggestions([]);
+        }
     }
 
     const panel = "mt-1.5 w-full max-w-[460px] rounded-lg border border-primary-200 bg-primary-0 shadow-lg shadow-primary-900/10 overflow-hidden";

@@ -36,4 +36,19 @@ describe("EmbargoEndedBanner", () => {
 
         await waitFor(() => expect(navigateDOIStatus).toHaveBeenCalledWith({ datasetId: "d1", versionName: "2", state: "FINDABLE" }));
     });
+
+    test("a DOI still in draft is to be finished, not created", () => {
+        render(<EmbargoEndedBanner dataset={{ ...dataset, current_version: { name: "2", doi: { identifier: "10.5281/datamap.3f9c1e", state: "DRAFT" } } }} />);
+
+        const banner = screen.getByRole("status");
+        expect(banner.textContent).toContain("Finish registering the DOI");
+        expect(banner.textContent).not.toContain("no DOI to promote");
+        expect(screen.queryByRole("button", { name: "Make DOI findable" })).toBeNull();
+    });
+
+    test("without a DOI, one is to be created first", () => {
+        render(<EmbargoEndedBanner dataset={{ ...dataset, current_version: { name: "2", doi: null } }} />);
+
+        expect(screen.getByRole("status").textContent).toContain("The dataset has no DOI to promote");
+    });
 });

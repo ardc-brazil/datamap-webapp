@@ -161,4 +161,60 @@ describe("ShareDialog", () => {
 
         expect(await screen.findByText("This person already has access.")).toBeTruthy();
     });
+
+    test("a refused grant keeps what was typed, so it can be corrected", async () => {
+        shareState = stateWith();
+        grantAccess.mockRejectedValue({ httpCode: 400, errors: [{ code: "invalid_email" }] });
+        render(<ShareDialog dataset={embargoed} show onClose={jest.fn()} />);
+
+        fireEvent.change(screen.getByLabelText("Add people by name, email or ORCID"), { target: { value: "joao@inpe.br" } });
+        fireEvent.click(screen.getByRole("button", { name: /Invite joao@inpe.br/ }));
+
+        expect(await screen.findByText("This email address is not valid.")).toBeTruthy();
+        expect((screen.getByLabelText("Add people by name, email or ORCID") as HTMLInputElement).value).toBe("joao@inpe.br");
+    });
+
+    test("a granted invitation clears the input", async () => {
+        shareState = stateWith();
+        grantAccess.mockResolvedValue({ kind: "invitation", invitation: { id: "i1", email: "joao@inpe.br" }, link: "x" });
+        render(<ShareDialog dataset={embargoed} show onClose={jest.fn()} />);
+
+        fireEvent.change(screen.getByLabelText("Add people by name, email or ORCID"), { target: { value: "joao@inpe.br" } });
+        fireEvent.click(screen.getByRole("button", { name: /Invite joao@inpe.br/ }));
+
+        await waitFor(() => expect((screen.getByLabelText("Add people by name, email or ORCID") as HTMLInputElement).value).toBe(""));
+    });
+
+    test("an error does not survive closing the dialog", async () => {
+        shareState = stateWith();
+        grantAccess.mockRejectedValue({ httpCode: 400, errors: [{ code: "already_has_access" }] });
+        const onClose = jest.fn();
+        const { rerender } = render(<ShareDialog dataset={embargoed} show onClose={onClose} />);
+
+        fireEvent.change(screen.getByLabelText("Add people by name, email or ORCID"), { target: { value: "joao@inpe.br" } });
+        fireEvent.click(screen.getByRole("button", { name: /Invite joao@inpe.br/ }));
+        expect(await screen.findByText("This person already has access.")).toBeTruthy();
+
+        fireEvent.click(screen.getByRole("button", { name: "Done" }));
+        expect(onClose).toHaveBeenCalled();
+        rerender(<ShareDialog dataset={embargoed} show={false} onClose={onClose} />);
+        rerender(<ShareDialog dataset={embargoed} show onClose={onClose} />);
+
+        expect(screen.queryByText("This person already has access.")).toBeNull();
+    });
+
+    test("Create link waits for a label", () => {
+        shareState = stateWith();
+        render(<ShareDialog dataset={embargoed} show onClose={jest.fn()} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "New anonymous link" }));
+        const createButton = screen.getByRole("button", { name: "Create link" }) as HTMLButtonElement;
+        expect(createButton.disabled).toBe(true);
+
+        fireEvent.change(screen.getByLabelText(/Label/), { target: { value: "   " } });
+        expect(createButton.disabled).toBe(true);
+
+        fireEvent.change(screen.getByLabelText(/Label/), { target: { value: "Reviewers" } });
+        expect(createButton.disabled).toBe(false);
+    });
 });

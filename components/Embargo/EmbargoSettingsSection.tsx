@@ -40,6 +40,7 @@ export function EmbargoSettingsSection(props: { dataset: GetDatasetDetailsRespon
     const access = props.dataset.access;
     const manage = access?.can_manage_embargo === true;
     const close = () => setOpen(null);
+    const days = embargo?.active ? daysLeft(embargo.until, new Date()) : 0;
 
     if (!access || (!manage && !access.can_extend_embargo && !embargo?.active)) {
         return null;
@@ -56,7 +57,7 @@ export function EmbargoSettingsSection(props: { dataset: GetDatasetDetailsRespon
                                     <MaterialSymbol icon="lock" size={14} grade={-25} weight={400} fill aria-hidden="true" />
                                     Under embargo
                                 </span>
-                                <span className="text-primary-600">{daysLeft(embargo.until, new Date())} days left</span>
+                                <span className="text-primary-600">{days} {days === 1 ? "day" : "days"} left</span>
                             </span>
                         </Row>
                         <Row label="Ends" action={access.can_extend_embargo && <Action label="Extend" onClick={() => setOpen("extend")} />}>

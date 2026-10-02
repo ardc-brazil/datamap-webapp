@@ -34,6 +34,15 @@ describe("EmbargoSettingsSection", () => {
         }
     });
 
+    test("on the last day, one day left", () => {
+        render(<EmbargoSettingsSection dataset={{
+            id: "d1", tenancy: "t", access: owner, versions: [],
+            embargo: { until: "2026-10-01T23:59:59+00:00", active: true, metadata_visible: true, note: null },
+        } as any} />);
+
+        expect(screen.getByText("1 day left")).toBeTruthy();
+    });
+
     test("before an embargo: Set embargo", () => {
         render(<EmbargoSettingsSection dataset={{ id: "d1", tenancy: "t", access: owner, versions: [], embargo: null } as any} />);
 
