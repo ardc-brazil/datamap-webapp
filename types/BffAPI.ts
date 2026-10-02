@@ -1,4 +1,4 @@
-import { DatasetInfo } from "./GatekeeperAPI"
+import { DatasetAccess, DatasetEmbargo, DatasetInfo, DatasetOwner, FilesSummary } from "./GatekeeperAPI"
 
 export interface CreateDatasetRequest {
     title: string,
@@ -36,6 +36,9 @@ export interface GetDatasetDetailsResponse {
     updated_at: Date
     versions: GetDatasetDetailsVersionResponse[]
     current_version: GetDatasetDetailsVersionResponse
+    embargo?: DatasetEmbargo | null
+    access?: DatasetAccess
+    owner?: DatasetOwner | null
 }
 
 export interface GetDatasetDetailsVersionResponse {
@@ -49,6 +52,8 @@ export interface GetDatasetDetailsVersionResponse {
     created_by: string
     created_at: Date
     updated_at: Date
+    files_withheld?: boolean
+    files_summary?: FilesSummary
 }
 
 export interface GetDatasetDetailsDOIResponse {
@@ -198,6 +203,8 @@ export interface GetMinimalDatasetsDetasetDetailsResponse {
         created_at: Date,
         updated_at: Date,
     }
+    embargo?: DatasetEmbargo | null
+    access?: DatasetAccess
 }
 
 export interface CreateDatasetRequestV2 {
@@ -282,6 +289,7 @@ export interface CreateDOIRequest {
     versionName: string
     identifier?: string
     mode: string
+    endEmbargo?: boolean
 }
 
 export interface CreateDOIResponse {

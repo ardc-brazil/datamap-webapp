@@ -17,7 +17,7 @@ interface Props {
 export default function DatasetInstitution(props: Props) {
     const bffGateway = new BFFAPI();
     const [editing, setEditing] = useState(false);
-    const canEdit = canEditDataset(props.user);
+    const canEdit = canEditDataset(props.user, props.dataset);
 
     function handleEditClick(event): void {
         setEditing(true);

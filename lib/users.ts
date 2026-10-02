@@ -1,3 +1,4 @@
+import { DatasetAccess } from "../types/GatekeeperAPI";
 import { AppLocalContext } from "./appLocalContext";
 import axiosInstance, { buildHeaders } from "./rpc";
 
@@ -123,8 +124,17 @@ export async function getUserByProviderID(request: GetUserByProviderRequest): Pr
     return response.data;
 }
 
-// TODO: Create a generic way to validade this.
-export function canEditDataset(user: UserDetailsResponse): boolean {
+export function canEditDataset(user: UserDetailsResponse, dataset?: { access?: DatasetAccess }): boolean {
+    if (dataset?.access) {
+        return dataset.access.can_edit;
+    }
     return user.roles.indexOf("datasets_write") >= 0
         || user.roles.indexOf("admin") >= 0;
+}
+
+export function canSeeAccessHistory(user: UserDetailsResponse, dataset?: { access?: DatasetAccess }): boolean {
+    if (dataset?.access) {
+        return dataset.access.level === "owner" || dataset.access.level === "write";
+    }
+    return canEditDataset(user, dataset);
 }

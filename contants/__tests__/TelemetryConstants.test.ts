@@ -46,3 +46,22 @@ describe("the ui events the browser may report", () => {
     expect(uiEventLabel("made_up_event_1234")).toBeUndefined();
   });
 });
+
+describe("the embargo telemetry", () => {
+  it("knows the new pages", () => {
+    for (const page of [
+      "/app/datasets/shared",
+      "/anonymous/[token]",
+      "/invitations/[token]",
+      "/doi/datasets/[datasetId]/versions/[versionName]",
+    ]) {
+      expect(pageLabel(page)).toBe(page);
+    }
+  });
+
+  it("accepts the new ui events", () => {
+    for (const event of ["embargo_set", "embargo_extended", "dataset_shared", "anonymous_link_created"]) {
+      expect(uiEventLabel(event)).toBe(event);
+    }
+  });
+});

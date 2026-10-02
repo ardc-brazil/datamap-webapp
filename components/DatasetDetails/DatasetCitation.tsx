@@ -1,12 +1,16 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { useSession } from "next-auth/react";
+import Router from "next/router";
 import { useEffect, useState } from 'react';
 import { MaterialSymbol } from 'react-material-symbols';
 import * as Yup from 'yup';
+import { EMBARGO_ERROR_MESSAGES } from "../../contants/EmbargoConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { getVersionByName } from "../../lib/datasetVersionSelector";
+import { tenancyDisplayName } from "../../lib/embargoDisplay";
+import { manualDoiGate } from "../../lib/embargoState";
 import { isDOIUpdateStatusEnabled } from "../../lib/featureFlags";
-import { UserDetailsResponse } from "../../lib/users";
+import { UserDetailsResponse, canEditDataset } from "../../lib/users";
 import { APIError, ErrorDetails } from "../../types/APIError";
 import { CreateDOIRequest, DeleteDOIRequest, GetDatasetDetailsDOIResponse, GetDatasetDetailsDOIResponseRegisterMode, GetDatasetDetailsDOIResponseState, GetDatasetDetailsResponse, NavigateDOIStatusRequest } from "../../types/BffAPI";
 import Alert from "../base/Alert";
@@ -14,6 +18,8 @@ import Modal from "../base/PopupModal";
 import { ContextMenuButton } from "../ContextMenu/ContextMenuButton";
 import { ContextMenuButtonItem } from "../ContextMenu/ContextMenuButtonItem";
 import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_HINT_CLASS, EDIT_FORM_INPUT_CLASS, EDIT_FORM_LABEL_CLASS } from "../../contants/EditFormConstants";
+import { ManualDoiConfirmation } from "../Embargo/ManualDoiConfirmation";
+import { SetEmbargoDialog } from "../Embargo/SetEmbargoDialog";
 import { CardItem } from "./CardItem";
 import { EditFormActions } from "./EditFormActions";
 
@@ -324,15 +330,25 @@ function CitationManualDOIForm(props: CitationEditionProps) {
         })
     });
 
-    async function onSubmit(values, { setSubmitting }) {
-        setSubmitting(true);
+    const gate = manualDoiGate(props.dataset);
+    const [pendingIdentifier, setPendingIdentifier] = useState<string | null>(null);
+    const [sending, setSending] = useState(false);
+    const [settingEmbargo, setSettingEmbargo] = useState(false);
 
+    function onSubmit(values, { setSubmitting }) {
+        setSubmitting(false);
+        setPendingIdentifier(values.doi.text);
+    }
+
+    async function send(identifier: string) {
+        setSending(true);
         try {
             const createDOIRequest = {
                 datasetId: props.dataset.id,
                 versionName: getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset)?.name,
-                identifier: values.doi.text,
-                mode: GetDatasetDetailsDOIResponseRegisterMode.MANUAL
+                identifier: identifier,
+                mode: GetDatasetDetailsDOIResponseRegisterMode.MANUAL,
+                endEmbargo: gate === "ends_embargo",
             } as CreateDOIRequest;
 
             const result = await bffGateway.createDOI(createDOIRequest)
@@ -342,10 +358,14 @@ function CitationManualDOIForm(props: CitationEditionProps) {
                 mode: result.mode,
             } as GetDatasetDetailsDOIResponse);
 
+            if (gate === "ends_embargo") {
+                Router.reload();
+            }
         } catch (error) {
             props.onManualDOICreatedWithError(error);
         } finally {
-            setSubmitting(false);
+            setSending(false);
+            setPendingIdentifier(null);
         }
     }
 
@@ -382,10 +402,21 @@ function CitationManualDOIForm(props: CitationEditionProps) {
                                 className={EDIT_FORM_ERROR_CLASS}
                             />
                         </div>
-                        <EditFormActions onCancel={props.onManualDOIFormEditionCancel} isSubmitting={isSubmitting} />
+                        <EditFormActions onCancel={props.onManualDOIFormEditionCancel} isSubmitting={isSubmitting || sending} />
                     </Form>
                 )}
             </Formik>
+            <ManualDoiConfirmation
+                gate={gate}
+                identifier={pendingIdentifier ?? ""}
+                tenancyName={tenancyDisplayName(props.dataset.tenancy)}
+                show={pendingIdentifier !== null}
+                sending={sending}
+                onConfirm={() => send(pendingIdentifier)}
+                onCancel={() => setPendingIdentifier(null)}
+                onSetEmbargo={props.dataset.access?.can_manage_embargo ? () => { setPendingIdentifier(null); setSettingEmbargo(true); } : undefined}
+            />
+            <SetEmbargoDialog dataset={props.dataset} show={settingEmbargo} onClose={() => setSettingEmbargo(false)} />
         </div>
     )
 
@@ -427,6 +458,7 @@ interface CitationDOIViewerProps extends Props {
 function CitationDOIViewer(props: CitationDOIViewerProps) {
     const [showAlert, setShowAlert] = useState(false);
     const [showCheckDOIDeletionModal, setShowCheckDOIDeletionModal] = useState(false);
+    const canEdit = props.user || props.dataset.access ? canEditDataset(props.user, props.dataset) : false;
 
     useEffect(() => {
         setShowAlert(!!props.DOIManagementOperationResult);
@@ -473,7 +505,8 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
     }
 
     function shouldHideDOIStatusNavigation(currentDOI: GetDatasetDetailsDOIResponse): boolean {
-        return currentDOI.state === GetDatasetDetailsDOIResponseState.FINDABLE ||
+        return !canEdit ||
+            currentDOI.state === GetDatasetDetailsDOIResponseState.FINDABLE ||
             currentDOI.mode === GetDatasetDetailsDOIResponseRegisterMode.MANUAL
     }
 
@@ -526,7 +559,7 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
                         />
                     </CardItem>
 
-                    {!shouldHideDOIDeletion(props.currentDOI) &&
+                    {canEdit && !shouldHideDOIDeletion(props.currentDOI) &&
                         <>
                             <div className="grow self-start" >
                                 <ContextMenuButton
@@ -558,7 +591,10 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
                 onCloseAlert={() => setShowAlert(false)}
                 showAlert={showAlert}
             />
-            <div className="flex flex-col items-start gap-1">
+            {!canEdit &&
+                <p className="m-0 text-sm leading-5 text-primary-900">This dataset does not have a registered DOI.</p>
+            }
+            {canEdit && <div className="flex flex-col items-start gap-1">
                 <p className="m-0 text-sm leading-5 text-primary-900">
                     This dataset does not have a registered DOI. Would you like to register one?
                 </p>
@@ -569,7 +605,7 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
                     <RegisterManualDOIButton onClick={props.onRegisterManualDOIClick} />
                     <RegisterAutoDOIButton onClick={props.onRegisterAutoDOIClick} />
                 </div>
-            </div>
+            </div>}
         </ >
     )
 }
@@ -590,7 +626,7 @@ function DOIManagementAlert(props: DOIManagementAlertProps) {
             case "missing_field": return "This dataset field is required";
             case "invalid_state": return "The DOI state is invalid for this operation";
             case "already_exists": return "A DOI has already been registered for this dataset"
-            default: return code;
+            default: return EMBARGO_ERROR_MESSAGES[code] ?? code;
         }
     }
     function getCallout(): string {

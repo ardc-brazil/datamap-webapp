@@ -24,6 +24,18 @@ describe("the name a gatekeeper call is recorded under", () => {
   it("does not trust a whole url with a host in it", () => {
     expect(operationOf("get", "http://gatekeeper:9092/api/v1/datasets/")).toBe("GET /api/v1/datasets/");
   });
+
+  it("replaces an invitation token, which is a credential, not an id", () => {
+    expect(operationOf("GET", "/invitations/AbC123-_xyz")).toBe("GET /invitations/{token}");
+  });
+
+  it("keeps the accept route literal", () => {
+    expect(operationOf("post", "/invitations/accept")).toBe("POST /invitations/accept");
+  });
+
+  it("replaces an anonymous link token, which is a credential, not an id", () => {
+    expect(operationOf("GET", "/anonymous/AbC123-_xyz")).toBe("GET /anonymous/{token}");
+  });
 });
 
 describe("the outcome of a call", () => {

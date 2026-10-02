@@ -11,6 +11,9 @@ interface ModalProps {
   noPaddingContent?: boolean
   destructive?: boolean
   maxWidthClassName?: string
+  hideCancel?: boolean
+  confirmDisabled?: boolean
+  cancelDisabled?: boolean
 }
 
 export default function Modal(props: ModalProps) {
@@ -40,7 +43,8 @@ export default function Modal(props: ModalProps) {
             <button
               type="button"
               aria-label="Close"
-              className="flex items-center justify-center h-8 w-8 rounded-md text-primary-500 hover:bg-primary-100 hover:text-primary-900 transition-colors"
+              disabled={props.cancelDisabled}
+              className="flex items-center justify-center h-8 w-8 rounded-md text-primary-500 hover:bg-primary-100 hover:text-primary-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => props.cancel()}
             >
               <MaterialSymbol icon="close" size={20} grade={-25} weight={400} />
@@ -50,17 +54,21 @@ export default function Modal(props: ModalProps) {
             {props.children}
           </div>
           <div className="flex flex-none items-center justify-end gap-2 px-5 py-3 border-t border-primary-200">
-            <button
-              className="h-9 px-3.5 rounded-md border border-primary-300 bg-primary-0 text-primary-900 text-[13px] font-semibold whitespace-nowrap hover:bg-primary-100 transition-colors"
-              type="button"
-              onClick={() => props.cancel()}
-            >
-              {!props.cancelButtonText ? "Close" : props.cancelButtonText}
-            </button>
+            {!props.hideCancel &&
+              <button
+                className="h-9 px-3.5 rounded-md border border-primary-300 bg-primary-0 text-primary-900 text-[13px] font-semibold whitespace-nowrap hover:bg-primary-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                type="button"
+                disabled={props.cancelDisabled}
+                onClick={() => props.cancel()}
+              >
+                {!props.cancelButtonText ? "Close" : props.cancelButtonText}
+              </button>
+            }
             {props.confim &&
               <button
-                className={`h-9 px-3.5 rounded-md text-[13px] font-semibold whitespace-nowrap transition-colors ${confirmColors}`}
+                className={`h-9 px-3.5 rounded-md text-[13px] font-semibold whitespace-nowrap transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${confirmColors}`}
                 type="button"
+                disabled={props.confirmDisabled}
                 onClick={() => props.confim()}
               >
                 {props.confimButtonText}

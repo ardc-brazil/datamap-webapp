@@ -4,8 +4,12 @@ import { TabPanel } from "./TabPanel";
 import { useRouter } from "next/router";
 import * as Yup from 'yup';
 import { BFFAPI } from "../../gateways/BFFAPI";
+import { canEditDataset, canSeeAccessHistory } from "../../lib/users";
 import { UpdateDatasetRequest } from "../../types/BffAPI";
 import { TabPanelProps } from "./TabPanel";
+import { AccessHistory } from "../Embargo/AccessHistory";
+import { AccessSummary } from "../Embargo/AccessSummary";
+import { EmbargoSettingsSection, SettingsBlock } from "../Embargo/EmbargoSettingsSection";
 
 export function TabPanelSettings(props: TabPanelProps) {
   const bffGateway = new BFFAPI();
@@ -45,54 +49,47 @@ export function TabPanelSettings(props: TabPanelProps) {
 
   return (
     <TabPanel title={props.title}>
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-10 items-start pt-2">
-        <section className="flex flex-col gap-3 min-w-0">
-          <div>
-            <h2 className="m-0 text-lg leading-snug tracking-[-0.01em]">General</h2>
-            <p className="m-0 mt-1 text-sm text-primary-600">The name and owner institution shown on the dataset page and in citations.</p>
-          </div>
+      <div className="flex flex-col gap-7 pt-2">
+        {canEditDataset(props.user, props.dataset) &&
+          <SettingsBlock title="General">
+            <Formik
+              initialValues={{
+                name: props.dataset.name,
+                institution: props.dataset.data.institution,
+              }}
+              validationSchema={schema}
+              onSubmit={onSubmit}
+            >
+              {({ isSubmitting, values, setFieldTouched }) => (
+                <Form className="rounded-lg border border-primary-200 bg-primary-0">
 
-          <Formik
-            initialValues={{
-              name: props.dataset.name,
-              institution: props.dataset.data.institution,
-            }}
-            validationSchema={schema}
-            onSubmit={onSubmit}
-          >
-            {({ isSubmitting, values, setFieldTouched }) => (
-              <Form className="rounded-lg border border-primary-200 bg-primary-0">
+                  {/* TODO: Avoid duplicated form */}
+                  <div className="flex flex-col gap-5 p-5">
+                    <SettingsField
+                      name="name"
+                      label="Name"
+                      placeholder="e.g. GoAmazon 2014/5 — Aerosol size distribution, T3 site"
+                      help="Identify the campaign, the measurement and the site."
+                    />
+                    <SettingsField
+                      name="institution"
+                      label="Institution"
+                      placeholder="What is the institution owner of this dataset?"
+                    />
+                    {/* TODO: Define how visibility will work */}
+                  </div>
 
-                {/* TODO: Avoid duplicated form */}
-                <div className="flex flex-col gap-5 p-5">
-                  <SettingsField
-                    name="name"
-                    label="Name"
-                    placeholder="e.g. GoAmazon 2014/5 — Aerosol size distribution, T3 site"
-                    help="Identify the campaign, the measurement and the site."
-                  />
-                  <SettingsField
-                    name="institution"
-                    label="Institution"
-                    placeholder="What is the institution owner of this dataset?"
-                  />
-                  {/* TODO: Define how visibility will work */}
-                </div>
-
-                <div className="flex items-center justify-end gap-2 border-t border-primary-200 bg-primary-50 px-5 py-3 rounded-b-lg">
-                  <button type="submit" className="btn-primary m-0" disabled={isSubmitting}>Save changes</button>
-                </div>
-              </Form>
-            )}
-          </Formik>
-        </section>
-
-        <aside className="rounded-lg border border-primary-200 bg-primary-0 p-4 flex flex-col gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-primary-500">About settings</span>
-          <p className="m-0 text-[13px] leading-[19px] text-primary-700">
-            Changes apply to every version of this dataset. Authors, license, coverage and the rest of the metadata are edited from the Data card tab.
-          </p>
-        </aside>
+                  <div className="flex items-center justify-end gap-2 border-t border-primary-200 bg-primary-50 px-5 py-3 rounded-b-lg">
+                    <button type="submit" className="btn-primary m-0" disabled={isSubmitting}>Save changes</button>
+                  </div>
+                </Form>
+              )}
+            </Formik>
+          </SettingsBlock>
+        }
+        <EmbargoSettingsSection dataset={props.dataset} />
+        <AccessSummary dataset={props.dataset} />
+        {canSeeAccessHistory(props.user, props.dataset) && <AccessHistory datasetId={props.dataset.id} />}
       </div>
     </TabPanel>
   );

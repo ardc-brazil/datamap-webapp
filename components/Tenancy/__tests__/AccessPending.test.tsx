@@ -55,4 +55,10 @@ describe("AccessPending", () => {
         await waitFor(() => expect(update).toHaveBeenCalled());
         expect(reload).not.toHaveBeenCalled();
     });
+
+    test("points to the datasets shared with the user", () => {
+        render(<AccessPending />);
+
+        expect(screen.getByRole("link", { name: "Shared with me" }).getAttribute("href")).toBe("/app/datasets/shared");
+    });
 });

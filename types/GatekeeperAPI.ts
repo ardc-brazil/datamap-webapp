@@ -79,6 +79,8 @@ interface Resolution {
 export interface DOICreationRequest {
     mode: string
     tenancy: string
+    identifier?: string
+    end_embargo?: boolean
 }
 
 export interface DOIUpdateRequest {
@@ -152,4 +154,228 @@ export interface DatasetSnapshotResponseVersion {
     doi_identifier: string
     doi_state: string
     created_at: string
+}
+
+/**
+ * Contracts: docs/superpowers/plans/2026-09-30-embargo-00-contracts.md (gatekeeper repo).
+ */
+export type PermissionLevel = "read" | "write";
+
+export type AccessLevel = "owner" | "write" | "read" | "tenancy";
+
+/** @interface */
+export interface DatasetEmbargo {
+    until: string
+    active: boolean
+    metadata_visible: boolean
+    note: string | null
+}
+
+/** @interface */
+export interface DatasetAccess {
+    level: AccessLevel
+    can_edit: boolean
+    can_share: boolean
+    can_manage_embargo: boolean
+    can_extend_embargo: boolean
+    can_delete: boolean
+}
+
+/** @interface */
+export interface FilesSummary {
+    count: number
+    total_size_bytes: number
+}
+
+/** @interface */
+export interface SetEmbargoRequest {
+    until: string
+    metadata_visible: boolean
+    note: string | null
+}
+
+/** @interface */
+export interface ExtendEmbargoRequest {
+    until: string
+    reason?: string | null
+}
+
+/** @interface */
+export interface EmbargoNoteRequest {
+    note: string | null
+}
+
+/** @interface */
+export interface DatasetOwner {
+    id: string
+    name: string
+}
+
+/** @interface */
+export interface EmbargoModeRequest {
+    metadata_visible: boolean
+}
+
+/** @interface */
+export interface EmbargoStatusResponse {
+    embargoed: boolean
+    until: string | null
+    doi: string | null
+}
+
+/** @interface */
+export interface ShareUser {
+    id: string
+    name: string
+    email: string
+}
+
+/** @interface */
+export interface SharePermission {
+    user: ShareUser
+    level: PermissionLevel
+    granted_at: string
+    granted_by: string
+    invited_as: string | null
+}
+
+/** @interface */
+export interface ShareInvitation {
+    id: string
+    email: string | null
+    orcid: string | null
+    level: PermissionLevel
+    created_at: string
+    accepted_at: string | null
+    accepted_by: ShareUser | null
+    revoked_at: string | null
+}
+
+/** @interface */
+export interface AnonymousLinkViews {
+    count: number
+    first_at: string | null
+    last_at: string | null
+}
+
+/** @interface */
+export interface AnonymousLink {
+    id: string
+    label: string
+    token_hint: string | null
+    created_at: string
+    revoked_at: string | null
+    views: AnonymousLinkViews
+}
+
+/** @interface */
+export interface CreatedAnonymousLink extends AnonymousLink {
+    link: string
+}
+
+/** @interface */
+export interface ShareTenancy {
+    name: string
+    path: string
+    members: number
+}
+
+/** @interface */
+export interface ShareState {
+    owner: ShareUser
+    permissions: SharePermission[]
+    invitations: ShareInvitation[]
+    anonymous_links: AnonymousLink[]
+    tenancy: ShareTenancy | null
+}
+
+/** Exactly one of user_id, email, orcid. */
+export interface GrantRequest {
+    user_id?: string
+    email?: string
+    orcid?: string
+    level: PermissionLevel
+}
+
+export type GrantResult =
+    | { kind: "permission", permission: SharePermission }
+    | { kind: "invitation", invitation: ShareInvitation, link: string };
+
+/** @interface */
+export interface FileExtensionSummary {
+    extension: string | null
+    count: number
+    total_size_bytes: number
+}
+
+/** @interface */
+export interface AnonymousPageVersion {
+    name: string
+    created_at: string
+    files_summary: FilesSummary & { extensions: FileExtensionSummary[] }
+}
+
+/** @interface */
+export interface AnonymousPageActive {
+    state: "active"
+    embargo_until: string
+    dataset: {
+        name: string
+        data: Record<string, unknown>
+        versions: AnonymousPageVersion[]
+    }
+}
+
+/** @interface */
+export interface AnonymousPageEnded {
+    state: "ended"
+    embargo_ended_at: string
+    dataset: AnonymousPageActive["dataset"]
+}
+
+/** @interface */
+export interface AnonymousPagePublished {
+    state: "published"
+    dataset_id: string
+}
+
+export type AnonymousPageResponse = AnonymousPageActive | AnonymousPageEnded | AnonymousPagePublished;
+
+/** @interface */
+export interface AcceptInvitationResponse {
+    dataset_id: string
+    level: PermissionLevel
+}
+
+/** @interface */
+export interface ClaimInvitationsResponse {
+    accepted: AcceptInvitationResponse[]
+}
+
+/** @interface */
+export interface InvitationPreview {
+    state: "pending" | "accepted"
+    dataset_name: string
+    inviter_name: string
+    owner_name: string
+    level: PermissionLevel
+    invited_as: string
+    embargo_until: string | null
+    accepted_at: string | null
+}
+
+/** @interface */
+export interface AccessHistoryEntry {
+    event_type: string
+    occurred_at: string
+    actor: { id: string, name: string } | null
+    subject: string | null
+    old_value: Record<string, unknown> | null
+    new_value: Record<string, unknown> | null
+    note: string | null
+}
+
+/** @interface */
+export interface AccessHistoryResponse {
+    items: AccessHistoryEntry[]
 }

@@ -5,6 +5,7 @@ import {
   logAccess,
   logError,
   redact,
+  rethrowSafely,
   withRequestId,
 } from "../logging";
 
@@ -105,6 +106,56 @@ describe("an axios failure", () => {
     expect(JSON.stringify(described)).not.toContain('"s"');
   });
 
+  it("masks an invitation token in the url, which is a credential too", () => {
+    const error = {
+      isAxiosError: true,
+      message: "Request failed",
+      config: { url: "/api/v1/invitations/AbC123-_xyz", method: "get" },
+    };
+
+    const described = describeError(error) as Record<string, unknown>;
+
+    expect(described.url).toMatch(/\/invitations\/\{token\}$/);
+    expect(JSON.stringify(described)).not.toContain("AbC123-_xyz");
+  });
+
+  it("masks an anonymous link token in the url", () => {
+    const error = {
+      isAxiosError: true,
+      message: "Request failed",
+      config: { url: "/api/v1/anonymous/AbC123-_xyz", method: "get" },
+    };
+
+    const described = describeError(error) as Record<string, unknown>;
+
+    expect(described.url).toMatch(/\/anonymous\/\{token\}$/);
+    expect(JSON.stringify(described)).not.toContain("AbC123-_xyz");
+  });
+
+  it("keeps the invitations/accept url literal", () => {
+    const error = {
+      isAxiosError: true,
+      message: "Request failed",
+      config: { url: "/invitations/accept", method: "post" },
+    };
+
+    const described = describeError(error) as Record<string, unknown>;
+
+    expect(described.url).toBe("/invitations/accept");
+  });
+
+  it("leaves an unrelated url with a UUID untouched", () => {
+    const error = {
+      isAxiosError: true,
+      message: "Request failed",
+      config: { url: "/datasets/7a9b5d5e-fa6d-4c18-a42c-34f28f1b2c3d", method: "get" },
+    };
+
+    const described = describeError(error) as Record<string, unknown>;
+
+    expect(described.url).toBe("/datasets/7a9b5d5e-fa6d-4c18-a42c-34f28f1b2c3d");
+  });
+
   it("logs as an error line with the fields worth querying", async () => {
     const error = await anAxiosError();
 
@@ -179,5 +230,43 @@ describe("the request id", () => {
     withRequestId("req-1", () => undefined);
 
     expect(currentRequestId()).toBeUndefined();
+  });
+});
+
+describe("rethrowSafely", () => {
+  it("throws a plain error carrying only the given message, not the original error", () => {
+    const original = {
+      isAxiosError: true,
+      message: "Request failed",
+      config: { url: "/invitations/AbC123-_xyz", headers: { "X-Api-Secret": "hunter2" } },
+    };
+
+    let thrown: unknown;
+    captureStdout(() => {
+      try {
+        rethrowSafely("invitation page failed", original);
+      } catch (error) {
+        thrown = error;
+      }
+    });
+
+    expect(thrown).toBeInstanceOf(Error);
+    expect((thrown as Error).message).toBe("invitation page failed");
+    expect(JSON.stringify(thrown)).not.toContain("hunter2");
+  });
+
+  it("logs the original error before throwing", () => {
+    const lines = captureStdout(() => {
+      try {
+        rethrowSafely("anonymous page failed", { isAxiosError: true, message: "boom", config: {} });
+      } catch {
+        // asserted separately
+      }
+    });
+
+    const entry = JSON.parse(lines[0]);
+    expect(entry.level).toBe("ERROR");
+    expect(entry.message).toBe("anonymous page failed");
+    expect((entry.error as Record<string, unknown>).message).toBe("boom");
   });
 });

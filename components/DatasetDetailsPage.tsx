@@ -4,9 +4,14 @@ import DatasetMoreSettingsButton from "./DatasetDetails/DatasetMoreSettingsButto
 import { TabPanelSettings } from "./DatasetDetails/TabPanelSettings";
 import { Tabs } from "./DatasetDetails/Tabs";
 import { DownloadDatafilesButton } from "./DownloadDatafilesButton";
+import { EmbargoBadge } from "./Embargo/EmbargoBadge";
+import { EmbargoEndedBanner } from "./Embargo/EmbargoEndedBanner";
+import { LockedDownloadButton } from "./Embargo/LockedDownloadButton";
 import LoggedLayout from "./LoggedLayout";
+import { ShareButton } from "./Share/ShareButton";
 import { getVersionByName } from "../lib/datasetVersionSelector";
-import { totalDatasetVersionFilesSize } from "../lib/file";
+import { canSeeSettings, isFilesWithheld, shouldShowEmbargoEndedBanner } from "../lib/embargoState";
+import { bytesToSize, totalDatasetVersionFilesSize } from "../lib/file";
 import { UserDetailsResponse, canEditDataset } from "../lib/users";
 import { GetDatasetDetailsResponse } from "../types/BffAPI";
 
@@ -36,23 +41,30 @@ function StatusPill(props: { designState?: string }) {
 
 export default function DatasetDetailsPage(props: Props) {
   const selectedVersion = getVersionByName(props.selectedVersionName, props.dataset.versions, props.dataset);
-  const filesCount = selectedVersion?.files_in?.length ?? 0;
+  const filesWithheld = selectedVersion?.files_withheld ?? false;
+  const filesCount = filesWithheld
+    ? selectedVersion?.files_summary?.count ?? 0
+    : selectedVersion?.files_in?.length ?? 0;
+  const filesSize = filesWithheld
+    ? bytesToSize(selectedVersion?.files_summary?.total_size_bytes ?? 0)
+    : totalDatasetVersionFilesSize(selectedVersion);
   const authors = props.dataset?.data?.authors
     ?.map(author => author?.name)
     ?.filter(Boolean)
     ?.join(", ");
 
   return (
-    <LoggedLayout>
+    <LoggedLayout tenancyOptional>
       <div className="w-full">
         <div className="mx-auto w-full max-w-5xl flex flex-col gap-7">
           <div className="flex flex-col gap-6 md:flex-row md:justify-between md:items-start md:gap-8">
             <div className="flex flex-col gap-2.5 min-w-0">
               <div className="flex items-center gap-2.5">
                 <StatusPill designState={selectedVersion?.design_state} />
+                <EmbargoBadge embargo={props.dataset.embargo} />
                 {selectedVersion &&
                   <span className="font-mono text-xs text-primary-500">
-                    v{selectedVersion.name} · {totalDatasetVersionFilesSize(selectedVersion)} · {filesCount} {filesCount === 1 ? "file" : "files"}
+                    v{selectedVersion.name} · {filesSize} · {filesCount} {filesCount === 1 ? "file" : "files"}
                   </span>
                 }
               </div>
@@ -67,10 +79,12 @@ export default function DatasetDetailsPage(props: Props) {
               </div>
             </div>
             <div className="flex flex-none items-center gap-2">
-              <DownloadDatafilesButton dataset={props.dataset} />
-              <DatasetMoreSettingsButton dataset={props.dataset} />
+              {props.dataset.access?.can_share && <ShareButton dataset={props.dataset} />}
+              {isFilesWithheld(props.dataset) ? <LockedDownloadButton /> : <DownloadDatafilesButton dataset={props.dataset} />}
+              {(props.dataset.access?.can_delete ?? true) && <DatasetMoreSettingsButton dataset={props.dataset} />}
             </div>
           </div>
+          {shouldShowEmbargoEndedBanner(props.dataset) && <EmbargoEndedBanner dataset={props.dataset} />}
           <Tabs className="pt-7">
             <TabPanelDataCard
               title="Data card"
@@ -82,7 +96,7 @@ export default function DatasetDetailsPage(props: Props) {
             {/* TODO: Enable discussion tab - Disabled while empty */}
             {/* <TabPanelDiscussion title="Discussions" dataset={props.dataset} /> */}
             {/* <TabPanelDiscussion title="Discussions" dataset={props.dataset} /> */}
-            {canEditDataset(props.user) &&
+            {canSeeSettings(props.dataset, canEditDataset(props.user, props.dataset)) &&
               <TabPanelSettings title="Settings" dataset={props.dataset} user={props.user} />
             }
           </Tabs>

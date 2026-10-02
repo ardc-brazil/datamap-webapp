@@ -18,7 +18,7 @@ export function DatasetDescription(props: Props) {
     const bffGateway = new BFFAPI();
     const [editingDescription, setEditDescription] = useState(false);
     const [textContent, setTextContent] = useState(props.dataset.data.description)
-    const canEdit = canEditDataset(props.user);
+    const canEdit = canEditDataset(props.user, props.dataset);
 
     useEffect(() => {
         setTextContent(props.dataset.data.description)

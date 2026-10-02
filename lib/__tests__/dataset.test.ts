@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { NewContext } from "../appLocalContext";
-import { deleteDataset, getDatasetBy } from "../dataset";
-import axiosInstance from "../rpc";
+import { deleteDataset, getDatasetBy, getSharedDatasets } from "../dataset";
+import axiosInstance, { buildHeaders } from "../rpc";
 
 jest.mock("../rpc")
 const mockAxiosGet = jest.mocked(axiosInstance.get)
@@ -127,6 +127,34 @@ describe('Dataset Gateway test', () => {
 
             // when, then
             await expect(deleteDataset(ctx, datasetId)).rejects.toMatchObject(expected)
+        });
+    })
+
+    describe("shared datasets", () => {
+        test("asks for the shared list, minimal, keeping the caller's paging", async () => {
+            jest.mocked(buildHeaders).mockReturnValue({ headers: { "X-User-Id": "u1" } } as any);
+            mockAxiosGet.mockResolvedValue({ data: { content: [], total_count: 0 } });
+            const context = { uid: "u1", tenancy: undefined };
+
+            await getSharedDatasets(context, { page: "2", page_size: "20" });
+
+            expect(mockAxiosGet).toHaveBeenCalledWith("/datasets/", {
+                headers: { "X-User-Id": "u1" },
+                params: { page: "2", page_size: "20", minimal: "true", shared: "true" },
+            });
+        });
+
+        test("forwards only the paging, whatever else the query carries", async () => {
+            jest.mocked(buildHeaders).mockReturnValue({ headers: { "X-User-Id": "u1" } } as any);
+            mockAxiosGet.mockResolvedValue({ data: { content: [], total_count: 0 } });
+            const context = { uid: "u1", tenancy: undefined };
+
+            await getSharedDatasets(context, { page: "1", page_size: "10", shared: "false", minimal: "false", user_id: "someone-else" });
+
+            expect(mockAxiosGet).toHaveBeenCalledWith("/datasets/", {
+                headers: { "X-User-Id": "u1" },
+                params: { page: "1", page_size: "10", minimal: "true", shared: "true" },
+            });
         });
     })
 })

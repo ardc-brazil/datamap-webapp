@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useRouter } from 'next/router';
 import { useState } from "react";
 import useSWR from 'swr';
+import { DatasetsTabs } from "../../../components/Datasets/DatasetsTabs";
 import LoggedLayout from "../../../components/LoggedLayout";
 import { EmptySearch } from "../../../components/Search/EmptySearch";
 import { FilterBadges } from "../../../components/Search/FilterBadges";
@@ -9,8 +10,10 @@ import { FilterCriteriaList } from "../../../components/Search/FilterCriteriaLis
 import { ListDataset } from "../../../components/Search/ListDataset";
 import TextSearchBar from "../../../components/Search/TextSearchBar";
 import Alert from "../../../components/base/Alert";
+import { useTenancyStore } from "../../../components/TenancyStore";
 import { CurrentSearchParameterState, SelectedFilterValue } from "../../../components/types/FilterOption";
 import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_ERROR } from "../../../contants/InternalRoutesConstants";
+import { tenancyDisplayName } from "../../../lib/embargoDisplay";
 import { SWRRetry, fetcher } from "../../../lib/fetcher";
 import { trackUiEvent } from "../../../lib/telemetryClient";
 import { GetDatasetsResponse } from "../../../types/BffAPI";
@@ -71,6 +74,9 @@ export default function ListDatasetPage() {
   const [pageSize, setPageSize] = useState(10)
 
   const { datasets, datasetsIsLoading, datasetsError } = useDatasetSearch(currentSearchParameters, currentPage, pageSize)
+
+  const tenancySelected = useTenancyStore((state) => state.tenancySelected)
+  const { data: shared } = useSWR(`/api/datasets/shared?page=1&page_size=1`, fetcher)
 
   // Reset to page 1 when search parameters change
   function resetPagination() {
@@ -201,13 +207,21 @@ export default function ListDatasetPage() {
           <div>
             <h2 className="m-0 text-3xl leading-tight">Datasets</h2>
             <p className="mt-2 mb-0 text-[15px] leading-[23px] text-primary-600">
-              Explore, analyze, and share quality data. Learn more about data types,
-              creating, and collaborating.
+              Explore, analyze, and share quality data.
             </p>
           </div>
           <Link href={ROUTE_PAGE_DATASETS_NEW} className="btn-primary m-0 flex-none hover:text-primary-50">
             + New dataset
           </Link>
+        </div>
+
+        <div className="mt-6">
+          <DatasetsTabs
+            active="tenancy"
+            tenancyName={tenancyDisplayName(tenancySelected)}
+            tenancyCount={datasets?.total_count}
+            sharedCount={(shared as GetDatasetsResponse)?.total_count}
+          />
         </div>
 
         <div className="mt-7 mb-4">

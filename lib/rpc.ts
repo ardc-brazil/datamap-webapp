@@ -1,5 +1,5 @@
 import axios, { HttpStatusCode } from 'axios';
-import { APIError } from "../types/APIError";
+import { APIError, HttpCode } from "../types/APIError";
 import { AppLocalContext } from './appLocalContext';
 import { callOutcome, operationOf, recordExternalCall } from './externalCalls';
 
@@ -128,9 +128,35 @@ export function httpErrorHandler(error) {
         handledError = new APIError(
           "BAD_REQUEST",
           HttpStatusCode.BadRequest,
-          response?.data?.details,
+          response?.data?.details ?? response?.data?.detail,
           true,
-          response?.data?.errors
+          response?.data?.errors,
+          response?.data?.detail
+        )
+      } else if (statusCode === 403) {
+        handledError = new APIError(
+          "FORBIDDEN",
+          HttpStatusCode.Forbidden,
+          "user not allowed to perform the operation",
+          true
+        )
+      } else if (statusCode === 409) {
+        handledError = new APIError(
+          "CONFLICT",
+          HttpStatusCode.Conflict,
+          response?.data?.detail,
+          true,
+          undefined,
+          response?.data?.detail
+        )
+      } else if (statusCode >= 400 && statusCode < 500) {
+        handledError = new APIError(
+          "CLIENT_ERROR",
+          statusCode as HttpCode,
+          typeof response?.data?.detail === "string" ? response.data.detail : "Client error",
+          true,
+          response?.data?.errors,
+          response?.data?.detail
         )
       }
     } else if (request) {

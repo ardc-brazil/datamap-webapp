@@ -7,6 +7,9 @@ interface FormValues {
     urls?: DatafilePath[]
     uploadedDataFiles?: Datafile[],
     remoteFilesCount: number
+    embargoMode?: "none" | "open" | "hidden"
+    embargoUntil?: string
+    embargoNote?: string
 }
 
 interface DatafilePath {

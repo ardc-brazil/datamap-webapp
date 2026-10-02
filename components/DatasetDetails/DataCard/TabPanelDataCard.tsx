@@ -4,6 +4,9 @@ import { ReactNode, useEffect, useState } from "react";
 import Moment from "react-moment";
 import { ROUTE_PAGE_DATASETS_VERSION_DETAILS, ROUTE_PAGE_NOTEBOOKS } from "../../../contants/InternalRoutesConstants";
 import { getVersionByName } from "../../../lib/datasetVersionSelector";
+import { formatShortDate } from "../../../lib/embargoDisplay";
+import { AccessCard } from "../../Embargo/AccessCard";
+import { EmbargoCard } from "../../Embargo/EmbargoCard";
 import DatasetAuthorsForm from "../DatasetAuthorsForm";
 import DatasetCitation from "../DatasetCitation";
 import DatasetColaboratorsForm from "../DatasetColaboratorsForm";
@@ -122,7 +125,15 @@ export function TabPanelDataCard(props: TabPanelProps) {
         </div>
 
         <aside className="flex flex-col gap-4">
+          <EmbargoCard dataset={props.dataset} />
+          <AccessCard dataset={props.dataset} />
           <div className="border border-primary-200 rounded-lg bg-primary-0 px-4 py-1">
+            {selectedVersion?.files_withheld && props.dataset.embargo &&
+              <>
+                <FactRow label="Files available">{formatShortDate(props.dataset.embargo.until)}</FactRow>
+                {props.dataset.owner && <FactRow label="Owner">{props.dataset.owner.name}</FactRow>}
+              </>
+            }
             {/* TODO: Enable Usability for a dataset */}
             <DatasetUsability dataset={props.dataset} />
             <DatasetLicense dataset={props.dataset} />

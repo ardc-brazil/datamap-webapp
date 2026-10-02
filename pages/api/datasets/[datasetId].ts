@@ -3,14 +3,14 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import { NewContext } from "../../../lib/appLocalContext";
 import { deleteDataset, getDatasetCategoryFilters, updateDataset } from "../../../lib/dataset";
-import middlewareChain from "../../../lib/middlewareChain";
+import { authOnlyChain } from "../../../lib/middlewareChain";
 import { ResponseError } from "../../../types/ResponseError";
 import { logError } from "../../../lib/logging";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
 router
-  .use(middlewareChain)
+  .use(authOnlyChain)
   .put(async (req, res) => {
     try {
       const context = await NewContext(req);

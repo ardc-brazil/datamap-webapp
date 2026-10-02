@@ -15,6 +15,7 @@ interface Props {
   // TODO: Call API to get all available version.
   // In the future, we'll remove the list of versions from the dataset get details request
   availableVersions: GetDatasetDetailsVersionResponse[]
+  canEdit: boolean
 }
 
 export default function DatasetVersionHandler(props: Props) {
@@ -40,6 +41,7 @@ export default function DatasetVersionHandler(props: Props) {
         onNewVersionClick={props.onNewVersionClick}
         dataset={props.dataset}
         currentVersion={props.datasetVersion}
+        canEdit={props.canEdit}
       />
     </ >
   )
@@ -51,6 +53,7 @@ interface DatasetVersionSelectorProps {
   availableVersions: GetDatasetDetailsVersionResponse[]
   dataset: GetDatasetDetailsResponse
   currentVersion?: GetDatasetDetailsVersionResponse
+  canEdit: boolean
 
   onNewVersionClick(): void
   onClose(): void;
@@ -75,7 +78,7 @@ function DatasetVersionSelector(props: DatasetVersionSelectorProps) {
           <span className="text-[11px] leading-4 tracking-[0.08em] uppercase font-semibold text-primary-500">
             {props?.availableVersions?.length ?? 0} {props?.availableVersions?.length === 1 ? "version" : "versions"}
           </span>
-          <NewVersionButton onClick={props.onNewVersionClick} />
+          {props.canEdit && <NewVersionButton onClick={props.onNewVersionClick} />}
         </div>
 
         <div className="max-h-80 overflow-y-auto overscroll-contain">

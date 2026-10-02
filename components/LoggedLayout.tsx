@@ -15,6 +15,7 @@ interface Props {
   footerPropsMarginTop?: boolean;
   hideFooter?: boolean;
   className?: string;
+  tenancyOptional?: boolean;
 }
 
 export default function LoggedLayour(props: Props) {
@@ -32,7 +33,7 @@ export default function LoggedLayour(props: Props) {
   }
 
   // If no tenancy selected, request to select one
-  if (!isTenancySelected()) {
+  if (!props.tenancyOptional && !isTenancySelected()) {
     Router.replace(ROUTE_PAGE_TENANCY_SELECTOR);
   }
 
@@ -77,29 +78,31 @@ export default function LoggedLayour(props: Props) {
 
           <div className={`flex items-center pt-2 ${menuClosed ? "justify-center" : "px-4"}`}>
 
-            {menuClosed &&
-              <Link href={ROUTE_PAGE_DATASETS} className="flex items-center justify-center w-10 h-10 rounded-md bg-primary-900 text-primary-50 text-xl hover:bg-primary-800 hover:text-primary-50" aria-label="Create">
-                +
-              </Link>
-            }
+            {isTenancySelected() && (<>
+              {menuClosed &&
+                <Link href={ROUTE_PAGE_DATASETS} className="flex items-center justify-center w-10 h-10 rounded-md bg-primary-900 text-primary-50 text-xl hover:bg-primary-800 hover:text-primary-50" aria-label="Create">
+                  +
+                </Link>
+              }
 
-            {!menuClosed && (
-              <div className="relative inline-block w-full">
-                <button type="button" className="flex items-center justify-between w-full px-3.5 py-2.5 rounded-md bg-primary-900 text-primary-50 text-sm font-semibold hover:bg-primary-800" onClick={showCreateMenu}>
-                  Create
-                  <svg className="h-4 w-4 text-primary-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-                  </svg>
-                </button>
+              {!menuClosed && (
+                <div className="relative inline-block w-full">
+                  <button type="button" className="flex items-center justify-between w-full px-3.5 py-2.5 rounded-md bg-primary-900 text-primary-50 text-sm font-semibold hover:bg-primary-800" onClick={showCreateMenu}>
+                    Create
+                    <svg className="h-4 w-4 text-primary-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                    </svg>
+                  </button>
 
-                <div ref={ref} className={`${!isComponentVisible && "hidden"} absolute left-0 right-0 z-10 mt-1 origin-top rounded-md border border-primary-200 shadow-lg focus:outline-none bg-primary-0`} role="menu" aria-orientation="vertical" aria-labelledby="menu-button">
-                  <div className="py-1" role="none">
-                    <CreateMenuItem href={ROUTE_PAGE_DATASETS_NEW} text="New Dataset" onClick={() => setIsComponentVisible(false)} icon="database" />
-                    <CreateMenuItem href={ROUTE_PAGE_NOTEBOOKS} text="New Notebook" onClick={() => setIsComponentVisible(false)} icon="code" />
+                  <div ref={ref} className={`${!isComponentVisible && "hidden"} absolute left-0 right-0 z-10 mt-1 origin-top rounded-md border border-primary-200 shadow-lg focus:outline-none bg-primary-0`} role="menu" aria-orientation="vertical" aria-labelledby="menu-button">
+                    <div className="py-1" role="none">
+                      <CreateMenuItem href={ROUTE_PAGE_DATASETS_NEW} text="New Dataset" onClick={() => setIsComponentVisible(false)} icon="database" />
+                      <CreateMenuItem href={ROUTE_PAGE_NOTEBOOKS} text="New Notebook" onClick={() => setIsComponentVisible(false)} icon="code" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </>)}
 
           </div>
 
@@ -153,8 +156,7 @@ function MenuItem(props) {
   const router = useRouter();
 
   function active(href: string) {
-    const browserPath = router.pathname.split("/").join("/");
-    return href.indexOf(browserPath) >= 0;
+    return router.pathname === href || router.pathname.startsWith(href + "/");
   }
 
   const isActive = active(props.href);

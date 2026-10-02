@@ -1,5 +1,6 @@
 // Server-side only: imports `requestContext`, which the browser cannot bundle.
 
+import { maskPathTokens } from "./externalCalls";
 import { currentRequestId } from "./requestContext";
 
 export { currentRequestId, withRequestId } from "./requestContext";
@@ -44,12 +45,13 @@ export function describeError(error: unknown): Record<string, unknown> {
   };
 
   if (candidate.isAxiosError) {
+    const url = candidate.config?.url;
     return {
       message: candidate.message,
       code: candidate.code,
       status: candidate.response?.status,
       method: candidate.config?.method,
-      url: candidate.config?.url,
+      url: url === undefined ? undefined : maskPathTokens(url),
     };
   }
 
@@ -102,6 +104,13 @@ export function logError(
   extra: Record<string, unknown> = {}
 ): void {
   emit("ERROR", "bff", message, { ...extra, error: describeError(error) });
+}
+
+// For getServerSideProps: Next.js prints a rethrown error with console.error,
+// and an AxiosError carries credentials and tokens the caller must not expose.
+export function rethrowSafely(message: string, error: unknown): never {
+  logError(message, error);
+  throw new Error(message);
 }
 
 export function logInfo(message: string, extra: Record<string, unknown> = {}): void {
