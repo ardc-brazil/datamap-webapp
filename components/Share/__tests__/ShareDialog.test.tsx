@@ -7,17 +7,20 @@ const createAnonymousLink = jest.fn() as any;
 const revokePermission = jest.fn() as any;
 const revokeAnonymousLink = jest.fn() as any;
 const searchShareCandidates = jest.fn() as any;
+const setMembersAccess = jest.fn() as any;
+const replace = jest.fn(async () => true);
 const mutate = jest.fn();
 let shareState: any;
 
 jest.mock("../../../gateways/BFFAPI", () => ({
-    BFFAPI: jest.fn().mockImplementation(() => ({ grantAccess, createAnonymousLink, revokePermission, revokeAnonymousLink, searchShareCandidates })),
+    BFFAPI: jest.fn().mockImplementation(() => ({ grantAccess, createAnonymousLink, revokePermission, revokeAnonymousLink, searchShareCandidates, setMembersAccess })),
 }));
 jest.mock("swr", () => ({
     __esModule: true,
     default: () => ({ data: shareState, error: undefined, mutate }),
 }));
 jest.mock("next-auth/react", () => ({ useSession: () => ({ data: null }) }));
+jest.mock("next/router", () => ({ useRouter: () => ({ replace, asPath: "/app/datasets/d2" }) }));
 jest.mock("../../../lib/fetcher", () => ({ fetcher: jest.fn() }));
 
 import { ShareDialog } from "../ShareDialog";
@@ -216,5 +219,49 @@ describe("ShareDialog", () => {
 
         fireEvent.change(screen.getByLabelText(/Label/), { target: { value: "Reviewers" } });
         expect(createButton.disabled).toBe(false);
+    });
+
+    test("without an embargo the owner changes what members can do", async () => {
+        shareState = stateWith({ tenancy: { name: "Data Amazon", path: "datamap/production/data-amazon", members: 14, members_can_edit: true } });
+        setMembersAccess.mockResolvedValue({ members_can_edit: false, access: { level: "owner" } });
+        render(<ShareDialog dataset={{ ...open, access: { level: "owner" }, members_can_edit: true }} show onClose={jest.fn()} />);
+
+        expect(screen.getByText("14 people · can read and edit")).toBeTruthy();
+        fireEvent.click(screen.getByRole("button", { name: "Change what members of Data Amazon can do" }));
+        fireEvent.click(screen.getByRole("radio", { name: /Read only/ }));
+        fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+        await waitFor(() => expect(setMembersAccess).toHaveBeenCalledWith("d2", { members_can_edit: false }));
+        await waitFor(() => expect(replace).toHaveBeenCalledWith("/app/datasets/d2", undefined, { scroll: false }));
+        expect(mutate).toHaveBeenCalled();
+        await waitFor(() => expect(screen.queryByRole("dialog", { name: "What members of Data Amazon can do" })).toBeNull());
+        expect(screen.getByRole("dialog", { name: "Share" })).toBeTruthy();
+    });
+
+    test("during an embargo the row says what members get afterwards", () => {
+        shareState = stateWith({ tenancy: null });
+        render(<ShareDialog dataset={{ ...embargoed, access: { level: "owner" }, members_can_edit: false }} show onClose={jest.fn()} />);
+
+        expect(screen.getByText("No access during the embargo · afterwards: read only")).toBeTruthy();
+        expect(screen.getByRole("button", { name: "Change what members of Data Amazon can do" })).toBeTruthy();
+    });
+
+    test("someone who is not the owner reads the row and cannot change it", () => {
+        shareState = stateWith({ tenancy: { name: "Data Amazon", path: "datamap/production/data-amazon", members: 14, members_can_edit: false } });
+        render(<ShareDialog dataset={{ ...open, access: { level: "write" } }} show onClose={jest.fn()} />);
+
+        expect(screen.getByText("14 people · can read · editing limited to the people above")).toBeTruthy();
+        expect(screen.queryByRole("button", { name: /Change what members/ })).toBeNull();
+    });
+
+    test("a refused change is shown in the members dialog", async () => {
+        shareState = stateWith({ tenancy: { name: "Data Amazon", path: "datamap/production/data-amazon", members: 14, members_can_edit: true } });
+        setMembersAccess.mockRejectedValue({ httpCode: 403 });
+        render(<ShareDialog dataset={{ ...open, access: { level: "owner" } }} show onClose={jest.fn()} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Change what members of Data Amazon can do" }));
+        fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+        expect(await screen.findByText("You are not allowed to do this on this dataset.")).toBeTruthy();
     });
 });
