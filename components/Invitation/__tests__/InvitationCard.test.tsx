@@ -50,11 +50,12 @@ describe("InvitationCard", () => {
         expect(screen.getByRole("status").textContent).toContain("It was accepted on Sep 29, 2026. If that was you, sign in to open the dataset. If it wasn't, ask Luciana Rizzo to revoke it and send a new one.");
     });
 
-    test("accepted, seen signed in after the login round trip: accepted, and where the dataset is", () => {
+    test("accepted, seen signed in after the login round trip: neutral wording, since this account may not be the one that accepted it", () => {
         render(<InvitationCard token="tok" preview={{ ...pending, state: "accepted", accepted_at: "2026-09-29T10:00:00Z" }} account="fernanda.lima@gmail.com" />);
 
         expect(screen.getByRole("heading", { name: "Invitation accepted" })).toBeTruthy();
         expect(screen.queryByText(/already used/)).toBeNull();
+        expect(screen.getByRole("status").textContent).toContain("This invitation has been accepted. If it was yours, you'll find the dataset in Shared with me.");
         expect(screen.getByRole("link", { name: "Shared with me" }).getAttribute("href")).toBe("/app/datasets/shared");
     });
 

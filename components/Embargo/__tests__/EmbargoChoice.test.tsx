@@ -4,10 +4,10 @@ import { act, render, screen, within } from '@testing-library/react';
 import { Form, Formik } from "formik";
 import { EmbargoChoice } from "../EmbargoChoice";
 
-function renderChoice() {
+function renderChoice(props: { disabled?: boolean, statusLine?: string | null } = {}) {
     render(
         <Formik initialValues={{ embargoMode: "none", embargoUntil: "", embargoNote: "" }} onSubmit={() => undefined}>
-            <Form><EmbargoChoice tenancyName="Data Amazon" /></Form>
+            <Form><EmbargoChoice tenancyName="Data Amazon" {...props} /></Form>
         </Formik>
     );
 }
@@ -69,5 +69,13 @@ describe("EmbargoChoice", () => {
 
         expect((await screen.findByRole("radio", { name: /See that it exists/ }) as HTMLInputElement).checked).toBe(true);
         expect((screen.getByRole("radio", { name: /Under embargo/ }) as HTMLInputElement).checked).toBe(true);
+    });
+
+    test("once the embargo is locked, the radios are disabled and the status line is shown", () => {
+        renderChoice({ disabled: true, statusLine: "Embargo set until Dec 15, 2026; change it in Settings after creation" });
+
+        expect((screen.getByRole("radio", { name: /Open to the workspace/ }) as HTMLInputElement).disabled).toBe(true);
+        expect((screen.getByRole("radio", { name: /Under embargo/ }) as HTMLInputElement).disabled).toBe(true);
+        expect(screen.getByRole("status").textContent).toBe("Embargo set until Dec 15, 2026; change it in Settings after creation");
     });
 });

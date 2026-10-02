@@ -32,4 +32,18 @@ describe("OneTimeLinkDialog", () => {
         expect(input.selectionStart).toBe(0);
         expect(input.selectionEnd).toBe(LINK.length);
     });
+
+    test("when the browser refuses the clipboard write, falls through to the same manual selection", async () => {
+        const writeText = (jest.fn() as any).mockRejectedValue(new Error("refused"));
+        Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+        render(<OneTimeLinkDialog link={LINK} kind="anonymous" onDone={jest.fn()} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Copy" }));
+
+        expect(await screen.findByText("Copy the link above")).toBeTruthy();
+        expect(screen.queryByText("Copied")).toBeNull();
+        const input = screen.getByLabelText("Link") as HTMLInputElement;
+        expect(input.selectionStart).toBe(0);
+        expect(input.selectionEnd).toBe(LINK.length);
+    });
 });

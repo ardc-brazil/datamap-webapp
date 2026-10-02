@@ -7,7 +7,7 @@ interface Values {
     embargoNote: string
 }
 
-export function EmbargoChoice(props: { tenancyName: string }) {
+export function EmbargoChoice(props: { tenancyName: string, disabled?: boolean, statusLine?: string | null }) {
     const { values, setFieldValue } = useFormikContext<Values>();
     const embargoed = values.embargoMode !== "none";
     const options = [
@@ -19,6 +19,7 @@ export function EmbargoChoice(props: { tenancyName: string }) {
         <div className="flex flex-col gap-2">
             <span className="text-sm font-semibold text-primary-900">Who can see it</span>
             <span className="text-[13px] leading-[19px] text-primary-500">You can change this later, as long as the dataset hasn&apos;t been published.</span>
+            {props.statusLine && <p role="status" className="m-0 text-[13px] leading-[19px] font-semibold text-primary-900">{props.statusLine}</p>}
             <div className="flex flex-col gap-3 pt-1">
                 {options.map((option) => {
                     const selected = embargoed === option.embargo;
@@ -30,6 +31,7 @@ export function EmbargoChoice(props: { tenancyName: string }) {
                                         type="radio"
                                         name="visibility"
                                         checked={selected}
+                                        disabled={props.disabled}
                                         onChange={() => setFieldValue("embargoMode", option.embargo ? "hidden" : "none")}
                                         className="h-[18px] w-[18px] p-0 accent-primary-900"
                                     />
@@ -39,7 +41,7 @@ export function EmbargoChoice(props: { tenancyName: string }) {
                             </label>
                             {option.embargo && embargoed &&
                                 <div className="border-t border-primary-200 pt-5 pr-4 pb-4 pl-12">
-                                    <EmbargoFields tenancyName={props.tenancyName} />
+                                    <EmbargoFields tenancyName={props.tenancyName} disabled={props.disabled} />
                                 </div>
                             }
                         </div>

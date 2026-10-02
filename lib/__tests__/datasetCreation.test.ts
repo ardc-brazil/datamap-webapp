@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 import { APIError } from "../../types/APIError";
-import { EmbargoStepError, finishDatasetCreation } from "../datasetCreation";
+import { EmbargoStepError, embargoLockFor, finishDatasetCreation } from "../datasetCreation";
 
 function recordingSteps(overrides: any = {}) {
     const calls: string[] = [];
@@ -79,5 +79,19 @@ describe("finishDatasetCreation", () => {
 
         await expect(finishDatasetCreation(steps)).rejects.not.toBeInstanceOf(EmbargoStepError);
         expect(steps.calls).toEqual(["setEmbargo", "onEmbargoSet"]);
+    });
+});
+
+describe("embargoLockFor", () => {
+
+    test("not locked before any embargo was set", () => {
+        expect(embargoLockFor(null)).toEqual({ locked: false, statusLine: null });
+    });
+
+    test("locked once the embargo was set, with a status line naming the set date", () => {
+        expect(embargoLockFor("2026-12-15T23:59:59+00:00")).toEqual({
+            locked: true,
+            statusLine: "Embargo set until Dec 15, 2026; change it in Settings after creation",
+        });
     });
 });

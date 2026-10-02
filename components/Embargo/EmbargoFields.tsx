@@ -15,7 +15,7 @@ const MEMBER_OPTIONS = [
     { value: "hidden", label: "Don't see it at all", hint: "Hidden from every listing and search. Only you and the people you share it with know it exists." },
 ];
 
-export function EmbargoFields(props: { tenancyName: string }) {
+export function EmbargoFields(props: { tenancyName: string, disabled?: boolean }) {
     const { values, setFieldValue } = useFormikContext<Values>();
     const now = new Date();
     const max = maxEmbargoDate(now);
@@ -27,7 +27,7 @@ export function EmbargoFields(props: { tenancyName: string }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                     <label htmlFor="embargoUntil" className="m-0 text-[13px] font-semibold text-primary-900">Embargo ends</label>
-                    <Field type="date" id="embargoUntil" name="embargoUntil" min={minEmbargoDate(now)} max={max} className={EDIT_FORM_INPUT_CLASS} />
+                    <Field type="date" id="embargoUntil" name="embargoUntil" min={minEmbargoDate(now)} max={max} disabled={props.disabled} className={EDIT_FORM_INPUT_CLASS} />
                     <span className="text-xs leading-[17px] text-primary-500">
                         {days !== null ? `${days} days. ` : ""}Up to 90 days ({formatShortDate(toEmbargoUntil(max))}); you can extend it later, 90 days at a time.
                     </span>
@@ -35,7 +35,7 @@ export function EmbargoFields(props: { tenancyName: string }) {
                 </div>
                 <div className="flex flex-col gap-1.5">
                     <label htmlFor="embargoNote" className="m-0 text-[13px] font-semibold text-primary-900">Note <span className="font-normal text-primary-400">optional</span></label>
-                    <Field type="text" id="embargoNote" name="embargoNote" maxLength={2000} placeholder="Under review at JGR Atmospheres" className={EDIT_FORM_INPUT_CLASS} />
+                    <Field type="text" id="embargoNote" name="embargoNote" maxLength={2000} placeholder="Under review at JGR Atmospheres" disabled={props.disabled} className={EDIT_FORM_INPUT_CLASS} />
                     <span className="text-xs leading-[17px] text-primary-500">Visible to you and the people with access.</span>
                 </div>
             </div>
@@ -47,7 +47,7 @@ export function EmbargoFields(props: { tenancyName: string }) {
                         return (
                             <label key={option.value} className={`flex flex-col gap-1 m-0 rounded-md bg-primary-0 px-3.5 py-3 cursor-pointer ${selected ? "border-[1.5px] border-primary-900" : "border border-primary-200"}`}>
                                 <span className="flex items-center gap-2 text-[13px] font-semibold text-primary-900">
-                                    <input type="radio" name="embargoMode" value={option.value} checked={selected} onChange={() => setFieldValue("embargoMode", option.value)} className="h-3.5 w-3.5 p-0 accent-primary-900" />
+                                    <input type="radio" name="embargoMode" value={option.value} checked={selected} disabled={props.disabled} onChange={() => setFieldValue("embargoMode", option.value)} className="h-3.5 w-3.5 p-0 accent-primary-900" />
                                     {option.label}
                                 </span>
                                 <span className="pl-[22px] text-xs leading-[17px] text-primary-600">{option.hint}</span>

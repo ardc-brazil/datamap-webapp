@@ -1,4 +1,5 @@
 import { APIError } from "../types/APIError";
+import { formatShortDate } from "./embargoDisplay";
 
 export class EmbargoStepError extends Error {
     readonly apiError: unknown;
@@ -23,6 +24,21 @@ export interface DatasetCreationSteps {
 
 function isAlreadyActive(error: unknown): boolean {
     return (error as APIError)?.errors?.[0]?.code === "embargo_already_active";
+}
+
+export interface EmbargoLock {
+    locked: boolean;
+    statusLine: string | null;
+}
+
+export function embargoLockFor(embargoSetUntil: string | null): EmbargoLock {
+    if (!embargoSetUntil) {
+        return { locked: false, statusLine: null };
+    }
+    return {
+        locked: true,
+        statusLine: `Embargo set until ${formatShortDate(embargoSetUntil)}; change it in Settings after creation`,
+    };
 }
 
 export async function finishDatasetCreation(steps: DatasetCreationSteps): Promise<void> {

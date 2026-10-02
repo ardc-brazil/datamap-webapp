@@ -13,13 +13,17 @@ export function OneTimeLinkDialog(props: Props) {
     const input = useRef<HTMLInputElement>(null);
 
     async function copy() {
-        if (!navigator.clipboard) {
-            input.current?.select();
-            setCopied("manual");
-            return;
+        if (navigator.clipboard) {
+            try {
+                await navigator.clipboard.writeText(props.link ?? "");
+                setCopied("copied");
+                return;
+            } catch {
+                // browser refused the clipboard write; fall through to manual selection
+            }
         }
-        await navigator.clipboard.writeText(props.link ?? "");
-        setCopied("copied");
+        input.current?.select();
+        setCopied("manual");
     }
 
     return (

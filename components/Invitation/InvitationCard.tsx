@@ -37,7 +37,7 @@ export function InvitationCard(props: Props) {
             <div role="status" className="flex flex-col gap-3 text-center items-center">
                 <h1 className="m-0 text-[26px] leading-[1.2] font-semibold tracking-[-0.02em] text-primary-900">Invitation accepted</h1>
                 <p className="m-0 max-w-[440px] text-[15px] leading-6 text-primary-700">
-                    {preview.inviter_name} shared {preview.dataset_name} with you. You&apos;ll find it in{" "}
+                    This invitation has been accepted. If it was yours, you&apos;ll find the dataset in{" "}
                     <Link href={ROUTE_PAGE_DATASETS_SHARED} className="font-medium text-primary-900 underline underline-offset-2">Shared with me</Link>.
                 </p>
             </div>

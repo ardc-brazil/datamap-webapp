@@ -2,7 +2,7 @@ import Uppy from "@uppy/core";
 import { ErrorMessage, Field, Form, Formik, FormikHelpers } from "formik";
 import { useSession } from "next-auth/react";
 import Router from "next/router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { EmbargoChoice } from "../../../components/Embargo/EmbargoChoice";
 import LayoutFullScreen from "../../../components/LayoutFullScreen";
 import LoggedLayout from "../../../components/LoggedLayout";
@@ -14,7 +14,7 @@ import { EDIT_FORM_ERROR_CLASS } from "../../../contants/EditFormConstants";
 import { messageForApiError } from "../../../contants/EmbargoConstants";
 import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
-import { EmbargoStepError, finishDatasetCreation } from "../../../lib/datasetCreation";
+import { EmbargoStepError, embargoLockFor, finishDatasetCreation } from "../../../lib/datasetCreation";
 import { embargoRequestFrom, toEmbargoUntil, validateEmbargoDate } from "../../../lib/embargoDates";
 import { formatShortDate, tenancyDisplayName } from "../../../lib/embargoDisplay";
 import {
@@ -40,7 +40,7 @@ export default function NewPage() {
   const [datasetPrototyping, setDatasetPrototyping] = useState({} as DatasetPrototyping);
   const [uppyReference, setUppyReference] = useState(null as Uppy);
   const [embargoError, setEmbargoError] = useState(null as string | null);
-  const embargoSet = useRef(false);
+  const [embargoSetUntil, setEmbargoSetUntil] = useState(null as string | null);
 
   function datasetCreated(datasetResponse: any): void {
     setShowModal(true);
@@ -118,8 +118,8 @@ export default function NewPage() {
       setEmbargo: embargoRequest
         ? () => bffGateway.setEmbargo(datasetId, { ...embargoRequest, note: values.embargoNote?.trim() || null })
         : null,
-      embargoAlreadySet: embargoSet.current,
-      onEmbargoSet: () => { embargoSet.current = true; },
+      embargoAlreadySet: embargoSetUntil !== null,
+      onEmbargoSet: () => { setEmbargoSetUntil(embargoRequest?.until ?? null); },
       uploadFiles: () => uploadFiles(),
       updateDataset: () => updateDataset(datasetUpdateRequest),
       publishVersion: () => {
@@ -180,7 +180,12 @@ export default function NewPage() {
         validate={handleValidateForm}
         onSubmit={handleSubmitForm}
       >
-        {({ isSubmitting, values, setFieldTouched }) => (
+        {({ isSubmitting, values, setFieldTouched }) => {
+          const embargoLock = embargoLockFor(embargoSetUntil);
+          const footerEmbargoUntil = embargoSetUntil
+            ?? (values.embargoMode !== "none" && values.embargoUntil ? toEmbargoUntil(values.embargoUntil) : null);
+
+          return (
           <Form>
             <LayoutFullScreen title="New dataset" hint="Add a title and the data files to create it">
               <div className="flex flex-col gap-10">
@@ -236,7 +241,11 @@ export default function NewPage() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <EmbargoChoice tenancyName={tenancyDisplayName(tenancySelected)} />
+                  <EmbargoChoice
+                    tenancyName={tenancyDisplayName(tenancySelected)}
+                    disabled={embargoLock.locked}
+                    statusLine={embargoLock.statusLine}
+                  />
                   {embargoError && <p role="alert" className={EDIT_FORM_ERROR_CLASS}>{embargoError}</p>}
                 </div>
               </div>
@@ -244,7 +253,7 @@ export default function NewPage() {
               <div className="mx-auto w-full max-w-[640px] h-full px-4 sm:px-0 flex justify-between items-center gap-4">
                 <span className="text-[13px] text-primary-500">
                   {values.remoteFilesCount} {values.remoteFilesCount === 1 ? "file" : "files"}
-                  {values.embargoMode !== "none" && values.embargoUntil && ` · embargo until ${formatShortDate(toEmbargoUntil(values.embargoUntil))}`}
+                  {footerEmbargoUntil && ` · embargo until ${formatShortDate(footerEmbargoUntil)}`}
                 </span>
                 <div className="flex gap-2">
                   <button type="button"
@@ -263,7 +272,8 @@ export default function NewPage() {
               </div>
             </LayoutFullScreen>
           </Form>
-        )}
+          );
+        }}
       </Formik>
 
       <Modal
