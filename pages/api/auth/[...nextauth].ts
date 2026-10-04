@@ -215,6 +215,10 @@ async function emailHintFor(user: GetUserByProviderResponse | null, attempt: Orc
 
 async function finishOrcidSignIn(token: JWT, user: GetUserByProviderResponse): Promise<JWT> {
   token = hydrateWithUserInfo(token, user);
+  token.email = user.email;
+  if (user.name) {
+    token.name = user.name;
+  }
   delete token.pending;
   await claimPendingInvitations(user.id);
   return token;
@@ -256,7 +260,9 @@ export async function refreshPendingSignIn(token: JWT): Promise<JWT> {
     return token;
   }
 
-  return finishOrcidSignIn(token, user);
+  token = await finishOrcidSignIn(token, user);
+  getMetrics().recordLogin("orcid", "success");
+  return token;
 }
 
 async function getUserByProviderAuthentication(account, token): Promise<GetUserByProviderResponse> {

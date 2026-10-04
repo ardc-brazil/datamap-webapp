@@ -67,6 +67,7 @@ describe("signing in with ORCID", () => {
 
         expect(token).toEqual({
             name: "Ada Lovelace",
+            email: "ada@usp.br",
             sub: ORCID,
             uid: "u1",
             tenancies: [TENANCY],
@@ -206,8 +207,34 @@ describe("refreshing a pending session after the code was confirmed", () => {
         });
 
         expect(getUserByProviderID).toHaveBeenCalledWith({ providerName: "orcid", providerID: ORCID });
-        expect(token).toEqual({ name: "Ada Lovelace", uid: "u1", tenancies: [TENANCY], v: TOKEN_VERSION });
+        expect(token).toEqual({ name: "Ada Lovelace", email: "ada@usp.br", uid: "u1", tenancies: [TENANCY], v: TOKEN_VERSION });
         expect(claimInvitations).toHaveBeenCalledWith("u1");
+    });
+
+    test("the completed sign-in carries the account's confirmed email and name", async () => {
+        jest.mocked(getUserByProviderID).mockResolvedValue(account({ name: "Ada King", email: "ada.king@usp.br" }));
+
+        const token = await jwt({ token: { ...pendingToken(), email: null }, trigger: "update" });
+
+        expect(token.email).toBe("ada.king@usp.br");
+        expect(token.name).toBe("Ada King");
+    });
+
+    test("completing a pending sign-in counts as one successful ORCID login", async () => {
+        jest.mocked(getUserByProviderID).mockResolvedValue(account());
+
+        await jwt({ token: pendingToken(), trigger: "update" });
+
+        expect(mockRecordLogin).toHaveBeenCalledTimes(1);
+        expect(mockRecordLogin).toHaveBeenCalledWith("orcid", "success");
+    });
+
+    test("a refresh that leaves the sign-in pending records no login", async () => {
+        jest.mocked(getUserByProviderID).mockResolvedValue(account({ email_verified_at: null }));
+
+        await jwt({ token: pendingToken(), trigger: "update" });
+
+        expect(mockRecordLogin).not.toHaveBeenCalled();
     });
 
     test("stays pending while the email is still unconfirmed", async () => {
