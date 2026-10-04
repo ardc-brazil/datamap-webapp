@@ -346,4 +346,29 @@ export class BFFAPI {
             throw httpErrorHandler(error);
         }
     }
+
+    async signUp(input: { name: string; email: string; password: string }): Promise<{ challengeId: string }> {
+        const response = await axios.post("/api/account/sign-up", input);
+        return response.data as { challengeId: string };
+    }
+
+    async confirmSignUp(challengeId: string, code: string): Promise<void> {
+        await axios.post(`/api/account/sign-up/${encodeURIComponent(challengeId)}/confirm`, { code });
+    }
+
+    async resendChallenge(challengeId: string): Promise<void> {
+        await axios.post(`/api/account/challenges/${encodeURIComponent(challengeId)}/resend`);
+    }
+
+    async requestPasswordReset(email: string): Promise<void> {
+        await axios.post("/api/account/password-reset", { email });
+    }
+
+    async confirmPasswordReset(token: string, password: string): Promise<void> {
+        await axios.post("/api/account/password-reset/confirm", { token, password });
+    }
+
+    async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+        await axios.put("/api/account/password", { currentPassword, newPassword });
+    }
 }
