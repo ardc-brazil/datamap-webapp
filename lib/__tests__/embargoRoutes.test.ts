@@ -1,4 +1,4 @@
-jest.mock("next-auth/jwt", () => ({ getToken: jest.fn(async () => ({ uid: "u1" })) }));
+jest.mock("next-auth/jwt", () => ({ getToken: jest.fn(async () => ({ uid: "u1", v: 2 })) }));
 jest.mock("../embargo");
 jest.mock("../dataset");
 
