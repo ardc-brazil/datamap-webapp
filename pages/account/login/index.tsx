@@ -2,6 +2,7 @@ import { signIn } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";
 import Router from "next/router";
+import { DevOrcidMockForm } from "../../../components/Account/DevOrcidMockForm";
 import { SignInForm } from "../../../components/Account/SignInForm";
 import { SignUpForm } from "../../../components/Account/SignUpForm";
 import { TabPanel } from "../../../components/DatasetDetails/TabPanel";
@@ -174,6 +175,9 @@ export default function LoginPage(props: Props) {
           <TabPanel title="Sign in">
             <div className="flex flex-col">
               <OrcidButton callbackUrl={callbackUrl}>Sign in with ORCID</OrcidButton>
+              {process.env.NODE_ENV == "development" &&
+                <DevOrcidMockForm callbackUrl={callbackUrl} />
+              }
               {process.env.NODE_ENV == "development" &&
                 <GithubButton callbackUrl={callbackUrl}>Sign in with GitHub</GithubButton>
               }

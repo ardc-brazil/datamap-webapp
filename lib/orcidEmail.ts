@@ -1,12 +1,11 @@
 import axios from "axios";
+import { ORCID_ID_PATTERN } from "../contants/AccountConstants";
 
 export const ORCID_PUBLIC_API_URL = "https://pub.orcid.org/v3.0";
 
 export const ORCID_EMAIL_TIMEOUT_MS = 3000;
 
 const PLACEHOLDER_EMAIL_DOMAIN = "@fake.mail.com";
-
-const ORCID_ID = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/;
 
 export interface OrcidEmail {
     email?: string
@@ -28,7 +27,7 @@ export function pickOrcidEmail(emails: OrcidEmail[] | undefined): string | undef
 
 /** Only used to pre-fill the confirmation field: a slow or failing ORCID must never block a sign-in. */
 export async function fetchOrcidPublicEmail(orcid: string, accessToken?: string): Promise<string | undefined> {
-    if (!ORCID_ID.test(orcid)) {
+    if (!ORCID_ID_PATTERN.test(orcid)) {
         return undefined;
     }
     try {

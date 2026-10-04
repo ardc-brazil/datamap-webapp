@@ -11,16 +11,19 @@ import { getMetrics } from "../../../lib/metrics";
 import { claimInvitations } from "../../../lib/share";
 import { STALE_SESSION_ERROR, TOKEN_VERSION } from "../../../lib/sessionToken";
 import { fetchOrcidPublicEmail, isPlaceholderEmail } from "../../../lib/orcidEmail";
+import { DEV_ORCID_MOCK_PROVIDER_ID } from "../../../contants/AccountConstants";
+import { devOrcidMockProvider } from "../../../lib/devOrcidMock";
 
 export { TOKEN_VERSION } from "../../../lib/sessionToken";
 
-// GitHub is for local work only; it must not exist in production.
+// GitHub is for local work, and the ORCID mock signs in as any iD: neither may exist in production.
 const developmentOnlyProviders = process.env.NODE_ENV === "development"
   ? [
     GithubProvider({
       clientId: process.env.GITHUB_ID,
       clientSecret: process.env.GITHUB_SECRET,
     }),
+    ...(process.env.ENABLE_DEV_ORCID_MOCK === "true" ? [devOrcidMockProvider()] : []),
   ]
   : [];
 
@@ -72,8 +75,9 @@ export const authOptions: AuthOptions = {
         token.accessToken = account.access_token
       }
 
-      if (trigger == "signIn" && account?.provider == "orcid") {
-        token = await signInWithOrcid(token, account as Account);
+      const orcid = trigger == "signIn" ? orcidSignIn(account, user) : null;
+      if (orcid) {
+        token = await signInWithOrcid(token, orcid);
       } else if (trigger == "signIn") {
         if (account?.provider == "credentials") {
           token = await hydratePasswordSignIn(token, user.id);
@@ -169,6 +173,32 @@ export async function claimPendingInvitations(uid: string): Promise<void> {
   }
 }
 
+export interface OrcidSignIn {
+  orcid: string
+  name?: string
+  publicEmail: () => Promise<string | undefined>
+}
+
+/** A real ORCID sign-in, or the development mock standing in for one; null for any other provider. */
+export function orcidSignIn(account: Account | null | undefined, user?: User | null): OrcidSignIn | null {
+  if (account?.provider === "orcid") {
+    const orcid = account.orcid as string;
+    return {
+      orcid,
+      name: user?.name ?? undefined,
+      publicEmail: () => fetchOrcidPublicEmail(orcid, account.access_token),
+    };
+  }
+  if (account?.provider === DEV_ORCID_MOCK_PROVIDER_ID && account.providerAccountId) {
+    return {
+      orcid: account.providerAccountId,
+      name: user?.name ?? undefined,
+      publicEmail: async () => user?.publicEmail,
+    };
+  }
+  return null;
+}
+
 async function findUserByOrcid(orcid: string): Promise<GetUserByProviderResponse | null> {
   try {
     return await getUserByProviderID({ providerName: "orcid", providerID: orcid });
@@ -180,11 +210,11 @@ async function findUserByOrcid(orcid: string): Promise<GetUserByProviderResponse
   }
 }
 
-async function emailHintFor(user: GetUserByProviderResponse | null, orcid: string, accessToken?: string): Promise<string | undefined> {
+async function emailHintFor(user: GetUserByProviderResponse | null, attempt: OrcidSignIn): Promise<string | undefined> {
   if (user && !isPlaceholderEmail(user.email)) {
     return user.email;
   }
-  return fetchOrcidPublicEmail(orcid, accessToken);
+  return attempt.publicEmail();
 }
 
 async function finishOrcidSignIn(token: JWT, user: GetUserByProviderResponse): Promise<JWT> {
@@ -194,8 +224,8 @@ async function finishOrcidSignIn(token: JWT, user: GetUserByProviderResponse): P
   return token;
 }
 
-export async function signInWithOrcid(token: JWT, account: Account): Promise<JWT> {
-  const orcid = account.orcid as string;
+export async function signInWithOrcid(token: JWT, attempt: OrcidSignIn): Promise<JWT> {
+  const { orcid } = attempt;
   const user = await findUserByOrcid(orcid);
 
   if (user?.email_verified_at) {
@@ -204,10 +234,10 @@ export async function signInWithOrcid(token: JWT, account: Account): Promise<JWT
 
   delete token.uid;
   delete token.tenancies;
-  const emailHint = await emailHintFor(user, orcid, account.access_token);
+  const emailHint = await emailHintFor(user, attempt);
   token.pending = {
     orcid,
-    name: (token.name as string) || user?.name || orcid,
+    name: (token.name as string) || attempt.name || user?.name || orcid,
     ...(emailHint ? { emailHint } : {}),
   };
   return token;

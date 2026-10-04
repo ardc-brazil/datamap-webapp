@@ -20,6 +20,11 @@ declare module "next-auth" {
             emailHint?: string
         } & DefaultSession["user"]
     }
+
+    interface User {
+        /** Set only by the development ORCID mock: the public email ORCID would have returned. */
+        publicEmail?: string
+    }
 }
 
 declare module "next-auth/jwt" {
