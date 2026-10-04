@@ -142,3 +142,7 @@ export function canSeeAccessHistory(user: UserDetailsResponse, dataset?: { acces
     }
     return canEditDataset(user, dataset);
 }
+
+export function hasSignInProvider(user: { providers?: { name: string }[] } | undefined | null, provider: string): boolean {
+    return (user?.providers ?? []).some((entry) => entry.name === provider);
+}

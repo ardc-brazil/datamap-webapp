@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Router from "next/router";
+import { ConnectOrcid } from "../../../components/Account/ConnectOrcid";
 import { PasswordSignInMethod } from "../../../components/Account/PasswordSignInMethod";
 import LoggedLayout from "../../../components/LoggedLayout";
 
@@ -9,7 +10,7 @@ import { MaterialSymbol } from "react-material-symbols";
 import { useTenancyStore } from "../../../components/TenancyStore";
 import { ROUTE_PAGE_ERROR, ROUTE_PAGE_TENANCY_SELECTOR } from "../../../contants/InternalRoutesConstants";
 import { AppLocalContext, NewContext } from "../../../lib/appLocalContext";
-import { getUserByUID } from "../../../lib/users";
+import { getUserByUID, hasSignInProvider } from "../../../lib/users";
 
 export default function ProfilePage(props) {
   const { data: session, status } = useSession();
@@ -88,6 +89,7 @@ export default function ProfilePage(props) {
                       </li>
                     ))}
                     <PasswordSignInMethod user={user} />
+                    {!hasSignInProvider(user, "orcid") && <ConnectOrcid accountEmail={user.email} />}
                   </ul>
                 ) : (
                   <p className="m-0 px-4 py-3 text-sm italic text-primary-500">No sign-in method linked.</p>

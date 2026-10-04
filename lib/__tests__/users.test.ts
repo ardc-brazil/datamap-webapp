@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { canEditDataset, canSeeAccessHistory } from "../users";
+import { canEditDataset, canSeeAccessHistory, hasSignInProvider } from "../users";
 
 const editor: any = { roles: ["datasets_write"] };
 const reader: any = { roles: ["datasets_read"] };
@@ -35,5 +35,18 @@ describe("canSeeAccessHistory", () => {
     test("without access flags, the role decides", () => {
         expect(canSeeAccessHistory(editor)).toBe(true);
         expect(canSeeAccessHistory(reader)).toBe(false);
+    });
+});
+
+describe("hasSignInProvider", () => {
+    test("finds a provider by name", () => {
+        expect(hasSignInProvider({ providers: [{ name: "orcid" }] }, "orcid")).toBe(true);
+    });
+
+    test("an account without it, or without providers, does not have it", () => {
+        expect(hasSignInProvider({ providers: [{ name: "github" }] }, "orcid")).toBe(false);
+        expect(hasSignInProvider({ providers: [] }, "orcid")).toBe(false);
+        expect(hasSignInProvider({}, "orcid")).toBe(false);
+        expect(hasSignInProvider(undefined, "orcid")).toBe(false);
     });
 });
