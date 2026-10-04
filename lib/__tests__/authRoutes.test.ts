@@ -1,5 +1,6 @@
 import { expect, test } from '@jest/globals';
-import { loginPhaseFor, loginTabFor, loginUrlFor, safeCallbackUrl, SIGN_OUT_CALLBACK_URL } from "../authRoutes";
+import { confirmEmailUrlFor, loginPhaseFor, loginTabFor, loginUrlFor, pendingSessionRedirect, safeCallbackUrl, SIGN_OUT_CALLBACK_URL } from "../authRoutes";
+import { ROUTE_PAGE_CONFIRM_EMAIL } from "../../contants/InternalRoutesConstants";
 
 test("sends a signed-out visitor to the login page without an error", () => {
   const url = loginUrlFor("/app/datasets");
@@ -58,4 +59,52 @@ test.each`
   ${"/%2F%2Fevil.com"}                  | ${"/"}
 `("keeps the callback URL used for signing in to an internal path ($callbackUrl)", ({ callbackUrl, expected }) => {
   expect(safeCallbackUrl(callbackUrl)).toBe(expected);
+});
+
+test("the confirmation page lives at /account/confirm-email", () => {
+  expect(ROUTE_PAGE_CONFIRM_EMAIL).toBe("/account/confirm-email");
+});
+
+test("the confirmation page remembers where the person was going", () => {
+  expect(confirmEmailUrlFor("/app/datasets/80f230be?tab=settings"))
+    .toBe("/account/confirm-email?callbackUrl=%2Fapp%2Fdatasets%2F80f230be%3Ftab%3Dsettings");
+});
+
+test.each`
+  returnTo
+  ${"https://evil.example/app"}
+  ${"//evil.example/app"}
+  ${"/\\evil.example/app"}
+  ${""}
+  ${undefined}
+`("a return path that is not internal becomes the home page ($returnTo)", ({ returnTo }) => {
+  expect(confirmEmailUrlFor(returnTo)).toBe("/account/confirm-email?callbackUrl=%2F");
+});
+
+test("the confirmation page reads its callbackUrl back with the login page's sanitiser", () => {
+  const url = new URL(confirmEmailUrlFor("/invitations/tok?x=1"), "http://localhost");
+
+  expect(safeCallbackUrl(url.searchParams.get("callbackUrl"))).toBe("/invitations/tok?x=1");
+});
+
+test("a pending session on an app page is sent to confirm its email", () => {
+  expect(pendingSessionRedirect(true, "/app/datasets/[datasetId]", "/app/datasets/d1"))
+    .toBe("/account/confirm-email?callbackUrl=%2Fapp%2Fdatasets%2Fd1");
+});
+
+test("a pending session on the confirmation page stays there", () => {
+  expect(pendingSessionRedirect(true, "/account/confirm-email", "/account/confirm-email?callbackUrl=%2F")).toBeNull();
+});
+
+test("a signed-in session has nothing to confirm", () => {
+  expect(pendingSessionRedirect(false, "/account/confirm-email", "/account/confirm-email")).toBe("/app/home");
+  expect(pendingSessionRedirect(false, "/app/home", "/app/home")).toBeNull();
+});
+
+test("on the login page, a pending session goes to confirm with the callbackUrl the login page already sanitised", () => {
+  expect(pendingSessionRedirect(true, "/account/login", safeCallbackUrl("%2Finvitations%2Ftok")))
+    .toBe("/account/confirm-email?callbackUrl=%2Finvitations%2Ftok");
+  expect(pendingSessionRedirect(true, "/account/login", safeCallbackUrl("https%3A%2F%2Fevil.example")))
+    .toBe("/account/confirm-email?callbackUrl=%2F");
+  expect(pendingSessionRedirect(false, "/account/login", safeCallbackUrl("%2Finvitations%2Ftok"))).toBeNull();
 });

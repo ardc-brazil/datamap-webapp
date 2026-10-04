@@ -1,3 +1,5 @@
+import { ROUTE_PAGE_CONFIRM_EMAIL, ROUTE_PAGE_HOME } from "../contants/InternalRoutesConstants";
+
 export const SIGN_OUT_CALLBACK_URL = "/";
 
 function hasControlCharacter(path: string): boolean {
@@ -46,4 +48,22 @@ export function loginTabFor(phase?: string | string[]): number {
 
 export function loginPhaseFor(tabIndex: number): string {
     return LOGIN_PHASES[tabIndex] ?? LOGIN_PHASES[0];
+}
+
+/** Confirmation page URL that returns the person to `returnTo`; the same internal-path rule as `loginUrlFor`. */
+export function confirmEmailUrlFor(returnTo?: string): string {
+    const callbackUrl = typeof returnTo === "string" && isInternalPath(returnTo) ? returnTo : "/";
+    return `${ROUTE_PAGE_CONFIRM_EMAIL}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+}
+
+/** A pending session must confirm its email first, and only a pending session belongs on the confirmation page. */
+export function pendingSessionRedirect(pending: boolean, pathname: string, asPath: string): string | null {
+    const onConfirmPage = pathname === ROUTE_PAGE_CONFIRM_EMAIL;
+    if (pending && !onConfirmPage) {
+        return confirmEmailUrlFor(asPath);
+    }
+    if (!pending && onConfirmPage) {
+        return ROUTE_PAGE_HOME;
+    }
+    return null;
 }

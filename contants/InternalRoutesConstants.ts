@@ -120,6 +120,12 @@ export const ROUTE_PAGE_FORGOT_PASSWORD = "/account/forgot-password";
  */
 export const ROUTE_PAGE_RESET_PASSWORD = (token: string) => "/account/reset-password/" + token;
 
+/**
+ * Route to the email confirmation of a pending ORCID sign-in.
+ * @constant
+ */
+export const ROUTE_PAGE_CONFIRM_EMAIL = "/account/confirm-email";
+
 function appendSearchParams(urlString: string, params: any = {}) {
     // Check if we're in a browser environment
     const isBrowser = typeof window !== 'undefined';

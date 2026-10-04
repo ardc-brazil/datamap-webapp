@@ -9,7 +9,7 @@ import { useReportWebVitals } from "next/web-vitals";
 import { useEffect } from "react";
 import 'react-material-symbols/outlined';
 import { useTenancyStore } from "../components/TenancyStore";
-import { loginUrlFor } from "../lib/authRoutes";
+import { loginUrlFor, pendingSessionRedirect } from "../lib/authRoutes";
 import { reportWebVital, setCurrentPage, startTelemetry, trackPageView } from "../lib/telemetryClient";
 
 interface CustomAppProps {
@@ -87,10 +87,20 @@ function Auth({ authContext, children }) {
     },
   })
 
-  if (status === "loading") {
+  const redirectTo = status === "authenticated"
+    ? pendingSessionRedirect(session?.user?.pending === true, router.pathname, router.asPath)
+    : null;
+
+  useEffect(() => {
+    if (redirectTo) {
+      Router.replace(redirectTo);
+    }
+  }, [redirectTo]);
+
+  if (status === "loading" || redirectTo) {
     return authContext.loading
   }
-  
+
   // Set the default tenancy if the user have only one, after the login.
   if (!isTenancySelected() && session?.user?.tenancies?.length == 1) {
     setTenancySelected(session.user.tenancies[0]);
