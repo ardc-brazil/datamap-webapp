@@ -2,17 +2,19 @@ import { signIn } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";
 import Router from "next/router";
-import { FormEventHandler, useState } from "react";
+import { SignInForm } from "../../../components/Account/SignInForm";
+import { SignUpForm } from "../../../components/Account/SignUpForm";
 import { TabPanel } from "../../../components/DatasetDetails/TabPanel";
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
 import { ROUTE_PAGE_SEARCH } from "../../../contants/InternalRoutesConstants";
+import { loginPhaseFor, loginTabFor, safeCallbackUrl } from "../../../lib/authRoutes";
 
 function OrcidButton(props) {
   return (
     <button
       type="button"
       className="btn-primary-outline self-center font-medium text-sm px-5 py-2.5 text-center inline-flex items-center mr-2 mb-2 cursor-pointer"
-      onClick={() => signIn("orcid", { callbackUrl: decodeURIComponent(props.callbackUrl || "/") })}
+      onClick={() => signIn("orcid", { callbackUrl: props.callbackUrl })}
     >
       <svg
         className="w-8 h-8 mr-2 -ml-1"
@@ -42,7 +44,7 @@ function GithubButton(props) {
     <button
       type="button"
       className="btn-primary-outline self-center font-medium text-sm px-5 py-2.5 text-center inline-flex items-center mr-2 mb-2 cursor-pointer"
-      onClick={() => signIn("github", { callbackUrl: decodeURIComponent(props.callbackUrl || "/") })}
+      onClick={() => signIn("github", { callbackUrl: props.callbackUrl })}
     >
       <svg className="w-8 h-8 mr-2 -ml-1" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <title>GitHub dark icon</title>
@@ -86,18 +88,29 @@ function EmailButton(props) {
   );
 }
 
+function OrDivider() {
+  return (
+    <div className="my-6 flex flex-row justify-center items-center">
+      <hr className="w-full" />
+      <span className="px-4 text-sm text-primary-500">or</span>
+      <hr className="w-full" />
+    </div>
+  );
+}
+
+function onTabChanged(tabIndex: number) {
+  Router.replace({ pathname: Router.pathname, query: { ...Router.query, phase: loginPhaseFor(tabIndex) } }, undefined, { shallow: true });
+}
+
 interface Props {
   error?: string
   callbackUrl?: string
   isDoi?: boolean
+  phase?: string
 }
 
 export default function LoginPage(props: Props) {
-  function getSelectedTabIndex() {
-    return 0;
-  }
-
-  const defaultTabIndex = getSelectedTabIndex();
+  const callbackUrl = safeCallbackUrl(decodeURIComponent(props.callbackUrl || "/"));
 
   return (
     <div className="container mx-auto flex flex-col gap-6 mt-16 pb-16">
@@ -156,31 +169,23 @@ export default function LoginPage(props: Props) {
         </div>
       }
 
-      <div className="w-10/12 md:w-4/12 h-fit border border-primary-200 self-center rounded-lg bg-primary-0">
-        <Tabs className="py-8" headerClassName="px-6 pt-5" defaultSelectedIndex={defaultTabIndex}>
-          <TabPanel title="Sign In">
+      <div className="w-11/12 max-w-[440px] h-fit border border-primary-200 self-center rounded-lg bg-primary-0">
+        <Tabs className="px-6 py-8" headerClassName="px-6 pt-5" defaultSelectedIndex={loginTabFor(props.phase)} onTabChanged={onTabChanged}>
+          <TabPanel title="Sign in">
             <div className="flex flex-col">
-              <OrcidButton callbackUrl={props.callbackUrl}>Sign in with ORCID</OrcidButton>
+              <OrcidButton callbackUrl={callbackUrl}>Sign in with ORCID</OrcidButton>
               {process.env.NODE_ENV == "development" &&
-                <GithubButton callbackUrl={props.callbackUrl}>Sign in with GitHub</GithubButton>
+                <GithubButton callbackUrl={callbackUrl}>Sign in with GitHub</GithubButton>
               }
-
-              {/* 
-                This kind of login is only available for local development for automated testing purposes 
-                PLEASE: DO NOT ENABLE IT IN PRODUCTION
-              */}
-              {process.env.NODE_ENV == "development" &&
-                (
-                  <div className="px-4">
-                    <div className="my-8 flex flex-row justify-center items-center">
-                      <hr className="w-full" />
-                      <span className="px-4">or</span>
-                      <hr className="w-full" />
-                    </div>
-                    <SignInForm callbackUrl={props.callbackUrl} />
-                  </div>
-                )
-              }
+              <OrDivider />
+              <SignInForm callbackUrl={callbackUrl} />
+            </div>
+          </TabPanel>
+          <TabPanel title="Create account">
+            <div className="flex flex-col">
+              <OrcidButton callbackUrl={callbackUrl}>Sign up with ORCID</OrcidButton>
+              <OrDivider />
+              <SignUpForm callbackUrl={callbackUrl} />
             </div>
           </TabPanel>
         </Tabs>
@@ -189,59 +194,7 @@ export default function LoginPage(props: Props) {
   );
 }
 
-function SignInForm(props) {
-  const [userInfo, setUserInfo] = useState({ name: "John Doe", email: "john-doe@local.datamap.com", password: "12345678" });
-  const handleSubmit: FormEventHandler<HTMLFormElement> = async (e) => {
-    // validate your userinfo
-    e.preventDefault();
-
-    signIn("credentials", {
-      name: userInfo.name,
-      email: userInfo.email,
-      password: userInfo.password,
-      redirect: true,
-      callbackUrl: decodeURIComponent(props.callbackUrl || "/"),
-    });
-
-  };
-
-  return (
-    <div>
-      <form onSubmit={handleSubmit} className="w-full flex flex-col gap-2 items-center">
-        <input
-          value={userInfo.name}
-          onChange={({ target }) =>
-            setUserInfo({ ...userInfo, name: target.value })
-          }
-          type="name"
-          placeholder="John Doe"
-          className="w-52"
-        />
-        <input
-          value={userInfo.email}
-          onChange={({ target }) =>
-            setUserInfo({ ...userInfo, email: target.value })
-          }
-          type="email"
-          placeholder="john@email.com"
-          className="w-52"
-        />
-        <input
-          value={userInfo.password}
-          onChange={({ target }) =>
-            setUserInfo({ ...userInfo, password: target.value })
-          }
-          type="password"
-          placeholder="********"
-          className="w-52"
-        />
-        <input type="submit" value="Login With Credential" className="w-52" />
-      </form>
-    </div>
-  )
-}
-
 LoginPage.getInitialProps = async ({ query }) => {
-  const { callbackUrl, error, isDoi } = query
-  return { callbackUrl: (callbackUrl ?? "/"), error, isDoi }
+  const { callbackUrl, error, isDoi, phase } = query
+  return { callbackUrl: (callbackUrl ?? "/"), error, isDoi, phase }
 }
