@@ -11,11 +11,20 @@ export function isUuid(value: unknown): value is string {
     return typeof value === "string" && UUID.test(value);
 }
 
+/** Every public challenge route takes the same id from the same place; a non-UUID never reaches the gatekeeper. */
+export function challengeIdOr404(req: NextApiRequest, res: NextApiResponse): string | undefined {
+    const challengeId = req.query.challengeId as string;
+    if (isUuid(challengeId)) {
+        return challengeId;
+    }
+    res.status(404).json({ detail: "challenge_not_found" });
+    return undefined;
+}
+
 const JSON_CONTENT_TYPE = /^application\/json\b/i;
 const METHODS_WITH_A_BODY = new Set(["POST", "PUT", "PATCH"]);
 
-// A browser form can only ever send application/x-www-form-urlencoded, multipart/form-data
-// or text/plain, so requiring JSON here is enough to keep a cross-site form out.
+// A browser form can only send application/x-www-form-urlencoded, multipart/form-data or text/plain, so requiring JSON keeps a cross-site form out.
 async function requireJsonContentType(req: NextApiRequest, res: NextApiResponse, next: () => Promise<unknown>) {
     const contentType = req.headers["content-type"];
     const value = Array.isArray(contentType) ? contentType[0] : contentType;

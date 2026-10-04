@@ -1,11 +1,10 @@
 import { resendChallenge } from "../../../../../lib/account";
-import { accountHandler, isUuid, publicAccountRouter } from "../../../../../lib/accountRoute";
+import { accountHandler, challengeIdOr404, publicAccountRouter } from "../../../../../lib/accountRoute";
 
 const router = publicAccountRouter()
     .post(async (req, res) => {
-        const challengeId = req.query.challengeId as string;
-        if (!isUuid(challengeId)) {
-            res.status(404).json({ detail: "challenge_not_found" });
+        const challengeId = challengeIdOr404(req, res);
+        if (!challengeId) {
             return;
         }
         await resendChallenge(challengeId);

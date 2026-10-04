@@ -29,8 +29,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
         try {
             await bffGateway.confirmPasswordReset(token, values.password);
             setDone(true);
-            // Shallow: the already-rendered success view stays up, and the dead token
-            // leaves the address bar and history without a second page load.
+            // Shallow keeps the success view mounted while clearing the dead token from the address bar and history.
             Router.replace(ROUTE_PAGE_RESET_PASSWORD("used"), undefined, { shallow: true });
         } catch (e) {
             const detail = e?.response?.data?.detail;
