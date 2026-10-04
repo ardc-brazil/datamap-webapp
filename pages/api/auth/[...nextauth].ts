@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import NextAuth, { AuthOptions, User } from "next-auth";
+import NextAuth, { Account, AuthOptions, User } from "next-auth";
 import { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
@@ -10,6 +10,7 @@ import { logError } from "../../../lib/logging";
 import { getMetrics } from "../../../lib/metrics";
 import { claimInvitations } from "../../../lib/share";
 import { STALE_SESSION_ERROR, TOKEN_VERSION } from "../../../lib/sessionToken";
+import { fetchOrcidPublicEmail, isPlaceholderEmail } from "../../../lib/orcidEmail";
 
 export { TOKEN_VERSION } from "../../../lib/sessionToken";
 
@@ -71,7 +72,9 @@ export const authOptions: AuthOptions = {
         token.accessToken = account.access_token
       }
 
-      if (trigger == "signIn") {
+      if (trigger == "signIn" && account?.provider == "orcid") {
+        token = await signInWithOrcid(token, account as Account);
+      } else if (trigger == "signIn") {
         if (account?.provider == "credentials") {
           token = await hydratePasswordSignIn(token, user.id);
         } else {
@@ -103,6 +106,10 @@ export const authOptions: AuthOptions = {
         // Hydarte the user in session with ID and the available tenancies
         session.user.uid = token.uid
         session.user.tenancies = token.tenancies
+        session.user.pending = Boolean(token.pending)
+        if (token.pending?.emailHint) {
+          session.user.emailHint = token.pending.emailHint
+        }
       }
       return session
     }
@@ -160,6 +167,46 @@ export async function claimPendingInvitations(uid: string): Promise<void> {
   }
 }
 
+async function findUserByOrcid(orcid: string): Promise<GetUserByProviderResponse | null> {
+  try {
+    return await getUserByProviderID({ providerName: "orcid", providerID: orcid });
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+async function emailHintFor(user: GetUserByProviderResponse | null, orcid: string, accessToken?: string): Promise<string | undefined> {
+  if (user && !isPlaceholderEmail(user.email)) {
+    return user.email;
+  }
+  return fetchOrcidPublicEmail(orcid, accessToken);
+}
+
+export async function signInWithOrcid(token: JWT, account: Account): Promise<JWT> {
+  const orcid = account.orcid as string;
+  const user = await findUserByOrcid(orcid);
+
+  if (user?.email_verified_at) {
+    token = hydrateWithUserInfo(token, user);
+    delete token.pending;
+    await claimPendingInvitations(user.id);
+    return token;
+  }
+
+  delete token.uid;
+  delete token.tenancies;
+  const emailHint = await emailHintFor(user, orcid, account.access_token);
+  token.pending = {
+    orcid,
+    name: (token.name as string) || user?.name || orcid,
+    ...(emailHint ? { emailHint } : {}),
+  };
+  return token;
+}
+
 async function getUserByProviderAuthentication(account, token): Promise<GetUserByProviderResponse> {
 
   let params = null as CreateUserRequest;
@@ -170,14 +217,6 @@ async function getUserByProviderAuthentication(account, token): Promise<GetUserB
       providerID: token.email,
       personName: token.name,
       userName: token.email.split('@')[0],
-      email: token.email
-    };
-  } else if (account.provider == "orcid") {
-    params = {
-      providerName: account.provider,
-      providerID: account.orcid,
-      personName: token.name,
-      userName: account.orcid,
       email: token.email
     };
   } else {
