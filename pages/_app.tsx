@@ -1,15 +1,15 @@
 import "../styles/globals.css";
 
 import { Session } from "next-auth";
-import { SessionProvider, useSession } from "next-auth/react";
+import { SessionProvider } from "next-auth/react";
 import type { AppProps } from "next/app";
 import { Inter } from "next/font/google";
 import Router, { useRouter } from 'next/router';
 import { useReportWebVitals } from "next/web-vitals";
 import { useEffect } from "react";
 import 'react-material-symbols/outlined';
-import { useTenancyStore } from "../components/TenancyStore";
-import { loginUrlFor, pendingSessionRedirect } from "../lib/authRoutes";
+import { PendingSessionGuard } from "../components/Auth/PendingSessionGuard";
+import { RequireSession } from "../components/Auth/RequireSession";
 import { reportWebVital, setCurrentPage, startTelemetry, trackPageView } from "../lib/telemetryClient";
 
 interface CustomAppProps {
@@ -42,13 +42,15 @@ export default function App({
           --font-inter: ${inter.style.fontFamily};
         }
       `}</style>
-      {Component.auth ? (
-        <Auth authContext={Component.auth}>
+      <PendingSessionGuard loading={Component.auth?.loading}>
+        {Component.auth ? (
+          <RequireSession loading={Component.auth.loading}>
+            <Component {...pageProps} />
+          </RequireSession>
+        ) : (
           <Component {...pageProps} />
-        </Auth>
-      ) : (
-        <Component {...pageProps} />
-      )}
+        )}
+      </PendingSessionGuard>
     </SessionProvider>
   )
 }
@@ -70,41 +72,4 @@ function useBrowserTelemetry() {
     return () => router.events.off("routeChangeComplete", onPageShown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-}
-
-function Auth({ authContext, children }) {
-  const { data: session } = useSession();
-  const setTenancySelected = useTenancyStore((state) => state.setTenancySelected)
-  const isTenancySelected = useTenancyStore((state) => state.isTenancySelected)
-
-  const router = useRouter();
-
-  // if `{ required: true }` is supplied, `status` can only be "loading" or "authenticated"
-  const { status } = useSession({
-    required: true,
-    onUnauthenticated() {
-      Router.replace(loginUrlFor(router.asPath));
-    },
-  })
-
-  const redirectTo = status === "authenticated"
-    ? pendingSessionRedirect(session?.user?.pending === true, router.pathname, router.asPath)
-    : null;
-
-  useEffect(() => {
-    if (redirectTo) {
-      Router.replace(redirectTo);
-    }
-  }, [redirectTo]);
-
-  if (status === "loading" || redirectTo) {
-    return authContext.loading
-  }
-
-  // Set the default tenancy if the user have only one, after the login.
-  if (!isTenancySelected() && session?.user?.tenancies?.length == 1) {
-    setTenancySelected(session.user.tenancies[0]);
-  }
-
-  return children
 }

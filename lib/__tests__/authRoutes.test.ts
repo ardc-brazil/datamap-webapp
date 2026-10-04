@@ -97,14 +97,35 @@ test("a pending session on the confirmation page stays there", () => {
 });
 
 test("a signed-in session has nothing to confirm", () => {
-  expect(pendingSessionRedirect(false, "/account/confirm-email", "/account/confirm-email")).toBe("/app/home");
   expect(pendingSessionRedirect(false, "/app/home", "/app/home")).toBeNull();
 });
 
-test("on the login page, a pending session goes to confirm with the callbackUrl the login page already sanitised", () => {
-  expect(pendingSessionRedirect(true, "/account/login", safeCallbackUrl("%2Finvitations%2Ftok")))
+test.each`
+  rawCallbackUrl                     | expected
+  ${"%2Finvitations%2Ftok%3Fx%3D1"}  | ${"/invitations/tok?x=1"}
+  ${"/app/datasets/d1"}              | ${"/app/datasets/d1"}
+  ${undefined}                       | ${"/"}
+  ${"https%3A%2F%2Fevil.example"}    | ${"/"}
+  ${["/a", "/b"]}                    | ${"/"}
+  ${"%2Faccount%2Fconfirm-email"}    | ${"/app/home"}
+`("a confirmed session on the confirmation page goes to its callbackUrl ($rawCallbackUrl)", ({ rawCallbackUrl, expected }) => {
+  expect(pendingSessionRedirect(false, "/account/confirm-email", "/account/confirm-email", rawCallbackUrl as string | string[] | undefined)).toBe(expected);
+});
+
+test("on the login page, a pending session goes to confirm with the login page's sanitised callbackUrl", () => {
+  expect(pendingSessionRedirect(true, "/account/login", "/account/login?callbackUrl=%2Finvitations%2Ftok", "%2Finvitations%2Ftok"))
     .toBe("/account/confirm-email?callbackUrl=%2Finvitations%2Ftok");
-  expect(pendingSessionRedirect(true, "/account/login", safeCallbackUrl("https%3A%2F%2Fevil.example")))
+  expect(pendingSessionRedirect(true, "/account/login", "/account/login", "https%3A%2F%2Fevil.example"))
     .toBe("/account/confirm-email?callbackUrl=%2F");
-  expect(pendingSessionRedirect(false, "/account/login", safeCallbackUrl("%2Finvitations%2Ftok"))).toBeNull();
+  expect(pendingSessionRedirect(false, "/account/login", "/account/login", "%2Finvitations%2Ftok")).toBeNull();
+});
+
+test("a pending session on a public page is sent to confirm its email", () => {
+  expect(pendingSessionRedirect(true, "/datasets/[datasetId]", "/datasets/d1"))
+    .toBe("/account/confirm-email?callbackUrl=%2Fdatasets%2Fd1");
+  expect(pendingSessionRedirect(true, "/", "/")).toBe("/account/confirm-email?callbackUrl=%2F");
+});
+
+test("API routes are never redirected", () => {
+  expect(pendingSessionRedirect(true, "/api/auth/[...nextauth]", "/api/auth/session")).toBeNull();
 });

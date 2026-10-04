@@ -56,14 +56,33 @@ export function confirmEmailUrlFor(returnTo?: string): string {
     return `${ROUTE_PAGE_CONFIRM_EMAIL}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
 }
 
-/** A pending session must confirm its email first, and only a pending session belongs on the confirmation page. */
-export function pendingSessionRedirect(pending: boolean, pathname: string, asPath: string): string | null {
+const LOGIN_PAGE = "/account/login";
+
+function rawQueryValue(value?: string | string[]): string | undefined {
+    return typeof value === "string" ? value : undefined;
+}
+
+/**
+ * A pending session must confirm its email first, and only a pending session belongs on the confirmation page.
+ * `rawCallbackUrl` is the page's `callbackUrl` query value, used on the login and confirmation pages.
+ */
+export function pendingSessionRedirect(
+    pending: boolean,
+    pathname: string,
+    asPath: string,
+    rawCallbackUrl?: string | string[],
+): string | null {
+    if (pathname.startsWith("/api/")) {
+        return null;
+    }
     const onConfirmPage = pathname === ROUTE_PAGE_CONFIRM_EMAIL;
     if (pending && !onConfirmPage) {
-        return confirmEmailUrlFor(asPath);
+        const returnTo = pathname === LOGIN_PAGE ? safeCallbackUrl(rawQueryValue(rawCallbackUrl)) : asPath;
+        return confirmEmailUrlFor(returnTo);
     }
     if (!pending && onConfirmPage) {
-        return ROUTE_PAGE_HOME;
+        const callbackUrl = safeCallbackUrl(rawQueryValue(rawCallbackUrl));
+        return callbackUrl.split(/[?#]/)[0] === ROUTE_PAGE_CONFIRM_EMAIL ? ROUTE_PAGE_HOME : callbackUrl;
     }
     return null;
 }
