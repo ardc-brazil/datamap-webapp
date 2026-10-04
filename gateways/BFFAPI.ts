@@ -371,4 +371,13 @@ export class BFFAPI {
     async changePassword(currentPassword: string, newPassword: string): Promise<void> {
         await axios.put("/api/account/password", { currentPassword, newPassword });
     }
+
+    async requestEmailVerification(email: string): Promise<{ challengeId: string }> {
+        const response = await axios.post("/api/account/email-verifications", { email });
+        return response.data as { challengeId: string };
+    }
+
+    async confirmEmailVerification(challengeId: string, code: string): Promise<void> {
+        await axios.post(`/api/account/email-verifications/${encodeURIComponent(challengeId)}/confirm`, { code });
+    }
 }
