@@ -187,15 +187,19 @@ async function emailHintFor(user: GetUserByProviderResponse | null, orcid: strin
   return fetchOrcidPublicEmail(orcid, accessToken);
 }
 
+async function finishOrcidSignIn(token: JWT, user: GetUserByProviderResponse): Promise<JWT> {
+  token = hydrateWithUserInfo(token, user);
+  delete token.pending;
+  await claimPendingInvitations(user.id);
+  return token;
+}
+
 export async function signInWithOrcid(token: JWT, account: Account): Promise<JWT> {
   const orcid = account.orcid as string;
   const user = await findUserByOrcid(orcid);
 
   if (user?.email_verified_at) {
-    token = hydrateWithUserInfo(token, user);
-    delete token.pending;
-    await claimPendingInvitations(user.id);
-    return token;
+    return finishOrcidSignIn(token, user);
   }
 
   delete token.uid;
@@ -210,6 +214,10 @@ export async function signInWithOrcid(token: JWT, account: Account): Promise<JWT
 }
 
 export async function refreshPendingSignIn(token: JWT): Promise<JWT> {
+  if (!token.pending) {
+    return token;
+  }
+
   let user: GetUserByProviderResponse | null;
   try {
     user = await findUserByOrcid(token.pending.orcid);
@@ -222,10 +230,7 @@ export async function refreshPendingSignIn(token: JWT): Promise<JWT> {
     return token;
   }
 
-  token = hydrateWithUserInfo(token, user);
-  delete token.pending;
-  await claimPendingInvitations(user.id);
-  return token;
+  return finishOrcidSignIn(token, user);
 }
 
 async function getUserByProviderAuthentication(account, token): Promise<GetUserByProviderResponse> {

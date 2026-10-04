@@ -11,7 +11,7 @@ jest.mock("../orcidEmail", () => ({
 }));
 
 import { AxiosError, AxiosHeaders } from "axios";
-import { authOptions, TOKEN_VERSION } from "../../pages/api/auth/[...nextauth]";
+import { authOptions, refreshPendingSignIn, TOKEN_VERSION } from "../../pages/api/auth/[...nextauth]";
 import { fetchOrcidPublicEmail } from "../orcidEmail";
 import { claimInvitations } from "../share";
 import { createUser, getUserByProviderID } from "../users";
@@ -188,5 +188,12 @@ describe("refreshing a pending session after the code was confirmed", () => {
         } finally {
             process.stdout.write = original;
         }
+    });
+
+    test("returns the token unchanged when there is nothing pending", async () => {
+        const token = { name: "Ada Lovelace", uid: "u1", tenancies: [TENANCY], v: TOKEN_VERSION };
+
+        expect(await refreshPendingSignIn(token as any)).toEqual(token);
+        expect(getUserByProviderID).not.toHaveBeenCalled();
     });
 });
