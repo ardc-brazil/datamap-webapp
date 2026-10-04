@@ -1,4 +1,4 @@
-import { ClipboardEvent, KeyboardEvent, useRef } from "react";
+import { ClipboardEvent, KeyboardEvent, useEffect, useRef } from "react";
 import { CODE_LENGTH } from "../../contants/AccountConstants";
 
 interface Props {
@@ -8,11 +8,13 @@ interface Props {
     disabled?: boolean
     invalid?: boolean
     describedBy?: string
+    /** Changing this value moves the focus to the first box, for a caller that just cleared the boxes after an error. */
+    autoFocusKey?: number
 }
 
 const BOX_CLASS = "w-10 h-12 p-0 text-center text-xl font-semibold font-mono text-primary-900 bg-primary-0 border rounded-md disabled:opacity-60";
 
-export function CodeInput({ value, onChange, onComplete, disabled, invalid, describedBy }: Props) {
+export function CodeInput({ value, onChange, onComplete, disabled, invalid, describedBy, autoFocusKey }: Props) {
     const boxes = useRef<(HTMLInputElement | null)[]>([]);
     // Focus moves before the parent re-renders with the new value, so the boxes read the length from here.
     const filled = useRef(value.length);
@@ -22,6 +24,14 @@ export function CodeInput({ value, onChange, onComplete, disabled, invalid, desc
     function focusBox(index: number) {
         boxes.current[Math.max(0, Math.min(CODE_LENGTH - 1, index))]?.focus();
     }
+
+    const previousAutoFocusKey = useRef(autoFocusKey);
+    useEffect(() => {
+        if (autoFocusKey !== undefined && autoFocusKey !== previousAutoFocusKey.current) {
+            focusBox(0);
+        }
+        previousAutoFocusKey.current = autoFocusKey;
+    }, [autoFocusKey]);
 
     function update(next: string, focusIndex: number) {
         filled.current = next.length;

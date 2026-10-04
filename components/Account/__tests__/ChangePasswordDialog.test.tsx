@@ -45,6 +45,17 @@ describe("ChangePasswordDialog", () => {
         expect(onChanged).not.toHaveBeenCalled();
     });
 
+    test("a 401 from an expired session says so, not that the password is wrong", async () => {
+        changePassword.mockRejectedValue({ response: { status: 401, data: { detail: "unauthorized" } } });
+        const onChanged = jest.fn();
+        render(<ChangePasswordDialog show onClose={jest.fn()} onChanged={onChanged} />);
+
+        await change("the old password", "the new password");
+
+        await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("Your session has expired. Sign in again."));
+        expect(onChanged).not.toHaveBeenCalled();
+    });
+
     test("a short new password is refused before anything is sent", async () => {
         render(<ChangePasswordDialog show onClose={jest.fn()} onChanged={jest.fn()} />);
 

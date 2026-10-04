@@ -12,6 +12,8 @@ export const INVALID_SIGN_IN_MESSAGE = "Invalid email or password.";
 
 export const CURRENT_PASSWORD_INCORRECT_MESSAGE = "The current password is incorrect, or the account is temporarily locked after too many attempts.";
 
+export const SESSION_EXPIRED_MESSAGE = "Your session has expired. Sign in again.";
+
 export const PASSWORD_LENGTH_MESSAGE = `Use ${PASSWORD_MIN_LENGTH} to ${PASSWORD_MAX_LENGTH} characters.`;
 
 export const ACCOUNT_ERROR_MESSAGES: Record<string, string> = {

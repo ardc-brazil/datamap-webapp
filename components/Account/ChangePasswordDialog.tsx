@@ -1,7 +1,7 @@
 import { useFormik } from "formik";
 import { useState } from "react";
 import * as Yup from "yup";
-import { CURRENT_PASSWORD_INCORRECT_MESSAGE, PASSWORD_MIN_LENGTH, accountErrorMessage } from "../../contants/AccountConstants";
+import { CURRENT_PASSWORD_INCORRECT_MESSAGE, PASSWORD_MIN_LENGTH, SESSION_EXPIRED_MESSAGE, accountErrorMessage } from "../../contants/AccountConstants";
 import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_HINT_CLASS, EDIT_FORM_INPUT_CLASS, EDIT_FORM_LABEL_CLASS } from "../../contants/EditFormConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { newPasswordField } from "../../lib/accountValidation";
@@ -31,7 +31,12 @@ export function ChangePasswordDialog(props: Props) {
                 helpers.resetForm();
                 props.onChanged();
             } catch (e) {
-                setError(e?.response?.status === 401 ? CURRENT_PASSWORD_INCORRECT_MESSAGE : accountErrorMessage(e?.response?.data?.detail));
+                const detail = e?.response?.data?.detail;
+                if (e?.response?.status === 401) {
+                    setError(detail === "invalid_credentials" ? CURRENT_PASSWORD_INCORRECT_MESSAGE : SESSION_EXPIRED_MESSAGE);
+                } else {
+                    setError(accountErrorMessage(detail));
+                }
             }
         },
     });

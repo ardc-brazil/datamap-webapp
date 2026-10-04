@@ -20,6 +20,7 @@ export function VerificationCodeForm({ email, onSubmit, onResend }: Props) {
     const [notice, setNotice] = useState<string | null>(null);
     const [secondsLeft, setSecondsLeft] = useState(RESEND_COOLDOWN_SECONDS);
     const [resending, setResending] = useState(false);
+    const [focusKey, setFocusKey] = useState(0);
     const counting = secondsLeft > 0;
     const errorId = useId();
     // Some mobile WebViews double-fire the autofill input: two onComplete calls can land with
@@ -47,6 +48,7 @@ export function VerificationCodeForm({ email, onSubmit, onResend }: Props) {
         } catch (e) {
             setError(accountErrorMessage(detailOf(e)));
             setCode("");
+            setFocusKey((key) => key + 1);
         } finally {
             submittingRef.current = false;
             setSubmitting(false);
@@ -79,7 +81,7 @@ export function VerificationCodeForm({ email, onSubmit, onResend }: Props) {
             <p className="m-0 text-sm text-primary-700">
                 We sent a {CODE_LENGTH}-digit code to <span className="font-semibold text-primary-900">{email}</span>. It can take up to a minute to arrive and expires in 15 minutes.
             </p>
-            <CodeInput value={code} onChange={setCode} onComplete={submit} disabled={submitting} invalid={error !== null} describedBy={error ? errorId : undefined} />
+            <CodeInput value={code} onChange={setCode} onComplete={submit} disabled={submitting} invalid={error !== null} describedBy={error ? errorId : undefined} autoFocusKey={focusKey} />
             {error && <p role="alert" id={errorId} className="m-0 text-sm text-error-600">{error}</p>}
             {notice && <p role="status" className="m-0 text-sm text-primary-700">{notice}</p>}
             <div className="flex flex-wrap items-center gap-3">

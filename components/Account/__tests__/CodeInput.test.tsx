@@ -4,11 +4,11 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { useState } from "react";
 import { CodeInput } from "../CodeInput";
 
-function Harness(props: { initial?: string, onComplete?: (code: string) => void, disabled?: boolean, invalid?: boolean, describedBy?: string }) {
+function Harness(props: { initial?: string, onComplete?: (code: string) => void, disabled?: boolean, invalid?: boolean, describedBy?: string, autoFocusKey?: number }) {
     const [value, setValue] = useState(props.initial ?? "");
     return (
         <>
-            <CodeInput value={value} onChange={setValue} onComplete={props.onComplete ?? (() => undefined)} disabled={props.disabled} invalid={props.invalid} describedBy={props.describedBy} />
+            <CodeInput value={value} onChange={setValue} onComplete={props.onComplete ?? (() => undefined)} disabled={props.disabled} invalid={props.invalid} describedBy={props.describedBy} autoFocusKey={props.autoFocusKey} />
             <output data-testid="value">{value}</output>
         </>
     );
@@ -228,6 +228,22 @@ describe("CodeInput", () => {
         box(6).focus();
 
         fireEvent.keyDown(box(6), { key: "ArrowRight" });
+
+        expect(document.activeElement).toBe(box(6));
+    });
+
+    test("changing autoFocusKey moves the focus to the first box", () => {
+        const { rerender } = render(<Harness initial="123456" autoFocusKey={0} />);
+        box(6).focus();
+
+        rerender(<Harness initial="" autoFocusKey={1} />);
+
+        expect(document.activeElement).toBe(box(1));
+    });
+
+    test("no autoFocusKey means focus is left wherever it was", () => {
+        render(<Harness initial="123456" />);
+        box(6).focus();
 
         expect(document.activeElement).toBe(box(6));
     });

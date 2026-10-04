@@ -80,6 +80,15 @@ describe("VerificationCodeForm", () => {
         expect(screen.getByLabelText("Digit 1 of 6").getAttribute("aria-invalid")).toBe("true");
     });
 
+    test("returns focus to the first box after a failed submit, for keyboard users", async () => {
+        const onSubmit = jest.fn<(code: string) => Promise<void>>().mockRejectedValue(refused("code_invalid"));
+        render(<VerificationCodeForm email="ana@usp.br" onSubmit={onSubmit} onResend={jest.fn<() => Promise<void>>()} />);
+
+        await act(async () => typeCode("123456"));
+
+        expect(document.activeElement).toBe(screen.getByLabelText("Digit 1 of 6"));
+    });
+
     test("cannot resend until the countdown ends", () => {
         jest.useFakeTimers();
         render(<VerificationCodeForm email="ana@usp.br" onSubmit={jest.fn<() => Promise<void>>()} onResend={jest.fn<() => Promise<void>>()} />);
