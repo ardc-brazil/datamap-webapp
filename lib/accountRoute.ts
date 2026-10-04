@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import { maskPathTokens } from "./externalCalls";
 import { logError } from "./logging";
-import { publicChain } from "./middlewareChain";
+import { pendingOnlyChain, publicChain } from "./middlewareChain";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -37,6 +37,11 @@ async function requireJsonContentType(req: NextApiRequest, res: NextApiResponse,
 
 export function publicAccountRouter() {
     return createRouter<NextApiRequest, NextApiResponse>().use(publicChain).use(requireJsonContentType);
+}
+
+/** Email verification of an ORCID sign-in that has no account, or no confirmed email, yet. */
+export function pendingAccountRouter() {
+    return createRouter<NextApiRequest, NextApiResponse>().use(pendingOnlyChain).use(requireJsonContentType);
 }
 
 /** The account screens map the gatekeeper's `detail` codes to their own copy, so both reach the browser as they were. */
