@@ -1,6 +1,7 @@
 import { NextApiRequest } from "next";
 import { getToken } from "next-auth/jwt";
 import { NextRequest } from "next/server";
+import { TOKEN_VERSION } from "./sessionToken";
 import { TENANCY_STORAGE_NAME, TenancyStore } from "../types/TenancyStore";
 
 /**
@@ -36,7 +37,7 @@ export async function NewContext(req: NextRequest | NextApiRequest): Promise<App
     const tenancyObject = getTenancyFromCookie(req)
 
     return {
-        uid: token?.uid as string,
+        uid: (token?.uid && token.v === TOKEN_VERSION) ? token.uid as string : undefined,
         tenancy: tenancyObject?.tenancySelected,
         requestId: req.headers?.["x-request-id"] as string
     };
