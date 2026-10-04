@@ -40,6 +40,20 @@ describe("signing in with a password", () => {
         expect(login).not.toHaveBeenCalled();
     });
 
+    test("a non-string field never reaches the gatekeeper, and logs no error", async () => {
+        expect(await authorizeCredentials({ email: 123, password: "a long password" } as any)).toBeNull();
+        expect(await authorizeCredentials({ email: "ana@usp.br", password: ["a", "b"] } as any)).toBeNull();
+        expect(login).not.toHaveBeenCalled();
+        expect(logError).not.toHaveBeenCalled();
+        expect(mockRecordLogin).toHaveBeenCalledWith("credentials", "failure");
+    });
+
+    test("a network error with no response also throws sign_in_unavailable", async () => {
+        jest.mocked(login).mockRejectedValue(new AxiosError("x", "ECONNREFUSED"));
+
+        await expect(authorizeCredentials({ email: "ana@usp.br", password: "a long password" })).rejects.toThrow("sign_in_unavailable");
+    });
+
     test("the old local stub is gone: a @local.datamap.com address is checked like any other", async () => {
         jest.mocked(login).mockRejectedValue(gatekeeperError(401, "invalid_credentials"));
 

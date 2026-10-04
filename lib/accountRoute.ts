@@ -10,7 +10,7 @@ export function publicAccountRouter() {
 }
 
 /** The account screens map the gatekeeper's `detail` codes to their own copy, so both reach the browser as they were. */
-export function accountHandler(router: ReturnType<typeof publicAccountRouter>) {
+export function accountHandler(router: ReturnType<typeof createRouter<NextApiRequest, NextApiResponse>>) {
     return router.handler({
         onError: (err: unknown, req, res) => {
             const response = axios.isAxiosError(err) ? err.response : undefined;

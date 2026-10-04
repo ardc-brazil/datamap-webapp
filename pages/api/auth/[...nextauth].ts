@@ -21,10 +21,10 @@ const developmentOnlyProviders = process.env.NODE_ENV === "development"
   : [];
 
 export async function authorizeCredentials(credentials?: Record<string, string>): Promise<User | null> {
-  const email = credentials?.email ?? "";
-  const password = credentials?.password ?? "";
+  const email = credentials?.email;
+  const password = credentials?.password;
 
-  if (!email || !password) {
+  if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
     getMetrics().recordLogin("credentials", "failure");
     return null;
   }
