@@ -1,14 +1,15 @@
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";
-import Router from "next/router";
+import Router, { useRouter } from "next/router";
+import { useEffect } from "react";
 import { DevOrcidMockForm } from "../../../components/Account/DevOrcidMockForm";
 import { SignInForm } from "../../../components/Account/SignInForm";
 import { SignUpForm } from "../../../components/Account/SignUpForm";
 import { TabPanel } from "../../../components/DatasetDetails/TabPanel";
 import { Tabs } from "../../../components/DatasetDetails/Tabs";
 import { ROUTE_PAGE_SEARCH } from "../../../contants/InternalRoutesConstants";
-import { loginPhaseFor, loginTabFor, safeCallbackUrl } from "../../../lib/authRoutes";
+import { loginPhaseFor, loginTabFor, pendingSessionRedirect, safeCallbackUrl } from "../../../lib/authRoutes";
 
 function OrcidButton(props) {
   return (
@@ -112,6 +113,15 @@ interface Props {
 
 export default function LoginPage(props: Props) {
   const callbackUrl = safeCallbackUrl(props.callbackUrl);
+  const router = useRouter();
+  const { data: session } = useSession();
+  const pendingRedirect = pendingSessionRedirect(session?.user?.pending === true, router.pathname, callbackUrl);
+
+  useEffect(() => {
+    if (pendingRedirect) {
+      Router.replace(pendingRedirect);
+    }
+  }, [pendingRedirect]);
 
   return (
     <div className="container mx-auto flex flex-col gap-6 mt-16 pb-16">
