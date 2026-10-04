@@ -110,7 +110,7 @@ interface Props {
 }
 
 export default function LoginPage(props: Props) {
-  const callbackUrl = safeCallbackUrl(decodeURIComponent(props.callbackUrl || "/"));
+  const callbackUrl = safeCallbackUrl(props.callbackUrl);
 
   return (
     <div className="container mx-auto flex flex-col gap-6 mt-16 pb-16">

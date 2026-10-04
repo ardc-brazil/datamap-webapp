@@ -44,12 +44,18 @@ test("each tab writes its phase back", () => {
 });
 
 test.each`
-  callbackUrl                      | expected
-  ${"https://evil.example/app"}    | ${"/"}
-  ${"//evil.example/app"}          | ${"/"}
-  ${"/app/datasets"}               | ${"/app/datasets"}
-  ${""}                            | ${"/"}
-  ${undefined}                     | ${"/"}
+  callbackUrl                           | expected
+  ${"https://evil.example/app"}         | ${"/"}
+  ${"//evil.example/app"}               | ${"/"}
+  ${"/app/datasets"}                    | ${"/app/datasets"}
+  ${""}                                 | ${"/"}
+  ${undefined}                          | ${"/"}
+  ${"/\\evil.com"}                      | ${"/"}
+  ${"/app\u0000/evil"}                  | ${"/"}
+  ${"%"}                                | ${"/"}
+  ${"%E0%A4%A"}                         | ${"/"}
+  ${"%2Fapp%2Fdatasets%3Ftab%3Dsettings"} | ${"/app/datasets?tab=settings"}
+  ${"/%2F%2Fevil.com"}                  | ${"/"}
 `("keeps the callback URL used for signing in to an internal path ($callbackUrl)", ({ callbackUrl, expected }) => {
   expect(safeCallbackUrl(callbackUrl)).toBe(expected);
 });

@@ -1,7 +1,20 @@
 export const SIGN_OUT_CALLBACK_URL = "/";
 
+function hasControlCharacter(path: string): boolean {
+    for (let i = 0; i < path.length; i++) {
+        if (path.charCodeAt(i) < 0x20) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function isInternalPath(path?: string): boolean {
-    return !!path && path.startsWith("/") && !path.startsWith("//");
+    return !!path
+        && path.startsWith("/")
+        && !path.startsWith("//")
+        && !path.startsWith("/\\")
+        && !hasControlCharacter(path);
 }
 
 /**
@@ -13,10 +26,14 @@ export function loginUrlFor(returnTo?: string): string {
     return `/account/login?phase=sign-in&callbackUrl=${encodeURIComponent(callbackUrl)}`;
 }
 
-/**
- * Callback URL used for signing in, kept to an internal path so a crafted login link cannot redirect off-site.
- */
-export function safeCallbackUrl(callbackUrl?: string): string {
+/** Callback URL used for signing in; takes the raw (still-encoded) query value and keeps it only if it decodes to an internal path. */
+export function safeCallbackUrl(rawCallbackUrl?: string): string {
+    let callbackUrl: string;
+    try {
+        callbackUrl = decodeURIComponent(rawCallbackUrl ?? "/");
+    } catch {
+        return "/";
+    }
     return isInternalPath(callbackUrl) ? callbackUrl : "/";
 }
 
