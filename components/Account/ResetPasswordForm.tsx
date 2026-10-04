@@ -1,10 +1,11 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import Link from "next/link";
+import Router from "next/router";
 import { useState } from "react";
 import * as Yup from "yup";
 import { PASSWORD_MIN_LENGTH, accountErrorMessage } from "../../contants/AccountConstants";
 import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_HINT_CLASS, EDIT_FORM_INPUT_CLASS, EDIT_FORM_LABEL_CLASS } from "../../contants/EditFormConstants";
-import { ROUTE_PAGE_FORGOT_PASSWORD, ROUTE_PAGE_HOME } from "../../contants/InternalRoutesConstants";
+import { ROUTE_PAGE_FORGOT_PASSWORD, ROUTE_PAGE_HOME, ROUTE_PAGE_RESET_PASSWORD } from "../../contants/InternalRoutesConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { newPasswordField } from "../../lib/accountValidation";
 import { loginUrlFor } from "../../lib/authRoutes";
@@ -28,6 +29,9 @@ export function ResetPasswordForm({ token }: { token: string }) {
         try {
             await bffGateway.confirmPasswordReset(token, values.password);
             setDone(true);
+            // Shallow: the already-rendered success view stays up, and the dead token
+            // leaves the address bar and history without a second page load.
+            Router.replace(ROUTE_PAGE_RESET_PASSWORD("used"), undefined, { shallow: true });
         } catch (e) {
             const detail = e?.response?.data?.detail;
             setError({ message: accountErrorMessage(detail), tokenDead: detail === "token_invalid" });

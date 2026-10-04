@@ -3,10 +3,13 @@ import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 const confirmPasswordReset = jest.fn() as any;
+const replace = jest.fn();
 
 jest.mock("../../../gateways/BFFAPI", () => ({
     BFFAPI: jest.fn().mockImplementation(() => ({ confirmPasswordReset })),
 }));
+
+jest.mock("next/router", () => ({ __esModule: true, default: { replace: (...args: unknown[]) => replace(...args) } }));
 
 import { ResetPasswordForm } from "../ResetPasswordForm";
 
@@ -20,6 +23,7 @@ async function choose(password: string, confirmation: string) {
 
 beforeEach(() => {
     confirmPasswordReset.mockReset();
+    replace.mockReset();
 });
 
 describe("ResetPasswordForm", () => {
@@ -32,6 +36,16 @@ describe("ResetPasswordForm", () => {
         await waitFor(() => expect(screen.getByText("Your password was changed")).toBeTruthy());
         expect(confirmPasswordReset).toHaveBeenCalledWith("tok", "a new long password");
         expect(screen.getByRole("link", { name: "Sign in" }).getAttribute("href")).toBe("/account/login?phase=sign-in&callbackUrl=%2Fapp%2Fhome");
+    });
+
+    test("replaces the URL so the token does not stay in history, keeping the success message", async () => {
+        confirmPasswordReset.mockResolvedValue(undefined);
+        render(<ResetPasswordForm token="tok" />);
+
+        await choose("a new long password", "a new long password");
+
+        await waitFor(() => expect(replace).toHaveBeenCalledWith("/account/reset-password/used", undefined, { shallow: true }));
+        expect(screen.getByText("Your password was changed")).toBeTruthy();
     });
 
     test("two different passwords are refused before anything is sent", async () => {
