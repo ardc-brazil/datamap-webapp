@@ -34,3 +34,17 @@ export async function changePassword(userId: string, currentPassword: string, ne
         { headers: { "X-User-Id": userId } },
     );
 }
+
+export async function requestEmailVerification(input: { orcid: string; email: string; name: string }): Promise<{ challengeId: string }> {
+    const response = await axiosInstance.post("/auth/email-verifications", {
+        orcid: input.orcid,
+        email: input.email,
+        name: input.name,
+    });
+    return { challengeId: response.data.challenge_id };
+}
+
+export async function confirmEmailVerification(challengeId: string, code: string): Promise<{ userId: string }> {
+    const response = await axiosInstance.post(`/auth/email-verifications/${encodeURIComponent(challengeId)}/confirm`, { code });
+    return { userId: response.data.user_id };
+}
