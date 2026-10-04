@@ -20,15 +20,15 @@ function providerIdsWhen(nodeEnv: string): string[] {
 }
 
 describe("the sign-in providers", () => {
-    test("production offers only ORCID", () => {
-        expect(providerIdsWhen("production")).toEqual(["orcid"]);
+    test("production offers ORCID and the password", () => {
+        expect(providerIdsWhen("production")).toEqual(["orcid", "credentials"]);
     });
 
-    test("development also offers GitHub and the credentials stub", () => {
-        expect(providerIdsWhen("development")).toEqual(["orcid", "github", "credentials"]);
+    test("development also offers GitHub", () => {
+        expect(providerIdsWhen("development")).toEqual(["orcid", "credentials", "github"]);
     });
 
     test("anything that is not development counts as production", () => {
-        expect(providerIdsWhen("test")).toEqual(["orcid"]);
+        expect(providerIdsWhen("test")).toEqual(["orcid", "credentials"]);
     });
 });
