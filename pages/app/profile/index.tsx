@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Router from "next/router";
+import { PasswordSignInMethod } from "../../../components/Account/PasswordSignInMethod";
 import LoggedLayout from "../../../components/LoggedLayout";
 
 import { SIGN_OUT_CALLBACK_URL } from "../../../lib/authRoutes";
@@ -78,14 +79,15 @@ export default function ProfilePage(props) {
               </ProfileSection>
 
               <ProfileSection title="Sign-in methods">
-                {user?.providers?.length > 0 ? (
+                {user ? (
                   <ul className="divide-y divide-primary-100">
-                    {user.providers.map((provider, index) => (
+                    {(user.providers ?? []).map((provider, index) => (
                       <li key={index} className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4 px-4 h-12 text-sm">
                         <span className="capitalize text-primary-500">{provider.name}</span>
                         <span className="truncate text-primary-900">{provider.reference}</span>
                       </li>
                     ))}
+                    <PasswordSignInMethod user={user} />
                   </ul>
                 ) : (
                   <p className="m-0 px-4 py-3 text-sm italic text-primary-500">No sign-in method linked.</p>

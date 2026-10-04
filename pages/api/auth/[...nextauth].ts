@@ -1,46 +1,46 @@
 import axios, { AxiosError } from "axios";
-import NextAuth, { AuthOptions } from "next-auth";
+import NextAuth, { AuthOptions, User } from "next-auth";
+import { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
+import { login } from "../../../lib/account";
 import OrcidProvider from "../../../lib/OrcidOAuthProvider";
 import { CreateUserRequest, GetUserByProviderResponse, createUser, getUserByProviderID, getUserByUID } from "../../../lib/users";
 import { logError } from "../../../lib/logging";
 import { getMetrics } from "../../../lib/metrics";
 import { claimInvitations } from "../../../lib/share";
 
-// The credentials stub signs in any @local.datamap.com address and GitHub is for local work: neither may exist in production.
+// GitHub is for local work only; it must not exist in production.
 const developmentOnlyProviders = process.env.NODE_ENV === "development"
   ? [
     GithubProvider({
       clientId: process.env.GITHUB_ID,
       clientSecret: process.env.GITHUB_SECRET,
     }),
-    CredentialsProvider({
-      id: "credentials",
-      name: "Credentials",
-      credentials: {},
-      async authorize(credentials) {
-
-        const { name, email, password } = credentials as {
-          name: string,
-          email: string;
-          password: string
-        };
-
-        if (email.indexOf("@local.datamap.com") > 0 && password?.length > 5) {
-          return {
-            id: crypto.randomUUID(),
-            name: name,
-            email: email,
-          }
-        }
-
-        getMetrics().recordLogin("credentials", "failure");
-        throw new Error("invalid credentials");
-      }
-    }),
   ]
   : [];
+
+export async function authorizeCredentials(credentials?: Record<string, string>): Promise<User | null> {
+  const email = credentials?.email;
+  const password = credentials?.password;
+
+  if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
+    getMetrics().recordLogin("credentials", "failure");
+    return null;
+  }
+
+  try {
+    const { userId } = await login(email, password);
+    return { id: userId, email };
+  } catch (error) {
+    getMetrics().recordLogin("credentials", "failure");
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      return null;
+    }
+    logError("password sign-in failed", error);
+    throw new Error("sign_in_unavailable");
+  }
+}
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -48,20 +48,30 @@ export const authOptions: AuthOptions = {
       clientId: process.env.OAUTH_ORCID_CLIENT_ID,
       clientSecret: process.env.OAUTH_ORCID_CLIENT_SECRET,
     }),
+    CredentialsProvider({
+      id: "credentials",
+      name: "Email and password",
+      credentials: {},
+      authorize: authorizeCredentials,
+    }),
     ...developmentOnlyProviders,
   ],
   // debug: true,
   callbacks: {
-    async jwt({ token, account, trigger }) {
+    async jwt({ token, account, trigger, user }) {
       // Persist the OAuth access_token to the token right after signin
       if (account) {
         token.accessToken = account.access_token
       }
 
       if (trigger == "signIn") {
-        const user = await getUserByProviderAuthentication(account, token);
-        token = hydrateWithUserInfo(token, user);
-        await claimPendingInvitations(user.id);
+        if (account?.provider == "credentials") {
+          token = await hydratePasswordSignIn(token, user.id);
+        } else {
+          const signedIn = await getUserByProviderAuthentication(account, token);
+          token = hydrateWithUserInfo(token, signedIn);
+        }
+        await claimPendingInvitations(token.uid as string);
       } else if (trigger == "update" && token.uid) {
         // Roles and tenancies are granted by the team after the user signs in.
         // Without re-reading them here the session keeps the claims from login,
@@ -120,6 +130,19 @@ export function hydrateWithUserInfo(token, user: any) {
   return token;
 }
 
+export async function hydratePasswordSignIn(token: JWT, uid: string): Promise<JWT> {
+  try {
+    const signedIn = await getUserByUID({ uid, tenancy: undefined });
+    token.name = signedIn.name;
+    token.email = signedIn.email;
+    return hydrateWithUserInfo(token, signedIn);
+  } catch (error) {
+    // The gatekeeper already accepted the password: a failed read must not undo the sign-in.
+    logError("hydrating a password sign-in failed", error);
+    return hydrateWithUserInfo(token, { id: uid });
+  }
+}
+
 export async function claimPendingInvitations(uid: string): Promise<void> {
   try {
     await claimInvitations(uid);
@@ -147,14 +170,6 @@ async function getUserByProviderAuthentication(account, token): Promise<GetUserB
       providerID: account.orcid,
       personName: token.name,
       userName: account.orcid,
-      email: token.email
-    };
-  } else if (account.provider == "credentials") {
-    params = {
-      providerName: account.provider,
-      providerID: token.email,
-      personName: token.name,
-      userName: token.email.split('@')[0],
       email: token.email
     };
   } else {

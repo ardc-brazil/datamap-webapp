@@ -108,6 +108,18 @@ export const ROUTE_PAGE_ERROR = (params) => appendSearchParams(ROUTE_APP_CONTEXT
  */
 export const ROUTE_PAGE_LOGIN = (params) => appendSearchParams('/account/login', params);
 
+/**
+ * Route to the page that sends a password reset link.
+ * @constant
+ */
+export const ROUTE_PAGE_FORGOT_PASSWORD = "/account/forgot-password";
+
+/**
+ * Route the password reset link opens.
+ * @constant
+ */
+export const ROUTE_PAGE_RESET_PASSWORD = (token: string) => "/account/reset-password/" + token;
+
 function appendSearchParams(urlString: string, params: any = {}) {
     // Check if we're in a browser environment
     const isBrowser = typeof window !== 'undefined';

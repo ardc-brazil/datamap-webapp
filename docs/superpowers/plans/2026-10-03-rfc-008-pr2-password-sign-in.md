@@ -12,7 +12,7 @@
 
 - Branch: `feat/rfc-008-password-sign-in` in worktree `.claude/worktrees/rfc-008-password-sign-in`, cut from `main` after webapp PR 0 (`fix/dev-only-auth-providers`) is merged and gatekeeper PR 1 is deployed.
 - Gatekeeper paths (relative to `DATAMAP_BASE_URL`, which already ends in `/api/v1`): `POST /auth/sign-up`, `POST /auth/sign-up/{challenge_id}/confirm`, `POST /auth/challenges/{challenge_id}/resend`, `POST /auth/login`, `POST /auth/password-reset`, `POST /auth/password-reset/confirm`, `PUT /users/{id}/password`.
-- Gatekeeper error codes handled: `code_invalid`, `code_expired`, `code_attempts_exceeded`, `challenge_not_found`, `resend_too_soon`, `invalid_credentials`, `token_invalid`, `email_belongs_to_another_account`, and the 400 validation codes `invalid_email`, `invalid_name`, `invalid_password`, `invalid_orcid` (`email_belongs_to_another_account` and `invalid_orcid` are PR 3's, mapped here so the map is complete).
+- Gatekeeper error codes handled: `code_invalid`, `code_expired`, `code_attempts_exceeded`, `challenge_not_found`, `resend_too_soon`, `invalid_credentials`, `token_invalid`, `email_belongs_to_another_account`, `invalid_request`, and the 400 validation codes `invalid_email`, `invalid_name`, `invalid_password`, `invalid_orcid` (`email_belongs_to_another_account` and `invalid_orcid` are PR 3's, mapped here so the map is complete). `invalid_request` is the gatekeeper's answer, on every `/v1/auth/*` route and on `PUT /users/{id}/password`, to a body it cannot parse — `400`, never the default `422`, and never an echo of the input.
 - BFF routes: `POST /api/account/sign-up` → `202 {challengeId}`; `POST /api/account/sign-up/[challengeId]/confirm` → `204`; `POST /api/account/challenges/[challengeId]/resend` → `202`; `POST /api/account/password-reset` → `202`; `POST /api/account/password-reset/confirm` → `204`; `PUT /api/account/password` (`authOnlyChain`) → `204`. Every gatekeeper response error is forwarded as `res.status(<gatekeeper status>).json({ detail: <gatekeeper detail> })`; no response at all is `500 {detail: "unavailable"}`.
 - The browser never sends a user id: `PUT /api/account/password` takes the id from the NextAuth token.
 - `PASSWORD_MIN_LENGTH = 10`, `PASSWORD_MAX_LENGTH = 128`, `CODE_LENGTH = 6`, `RESEND_COOLDOWN_SECONDS = 90`.
@@ -90,18 +90,9 @@
 - Consumes: `GENERIC_ERROR_MESSAGE` from `contants/EmbargoConstants.ts` (`"Something went wrong. Please try again."`).
 - Produces: `PASSWORD_MIN_LENGTH = 10`, `PASSWORD_MAX_LENGTH = 128`, `CODE_LENGTH = 6`, `RESEND_COOLDOWN_SECONDS = 90`, `INVALID_SIGN_IN_MESSAGE: string`, `CURRENT_PASSWORD_INCORRECT_MESSAGE: string`, `PASSWORD_LENGTH_MESSAGE: string`, `ACCOUNT_ERROR_MESSAGES: Record<string, string>`, `accountErrorMessage(detail?: string): string`, `ROUTE_PAGE_FORGOT_PASSWORD: string`, `ROUTE_PAGE_RESET_PASSWORD(token: string): string`.
 
-- [ ] **Step 1: Create the worktree**
+- [x] **Step 1: Create the worktree** — already done.
 
-```bash
-cd /Users/caio.maia/workspace/datamap/datamap-webapp
-git pull --ff-only                 # the main checkout is on main
-git log --oneline -5 main          # PR 0 ("register GitHub and the credentials stub only in development") must be here
-git worktree add -b feat/rfc-008-password-sign-in .claude/worktrees/rfc-008-password-sign-in main
-cd .claude/worktrees/rfc-008-password-sign-in
-npm ci                             # its own node_modules; never a symlink to the main checkout's
-cp ../../../.env.local .env.local  # untracked; needed by npm run dev and npm run build
-npx jest --coverage=false          # baseline: everything passes before the first change
-```
+The worktree exists at `/Users/caio.maia/workspace/datamap/datamap-webapp/.claude/worktrees/rfc-008-password-sign-in`, on branch `feat/rfc-008-password-sign-in`, cut from `main` after PR 0 (`fix/dev-only-auth-providers`, #108) was merged. It has its own `node_modules` (`npm ci`, never a symlink to the main checkout's) and its own `.env.local`. Baseline, everything passing before the first change in this plan: **70 suites, 451 tests**.
 
 Every later command in this plan runs from `/Users/caio.maia/workspace/datamap/datamap-webapp/.claude/worktrees/rfc-008-password-sign-in`.
 
@@ -145,6 +136,7 @@ describe("accountErrorMessage", () => {
         ${"invalid_name"}                     | ${"Enter your name."}
         ${"invalid_password"}                 | ${"The password must have 10 to 128 characters."}
         ${"invalid_orcid"}                    | ${"Your ORCID sign-in could not be read. Sign in again."}
+        ${"invalid_request"}                  | ${"Something in the form could not be read. Check it and try again."}
     `("explains $detail", ({ detail, message }) => {
         expect(accountErrorMessage(detail)).toBe(message);
     });
@@ -198,7 +190,7 @@ export const RESEND_COOLDOWN_SECONDS = 90;
 
 export const INVALID_SIGN_IN_MESSAGE = "Invalid email or password.";
 
-export const CURRENT_PASSWORD_INCORRECT_MESSAGE = "The current password is not correct.";
+export const CURRENT_PASSWORD_INCORRECT_MESSAGE = "The current password is incorrect, or the account is temporarily locked after too many attempts.";
 
 export const PASSWORD_LENGTH_MESSAGE = `Use ${PASSWORD_MIN_LENGTH} to ${PASSWORD_MAX_LENGTH} characters.`;
 
@@ -215,6 +207,7 @@ export const ACCOUNT_ERROR_MESSAGES: Record<string, string> = {
     invalid_name: "Enter your name.",
     invalid_password: `The password must have ${PASSWORD_MIN_LENGTH} to ${PASSWORD_MAX_LENGTH} characters.`,
     invalid_orcid: "Your ORCID sign-in could not be read. Sign in again.",
+    invalid_request: "Something in the form could not be read. Check it and try again.",
 };
 
 export function accountErrorMessage(detail?: string): string {
@@ -246,7 +239,7 @@ export const ROUTE_PAGE_RESET_PASSWORD = (token: string) => "/account/reset-pass
 
 Run: `npx jest --coverage=false contants/__tests__/AccountConstants.test.ts`
 
-Expected: PASS, 18 tests.
+Expected: PASS, 19 tests.
 
 - [ ] **Step 6: Commit**
 
@@ -2121,7 +2114,7 @@ EOF
 
 **Interfaces:**
 - Consumes: `BFFAPI.signUp`, `BFFAPI.confirmSignUp`, `BFFAPI.resendChallenge` (Task 5); `VerificationCodeForm` (Task 7); `emailField`, `newPasswordField` (Task 8); `signIn`; `Router.push`; `loginUrlFor` from `lib/authRoutes.ts`; `accountErrorMessage`, `PASSWORD_MIN_LENGTH`.
-- Produces: `SignUpForm({ callbackUrl }: { callbackUrl: string })`, a named export. Step 1: Formik name/email/password (Yup: name required after trim, email valid, password 10–128) → `signUp` with trimmed name and email. Step 2, same tab: `VerificationCodeForm` whose `onSubmit` confirms, then `signIn("credentials", { email, password, redirect: false, callbackUrl })` and pushes `result.url`, or the sign-in page if that sign-in fails; "Use a different email" returns to step 1 with the values kept.
+- Produces: `SignUpForm({ callbackUrl }: { callbackUrl: string })`, a named export. Step 1: Formik name/email/password (Yup: name required after trim, email valid, password 10–128) → `signUp` with trimmed name and email. Step 2, same tab: a one-sentence notice above `VerificationCodeForm` — the gatekeeper answers the same `202 {challenge_id}` whether or not the address already has a password account, and for one that does it emails a reset link instead of a code, so the screen says so rather than implying a code always follows. `VerificationCodeForm`'s `onSubmit` confirms, then `signIn("credentials", { email, password, redirect: false, callbackUrl })` and pushes `result.url`, or the sign-in page if that sign-in fails; a confirm refused with `409 email_belongs_to_another_account` (the address belongs to a disabled account) is shown by `VerificationCodeForm` like any other code error, through `accountErrorMessage`, already mapped in Task 1. "Use a different email" returns to step 1 with the values kept.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2214,6 +2207,16 @@ describe("SignUpForm", () => {
         expect(screen.getByText("ana@usp.br")).toBeTruthy();
     });
 
+    test("the code step also explains an existing account gets a reset link instead", async () => {
+        render(<SignUpForm callbackUrl="/" />);
+        fill("Ana", "ana@usp.br", "a long password");
+
+        await createAccount();
+
+        await waitFor(() => expect(screen.getByLabelText("Digit 1 of 6")).toBeTruthy());
+        expect(screen.getByText("If ana@usp.br already has a password account, we sent a password-reset link to it instead of a code.")).toBeTruthy();
+    });
+
     test("a confirmed code signs in with the same email and password, then goes to the callback", async () => {
         confirmSignUp.mockResolvedValue(undefined);
         signIn.mockResolvedValue({ ok: true, error: null, status: 200, url: "http://localhost:3000/app/home" });
@@ -2241,6 +2244,19 @@ describe("SignUpForm", () => {
         await typeCode("000000");
 
         await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("Invalid code."));
+        expect(signIn).not.toHaveBeenCalled();
+    });
+
+    test("a code confirmed for an email that belongs to another account says so", async () => {
+        confirmSignUp.mockRejectedValue({ response: { status: 409, data: { detail: "email_belongs_to_another_account" } } });
+        render(<SignUpForm callbackUrl="/" />);
+        fill("Ana", "ana@usp.br", "a long password");
+        await createAccount();
+        await waitFor(() => expect(screen.getByLabelText("Digit 1 of 6")).toBeTruthy());
+
+        await typeCode("123456");
+
+        await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("This email belongs to another DataMap account. Contact the DataMap team."));
         expect(signIn).not.toHaveBeenCalled();
     });
 
@@ -2356,6 +2372,9 @@ export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
     if (challengeId) {
         return (
             <div className="flex flex-col gap-4">
+                <p className="m-0 text-sm text-primary-700">
+                    If {details.email} already has a password account, we sent a password-reset link to it instead of a code.
+                </p>
                 <VerificationCodeForm email={details.email} onSubmit={confirm} onResend={() => bffGateway.resendChallenge(challengeId)} />
                 <button type="button" className="self-start text-sm font-medium text-primary-900 underline underline-offset-2" onClick={() => setChallengeId(null)}>
                     Use a different email
@@ -2396,7 +2415,7 @@ export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
 - [ ] **Step 4: Run it and watch it pass**
 
 Run: `npx jest --coverage=false components/Account/__tests__/SignUpForm.test.tsx`
-Expected: PASS, 9 tests.
+Expected: PASS, 11 tests.
 
 - [ ] **Step 5: Commit**
 
@@ -3039,7 +3058,7 @@ EOF
 
 **Interfaces:**
 - Consumes: `BFFAPI.changePassword`, `BFFAPI.requestPasswordReset` (Task 5); `newPasswordField` (Task 8); `CURRENT_PASSWORD_INCORRECT_MESSAGE`, `PASSWORD_MIN_LENGTH`, `accountErrorMessage` (Task 1); `Modal` from `components/base/PopupModal.tsx`; `UserDetailsResponse` with `has_password` and `email_verified_at` (Task 2).
-- Produces: `ChangePasswordDialog(props: { show: boolean; onClose(): void; onChanged(): void })` and `PasswordSignInMethod({ user }: { user: Pick<UserDetailsResponse, "email" | "has_password" | "email_verified_at"> })`, named exports. The row shows "Set" + "Change password" when `has_password`; "Not set" + "Set a password" (sends the reset link to `user.email`, then "We sent a link to {email}.") when the email is confirmed; "Not set. Available once your email is confirmed." and no button otherwise (the gatekeeper sends a reset link only to a confirmed email).
+- Produces: `ChangePasswordDialog(props: { show: boolean; onClose(): void; onChanged(): void })` and `PasswordSignInMethod({ user }: { user: Pick<UserDetailsResponse, "email" | "has_password" | "email_verified_at"> })`, named exports. The row shows "Set" + "Change password" when `has_password`; "Not set" + "Set a password" (sends the reset link to `user.email`, then "We sent a link to {email}.") when the email is confirmed; "Not set. Available once your email is confirmed." and no button otherwise (the gatekeeper sends a reset link only to a confirmed email). A `401` from `PUT /users/{id}/password` is shown as `CURRENT_PASSWORD_INCORRECT_MESSAGE`, not a narrower "current password is incorrect": a wrong current password counts toward the same 10-failure sign-in lock as `POST /auth/login`, so the gatekeeper answers the same `401 invalid_credentials` once that lock is reached, and the dialog cannot tell the two apart.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -3089,7 +3108,7 @@ describe("ChangePasswordDialog", () => {
 
         await change("wrong password", "the new password");
 
-        await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("The current password is not correct."));
+        await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("The current password is incorrect, or the account is temporarily locked after too many attempts."));
         expect(onChanged).not.toHaveBeenCalled();
     });
 
@@ -3432,7 +3451,7 @@ EOF
 
 Run (from the worktree): `npx jest --coverage=false`
 
-Expected: every suite passes — 13 suites more than after PR 0 (83 suites, 573 tests when PR 0 left 70 and 451).
+Expected: every suite passes — 13 suites more than after PR 0 (83 suites, 576 tests when PR 0 left 70 and 451).
 
 - [ ] **Step 2: Build for production**
 
@@ -3484,6 +3503,7 @@ Check: `curl -s http://localhost:3000/api/auth/providers` lists `orcid`, `creden
 5. Type `000000`: "Invalid code." and the boxes clear.
 6. Copy the real code from Mailpit and paste it into the first box: all six fill, it submits, and the browser lands on `/app/home` signed in. A new account has no tenancy yet, so the "Your access is not set up yet" panel is expected.
 7. Check the Resend button: it enables after 90 s; clicking it shows "We sent a new code to …" and a second email arrives.
+8. Sign up again with that same, now-confirmed email and any password. The tab still shows the code step and the "If … already has a password account, we sent a password-reset link to it instead of a code." notice; Mailpit receives a reset link, not a code, and typing any six digits answers "Invalid code." (the challenge can never be confirmed).
 
 - [ ] **Step 6: Sign in and out**
 
@@ -3502,7 +3522,7 @@ Check: `curl -s http://localhost:3000/api/auth/providers` lists `orcid`, `creden
 
 `/app/profile` reads the user through `GET /users/{id}` and the change goes through `PUT /users/{id}/password`; the gatekeeper lets a user do both on itself, so the new account needs no role.
 
-1. "Sign-in methods" shows "Password — Set — Change password". A wrong current password shows "The current password is not correct."; a correct one closes the dialog and shows "Password changed."; sign out and in with the new password.
+1. "Sign-in methods" shows "Password — Set — Change password". A wrong current password shows "The current password is incorrect, or the account is temporarily locked after too many attempts."; a correct one closes the dialog and shows "Password changed."; sign out and in with the new password.
 2. Sign in with GitHub (development only) as an account without a password: the row reads "Not set. Available once your email is confirmed." Mark that account's email as confirmed (`docker exec -it datamap_gatekeeper_db psql -U gk_admin -d gatekeeper_db -c "UPDATE users SET email_verified_at = now() WHERE email = '<github email>';"`), reload: "Set a password" sends a reset email to Mailpit and the row shows "We sent a link to …".
 
 - [ ] **Step 9: Check the production providers**
@@ -3552,8 +3572,12 @@ EOF
 | BFF routes `sign-up`, `sign-up/[challengeId]/confirm`, `challenges/[challengeId]/resend`, `password-reset`, `password-reset/confirm` public; `password` on `authOnlyChain`; status and `{detail}` forwarded unchanged | 4 |
 | The browser never sends a user id | 4 (`changing the password` test) |
 | BFFAPI methods with the contract signatures, rejecting with the Axios error | 5 |
-| `AccountConstants.ts` (`PASSWORD_MIN_LENGTH`, `PASSWORD_MAX_LENGTH`, `CODE_LENGTH`, `RESEND_COOLDOWN_SECONDS`, `accountErrorMessage`) mapping every contract `detail` | 1 |
+| `AccountConstants.ts` (`PASSWORD_MIN_LENGTH`, `PASSWORD_MAX_LENGTH`, `CODE_LENGTH`, `RESEND_COOLDOWN_SECONDS`, `accountErrorMessage`) mapping every contract `detail`, including `invalid_request` (a body the gatekeeper could not parse, on every credentials route) | 1 |
 | `ROUTE_PAGE_FORGOT_PASSWORD`, `ROUTE_PAGE_RESET_PASSWORD` | 1 |
+| A wrong current password on `PUT /users/{id}/password` counts toward the sign-in lock; a locked account's `401` is shown without claiming the password alone is wrong | 1, 12 |
+| A sign-up for an address with an enabled, confirmed password account answers the same `202`, but the code step says a reset link was sent instead; a confirm refused with `409 email_belongs_to_another_account` (a disabled account) is shown to the person | 9 |
+| Self-access: a new account with no Casbin role reads and changes itself (`GET /users/{id}`, `PUT /users/{id}/password` skip Casbin when `{id} == X-User-Id`) | 3 |
+| Resend on a sign-up challenge replaced by a newer one answers `404 challenge_not_found`, shown as "This code is no longer valid. Start again." like any other not-found challenge | 1, 7 |
 | `CodeInput`: six boxes, digits only, typing advances, Backspace on empty moves back, arrows, paste fills six, `inputMode="numeric"`, `autocomplete="one-time-code"` on the first, submits on the sixth digit, "Digit n of 6", invalid styling | 6 |
 | `VerificationCodeForm`: errors "Invalid code", "Code expired, request a new one", "Too many attempts"; "Resend code" behind 90 s | 7 |
 | Login: tabs by `phase`, ORCID button, "or" divider, email + password, "Forgot password?", "Invalid email or password."; Create account: ORCID, divider, name/email/password (10–128), code step in the tab, then sign-in to `callbackUrl`; `error`/`isDoi` unchanged | 8, 9, 10 |
@@ -3562,4 +3586,6 @@ EOF
 | New pages counted by telemetry, not as "other" | 11 |
 | `npm run test`, `npm run build`, manual check with Mailpit | 13 |
 
-Deliberate departures, each stated where it happens: `VerificationCodeForm` uses component state rather than Formik (Task 7); `bffHandler` is not reused for the account routes (Task 4); "Set a password" is offered only for a confirmed email (Task 12); a password sign-in whose user read fails (a genuine error, not a missing role: the gatekeeper lets a user read itself) carries only `uid` (Task 3). Copy follows the RFC's wording with sentence punctuation ("Invalid code.", "Too many attempts. Request a new code.").
+Deliberate departures, each stated where it happens: `VerificationCodeForm` uses component state rather than Formik (Task 7); `bffHandler` is not reused for the account routes (Task 4); "Set a password" is offered only for a confirmed email (Task 12); a password sign-in whose user read fails (a genuine error, not a missing role: the gatekeeper lets a user read itself) carries only `uid` (Task 3); the "already has an account" notice lives in `SignUpForm`, not in the shared `VerificationCodeForm`, because PR 3 reuses that component for email verification, where no such link is ever sent (Task 9). Copy follows the RFC's wording with sentence punctuation ("Invalid code.", "Too many attempts. Request a new code.").
+
+This plan was updated after the gatekeeper's PR 1 changed during its final review (see `app/service/account.py` and `app/controller/interceptor/exception_handler.py` in the gatekeeper worktree): an existing-account sign-up now sends a reset link under the same `202`, a disabled account's confirm answers `409`, every credentials route — including `PUT /users/{id}/password` — answers `400 invalid_request` for an unparsable body instead of `422`, and a wrong current password shares the sign-in lock.

@@ -60,6 +60,8 @@ export interface GetUserByProviderResponse {
     updated_at: string
     providers: GetUserByProviderProvidersResponse[]
     tenancies: string[]
+    has_password: boolean
+    email_verified_at: string | null
 }
 
 export interface GetUserByProviderProvidersResponse {
@@ -77,6 +79,8 @@ export interface UserDetailsResponse {
     created_at: Date,
     updated_at: Date,
     tenancies: string[],
+    has_password: boolean,
+    email_verified_at: string | null,
 }
 
 interface ProviderUserDetailsResponse {

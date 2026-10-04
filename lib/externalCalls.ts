@@ -16,9 +16,19 @@ const TIMEOUT_CODES = new Set(["ECONNABORTED", "ETIMEDOUT"]);
 const TOP_LEVEL_TOKEN_LITERALS: Record<string, Set<string>> = {
   invitations: new Set(["accept"]),
   anonymous: new Set(),
+  "account/reset-password": new Set(),
 };
 
+// A challenge id is a bearer value an anonymous caller supplies outright: template it unconditionally so a malformed one can't mint its own metric series.
+const UNCONDITIONAL_TOKEN_PREFIXES = ["auth/sign-up", "auth/challenges", "auth/email-verifications"];
+
 export function maskPathTokens(path: string): string {
+  for (const prefix of UNCONDITIONAL_TOKEN_PREFIXES) {
+    const match = path.match(new RegExp(`^((?:/api(?:/v\\d+)?)?/${prefix}/)([^/?]+)`, "i"));
+    if (match) {
+      return path.slice(0, match[1].length) + "{token}" + path.slice(match[1].length + match[2].length);
+    }
+  }
   for (const [resource, literals] of Object.entries(TOP_LEVEL_TOKEN_LITERALS)) {
     const match = path.match(new RegExp(`^((?:/api(?:/v\\d+)?)?/${resource}/)([^/?]+)`, "i"));
     if (match && !literals.has(match[2])) {
