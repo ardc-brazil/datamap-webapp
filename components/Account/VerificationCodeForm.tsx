@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import { CODE_LENGTH, RESEND_COOLDOWN_SECONDS, accountErrorMessage } from "../../contants/AccountConstants";
 import { CodeInput } from "./CodeInput";
 
@@ -21,6 +21,7 @@ export function VerificationCodeForm({ email, onSubmit, onResend }: Props) {
     const [secondsLeft, setSecondsLeft] = useState(RESEND_COOLDOWN_SECONDS);
     const [resending, setResending] = useState(false);
     const counting = secondsLeft > 0;
+    const errorId = useId();
     // Some mobile WebViews double-fire the autofill input: two onComplete calls can land with
     // the same code before a re-render, so the guard can't rely on submitting state alone.
     const submittingRef = useRef(false);
@@ -78,8 +79,8 @@ export function VerificationCodeForm({ email, onSubmit, onResend }: Props) {
             <p className="m-0 text-sm text-primary-700">
                 We sent a {CODE_LENGTH}-digit code to <span className="font-semibold text-primary-900">{email}</span>. It can take up to a minute to arrive and expires in 15 minutes.
             </p>
-            <CodeInput value={code} onChange={setCode} onComplete={submit} disabled={submitting} invalid={error !== null} />
-            {error && <p role="alert" className="m-0 text-sm text-error-600">{error}</p>}
+            <CodeInput value={code} onChange={setCode} onComplete={submit} disabled={submitting} invalid={error !== null} describedBy={error ? errorId : undefined} />
+            {error && <p role="alert" id={errorId} className="m-0 text-sm text-error-600">{error}</p>}
             {notice && <p role="status" className="m-0 text-sm text-primary-700">{notice}</p>}
             <div className="flex flex-wrap items-center gap-3">
                 <button type="submit" className="btn-primary m-0" disabled={submitting || code.length !== CODE_LENGTH}>

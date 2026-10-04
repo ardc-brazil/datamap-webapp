@@ -4,11 +4,11 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { useState } from "react";
 import { CodeInput } from "../CodeInput";
 
-function Harness(props: { initial?: string, onComplete?: (code: string) => void, disabled?: boolean, invalid?: boolean }) {
+function Harness(props: { initial?: string, onComplete?: (code: string) => void, disabled?: boolean, invalid?: boolean, describedBy?: string }) {
     const [value, setValue] = useState(props.initial ?? "");
     return (
         <>
-            <CodeInput value={value} onChange={setValue} onComplete={props.onComplete ?? (() => undefined)} disabled={props.disabled} invalid={props.invalid} />
+            <CodeInput value={value} onChange={setValue} onComplete={props.onComplete ?? (() => undefined)} disabled={props.disabled} invalid={props.invalid} describedBy={props.describedBy} />
             <output data-testid="value">{value}</output>
         </>
     );
@@ -200,5 +200,35 @@ describe("CodeInput", () => {
 
         expect(box(1).getAttribute("aria-invalid")).toBeNull();
         expect(box(1).className).not.toContain("border-error-500");
+    });
+
+    test("describedBy is wired onto the group, for a caller that has an error to announce", () => {
+        render(<Harness describedBy="code-error" />);
+
+        expect(screen.getByRole("group").getAttribute("aria-describedby")).toBe("code-error");
+    });
+
+    test("no describedBy means no aria-describedby, as before", () => {
+        render(<Harness />);
+
+        expect(screen.getByRole("group").getAttribute("aria-describedby")).toBeNull();
+    });
+
+    test("ArrowLeft on the first box keeps the focus there", () => {
+        render(<Harness initial="1234" />);
+        box(1).focus();
+
+        fireEvent.keyDown(box(1), { key: "ArrowLeft" });
+
+        expect(document.activeElement).toBe(box(1));
+    });
+
+    test("ArrowRight on the last box keeps the focus there", () => {
+        render(<Harness initial="123456" />);
+        box(6).focus();
+
+        fireEvent.keyDown(box(6), { key: "ArrowRight" });
+
+        expect(document.activeElement).toBe(box(6));
     });
 });

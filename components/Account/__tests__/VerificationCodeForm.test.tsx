@@ -117,4 +117,47 @@ describe("VerificationCodeForm", () => {
 
         await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("Wait a moment before asking for another code."));
     });
+
+    test("a refused resend leaves the resend button enabled and reading 'Resend code'", async () => {
+        jest.useFakeTimers();
+        const onResend = jest.fn<() => Promise<void>>().mockRejectedValue({ response: { status: 429, data: { detail: "resend_too_soon" } } });
+        render(<VerificationCodeForm email="ana@usp.br" onSubmit={jest.fn<() => Promise<void>>()} onResend={onResend} />);
+        act(() => { jest.advanceTimersByTime(90_000); });
+
+        await act(async () => fireEvent.click(screen.getByRole("button", { name: "Resend code" })));
+
+        const button = await waitFor(() => screen.getByRole("button", { name: "Resend code" }) as HTMLButtonElement);
+        expect(button.disabled).toBe(false);
+    });
+
+    test("a rejection with no response shows the generic message", async () => {
+        const onSubmit = jest.fn<(code: string) => Promise<void>>().mockRejectedValue(new Error("Network Error"));
+        render(<VerificationCodeForm email="ana@usp.br" onSubmit={onSubmit} onResend={jest.fn<() => Promise<void>>()} />);
+
+        await act(async () => typeCode("123456"));
+
+        expect(screen.getByRole("alert").textContent).toBe("Something went wrong. Please try again.");
+    });
+
+    test("unmounting during the countdown leaves no timer running", () => {
+        jest.useFakeTimers();
+        const { unmount } = render(<VerificationCodeForm email="ana@usp.br" onSubmit={jest.fn<() => Promise<void>>()} onResend={jest.fn<() => Promise<void>>()} />);
+
+        unmount();
+
+        expect(jest.getTimerCount()).toBe(0);
+    });
+
+    test("the error is announced to the code boxes only while it is shown", async () => {
+        const onSubmit = jest.fn<(code: string) => Promise<void>>().mockRejectedValue(refused("code_invalid"));
+        render(<VerificationCodeForm email="ana@usp.br" onSubmit={onSubmit} onResend={jest.fn<() => Promise<void>>()} />);
+
+        expect(screen.getByRole("group").getAttribute("aria-describedby")).toBeNull();
+
+        await act(async () => typeCode("123456"));
+
+        const alert = screen.getByRole("alert");
+        expect(alert.id).toBeTruthy();
+        expect(screen.getByRole("group").getAttribute("aria-describedby")).toBe(alert.id);
+    });
 });

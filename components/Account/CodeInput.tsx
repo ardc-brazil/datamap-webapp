@@ -7,11 +7,12 @@ interface Props {
     onComplete: (code: string) => void
     disabled?: boolean
     invalid?: boolean
+    describedBy?: string
 }
 
 const BOX_CLASS = "w-10 h-12 p-0 text-center text-xl font-semibold font-mono text-primary-900 bg-primary-0 border rounded-md disabled:opacity-60";
 
-export function CodeInput({ value, onChange, onComplete, disabled, invalid }: Props) {
+export function CodeInput({ value, onChange, onComplete, disabled, invalid, describedBy }: Props) {
     const boxes = useRef<(HTMLInputElement | null)[]>([]);
     // Focus moves before the parent re-renders with the new value, so the boxes read the length from here.
     const filled = useRef(value.length);
@@ -78,7 +79,7 @@ export function CodeInput({ value, onChange, onComplete, disabled, invalid }: Pr
     }
 
     return (
-        <div role="group" aria-label="Verification code" className="flex gap-2">
+        <div role="group" aria-label="Verification code" aria-describedby={describedBy} className="flex gap-2">
             {digits.map((digit, index) => (
                 <input
                     key={index}

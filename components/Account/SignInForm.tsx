@@ -20,12 +20,18 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
 
     async function onSubmit(values: { email: string, password: string }) {
         setError(null);
-        const result = await signIn("credentials", {
-            email: values.email.trim(),
-            password: values.password,
-            redirect: false,
-            callbackUrl,
-        });
+        let result: Awaited<ReturnType<typeof signIn>>;
+        try {
+            result = await signIn("credentials", {
+                email: values.email.trim(),
+                password: values.password,
+                redirect: false,
+                callbackUrl,
+            });
+        } catch {
+            setError(GENERIC_ERROR_MESSAGE);
+            return;
+        }
         if (!result || result.error) {
             setError(result?.error === "CredentialsSignin" ? INVALID_SIGN_IN_MESSAGE : GENERIC_ERROR_MESSAGE);
             return;

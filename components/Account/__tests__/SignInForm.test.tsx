@@ -71,6 +71,17 @@ describe("SignInForm", () => {
         expect(signIn).not.toHaveBeenCalled();
     });
 
+    test("a rejected signIn call shows the generic message and does not navigate", async () => {
+        signIn.mockRejectedValue(new Error("network error"));
+        render(<SignInForm callbackUrl="/" />);
+        fill("ana@usp.br", "a long password");
+
+        await submit();
+
+        await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("Something went wrong. Please try again."));
+        expect(push).not.toHaveBeenCalled();
+    });
+
     test("offers the way back into an account whose password is forgotten", () => {
         render(<SignInForm callbackUrl="/" />);
 
