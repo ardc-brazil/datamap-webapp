@@ -1,4 +1,5 @@
 import { useSession } from "next-auth/react";
+import Head from "next/head";
 import { useRouter } from "next/router";
 import { ConfirmEmailForm } from "../../components/Account/ConfirmEmailForm";
 import { BareLayout } from "../../components/Public/BareLayout";
@@ -13,6 +14,9 @@ export default function ConfirmEmailPage() {
 
     return (
         <BareLayout>
+            <Head>
+                <title>Confirm your email · DataMap</title>
+            </Head>
             <div className={COLUMN}>
                 <ConfirmEmailForm
                     emailHint={session?.user?.emailHint}
