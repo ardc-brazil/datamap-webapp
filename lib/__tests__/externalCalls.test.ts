@@ -36,6 +36,10 @@ describe("the name a gatekeeper call is recorded under", () => {
   it("replaces an anonymous link token, which is a credential, not an id", () => {
     expect(operationOf("GET", "/anonymous/AbC123-_xyz")).toBe("GET /anonymous/{token}");
   });
+
+  it("replaces a reset-password token, which is a credential, not an id", () => {
+    expect(operationOf("GET", "/account/reset-password/AbC123-_xyz")).toBe("GET /account/reset-password/{token}");
+  });
 });
 
 describe("the outcome of a call", () => {

@@ -16,6 +16,7 @@ const TIMEOUT_CODES = new Set(["ECONNABORTED", "ETIMEDOUT"]);
 const TOP_LEVEL_TOKEN_LITERALS: Record<string, Set<string>> = {
   invitations: new Set(["accept"]),
   anonymous: new Set(),
+  "account/reset-password": new Set(),
 };
 
 export function maskPathTokens(path: string): string {

@@ -5,7 +5,6 @@ import { useState } from "react";
 import * as Yup from "yup";
 import { PASSWORD_MIN_LENGTH, accountErrorMessage } from "../../contants/AccountConstants";
 import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_HINT_CLASS, EDIT_FORM_INPUT_CLASS, EDIT_FORM_LABEL_CLASS } from "../../contants/EditFormConstants";
-import { GENERIC_ERROR_MESSAGE } from "../../contants/EmbargoConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { emailField, newPasswordField } from "../../lib/accountValidation";
 import { loginUrlFor } from "../../lib/authRoutes";
@@ -14,6 +13,9 @@ import { VerificationCodeForm } from "./VerificationCodeForm";
 interface Details {
     name: string
     email: string
+}
+
+interface FormValues extends Details {
     password: string
 }
 
@@ -25,16 +27,19 @@ const schema = Yup.object({
 
 export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
     const [bffGateway] = useState(() => new BFFAPI());
-    const [details, setDetails] = useState<Details>({ name: "", email: "", password: "" });
+    const [details, setDetails] = useState<Details>({ name: "", email: "" });
+    // Kept only to sign in right after the code is confirmed; never seeds the form again.
+    const [password, setPassword] = useState("");
     const [challengeId, setChallengeId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    async function onSubmit(values: Details) {
+    async function onSubmit(values: FormValues) {
         setError(null);
         const submitted = { name: values.name.trim(), email: values.email.trim(), password: values.password };
         try {
             const challenge = await bffGateway.signUp(submitted);
-            setDetails(submitted);
+            setDetails({ name: submitted.name, email: submitted.email });
+            setPassword(submitted.password);
             setChallengeId(challenge.challengeId);
         } catch (e) {
             setError(accountErrorMessage(e?.response?.data?.detail));
@@ -47,12 +52,12 @@ export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
         try {
             result = await signIn("credentials", {
                 email: details.email,
-                password: details.password,
+                password,
                 redirect: false,
                 callbackUrl,
             });
         } catch {
-            throw new Error(GENERIC_ERROR_MESSAGE);
+            throw new Error("sign_in_failed");
         }
         await Router.push(result && !result.error && result.url ? result.url : loginUrlFor(callbackUrl));
     }
@@ -72,7 +77,7 @@ export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
     }
 
     return (
-        <Formik initialValues={details} validationSchema={schema} onSubmit={onSubmit}>
+        <Formik initialValues={{ ...details, password: "" }} validationSchema={schema} onSubmit={onSubmit}>
             {({ isSubmitting }) => (
                 <Form noValidate className="flex flex-col gap-4">
                     <div>

@@ -181,6 +181,7 @@ describe("SignUpForm", () => {
 
         expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Ana");
         expect((screen.getByLabelText("Email") as HTMLInputElement).value).toBe("ana@usp.br");
+        expect((screen.getByLabelText("Password") as HTMLInputElement).value).toBe("");
     });
 
     test("a refused sign-up stays on the details and says why", async () => {
