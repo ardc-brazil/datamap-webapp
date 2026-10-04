@@ -14,6 +14,9 @@ const middlewareChain = router.use(requestLogging, auth, tenancyChecker)
 // Dataset routes: the gatekeeper decides access per dataset, and an account invited from outside every tenancy has none to select.
 export const authOnlyChain = createRouter<NextApiRequest, NextApiResponse>().use(requestLogging, auth);
 
+// Account routes a signed-out visitor needs: sign-up, code confirmation, password reset.
+export const publicChain = createRouter<NextApiRequest, NextApiResponse>().use(requestLogging);
+
 async function auth(req: NextApiRequest, res: NextApiResponse, next: any) {
     const token = await getToken({ req })
     if (!token) {

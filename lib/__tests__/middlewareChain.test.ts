@@ -2,7 +2,7 @@ jest.mock("next-auth/jwt", () => ({ getToken: jest.fn() }));
 
 import { getToken } from "next-auth/jwt";
 import { createRouter } from "next-connect";
-import middlewareChain, { authOnlyChain } from "../middlewareChain";
+import middlewareChain, { authOnlyChain, publicChain } from "../middlewareChain";
 import { TENANCY_STORAGE_NAME } from "../../types/TenancyStore";
 
 const mockGetToken = jest.mocked(getToken);
@@ -61,5 +61,14 @@ describe("the BFF chains", () => {
 
         expect((await call(authOnlyChain)).statusCode).toBe(401);
         expect((await call(middlewareChain)).statusCode).toBe(401);
+    });
+
+    test("the public chain lets an anonymous request through, and still logs it", async () => {
+        mockGetToken.mockResolvedValue(null);
+
+        const res = await call(publicChain);
+
+        expect(res.statusCode).toBe(200);
+        expect(res.headers["X-Request-Id"]).toBeTruthy();
     });
 });
