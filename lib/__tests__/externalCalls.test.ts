@@ -40,6 +40,26 @@ describe("the name a gatekeeper call is recorded under", () => {
   it("replaces a reset-password token, which is a credential, not an id", () => {
     expect(operationOf("GET", "/account/reset-password/AbC123-_xyz")).toBe("GET /account/reset-password/{token}");
   });
+
+  it("bounds the sign-up confirmation route, whatever the challenge id looks like", () => {
+    expect(operationOf("post", "/auth/sign-up/'; DROP TABLE users;--/confirm")).toBe(
+      "POST /auth/sign-up/{token}/confirm"
+    );
+  });
+
+  it("bounds the resend route, whatever the challenge id looks like", () => {
+    expect(operationOf("post", "/auth/challenges/xyz/resend")).toBe("POST /auth/challenges/{token}/resend");
+  });
+
+  it("bounds the email verification confirmation route, for PR 3's challenge ids", () => {
+    expect(operationOf("post", "/auth/email-verifications/xyz/confirm")).toBe(
+      "POST /auth/email-verifications/{token}/confirm"
+    );
+  });
+
+  it("leaves the plain sign-up route alone, which carries no challenge id", () => {
+    expect(operationOf("post", "/auth/sign-up")).toBe("POST /auth/sign-up");
+  });
 });
 
 describe("the outcome of a call", () => {

@@ -1,9 +1,14 @@
 import { confirmSignUp } from "../../../../../lib/account";
-import { accountHandler, publicAccountRouter } from "../../../../../lib/accountRoute";
+import { accountHandler, isUuid, publicAccountRouter } from "../../../../../lib/accountRoute";
 
 const router = publicAccountRouter()
     .post(async (req, res) => {
-        await confirmSignUp(req.query.challengeId as string, req.body?.code);
+        const challengeId = req.query.challengeId as string;
+        if (!isUuid(challengeId)) {
+            res.status(404).json({ detail: "challenge_not_found" });
+            return;
+        }
+        await confirmSignUp(challengeId, req.body?.code);
         res.status(204).end();
     });
 

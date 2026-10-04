@@ -30,18 +30,21 @@ function fakeRes() {
     return res;
 }
 
-async function send(handler: any, method: string, query: Record<string, string>, body: unknown = undefined) {
+async function send(handler: any, method: string, query: Record<string, string>, body: unknown = undefined, headers: Record<string, string> = {}) {
     const res = fakeRes();
     const original = process.stdout.write;
     // @ts-ignore
     process.stdout.write = () => true;
     try {
-        await handler({ method, url: "/api/account/x", headers: {}, cookies: {}, query, body } as any, res);
+        await handler({ method, url: "/api/account/x", headers, cookies: {}, query, body } as any, res);
     } finally {
         process.stdout.write = original;
     }
     return res;
 }
+
+const CHALLENGE_ID = "550e8400-e29b-41d4-a716-446655440000";
+const UNKNOWN_CHALLENGE_ID = "00000000-0000-0000-0000-000000000000";
 
 beforeEach(() => {
     jest.mocked(getToken).mockResolvedValue(null);
@@ -61,16 +64,16 @@ describe("the public account routes", () => {
     test("confirming a sign-up answers 204", async () => {
         jest.mocked(confirmSignUp).mockResolvedValue({ userId: "u1" });
 
-        const res = await send(confirmHandler, "POST", { challengeId: "c1" }, { code: "123456" });
+        const res = await send(confirmHandler, "POST", { challengeId: CHALLENGE_ID }, { code: "123456" });
 
         expect(res.statusCode).toBe(204);
-        expect(confirmSignUp).toHaveBeenCalledWith("c1", "123456");
+        expect(confirmSignUp).toHaveBeenCalledWith(CHALLENGE_ID, "123456");
     });
 
     test("a wrong code keeps its status and code", async () => {
         jest.mocked(confirmSignUp).mockRejectedValue(gatekeeperError(400, { detail: "code_invalid" }));
 
-        const res = await send(confirmHandler, "POST", { challengeId: "c1" }, { code: "000000" });
+        const res = await send(confirmHandler, "POST", { challengeId: CHALLENGE_ID }, { code: "000000" });
 
         expect(res.statusCode).toBe(400);
         expect(res.json).toHaveBeenCalledWith({ detail: "code_invalid" });
@@ -79,16 +82,25 @@ describe("the public account routes", () => {
     test("an unknown challenge keeps its 404 and code", async () => {
         jest.mocked(confirmSignUp).mockRejectedValue(gatekeeperError(404, { detail: "challenge_not_found" }));
 
-        const res = await send(confirmHandler, "POST", { challengeId: "gone" }, { code: "123456" });
+        const res = await send(confirmHandler, "POST", { challengeId: UNKNOWN_CHALLENGE_ID }, { code: "123456" });
 
         expect(res.statusCode).toBe(404);
         expect(res.json).toHaveBeenCalledWith({ detail: "challenge_not_found" });
+        expect(confirmSignUp).toHaveBeenCalledWith(UNKNOWN_CHALLENGE_ID, "123456");
+    });
+
+    test("a malformed challenge id never reaches the gatekeeper when confirming", async () => {
+        const res = await send(confirmHandler, "POST", { challengeId: "not-a-uuid" }, { code: "123456" });
+
+        expect(res.statusCode).toBe(404);
+        expect(res.json).toHaveBeenCalledWith({ detail: "challenge_not_found" });
+        expect(confirmSignUp).not.toHaveBeenCalled();
     });
 
     test("resending too soon keeps its 429", async () => {
         jest.mocked(resendChallenge).mockRejectedValue(gatekeeperError(429, { detail: "resend_too_soon" }));
 
-        const res = await send(resendHandler, "POST", { challengeId: "c1" });
+        const res = await send(resendHandler, "POST", { challengeId: CHALLENGE_ID });
 
         expect(res.statusCode).toBe(429);
         expect(res.json).toHaveBeenCalledWith({ detail: "resend_too_soon" });
@@ -97,10 +109,34 @@ describe("the public account routes", () => {
     test("resending answers 202", async () => {
         jest.mocked(resendChallenge).mockResolvedValue(undefined);
 
-        const res = await send(resendHandler, "POST", { challengeId: "c1" });
+        const res = await send(resendHandler, "POST", { challengeId: CHALLENGE_ID });
 
         expect(res.statusCode).toBe(202);
-        expect(resendChallenge).toHaveBeenCalledWith("c1");
+        expect(resendChallenge).toHaveBeenCalledWith(CHALLENGE_ID);
+    });
+
+    test("a malformed challenge id never reaches the gatekeeper when resending", async () => {
+        const res = await send(resendHandler, "POST", { challengeId: "<script>alert(1)</script>" });
+
+        expect(res.statusCode).toBe(404);
+        expect(res.json).toHaveBeenCalledWith({ detail: "challenge_not_found" });
+        expect(resendChallenge).not.toHaveBeenCalled();
+    });
+
+    test("a non-JSON content type is refused, so a cross-site form cannot post here", async () => {
+        const res = await send(signUpHandler, "POST", {}, { name: "Ana", email: "ana@usp.br", password: "a long password" }, { "content-type": "application/x-www-form-urlencoded" });
+
+        expect(res.statusCode).toBe(415);
+        expect(res.json).toHaveBeenCalledWith({ detail: "invalid_request" });
+        expect(signUp).not.toHaveBeenCalled();
+    });
+
+    test("a JSON content type with a charset is accepted", async () => {
+        jest.mocked(signUp).mockResolvedValue({ challengeId: CHALLENGE_ID });
+
+        const res = await send(signUpHandler, "POST", {}, { name: "Ana", email: "ana@usp.br", password: "a long password" }, { "content-type": "application/json; charset=utf-8" });
+
+        expect(res.statusCode).toBe(202);
     });
 
     test("asking for a reset answers 202", async () => {
