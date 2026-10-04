@@ -143,3 +143,50 @@ describe("the session a browser sees", () => {
         expect(result.user).toEqual({ name: "Ada Lovelace", uid: "u1", tenancies: [TENANCY], pending: false });
     });
 });
+
+describe("refreshing a pending session after the code was confirmed", () => {
+    const pendingToken = () => ({
+        name: "Ada Lovelace",
+        pending: { orcid: ORCID, name: "Ada Lovelace", emailHint: "ada@usp.br" },
+        v: TOKEN_VERSION,
+    });
+
+    test("signs in once the account has a confirmed email, looking up the ORCID iD from the token, never the browser", async () => {
+        jest.mocked(getUserByProviderID).mockResolvedValue(account());
+
+        const token = await jwt({
+            token: pendingToken(),
+            trigger: "update",
+            session: { pending: { orcid: "9999-9999-9999-9999" }, uid: "someone-else" },
+        });
+
+        expect(getUserByProviderID).toHaveBeenCalledWith({ providerName: "orcid", providerID: ORCID });
+        expect(token).toEqual({ name: "Ada Lovelace", uid: "u1", tenancies: [TENANCY], v: TOKEN_VERSION });
+        expect(claimInvitations).toHaveBeenCalledWith("u1");
+    });
+
+    test("stays pending while the email is still unconfirmed", async () => {
+        jest.mocked(getUserByProviderID).mockResolvedValue(account({ email_verified_at: null }));
+
+        expect(await jwt({ token: pendingToken(), trigger: "update" })).toEqual(pendingToken());
+        expect(claimInvitations).not.toHaveBeenCalled();
+    });
+
+    test("stays pending while there is still no account", async () => {
+        jest.mocked(getUserByProviderID).mockRejectedValue(gatekeeperError(404));
+
+        expect(await jwt({ token: pendingToken(), trigger: "update" })).toEqual(pendingToken());
+    });
+
+    test("a gatekeeper failure keeps the pending session instead of signing out", async () => {
+        jest.mocked(getUserByProviderID).mockRejectedValue(gatekeeperError(503));
+        const original = process.stdout.write;
+        // @ts-ignore
+        process.stdout.write = () => true;
+        try {
+            expect(await jwt({ token: pendingToken(), trigger: "update" })).toEqual(pendingToken());
+        } finally {
+            process.stdout.write = original;
+        }
+    });
+});

@@ -82,6 +82,8 @@ export const authOptions: AuthOptions = {
           token = hydrateWithUserInfo(token, signedIn);
         }
         await claimPendingInvitations(token.uid as string);
+      } else if (trigger == "update" && token.pending) {
+        token = await refreshPendingSignIn(token);
       } else if (trigger == "update" && token.uid) {
         // Roles and tenancies are granted by the team after the user signs in.
         // Without re-reading them here the session keeps the claims from login,
@@ -204,6 +206,25 @@ export async function signInWithOrcid(token: JWT, account: Account): Promise<JWT
     name: (token.name as string) || user?.name || orcid,
     ...(emailHint ? { emailHint } : {}),
   };
+  return token;
+}
+
+export async function refreshPendingSignIn(token: JWT): Promise<JWT> {
+  let user: GetUserByProviderResponse | null;
+  try {
+    user = await findUserByOrcid(token.pending.orcid);
+  } catch (error) {
+    logError("failed to refresh a pending sign-in", error);
+    return token;
+  }
+
+  if (!user?.email_verified_at) {
+    return token;
+  }
+
+  token = hydrateWithUserInfo(token, user);
+  delete token.pending;
+  await claimPendingInvitations(user.id);
   return token;
 }
 
