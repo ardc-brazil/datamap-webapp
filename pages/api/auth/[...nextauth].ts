@@ -9,6 +9,9 @@ import { CreateUserRequest, GetUserByProviderResponse, createUser, getUserByProv
 import { logError } from "../../../lib/logging";
 import { getMetrics } from "../../../lib/metrics";
 import { claimInvitations } from "../../../lib/share";
+import { STALE_SESSION_ERROR, TOKEN_VERSION } from "../../../lib/sessionToken";
+
+export { TOKEN_VERSION } from "../../../lib/sessionToken";
 
 // GitHub is for local work only; it must not exist in production.
 const developmentOnlyProviders = process.env.NODE_ENV === "development"
@@ -59,6 +62,10 @@ export const authOptions: AuthOptions = {
   // debug: true,
   callbacks: {
     async jwt({ token, account, trigger, user }) {
+      if (!account && token.v !== TOKEN_VERSION) {
+        throw new Error(STALE_SESSION_ERROR);
+      }
+
       // Persist the OAuth access_token to the token right after signin
       if (account) {
         token.accessToken = account.access_token
@@ -85,6 +92,7 @@ export const authOptions: AuthOptions = {
         }
       }
 
+      token.v = TOKEN_VERSION;
       return token
     },
 
