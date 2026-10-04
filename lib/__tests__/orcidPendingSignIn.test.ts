@@ -9,6 +9,8 @@ jest.mock("../orcidEmail", () => ({
     ...jest.requireActual("../orcidEmail"),
     fetchOrcidPublicEmail: jest.fn(),
 }));
+jest.mock("../metrics", () => ({ getMetrics: () => ({ recordLogin: mockRecordLogin }) }));
+const mockRecordLogin = jest.fn();
 
 import { AxiosError, AxiosHeaders } from "axios";
 import { authOptions, refreshPendingSignIn, TOKEN_VERSION } from "../../pages/api/auth/[...nextauth]";
@@ -54,6 +56,7 @@ function account(overrides: Record<string, unknown> = {}) {
 beforeEach(() => {
     jest.mocked(claimInvitations).mockResolvedValue({ accepted: [] } as any);
     jest.mocked(fetchOrcidPublicEmail).mockResolvedValue(undefined);
+    mockRecordLogin.mockClear();
 });
 
 describe("signing in with ORCID", () => {
@@ -65,13 +68,13 @@ describe("signing in with ORCID", () => {
         expect(token).toEqual({
             name: "Ada Lovelace",
             sub: ORCID,
-            accessToken: "orcid-access-token",
             uid: "u1",
             tenancies: [TENANCY],
             v: TOKEN_VERSION,
         });
         expect(getUserByProviderID).toHaveBeenCalledWith({ providerName: "orcid", providerID: ORCID });
         expect(claimInvitations).toHaveBeenCalledWith("u1");
+        expect(mockRecordLogin).toHaveBeenCalledWith("orcid", "success");
     });
 
     test("an account with a placeholder email is pending, pre-filled from ORCID's public email", async () => {
@@ -86,6 +89,7 @@ describe("signing in with ORCID", () => {
         expect(token.v).toBe(TOKEN_VERSION);
         expect(fetchOrcidPublicEmail).toHaveBeenCalledWith(ORCID, "orcid-access-token");
         expect(claimInvitations).not.toHaveBeenCalled();
+        expect(mockRecordLogin).toHaveBeenCalledWith("orcid", "pending");
     });
 
     test("an account with a real but unconfirmed email is pending, pre-filled with that email", async () => {

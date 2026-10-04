@@ -7,7 +7,7 @@ export async function authorizeDevOrcidMock(credentials?: Record<string, string>
     if (!ORCID_ID_PATTERN.test(orcid)) {
         return null;
     }
-    const name = credentials?.name?.trim() || `Dev User ${orcid}`;
+    const name = credentials?.name?.trim() || "Dev User";
     const publicEmail = credentials?.email?.trim();
     return { id: orcid, name, ...(publicEmail ? { publicEmail } : {}) };
 }

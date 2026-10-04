@@ -70,11 +70,6 @@ export const authOptions: AuthOptions = {
         throw new Error(STALE_SESSION_ERROR);
       }
 
-      // Persist the OAuth access_token to the token right after signin
-      if (account) {
-        token.accessToken = account.access_token
-      }
-
       const orcid = trigger == "signIn" ? orcidSignIn(account, user) : null;
       if (orcid) {
         token = await signInWithOrcid(token, orcid);
@@ -86,7 +81,13 @@ export const authOptions: AuthOptions = {
           token = hydrateWithUserInfo(token, signedIn);
         }
         await claimPendingInvitations(token.uid as string);
-      } else if (trigger == "update" && token.pending) {
+      }
+
+      if (trigger == "signIn") {
+        getMetrics().recordLogin(account?.provider ?? "unknown", token.pending ? "pending" : "success");
+      }
+
+      if (trigger == "update" && token.pending) {
         token = await refreshPendingSignIn(token);
       } else if (trigger == "update" && token.uid) {
         // Roles and tenancies are granted by the team after the user signs in.
@@ -119,11 +120,6 @@ export const authOptions: AuthOptions = {
       }
       return session
     }
-  },
-  events: {
-    async signIn({ account }) {
-      getMetrics().recordLogin(account?.provider ?? "unknown", "success");
-    },
   },
   pages: {
     signIn: '/account/login?phase=sign-in',

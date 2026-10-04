@@ -63,10 +63,10 @@ describe("the mock's authorize", () => {
             .toEqual({ id: ORCID, name: "Ada Lovelace", publicEmail: "ada.public@example.org" });
     });
 
-    test("without a name it makes one up from the iD, and without an email it has none", async () => {
+    test("without a name it falls back to a fixed default, never the iD, and without an email it has none", async () => {
         const user = await authorizeDevOrcidMock({ orcid: ORCID, name: "", email: "" });
 
-        expect(user).toEqual({ id: ORCID, name: `Dev User ${ORCID}` });
+        expect(user).toEqual({ id: ORCID, name: "Dev User" });
         expect("publicEmail" in user).toBe(false);
     });
 
@@ -112,7 +112,7 @@ describe("a mock sign-in takes the ORCID path", () => {
 
         const token = await signInWithMock({ orcid: ORCID, name: "", email: "" });
 
-        expect(token.pending).toEqual({ orcid: ORCID, name: `Dev User ${ORCID}` });
+        expect(token.pending).toEqual({ orcid: ORCID, name: "Dev User" });
         expect(fetchOrcidPublicEmail).not.toHaveBeenCalled();
     });
 

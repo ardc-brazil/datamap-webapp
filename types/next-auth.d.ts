@@ -31,7 +31,6 @@ declare module "next-auth/jwt" {
     interface JWT {
         uid?: string
         tenancies?: string[]
-        accessToken?: string
         v?: number
         pending?: PendingSignIn
     }

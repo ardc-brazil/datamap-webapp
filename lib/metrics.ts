@@ -129,7 +129,7 @@ class Metrics {
     if (responseBytes !== undefined) this.responseSize.labels(method, route).observe(responseBytes);
   }
 
-  recordLogin(provider: string, outcome: "success" | "failure"): void {
+  recordLogin(provider: string, outcome: "success" | "failure" | "pending"): void {
     this.logins.labels(provider, outcome).inc();
   }
 
