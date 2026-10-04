@@ -101,6 +101,35 @@ describe("ConfirmEmailForm", () => {
         expect(mockUpdate.mock.invocationCallOrder[0]).toBeLessThan(mockReplace.mock.invocationCallOrder[0]);
     });
 
+    test("a session that is still pending after update() does not navigate", async () => {
+        mockBff.confirmEmailVerification.mockResolvedValue(undefined);
+        mockUpdate.mockResolvedValue({ user: { pending: true } });
+        render(<ConfirmEmailForm emailHint="ada@usp.br" callbackUrl="/app/home" />);
+        await sendCode("ada@usp.br");
+
+        await act(async () => {
+            await mockCodeFormProps.onSubmit("123456");
+        });
+
+        expect(mockReplace).not.toHaveBeenCalled();
+        expect(screen.getByRole("alert").textContent).toBe(accountErrorMessage(undefined));
+        expect(screen.queryByTestId("code-step")).toBeNull();
+    });
+
+    test("a session update that resolves to nothing does not navigate", async () => {
+        mockBff.confirmEmailVerification.mockResolvedValue(undefined);
+        mockUpdate.mockResolvedValue(null);
+        render(<ConfirmEmailForm emailHint="ada@usp.br" callbackUrl="/app/home" />);
+        await sendCode("ada@usp.br");
+
+        await act(async () => {
+            await mockCodeFormProps.onSubmit("123456");
+        });
+
+        expect(mockReplace).not.toHaveBeenCalled();
+        expect(screen.getByRole("alert").textContent).toBe(accountErrorMessage(undefined));
+    });
+
     test("an email of another account is explained and the person can try another one", async () => {
         mockBff.confirmEmailVerification.mockRejectedValue({ response: { status: 409, data: { detail: "email_belongs_to_another_account" } } });
         render(<ConfirmEmailForm emailHint="ada@usp.br" callbackUrl="/app/home" />);
@@ -136,6 +165,24 @@ describe("ConfirmEmailForm", () => {
         });
 
         expect(mockBff.resendChallenge).toHaveBeenCalledWith("c1");
+    });
+
+    test("resending after switching email uses the new challenge", async () => {
+        mockBff.requestEmailVerification
+            .mockResolvedValueOnce({ challengeId: "c1" })
+            .mockResolvedValueOnce({ challengeId: "c2" });
+        mockBff.resendChallenge.mockResolvedValue(undefined);
+        render(<ConfirmEmailForm callbackUrl="/app/home" />);
+        await sendCode("ada@usp.br");
+
+        fireEvent.click(screen.getByRole("button", { name: "Use a different email" }));
+        await sendCode("ada.lovelace@usp.br");
+
+        await act(async () => {
+            await mockCodeFormProps.onResend();
+        });
+
+        expect(mockBff.resendChallenge).toHaveBeenCalledWith("c2");
     });
 
     test("a different email can be used from the code step", async () => {

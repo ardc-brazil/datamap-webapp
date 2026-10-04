@@ -56,7 +56,12 @@ export function ConfirmEmailForm(props: Props) {
             }
             throw e;
         }
-        await update();
+        const updated = await update();
+        if (!updated || (updated as { user?: { pending?: boolean } })?.user?.pending) {
+            setChallenge(null);
+            setError(accountErrorMessage(undefined));
+            return;
+        }
         await Router.replace(props.callbackUrl);
     }
 
