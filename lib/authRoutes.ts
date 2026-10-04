@@ -58,6 +58,13 @@ export function confirmEmailUrlFor(returnTo?: string): string {
 
 const LOGIN_PAGE = "/account/login";
 
+/** Route templates that work without a session and never read it, so a pending session may stay on them. */
+export const PAGES_WITHOUT_SESSION = ["/account/reset-password/[token]", "/account/forgot-password", "/anonymous/[token]"];
+
+function withoutTrailingSlash(path: string): string {
+    return path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path;
+}
+
 function rawQueryValue(value?: string | string[]): string | undefined {
     return typeof value === "string" ? value : undefined;
 }
@@ -72,17 +79,18 @@ export function pendingSessionRedirect(
     asPath: string,
     rawCallbackUrl?: string | string[],
 ): string | null {
-    if (pathname.startsWith("/api/")) {
+    const page = withoutTrailingSlash(pathname);
+    if (page.startsWith("/api/") || PAGES_WITHOUT_SESSION.includes(page)) {
         return null;
     }
-    const onConfirmPage = pathname === ROUTE_PAGE_CONFIRM_EMAIL;
+    const onConfirmPage = page === ROUTE_PAGE_CONFIRM_EMAIL;
     if (pending && !onConfirmPage) {
-        const returnTo = pathname === LOGIN_PAGE ? safeCallbackUrl(rawQueryValue(rawCallbackUrl)) : asPath;
+        const returnTo = page === LOGIN_PAGE ? safeCallbackUrl(rawQueryValue(rawCallbackUrl)) : asPath;
         return confirmEmailUrlFor(returnTo);
     }
     if (!pending && onConfirmPage) {
         const callbackUrl = safeCallbackUrl(rawQueryValue(rawCallbackUrl));
-        return callbackUrl.split(/[?#]/)[0] === ROUTE_PAGE_CONFIRM_EMAIL ? ROUTE_PAGE_HOME : callbackUrl;
+        return withoutTrailingSlash(callbackUrl.split(/[?#]/)[0]) === ROUTE_PAGE_CONFIRM_EMAIL ? ROUTE_PAGE_HOME : callbackUrl;
     }
     return null;
 }

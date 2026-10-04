@@ -1,5 +1,5 @@
 import { expect, test } from '@jest/globals';
-import { confirmEmailUrlFor, loginPhaseFor, loginTabFor, loginUrlFor, pendingSessionRedirect, safeCallbackUrl, SIGN_OUT_CALLBACK_URL } from "../authRoutes";
+import { confirmEmailUrlFor, loginPhaseFor, loginTabFor, loginUrlFor, PAGES_WITHOUT_SESSION, pendingSessionRedirect, safeCallbackUrl, SIGN_OUT_CALLBACK_URL } from "../authRoutes";
 import { ROUTE_PAGE_CONFIRM_EMAIL } from "../../contants/InternalRoutesConstants";
 
 test("sends a signed-out visitor to the login page without an error", () => {
@@ -128,4 +128,24 @@ test("a pending session on a public page is sent to confirm its email", () => {
 
 test("API routes are never redirected", () => {
   expect(pendingSessionRedirect(true, "/api/auth/[...nextauth]", "/api/auth/session")).toBeNull();
+});
+
+test.each`
+  pathname                              | asPath
+  ${"/account/reset-password/[token]"}  | ${"/account/reset-password/abc"}
+  ${"/account/forgot-password"}         | ${"/account/forgot-password"}
+  ${"/anonymous/[token]"}               | ${"/anonymous/xyz"}
+  ${"/account/forgot-password/"}        | ${"/account/forgot-password/"}
+`("a pending session can still use a page that works without a session ($pathname)", ({ pathname, asPath }) => {
+  expect(pendingSessionRedirect(true, pathname, asPath)).toBeNull();
+});
+
+test("the allow-list names the token pages by their route templates", () => {
+  expect(PAGES_WITHOUT_SESSION).toEqual(["/account/reset-password/[token]", "/account/forgot-password", "/anonymous/[token]"]);
+});
+
+test("a trailing slash on the confirmation page is still the confirmation page", () => {
+  expect(pendingSessionRedirect(true, "/account/confirm-email/", "/account/confirm-email/?callbackUrl=%2F")).toBeNull();
+  expect(pendingSessionRedirect(false, "/account/confirm-email/", "/account/confirm-email/", "/app/datasets")).toBe("/app/datasets");
+  expect(pendingSessionRedirect(false, "/account/confirm-email", "/account/confirm-email", "%2Faccount%2Fconfirm-email%2F%3Fx%3D1")).toBe("/app/home");
 });
