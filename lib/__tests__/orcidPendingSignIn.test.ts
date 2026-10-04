@@ -77,6 +77,26 @@ describe("signing in with ORCID", () => {
         expect(mockRecordLogin).toHaveBeenCalledWith("orcid", "success");
     });
 
+    test("a stale uid, tenancies and pending on the token are replaced once the sign-in confirms", async () => {
+        jest.mocked(getUserByProviderID).mockResolvedValue(account());
+
+        const token = await jwt({
+            token: {
+                name: "Ada Lovelace",
+                sub: ORCID,
+                uid: "stale-uid",
+                tenancies: ["stale/tenancy"],
+                pending: { orcid: "9999-9999-9999-9999", name: "Someone Else" },
+            },
+            account: orcidAccount,
+            trigger: "signIn",
+        });
+
+        expect(token.uid).toBe("u1");
+        expect(token.tenancies).toEqual([TENANCY]);
+        expect("pending" in token).toBe(false);
+    });
+
     test("an account with a placeholder email is pending, pre-filled from ORCID's public email", async () => {
         jest.mocked(getUserByProviderID).mockResolvedValue(account({ email: `${ORCID}@fake.mail.com`, email_verified_at: null }));
         jest.mocked(fetchOrcidPublicEmail).mockResolvedValue("ada.public@example.org");
@@ -90,6 +110,26 @@ describe("signing in with ORCID", () => {
         expect(fetchOrcidPublicEmail).toHaveBeenCalledWith(ORCID, "orcid-access-token");
         expect(claimInvitations).not.toHaveBeenCalled();
         expect(mockRecordLogin).toHaveBeenCalledWith("orcid", "pending");
+    });
+
+    test("a stale uid, tenancies and pending on the token are removed or replaced while the sign-in is still pending", async () => {
+        jest.mocked(getUserByProviderID).mockResolvedValue(account({ email_verified_at: null }));
+
+        const token = await jwt({
+            token: {
+                name: "Ada Lovelace",
+                sub: ORCID,
+                uid: "stale-uid",
+                tenancies: ["stale/tenancy"],
+                pending: { orcid: "9999-9999-9999-9999", name: "Someone Else" },
+            },
+            account: orcidAccount,
+            trigger: "signIn",
+        });
+
+        expect("uid" in token).toBe(false);
+        expect("tenancies" in token).toBe(false);
+        expect(token.pending).toEqual({ orcid: ORCID, name: "Ada Lovelace", emailHint: "ada@usp.br" });
     });
 
     test("an account with a real but unconfirmed email is pending, pre-filled with that email", async () => {
@@ -124,7 +164,8 @@ describe("signing in with ORCID", () => {
     test("a gatekeeper failure fails the sign-in instead of guessing", async () => {
         jest.mocked(getUserByProviderID).mockRejectedValue(gatekeeperError(503));
 
-        await expect(signInWithOrcid()).rejects.toBeTruthy();
+        await expect(signInWithOrcid()).rejects.toMatchObject({ response: { status: 503 } });
+        expect(fetchOrcidPublicEmail).not.toHaveBeenCalled();
     });
 });
 
