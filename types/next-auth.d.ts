@@ -16,6 +16,9 @@ declare module "next-auth" {
             /** An ORCID sign-in waiting for a confirmed email. */
             pending: boolean
 
+            /** The account holds the global admin role. */
+            admin: boolean
+
             /** Pre-fills the confirmation field of a pending sign-in. */
             emailHint?: string
         } & DefaultSession["user"]
@@ -33,5 +36,6 @@ declare module "next-auth/jwt" {
         tenancies?: string[]
         v?: number
         pending?: PendingSignIn
+        admin?: boolean
     }
 }

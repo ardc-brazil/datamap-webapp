@@ -145,6 +145,7 @@ export function authOptionsFor(request?: AuthRequest): AuthOptions {
           session.user.uid = token.uid
           session.user.tenancies = token.tenancies
           session.user.pending = Boolean(token.pending)
+          session.user.admin = token.admin === true
           if (token.pending?.emailHint) {
             session.user.emailHint = token.pending.emailHint
           }
@@ -206,6 +207,12 @@ export function hydrateWithUserInfo(token, user: any) {
     // The user has no tenancy. Leaving a claim from a previous hydration would
     // let a revoked session keep querying the tenancy it was removed from.
     delete token.tenancies;
+  }
+
+  if (Array.isArray(user.roles) && user.roles.includes("admin")) {
+    token.admin = true;
+  } else {
+    delete token.admin;
   }
 
   return token;
