@@ -1,6 +1,7 @@
 import Link from "next/link";
-import Router from "next/router";
+import Router, { useRouter } from "next/router";
 import { ConnectOrcid } from "../../../components/Account/ConnectOrcid";
+import { OrcidLinkOutcome } from "../../../components/Account/OrcidLinkOutcome";
 import { PasswordSignInMethod } from "../../../components/Account/PasswordSignInMethod";
 import LoggedLayout from "../../../components/LoggedLayout";
 
@@ -8,6 +9,7 @@ import { SIGN_OUT_CALLBACK_URL } from "../../../lib/authRoutes";
 import { signOut, useSession } from "next-auth/react";
 import { MaterialSymbol } from "react-material-symbols";
 import { useTenancyStore } from "../../../components/TenancyStore";
+import { ORCID_LINK_OUTCOME_PARAM } from "../../../contants/AccountConstants";
 import { ROUTE_PAGE_ERROR, ROUTE_PAGE_TENANCY_SELECTOR } from "../../../contants/InternalRoutesConstants";
 import { AppLocalContext, NewContext } from "../../../lib/appLocalContext";
 import { getUserByUID, hasSignInProvider } from "../../../lib/users";
@@ -15,6 +17,7 @@ import { getUserByUID, hasSignInProvider } from "../../../lib/users";
 export default function ProfilePage(props) {
   const { data: session, status } = useSession();
   const tenancySelected = useTenancyStore((state) => state.tenancySelected)
+  const { query } = useRouter();
 
   function clickSignOut() {
     signOut({ callbackUrl: SIGN_OUT_CALLBACK_URL });
@@ -80,6 +83,7 @@ export default function ProfilePage(props) {
               </ProfileSection>
 
               <ProfileSection title="Sign-in methods">
+                <OrcidLinkOutcome outcome={query[ORCID_LINK_OUTCOME_PARAM]} />
                 {user ? (
                   <ul className="divide-y divide-primary-100">
                     {(user.providers ?? []).map((provider, index) => (
