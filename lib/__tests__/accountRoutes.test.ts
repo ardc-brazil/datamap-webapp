@@ -176,7 +176,7 @@ describe("the public account routes", () => {
 
 describe("changing the password", () => {
     test("acts as the signed-in user, never one from the body", async () => {
-        jest.mocked(getToken).mockResolvedValue({ uid: "u1" } as any);
+        jest.mocked(getToken).mockResolvedValue({ uid: "u1", v: 2 } as any);
         jest.mocked(changePassword).mockResolvedValue(undefined);
 
         const res = await send(passwordHandler, "PUT", {}, { currentPassword: "the old password", newPassword: "the new password", userId: "u2" });
@@ -186,7 +186,7 @@ describe("changing the password", () => {
     });
 
     test("a wrong current password keeps its 401 and code", async () => {
-        jest.mocked(getToken).mockResolvedValue({ uid: "u1" } as any);
+        jest.mocked(getToken).mockResolvedValue({ uid: "u1", v: 2 } as any);
         jest.mocked(changePassword).mockRejectedValue(gatekeeperError(401, { detail: "invalid_credentials" }));
 
         const res = await send(passwordHandler, "PUT", {}, { currentPassword: "wrong", newPassword: "the new password" });

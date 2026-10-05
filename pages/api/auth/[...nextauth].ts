@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import NextAuth, { AuthOptions, User } from "next-auth";
+import NextAuth, { Account, AuthOptions, User } from "next-auth";
 import { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
@@ -9,14 +9,21 @@ import { CreateUserRequest, GetUserByProviderResponse, createUser, getUserByProv
 import { logError } from "../../../lib/logging";
 import { getMetrics } from "../../../lib/metrics";
 import { claimInvitations } from "../../../lib/share";
+import { STALE_SESSION_ERROR, TOKEN_VERSION } from "../../../lib/sessionToken";
+import { fetchOrcidPublicEmail, isPlaceholderEmail } from "../../../lib/orcidEmail";
+import { DEV_ORCID_MOCK_PROVIDER_ID } from "../../../contants/AccountConstants";
+import { devOrcidMockProvider } from "../../../lib/devOrcidMock";
 
-// GitHub is for local work only; it must not exist in production.
+export { TOKEN_VERSION } from "../../../lib/sessionToken";
+
+// GitHub is for local work, and the ORCID mock signs in as any iD: neither may exist in production.
 const developmentOnlyProviders = process.env.NODE_ENV === "development"
   ? [
     GithubProvider({
       clientId: process.env.GITHUB_ID,
       clientSecret: process.env.GITHUB_SECRET,
     }),
+    ...(process.env.ENABLE_DEV_ORCID_MOCK === "true" ? [devOrcidMockProvider()] : []),
   ]
   : [];
 
@@ -59,12 +66,14 @@ export const authOptions: AuthOptions = {
   // debug: true,
   callbacks: {
     async jwt({ token, account, trigger, user }) {
-      // Persist the OAuth access_token to the token right after signin
-      if (account) {
-        token.accessToken = account.access_token
+      if (!account && token.v !== TOKEN_VERSION) {
+        throw new Error(STALE_SESSION_ERROR);
       }
 
-      if (trigger == "signIn") {
+      const orcid = trigger == "signIn" ? orcidSignIn(account, user) : null;
+      if (orcid) {
+        token = await signInWithOrcid(token, orcid);
+      } else if (trigger == "signIn") {
         if (account?.provider == "credentials") {
           token = await hydratePasswordSignIn(token, user.id);
         } else {
@@ -72,6 +81,14 @@ export const authOptions: AuthOptions = {
           token = hydrateWithUserInfo(token, signedIn);
         }
         await claimPendingInvitations(token.uid as string);
+      }
+
+      if (trigger == "signIn") {
+        getMetrics().recordLogin(account?.provider ?? "unknown", token.pending ? "pending" : "success");
+      }
+
+      if (trigger == "update" && token.pending) {
+        token = await refreshPendingSignIn(token);
       } else if (trigger == "update" && token.uid) {
         // Roles and tenancies are granted by the team after the user signs in.
         // Without re-reading them here the session keeps the claims from login,
@@ -85,6 +102,7 @@ export const authOptions: AuthOptions = {
         }
       }
 
+      token.v = TOKEN_VERSION;
       return token
     },
 
@@ -95,14 +113,13 @@ export const authOptions: AuthOptions = {
         // Hydarte the user in session with ID and the available tenancies
         session.user.uid = token.uid
         session.user.tenancies = token.tenancies
+        session.user.pending = Boolean(token.pending)
+        if (token.pending?.emailHint) {
+          session.user.emailHint = token.pending.emailHint
+        }
       }
       return session
     }
-  },
-  events: {
-    async signIn({ account }) {
-      getMetrics().recordLogin(account?.provider ?? "unknown", "success");
-    },
   },
   pages: {
     signIn: '/account/login?phase=sign-in',
@@ -152,6 +169,102 @@ export async function claimPendingInvitations(uid: string): Promise<void> {
   }
 }
 
+export interface OrcidSignIn {
+  orcid: string
+  name?: string
+  publicEmail: () => Promise<string | undefined>
+}
+
+/** A real ORCID sign-in, or the development mock standing in for one; null for any other provider. */
+export function orcidSignIn(account: Account | null | undefined, user?: User | null): OrcidSignIn | null {
+  if (account?.provider === "orcid") {
+    const orcid = account.orcid as string;
+    return {
+      orcid,
+      name: user?.name ?? undefined,
+      publicEmail: () => fetchOrcidPublicEmail(orcid, account.access_token),
+    };
+  }
+  if (account?.provider === DEV_ORCID_MOCK_PROVIDER_ID && account.providerAccountId) {
+    return {
+      orcid: account.providerAccountId,
+      name: user?.name ?? undefined,
+      publicEmail: async () => user?.publicEmail,
+    };
+  }
+  return null;
+}
+
+async function findUserByOrcid(orcid: string): Promise<GetUserByProviderResponse | null> {
+  try {
+    return await getUserByProviderID({ providerName: "orcid", providerID: orcid });
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+async function emailHintFor(user: GetUserByProviderResponse | null, attempt: OrcidSignIn): Promise<string | undefined> {
+  if (user && !isPlaceholderEmail(user.email)) {
+    return user.email;
+  }
+  return attempt.publicEmail();
+}
+
+async function finishOrcidSignIn(token: JWT, user: GetUserByProviderResponse): Promise<JWT> {
+  token = hydrateWithUserInfo(token, user);
+  token.email = user.email;
+  if (user.name) {
+    token.name = user.name;
+  }
+  delete token.pending;
+  await claimPendingInvitations(user.id);
+  return token;
+}
+
+export async function signInWithOrcid(token: JWT, attempt: OrcidSignIn): Promise<JWT> {
+  const { orcid } = attempt;
+  const user = await findUserByOrcid(orcid);
+
+  if (user?.email_verified_at) {
+    return finishOrcidSignIn(token, user);
+  }
+
+  delete token.uid;
+  delete token.tenancies;
+  const emailHint = await emailHintFor(user, attempt);
+  token.pending = {
+    orcid,
+    name: (token.name as string) || attempt.name || user?.name || orcid,
+    ...(emailHint ? { emailHint } : {}),
+  };
+  return token;
+}
+
+export async function refreshPendingSignIn(token: JWT): Promise<JWT> {
+  if (!token.pending) {
+    return token;
+  }
+
+  let user: GetUserByProviderResponse | null;
+  try {
+    user = await findUserByOrcid(token.pending.orcid);
+  } catch (error) {
+    logError("failed to refresh a pending sign-in", error);
+    return token;
+  }
+
+  if (!user?.email_verified_at) {
+    return token;
+  }
+
+  token = await finishOrcidSignIn(token, user);
+  getMetrics().recordLogin("orcid", "success");
+  return token;
+}
+
 async function getUserByProviderAuthentication(account, token): Promise<GetUserByProviderResponse> {
 
   let params = null as CreateUserRequest;
@@ -162,14 +275,6 @@ async function getUserByProviderAuthentication(account, token): Promise<GetUserB
       providerID: token.email,
       personName: token.name,
       userName: token.email.split('@')[0],
-      email: token.email
-    };
-  } else if (account.provider == "orcid") {
-    params = {
-      providerName: account.provider,
-      providerID: account.orcid,
-      personName: token.name,
-      userName: account.orcid,
       email: token.email
     };
   } else {

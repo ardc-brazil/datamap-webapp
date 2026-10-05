@@ -30,10 +30,7 @@ export function PasswordSignInMethod({ user }: Props) {
     }
 
     function state(): string {
-        if (user.has_password) {
-            return "Set";
-        }
-        return user.email_verified_at ? "Not set" : "Not set. Available once your email is confirmed.";
+        return user.has_password ? "Set" : "Not set";
     }
 
     return (

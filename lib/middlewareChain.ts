@@ -4,6 +4,7 @@ import { getToken } from "next-auth/jwt";
 import { createRouter } from "next-connect";
 import { TENANCY_STORAGE_NAME } from "../types/TenancyStore";
 import { requestLogging } from "./requestLogging";
+import { TOKEN_VERSION } from "./sessionToken";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
@@ -17,12 +18,24 @@ export const authOnlyChain = createRouter<NextApiRequest, NextApiResponse>().use
 // Account routes a signed-out visitor needs: sign-up, code confirmation, password reset.
 export const publicChain = createRouter<NextApiRequest, NextApiResponse>().use(requestLogging);
 
+// Email-verification routes: an ORCID sign-in that has no account, or no confirmed email, yet.
+export const pendingOnlyChain = createRouter<NextApiRequest, NextApiResponse>().use(requestLogging, pendingOnly);
+
 async function auth(req: NextApiRequest, res: NextApiResponse, next: any) {
     const token = await getToken({ req })
-    if (!token) {
+    if (!token?.uid || token.v !== TOKEN_VERSION) {
         res.status(401).end("401 Unauthorized");
     } else {
-        await next(); // call next in chain
+        await next();
+    }
+}
+
+async function pendingOnly(req: NextApiRequest, res: NextApiResponse, next: any) {
+    const token = await getToken({ req })
+    if (!token?.pending || token.uid || token.v !== TOKEN_VERSION) {
+        res.status(401).end("401 Unauthorized");
+    } else {
+        await next();
     }
 }
 

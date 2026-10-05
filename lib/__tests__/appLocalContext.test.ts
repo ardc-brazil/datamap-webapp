@@ -8,6 +8,7 @@ import { NextRequest } from "next/server";
 import { NextApiRequest } from "next";
 import { getToken } from "next-auth/jwt";
 import { TENANCY_STORAGE_NAME } from "../../types/TenancyStore";
+import { TOKEN_VERSION } from "../sessionToken";
 
 jest.mock("next-auth/jwt")
 const mGetToken = jest.mocked(getToken)
@@ -47,7 +48,8 @@ describe('Create a new application context', () => {
     test('Token tenancy is empty in NextRequest', async () => {
 
         mGetToken.mockResolvedValue({
-            uid: "andré"
+            uid: "andré",
+            v: TOKEN_VERSION,
         })
 
         const context = await NewContext(new NextRequest(new URL('http://localhost:3000')))
@@ -56,5 +58,14 @@ describe('Create a new application context', () => {
             tenancy: undefined
         })
     })
-    
+
+    test('a token from before the current version counts as having no user', async () => {
+        mGetToken.mockResolvedValue({
+            uid: "andré"
+        })
+
+        const context = await NewContext(new NextRequest(new URL('http://localhost:3000')))
+        expect(context.uid).toBeUndefined()
+    })
+
 })

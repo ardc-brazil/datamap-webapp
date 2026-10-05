@@ -62,10 +62,11 @@ describe("PasswordSignInMethod", () => {
         expect((screen.getByRole("button", { name: "Set a password" }) as HTMLButtonElement).disabled).toBe(true);
     });
 
-    test("an unconfirmed email is offered no link the gatekeeper would not send", () => {
+    test("an unconfirmed email is offered no link the gatekeeper would not send, and no promise either", () => {
         renderRow(unconfirmed);
 
         expect(screen.queryByRole("button", { name: "Set a password" })).toBeNull();
-        expect(screen.getByText("Not set. Available once your email is confirmed.")).toBeTruthy();
+        expect(screen.getByText("Not set")).toBeTruthy();
+        expect(screen.queryByText(/once your email is confirmed/)).toBeNull();
     });
 });

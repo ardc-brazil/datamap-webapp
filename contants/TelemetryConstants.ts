@@ -6,6 +6,7 @@ export const PAGES: readonly string[] = [
   "/",
   "/404",
   "/500",
+  "/account/confirm-email",
   "/account/forgot-password",
   "/account/login",
   "/account/reset-password/[token]",

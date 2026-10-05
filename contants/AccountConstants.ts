@@ -38,3 +38,9 @@ export function accountErrorMessage(detail?: string): string {
     }
     return GENERIC_ERROR_MESSAGE;
 }
+
+export const ORCID_ID_PATTERN = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/;
+
+export const DEV_ORCID_MOCK_PROVIDER_ID = "orcid-dev";
+
+export const DEV_ORCID_MOCK_PROVIDER_NAME = "ORCID (development mock)";

@@ -4,14 +4,15 @@
 
 **Goal:** An ORCID sign-in only produces a usable session once the account behind it has a confirmed, real email; until then the session is *pending* (no `uid`), can reach only `/account/confirm-email` and the two email-verification BFF routes, and tokens issued before this change are signed out.
 
-**Architecture:** The NextAuth `jwt` callback gains three behaviours: a version gate (`token.v === TOKEN_VERSION`, otherwise it throws, which NextAuth 4.24.9 turns into a deleted cookie and an empty session), an ORCID sign-in branch that either hydrates a verified account or sets `token.pending = {orcid, name, emailHint?}`, and an `update` branch that re-reads the ORCID iD already in the token. The BFF's `auth` step requires `uid` and the current version; a new `pendingOnlyChain` (next to PR 2's `publicChain`, wrapped as `pendingAccountRouter()` beside PR 2's `publicAccountRouter()`) admits only pending tokens to `pages/api/account/email-verifications/*`, which take the ORCID iD and name from the token and only the email or code from the browser, and answer errors through PR 2's `accountHandler`. `_app.tsx` and PR 2's login page route a pending session to `/account/confirm-email`, where `ConfirmEmailForm` (Formik + Yup, then PR 2's `VerificationCodeForm`) confirms the email, calls `update()` and returns to the `callbackUrl`. The profile gets "Connect ORCID", which reuses the same flow. Production ORCID accepts only HTTPS redirect URIs, so for local testing a development-only Credentials provider `orcid-dev` stands in for ORCID. It is double-gated on `NODE_ENV` and `ENABLE_DEV_ORCID_MOCK`, and `orcidSignIn(account, user)` sends it down the same `jwt` branch. The login page shows its form under the ORCID button when `getProviders()` lists it.
+**Architecture:** The NextAuth `jwt` callback gains three behaviours: a version gate (`token.v === TOKEN_VERSION`, otherwise it throws, which NextAuth 4.24.9 turns into a deleted cookie and an empty session), an ORCID sign-in branch that either hydrates a verified account or sets `token.pending = {orcid, name, emailHint?}`, and an `update` branch that re-reads the ORCID iD already in the token. The BFF's `auth` step requires `uid` and the current version; a new `pendingOnlyChain` (next to PR 2's `publicChain`, wrapped as `pendingAccountRouter()` beside PR 2's `publicAccountRouter()` and with the same JSON Content-Type gate) admits only pending tokens to `pages/api/account/email-verifications/*`, which take the ORCID iD and name from the token and only the email or code from the browser, validate the challenge id with PR 2's `challengeIdOr404`, and answer errors through PR 2's `accountHandler`. `_app.tsx` and PR 2's login page (which already sanitises its `callbackUrl` with `safeCallbackUrl`) route a pending session to `/account/confirm-email`, where `ConfirmEmailForm` (Formik + Yup, then PR 2's `VerificationCodeForm`) confirms the email, calls `update()` and returns to the `callbackUrl`. The profile gets "Connect ORCID", which reuses the same flow. Production ORCID accepts only HTTPS redirect URIs, so for local testing a development-only Credentials provider `orcid-dev` stands in for ORCID. It is double-gated on `NODE_ENV` and `ENABLE_DEV_ORCID_MOCK`, and `orcidSignIn(account, user)` sends it down the same `jwt` branch. The login page shows its form under the ORCID button when `getProviders()` lists it.
 
 **Tech Stack:** Next.js 14 (pages router), NextAuth 4.24.9 (JWT strategy), next-connect 1.0.0-next.4, Axios, Formik 2.4 + Yup 1, Jest 29 + ts-jest, @testing-library/react 14 with `jest-environment-jsdom`.
 
 ## Global Constraints
 
-- Worktree: `git worktree add -b feat/rfc-008-orcid-email-confirmation .claude/worktrees/rfc-008-orcid-email-confirmation main` (`main` after webapp PR 0, gatekeeper PR 1 and webapp PR 2 are merged); every command runs from `/Users/caio.maia/workspace/datamap/datamap-webapp/.claude/worktrees/rfc-008-orcid-email-confirmation`; `npm ci` there, never a symlinked `node_modules`.
-- Jest from the worktree: `npx jest --coverage=false <paths>`.
+- Worktree: already created. `/Users/caio.maia/workspace/datamap/datamap-webapp/.claude/worktrees/rfc-008-orcid-email-confirmation`, branch `feat/rfc-008-orcid-email-confirmation` from `main` at `2552647` (webapp PR 2, #109, merged). `npm ci` is done (a real `node_modules`, not a symlink) and `.env.local` is copied in. Baseline: **83 suites, 614 tests**. Every command in this plan runs from that directory, and every git call is spelled `command git` so a shell alias cannot change it.
+- Jest from the worktree: `npx jest --coverage=false <paths>`. Jest runs `ts-jest` with type-checking (`tsconfig.json` has `strict: false`), so a test file or the code under test that does not type-check fails as a suite.
+- `next-auth/package.json` has an `exports` map that does not list `core/*`: Jest cannot resolve `next-auth/core/routes/session`. A test that needs NextAuth's session route imports it by relative path, `../../node_modules/next-auth/core/routes/session`.
 - `TOKEN_VERSION = 2`, defined in `lib/sessionToken.ts` and re-exported from `pages/api/auth/[...nextauth].ts`; every token the `jwt` callback returns carries `token.v = 2`.
 - A token without `v === 2` read outside a sign-in makes the `jwt` callback throw `new Error(STALE_SESSION_ERROR)`; NextAuth 4.24.9 then clears the session cookie and answers `{}`, which `next-auth/react` reads as `unauthenticated`.
 - `token.pending?: { orcid: string; name: string; emailHint?: string }`; a pending token never has `uid` or `tenancies`.
@@ -20,9 +21,10 @@
 - ORCID public email: `GET https://pub.orcid.org/v3.0/{orcid}/email`, `Accept: application/json`, `Authorization: Bearer <ORCID access token>`, timeout 3000 ms, any failure → `undefined`.
 - An ORCID sign-in never calls `createUser`; accounts are created by the gatekeeper on email-verification confirm.
 - `ROUTE_PAGE_CONFIRM_EMAIL = "/account/confirm-email"`.
+- Return paths have one sanitiser for what comes in and one rule for what goes out. A `callbackUrl` read from a query string goes through PR 2's `safeCallbackUrl(raw)` (decodes inside a `try`, keeps only an internal path, else `"/"`): the login page already does this, and the confirmation page does the same. A URL this PR builds goes through `confirmEmailUrlFor(returnTo)`, which keeps `returnTo` only when it is an internal path, exactly as PR 2's `loginUrlFor` does. There is no third helper.
 - Gatekeeper: `POST /auth/email-verifications {orcid, email, name}` → `202 {challenge_id}`; `POST /auth/email-verifications/{challenge_id}/confirm {code}` → `200 {user_id}`, `400 code_invalid|code_expired|code_attempts_exceeded`, `404 challenge_not_found`, `409 email_belongs_to_another_account`.
-- Gatekeeper validation `400`s carry `{"detail": "invalid_email" | "invalid_name" | "invalid_password" | "invalid_orcid"}`.
-- BFF: `POST /api/account/email-verifications` (`pendingOnlyChain`, body `{email}`) → `202 {challengeId}`; `POST /api/account/email-verifications/[challengeId]/confirm` (`pendingOnlyChain`, body `{code}`) → `204`; errors through PR 2's `accountHandler` (gatekeeper status and `{detail}` unchanged; no response → `500 {detail: "unavailable"}`).
+- Gatekeeper validation `400`s carry `{"detail": "invalid_email" | "invalid_name" | "invalid_password" | "invalid_orcid"}`; a body it cannot parse is `400 {"detail": "invalid_request"}`. A `{challenge_id}` that is not a UUID is `404 challenge_not_found`. `POST /auth/challenges/{id}/resend` accepts an email-verification challenge (only sign-up challenges without a password and password-reset challenges are refused).
+- BFF: `POST /api/account/email-verifications` (`pendingAccountRouter()`: `pendingOnlyChain` + JSON gate, body `{email}`) → `202 {challengeId}`; `POST /api/account/email-verifications/[challengeId]/confirm` (same router, body `{code}`) → `204`, a non-UUID `challengeId` → `404 {detail: "challenge_not_found"}` from PR 2's `challengeIdOr404` without calling the gatekeeper; a `POST` whose `Content-Type` is present and not `application/json` → `415 {detail: "invalid_request"}` (PR 2's gate; a missing `Content-Type` passes); errors through PR 2's `accountHandler` (gatekeeper status and `{detail}` unchanged; no response → `500 {detail: "unavailable"}`).
 - Resend cooldown is PR 2's `RESEND_COOLDOWN_SECONDS = 90`, owned by `VerificationCodeForm`; this PR does not restate it.
 - BFFAPI: `requestEmailVerification(email: string): Promise<{ challengeId: string }>`, `confirmEmailVerification(challengeId: string, code: string): Promise<void>`; both reject with the Axios error.
 - 409 copy: `accountErrorMessage("email_belongs_to_another_account")` = `"This email belongs to another DataMap account. Contact the DataMap team."`.
@@ -33,27 +35,64 @@
 - UI copy in English; forms with Formik + Yup; component tests start with the `/** @jest-environment jsdom */` docblock and import components from their own file under `components/`.
 - Every commit message ends with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 
-### PR 2 code this plan builds on
+### Merged PR 2 code this plan builds on
 
-Checked against `docs/superpowers/plans/2026-10-03-rfc-008-pr2-password-sign-in.md`. Every edit below is anchored on code as PR 2 leaves it.
+Checked against the merged code at `2552647` (webapp #109), not against PR 2's plan. Every edit below quotes the line it anchors on as it is in that commit.
 
-- `pages/api/auth/[...nextauth].ts`: imports `import NextAuth, { AuthOptions, User } from "next-auth";`, `import { JWT } from "next-auth/jwt";` and `login` from `lib/account`; `async jwt({ token, account, trigger, user })` keeps `// Persist the OAuth access_token to the token right after signin`; the sign-in block is `if (trigger == "signIn") { if (account?.provider == "credentials") { token = await hydratePasswordSignIn(token, user.id); } else { ... getUserByProviderAuthentication ... } await claimPendingInvitations(token.uid as string); } else if (trigger == "update" && token.uid) {`; `getUserByProviderAuthentication` has only the `github` and `orcid` branches, then `} else { throw ... }`.
-- `pages/api/auth/[...nextauth].ts` providers: `developmentOnlyProviders` holds only `GithubProvider`, under the comment `// GitHub is for local work only; it must not exist in production.`; `providers` is `[OrcidProvider(...), CredentialsProvider({ id: "credentials", name: "Email and password", ... }), ...developmentOnlyProviders]`, so `CredentialsProvider` is already imported.
-- `lib/__tests__/authProviders.test.ts`: PR 0's `providerIdsWhen(nodeEnv)` helper (reads `provider.id`) with PR 2's three expectations: production and test `["orcid", "credentials"]`, development `["orcid", "credentials", "github"]`.
-- `lib/users.ts`: PR 2 Task 2 already adds `has_password` and `email_verified_at` to `GetUserByProviderResponse` and `UserDetailsResponse`; this plan does not touch those types.
-- `lib/account.ts`: `import axiosInstance from "./rpc";`; exports `signUp`, `confirmSignUp`, `resendChallenge`, `login`, `requestPasswordReset`, `confirmPasswordReset`, `changePassword`.
-- `lib/middlewareChain.ts`: `export const publicChain = createRouter<NextApiRequest, NextApiResponse>().use(requestLogging);` right after `authOnlyChain`.
-- `lib/accountRoute.ts`: `publicAccountRouter()` and `accountHandler(router: ReturnType<typeof publicAccountRouter>)`, which answers `err.response.status` with `{ detail: err.response.data.detail ?? "unavailable" }`, `500 {detail: "unavailable"}` without a response, `405` otherwise.
-- `lib/__tests__/accountRoutes.test.ts` mocks `getToken` with `{ uid: "u1" }` for the password route (twice).
-- `gateways/BFFAPI.ts`: `resendChallenge(challengeId: string): Promise<void>` exists; the last method of the class is `async changePassword(currentPassword: string, newPassword: string): Promise<void>`; account methods reject with the Axios error.
-- `components/Account/VerificationCodeForm.tsx`: named export `VerificationCodeForm({ email, onSubmit, onResend })`; it shows `accountErrorMessage(error.response.data.detail)` for a rejected `onSubmit` and owns the 90 s resend countdown.
-- `contants/AccountConstants.ts`: `ACCOUNT_ERROR_MESSAGES` already maps `email_belongs_to_another_account` to the exact 409 copy; `accountErrorMessage` falls back to `GENERIC_ERROR_MESSAGE` ("Something went wrong. Please try again."). It also maps the validation codes: `invalid_email` → "This email address is not valid.", `invalid_name` → "Enter your name.", `invalid_password` → "The password must have 10 to 128 characters.", `invalid_orcid` → "Your ORCID sign-in could not be read. Sign in again."; `resend_too_soon` → "Wait a moment before asking for another code." This plan adds no messages; Task 5 appends three non-message constants (`ORCID_ID_PATTERN`, `DEV_ORCID_MOCK_PROVIDER_ID`, `DEV_ORCID_MOCK_PROVIDER_NAME`).
+- `pages/api/auth/[...nextauth].ts`, imports, in this order: `import axios, { AxiosError } from "axios";`, `import NextAuth, { AuthOptions, User } from "next-auth";`, `import { JWT } from "next-auth/jwt";`, `CredentialsProvider`, `GithubProvider`, `import { login } from "../../../lib/account";`, `OrcidProvider` from `lib/OrcidOAuthProvider`, `import { CreateUserRequest, GetUserByProviderResponse, createUser, getUserByProviderID, getUserByUID } from "../../../lib/users";`, `logError`, `getMetrics`, and last `import { claimInvitations } from "../../../lib/share";`.
+- Same file, exported functions: `authorizeCredentials(credentials)` (calls `login`, records a `credentials` failure metric, `null` on 401, throws `sign_in_unavailable` otherwise), `hydrateWithUserInfo(token, user)`, `hydratePasswordSignIn(token: JWT, uid: string): Promise<JWT>` (reads the user by id; a failed read keeps the sign-in with only `uid`), `claimPendingInvitations(uid)`. `getUserByProviderAuthentication(account, token)` is private and still has the `github` and `orcid` branches (PR 2 removed only the `credentials` one), each building a `CreateUserRequest` and creating the user on a 404.
+- Same file, the `jwt` callback as merged:
+
+  ```ts
+      async jwt({ token, account, trigger, user }) {
+        // Persist the OAuth access_token to the token right after signin
+        if (account) {
+          token.accessToken = account.access_token
+        }
+
+        if (trigger == "signIn") {
+          if (account?.provider == "credentials") {
+            token = await hydratePasswordSignIn(token, user.id);
+          } else {
+            const signedIn = await getUserByProviderAuthentication(account, token);
+            token = hydrateWithUserInfo(token, signedIn);
+          }
+          await claimPendingInvitations(token.uid as string);
+        } else if (trigger == "update" && token.uid) {
+          ...
+        }
+
+        return token
+      },
+  ```
+
+  and the `session` callback sets `session.user.uid = token.uid` then `session.user.tenancies = token.tenancies`.
+- Same file, providers: `developmentOnlyProviders` holds only `GithubProvider`, under `// GitHub is for local work only; it must not exist in production.`; `providers` is `[OrcidProvider(...), CredentialsProvider({ id: "credentials", name: "Email and password", credentials: {}, authorize: authorizeCredentials }), ...developmentOnlyProviders]`. The credentials provider is registered in every environment, so the merged order is `orcid`, `credentials`, then the development-only ones.
+- `lib/__tests__/authProviders.test.ts`: `providerIdsWhen(nodeEnv)` reads `provider.id` inside `jest.isolateModules`, with three tests: production and test `["orcid", "credentials"]`, development `["orcid", "credentials", "github"]`.
+- `lib/__tests__/passwordSignIn.test.ts`: PR 2's tests of `authorizeCredentials`, `hydratePasswordSignIn` and one `jwt` call with `account.provider === "credentials"` and `trigger: "signIn"`. It is the only existing test that calls `authOptions.callbacks`, and none of its calls lacks an `account`, so the version gate in Task 2 does not touch it.
+- `types/next-auth.d.ts` (untouched by PR 2): `import NextAuth from "next-auth"` and a `Session.user` augmentation with `uid` and `tenancies` only. Nothing augments `JWT` or `User` yet.
+- `lib/users.ts`: `GetUserByProviderResponse` and `UserDetailsResponse` already have `has_password: boolean` and `email_verified_at: string | null`. The file ends with `canSeeAccessHistory`.
+- `lib/account.ts`: `import axiosInstance from "./rpc";`; exports `signUp`, `confirmSignUp`, `resendChallenge`, `login`, `requestPasswordReset`, `confirmPasswordReset`, and last `changePassword(userId, currentPassword, newPassword)`. `lib/__tests__/account.test.ts` covers them with `jest.mock("../rpc")`.
+- `lib/middlewareChain.ts`: `middlewareChain` = `requestLogging, auth, tenancyChecker`; `authOnlyChain` = `requestLogging, auth`; then `// Account routes a signed-out visitor needs: sign-up, code confirmation, password reset.` and `export const publicChain = createRouter<NextApiRequest, NextApiResponse>().use(requestLogging);`. `auth` only checks that `getToken` returned something. (`lib/auth.ts` is an older copy of that check that nothing imports; this plan leaves it alone.)
+- `lib/bffRoute.ts`: `bffRouter()` = `createRouter().use(authOnlyChain)`; PR 2's `PUT /api/account/password` uses it with `accountHandler`.
+- `lib/accountRoute.ts`: `isUuid(value)`; `challengeIdOr404(req, res): string | undefined` (answers `404 {detail: "challenge_not_found"}` itself for a non-UUID `req.query.challengeId`); a private `requireJsonContentType` step (`POST`/`PUT`/`PATCH` with a `Content-Type` that is present and not `application/json` → `415 {detail: "invalid_request"}`); `publicAccountRouter()` = `createRouter<NextApiRequest, NextApiResponse>().use(publicChain).use(requireJsonContentType)`; `accountHandler(router: ReturnType<typeof createRouter<NextApiRequest, NextApiResponse>>)`, which answers the gatekeeper's status with `{ detail: response.data.detail ?? "unavailable" }`, `500 {detail: "unavailable"}` without a response (logged with `maskPathTokens`), `405` on no match. The file imports `import { publicChain } from "./middlewareChain";`.
+- `pages/api/account/sign-up/[challengeId]/confirm.ts`: the pattern this PR copies — `publicAccountRouter().post(...)`, `const challengeId = challengeIdOr404(req, res); if (!challengeId) { return; }`, then the gatekeeper call and `res.status(204).end()`, exported through `accountHandler(router)`.
+- `lib/__tests__/accountRoutes.test.ts`: `send(handler, method, query, body = undefined, headers = {})`; UUID constants `CHALLENGE_ID` / `UNKNOWN_CHALLENGE_ID`; `getToken` mocked to `null` in `beforeEach` and to `{ uid: "u1" }` in two "changing the password" tests.
+- `lib/externalCalls.ts`: `UNCONDITIONAL_TOKEN_PREFIXES` already includes `"auth/email-verifications"`, and `lib/__tests__/externalCalls.test.ts` already asserts `POST /auth/email-verifications/{token}/confirm`. This plan does not touch metrics templating.
+- `gateways/BFFAPI.ts`: `resendChallenge(challengeId: string): Promise<void>` exists; the last method of the class is `async changePassword(currentPassword: string, newPassword: string): Promise<void>`; account methods do not wrap errors, so they reject with the Axios error. `gateways/__tests__/BFFAPI.account.test.ts` mocks only `post` and `put`.
+- `components/Account/CodeInput.tsx`: `CodeInput({ value, onChange, onComplete, disabled, invalid, describedBy?, autoFocusKey? })`; changing `autoFocusKey` moves the focus to the first box.
+- `components/Account/VerificationCodeForm.tsx`: named export `VerificationCodeForm({ email, onSubmit, onResend })`. It guards double submission with a `submittingRef`, shows `accountErrorMessage(detail)` in `role="alert"` (wired to `CodeInput` through `describedBy`) for a rejected `onSubmit`, then clears the code and bumps `autoFocusKey`; it owns the 90 s resend countdown and its "We sent a new code to …" notice.
+- `components/Account/SignUpForm.tsx`: keeps the gateway as `const [bffGateway] = useState(() => new BFFAPI());` and offers "Use a different email" under `VerificationCodeForm`; `ConfirmEmailForm` follows the same shape.
+- `contants/AccountConstants.ts`: `PASSWORD_MIN_LENGTH`, `PASSWORD_MAX_LENGTH`, `CODE_LENGTH`, `RESEND_COOLDOWN_SECONDS = 90`, `INVALID_SIGN_IN_MESSAGE`, `CURRENT_PASSWORD_INCORRECT_MESSAGE`, `SESSION_EXPIRED_MESSAGE`, `PASSWORD_LENGTH_MESSAGE`; `ACCOUNT_ERROR_MESSAGES` maps `code_invalid`, `code_expired`, `code_attempts_exceeded`, `challenge_not_found`, `resend_too_soon`, `invalid_credentials`, `token_invalid`, `email_belongs_to_another_account` ("This email belongs to another DataMap account. Contact the DataMap team."), `invalid_email` ("This email address is not valid."), `invalid_name`, `invalid_password`, `invalid_orcid` ("Your ORCID sign-in could not be read. Sign in again.") and `invalid_request`; `accountErrorMessage` falls back to `GENERIC_ERROR_MESSAGE` from `EmbargoConstants`. This plan adds no messages; Task 5 appends three non-message constants (`ORCID_ID_PATTERN`, `DEV_ORCID_MOCK_PROVIDER_ID`, `DEV_ORCID_MOCK_PROVIDER_NAME`).
 - `lib/accountValidation.ts`: `emailField` (Yup, "Enter a valid email address." / "Enter your email address.").
-- `contants/EditFormConstants.ts`: `EDIT_FORM_LABEL_CLASS`, `EDIT_FORM_INPUT_CLASS`, `EDIT_FORM_ERROR_CLASS`; inline alerts use `text-error-600`.
-- `lib/authRoutes.ts`: ends with `loginTabFor` / `loginPhaseFor`.
-- `pages/account/login/index.tsx`: imports `import { signIn } from "next-auth/react";`, `import Router from "next/router";`, `import { loginPhaseFor, loginTabFor } from "../../../lib/authRoutes";`; `LoginPage` starts with `const callbackUrl = decodeURIComponent(props.callbackUrl || "/");`; not `auth`-gated; imports `import { SignInForm } from "../../../components/Account/SignInForm";`; the "Sign in" tab starts with `<OrcidButton callbackUrl={callbackUrl}>Sign in with ORCID</OrcidButton>` followed by the GitHub button inside `{process.env.NODE_ENV == "development" && ...}`.
-- `pages/app/profile/index.tsx`: the "Sign-in methods" `<ul>` ends with `<PasswordSignInMethod user={user} />`, an `<li className="grid grid-cols-[140px_minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 text-sm">`; `import { getUserByUID } from "../../../lib/users";` is unchanged.
-- Gatekeeper: `GET /users/{id}` and `PUT /users/{id}/password` skip Casbin when `{id} == X-User-Id`, so a role-less new account can read itself; nothing in this plan works around it.
+- `contants/EditFormConstants.ts`: `EDIT_FORM_LABEL_CLASS`, `EDIT_FORM_INPUT_CLASS`, `EDIT_FORM_ERROR_CLASS`, `EDIT_FORM_HINT_CLASS`; inline alerts use `text-error-600`.
+- `contants/InternalRoutesConstants.ts`: `ROUTE_PAGE_HOME = "/app/home"`, `ROUTE_PAGE_PROFILE = "/app/profile"`; PR 2's last route is `export const ROUTE_PAGE_RESET_PASSWORD = (token: string) => "/account/reset-password/" + token;`. The file imports nothing.
+- `lib/authRoutes.ts` has no imports. It holds `SIGN_OUT_CALLBACK_URL = "/"`, a private `isInternalPath(path?: string)` (starts with `/`, not `//` or `/\`, no control character), `loginUrlFor(returnTo?)`, `safeCallbackUrl(rawCallbackUrl?: string): string`, and it ends with `loginTabFor` / `loginPhaseFor`. `lib/__tests__/authRoutes.test.ts` starts with `import { expect, test } from '@jest/globals';` and `import { loginPhaseFor, loginTabFor, loginUrlFor, safeCallbackUrl, SIGN_OUT_CALLBACK_URL } from "../authRoutes";`.
+- `pages/account/login/index.tsx`: imports `import { signIn } from "next-auth/react";`, `import Router from "next/router";` (no `useRouter`, no `useSession`, no React hooks), `import { SignInForm } from "../../../components/Account/SignInForm";`, `import { loginPhaseFor, loginTabFor, safeCallbackUrl } from "../../../lib/authRoutes";`. `LoginPage` starts with `const callbackUrl = safeCallbackUrl(props.callbackUrl);`, and `getInitialProps` passes the query value through as it came. Not `auth`-gated. The "Sign in" tab starts with `<OrcidButton callbackUrl={callbackUrl}>Sign in with ORCID</OrcidButton>` followed by the GitHub button inside `{process.env.NODE_ENV == "development" && ...}`.
+- `pages/_app.tsx`: imports `import { loginUrlFor } from "../lib/authRoutes";`; `Auth` is the last function of the file and returns `authContext.loading` only while `status === "loading"`.
+- `pages/app/profile/index.tsx`: `import { PasswordSignInMethod } from "../../../components/Account/PasswordSignInMethod";` and `import { getUserByUID } from "../../../lib/users";`; the "Sign-in methods" `<ul>` (rendered only under `user ? (`) ends with `<PasswordSignInMethod user={user} />`. `getServerSideProps` returns `{ props: {} }` when the token has no `uid`, so a pending session never reaches the gatekeeper from there.
+- `components/Account/PasswordSignInMethod.tsx`: the "Password" row. Without a password it says "Not set" and offers "Set a password" when `email_verified_at` is set, and says "Not set. Available once your email is confirmed." with no button otherwise; `components/Account/__tests__/PasswordSignInMethod.test.tsx` asserts that copy for an `unconfirmed` fixture. Task 14 removes the copy (see there).
+- Gatekeeper: `GET /users/{id}` and `PUT /users/{id}/password` skip Casbin when `{id} == X-User-Id`, so a role-less new account can read itself; `POST /auth/login` refuses an account whose `email_verified_at` is null. Nothing in this plan works around either.
 
 ---
 
@@ -70,20 +109,22 @@ Checked against `docs/superpowers/plans/2026-10-03-rfc-008-pr2-password-sign-in.
 | `pages/api/auth/[...nextauth].ts` | modify | version gate, ORCID pending branch, `update` on pending, session exposes `pending`/`emailHint`, ORCID removed from `getUserByProviderAuthentication`; `orcidSignIn` (real ORCID or the mock), mock registered behind the double gate |
 | `lib/middlewareChain.ts` | modify | `auth` requires `uid` + current version; `pendingOnlyChain` |
 | `lib/account.ts` | modify | `requestEmailVerification`, `confirmEmailVerification` |
-| `lib/accountRoute.ts` | modify | `pendingAccountRouter()` next to PR 2's `publicAccountRouter()` |
+| `lib/accountRoute.ts` | modify | `pendingAccountRouter()` next to PR 2's `publicAccountRouter()`: `pendingOnlyChain` + PR 2's JSON Content-Type gate |
 | `pages/api/account/email-verifications/index.ts` | create | BFF: request a code for the pending ORCID sign-in |
-| `pages/api/account/email-verifications/[challengeId]/confirm.ts` | create | BFF: confirm the code |
+| `pages/api/account/email-verifications/[challengeId]/confirm.ts` | create | BFF: confirm the code; challenge id through PR 2's `challengeIdOr404` |
 | `gateways/BFFAPI.ts` | modify | `requestEmailVerification`, `confirmEmailVerification` |
 | `contants/InternalRoutesConstants.ts` | modify | `ROUTE_PAGE_CONFIRM_EMAIL` |
-| `lib/authRoutes.ts` | modify | `safeReturnPath`, `confirmEmailUrlFor`, `pendingSessionRedirect` |
+| `lib/authRoutes.ts` | modify | `confirmEmailUrlFor`, `pendingSessionRedirect` (PR 2's `safeCallbackUrl` is reused, not duplicated) |
 | `pages/_app.tsx` | modify | `Auth` sends pending sessions to confirm-email and non-pending ones away from it |
-| `pages/account/login/index.tsx` | modify | `DevOrcidMockForm` under the ORCID button (development only); a pending session that reaches the login page goes to confirm-email with the login's `callbackUrl` |
+| `pages/account/login/index.tsx` | modify | `DevOrcidMockForm` under the ORCID button (development only); a pending session that reaches the login page goes to confirm-email with the login's `callbackUrl` as PR 2's `safeCallbackUrl` already sanitised it |
 | `components/Account/DevOrcidMockForm.tsx` | create | the mock's form (Formik + Yup), rendered only when `getProviders()` lists `orcid-dev` |
 | `.env.local.template` | modify | `ENABLE_DEV_ORCID_MOCK=false` |
 | `components/Account/ConfirmEmailForm.tsx` | create | email step (Formik) → `VerificationCodeForm` → `update()` → `callbackUrl`; 409; sign out |
-| `pages/account/confirm-email.tsx` | create | the page, `BareLayout`, 560 px column, `auth` gated |
+| `pages/account/confirm-email.tsx` | create | the page, `BareLayout`, 560 px column, `auth` gated; `callbackUrl` through `safeCallbackUrl` |
 | `components/Account/ConnectOrcid.tsx` | create | profile row with "Connect ORCID" |
-| `pages/app/profile/index.tsx` | modify | shows `ConnectOrcid` when the account has no `orcid` provider |
+| `pages/app/profile/index.tsx` | modify | shows `ConnectOrcid` after `PasswordSignInMethod` when the account has no `orcid` provider |
+| `components/Account/PasswordSignInMethod.tsx` | modify | drops "Not set. Available once your email is confirmed.", which no production session can reach after this PR |
+| `components/Account/__tests__/PasswordSignInMethod.test.tsx` | modify | the unconfirmed case now reads "Not set" and still has no button |
 | `lib/__tests__/orcidEmail.test.ts` | create | tests for `lib/orcidEmail.ts` |
 | `lib/__tests__/sessionTokenVersion.test.ts` | create | version gate + NextAuth session-route behaviour |
 | `lib/__tests__/orcidPendingSignIn.test.ts` | create | ORCID sign-in, `update` on pending, session callback |
@@ -93,7 +134,7 @@ Checked against `docs/superpowers/plans/2026-10-03-rfc-008-pr2-password-sign-in.
 | `lib/__tests__/middlewareChain.test.ts` | modify | `uid`/version required; `pendingOnlyChain` |
 | `lib/__tests__/embargoRoutes.test.ts`, `lib/__tests__/membersAccessRoute.test.ts`, `lib/__tests__/shareRoutes.test.ts`, `lib/__tests__/accountRoutes.test.ts` | modify | mocked signed-in tokens carry `v: 2` |
 | `lib/__tests__/accountEmailVerification.test.ts` | create | tests for the two `lib/account.ts` functions |
-| `lib/__tests__/emailVerificationRoutes.test.ts` | create | tests for the two BFF routes |
+| `lib/__tests__/emailVerificationRoutes.test.ts` | create | tests for the two BFF routes, including the 415 and the non-UUID 404 |
 | `gateways/__tests__/BFFAPI.emailVerification.test.ts` | create | tests for the two BFFAPI methods |
 | `lib/__tests__/authRoutes.test.ts` | modify | tests for the new route helpers, including the login-page case |
 | `components/Account/__tests__/ConfirmEmailForm.test.tsx` | create | component tests |
@@ -119,16 +160,18 @@ New tests for the NextAuth module live under `lib/__tests__/`, not `pages/api/au
   - `pickOrcidEmail(emails: OrcidEmail[] | undefined): string | undefined`
   - `fetchOrcidPublicEmail(orcid: string, accessToken?: string): Promise<string | undefined>`
 
-- [ ] **Step 0: Create the worktree**
+- [ ] **Step 0: Check the worktree (already created)**
+
+The worktree exists, `npm ci` has run in it and `.env.local` is in place. Confirm it is the merged PR 2 and the suite is green before changing anything:
 
 ```bash
-cd /Users/caio.maia/workspace/datamap/datamap-webapp
-git fetch origin
-git log --oneline -5 origin/main   # PR 2 ("password sign-in through the gatekeeper" etc.) must be here
-git worktree add -b feat/rfc-008-orcid-email-confirmation .claude/worktrees/rfc-008-orcid-email-confirmation origin/main
-cd .claude/worktrees/rfc-008-orcid-email-confirmation
-npm ci
+cd /Users/caio.maia/workspace/datamap/datamap-webapp/.claude/worktrees/rfc-008-orcid-email-confirmation
+command git log --oneline -1
+command git status --short
+npx jest --coverage=false
 ```
+
+Expected: `2552647 feat: email and password sign-in (RFC 008, PR 2) (#109)` (or a later commit of this branch, such as this plan's); a clean status; `Test Suites: 83 passed, 83 total` and `Tests: 614 passed, 614 total`.
 
 Every later command in this plan runs from `/Users/caio.maia/workspace/datamap/datamap-webapp/.claude/worktrees/rfc-008-orcid-email-confirmation`.
 
@@ -291,13 +334,13 @@ export async function fetchOrcidPublicEmail(orcid: string, accessToken?: string)
 - [ ] **Step 4: Run it and watch it pass**
 
 Run: `npx jest --coverage=false lib/__tests__/orcidEmail.test.ts`
-Expected: PASS (all tests green).
+Expected: PASS — 16 tests.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lib/orcidEmail.ts lib/__tests__/orcidEmail.test.ts
-git commit -m "$(cat <<'EOF'
+command git add lib/orcidEmail.ts lib/__tests__/orcidEmail.test.ts
+command git commit -m "$(cat <<'EOF'
 feat: read the public ORCID email to pre-fill the confirmation
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
@@ -316,7 +359,7 @@ EOF
 - Test: `lib/__tests__/sessionTokenVersion.test.ts`
 
 **Interfaces:**
-- Consumes: `authOptions.callbacks.jwt` / `.session` (existing); `next-auth/core/routes/session` default export (NextAuth 4.24.9 internal, used only in the test to prove the cookie is deleted).
+- Consumes: `authOptions.callbacks.jwt` / `.session` (merged); NextAuth 4.24.9's internal session route `node_modules/next-auth/core/routes/session` (default export), used only in the test to prove the cookie is deleted. The package's `exports` map does not list `core/*`, so `import ... from "next-auth/core/routes/session"` fails in Jest with `Cannot find module`; the test imports it by relative path, which Jest and `tsc` (`moduleResolution: "node"`, types from the neighbouring `session.d.ts`) both resolve.
 - Produces:
   - `lib/sessionToken.ts`: `TOKEN_VERSION = 2`, `STALE_SESSION_ERROR: string`, `interface PendingSignIn { orcid: string; name: string; emailHint?: string }`
   - `pages/api/auth/[...nextauth].ts`: `export { TOKEN_VERSION }`
@@ -338,7 +381,8 @@ jest.mock("../users", () => ({
     createUser: jest.fn(),
 }));
 
-import sessionRoute from "next-auth/core/routes/session";
+// next-auth's exports map does not list core/*, so the internal route is reached by path.
+import sessionRoute from "../../node_modules/next-auth/core/routes/session";
 import { authOptions, TOKEN_VERSION } from "../../pages/api/auth/[...nextauth]";
 import { claimInvitations } from "../share";
 import { STALE_SESSION_ERROR } from "../sessionToken";
@@ -436,7 +480,7 @@ describe("NextAuth's session endpoint", () => {
 - [ ] **Step 2: Run it and watch it fail**
 
 Run: `npx jest --coverage=false lib/__tests__/sessionTokenVersion.test.ts`
-Expected: FAIL — `Cannot find module '../sessionToken' from 'lib/__tests__/sessionTokenVersion.test.ts'`.
+Expected: FAIL — "Test suite failed to run": `Cannot find module '../sessionToken' from 'lib/__tests__/sessionTokenVersion.test.ts'` (ts-jest also reports that `[...nextauth]` has no exported member `TOKEN_VERSION`).
 
 - [ ] **Step 3: Implement**
 
@@ -455,7 +499,7 @@ export interface PendingSignIn {
 }
 ```
 
-Replace the whole of `types/next-auth.d.ts` (PR 2 does not change it):
+Replace the whole of `types/next-auth.d.ts` (as merged it imports `NextAuth` without using it and augments only `Session.user` with `uid` and `tenancies`):
 
 ```ts
 import { DefaultSession } from "next-auth"
@@ -536,13 +580,13 @@ with:
 - [ ] **Step 4: Run it and watch it pass**
 
 Run: `npx jest --coverage=false lib/__tests__/sessionTokenVersion.test.ts lib/__tests__/passwordSignIn.test.ts "pages/api/auth/__tests__"`
-Expected: PASS (the new file, PR 2's `passwordSignIn.test.ts` — its sign-in calls carry an `account`, so the version gate does not apply — and the existing `[...nextauth].test.ts`).
+Expected: PASS — 3 suites: the new file (8 tests), PR 2's `passwordSignIn.test.ts` (its only `jwt` call carries an `account`, so the version gate does not apply) and the existing `[...nextauth].test.ts`.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lib/sessionToken.ts types/next-auth.d.ts "pages/api/auth/[...nextauth].ts" lib/__tests__/sessionTokenVersion.test.ts
-git commit -m "$(cat <<'EOF'
+command git add lib/sessionToken.ts types/next-auth.d.ts "pages/api/auth/[...nextauth].ts" lib/__tests__/sessionTokenVersion.test.ts
+command git commit -m "$(cat <<'EOF'
 feat: sign out sessions issued before the token version
 
 A token without v === 2 makes the jwt callback throw, which NextAuth
@@ -563,7 +607,7 @@ EOF
 - Test: `lib/__tests__/orcidPendingSignIn.test.ts`
 
 **Interfaces:**
-- Consumes: `getUserByProviderID(request: GetUserByProviderRequest): Promise<GetUserByProviderResponse>` (throws the Axios error, 404 when unknown; `email_verified_at: string | null` added by PR 2 Task 2); `fetchOrcidPublicEmail`, `isPlaceholderEmail` (Task 1); `hydrateWithUserInfo`, `claimPendingInvitations` (existing).
+- Consumes: `getUserByProviderID(request: GetUserByProviderRequest): Promise<GetUserByProviderResponse>` (throws the Axios error, 404 when unknown; `email_verified_at: string | null` is already on the merged type); `fetchOrcidPublicEmail`, `isPlaceholderEmail` (Task 1); `hydrateWithUserInfo`, `claimPendingInvitations` (merged); `axios` and `GetUserByProviderResponse`, both already imported by the merged file.
 - Produces:
   - `export async function signInWithOrcid(token: JWT, account: Account): Promise<JWT>`
   - session callback sets `session.user.pending` and `session.user.emailHint`.
@@ -723,13 +767,13 @@ describe("the session a browser sees", () => {
 - [ ] **Step 2: Run it and watch it fail**
 
 Run: `npx jest --coverage=false lib/__tests__/orcidPendingSignIn.test.ts`
-Expected: FAIL — the confirmed-account test fails on `getUserByProviderID` being called with the old `CreateUserRequest`-shaped object; the pending tests fail with `createUser` called / `token.pending` undefined; the session tests fail on missing `pending`.
+Expected: FAIL. The merged `else` branch still runs `getUserByProviderAuthentication`, so: the confirmed-account test fails because `getUserByProviderID` is called with the `CreateUserRequest`-shaped object (`personName`, `userName`, `email` too); the placeholder and unconfirmed-email tests fail because the account is hydrated (`token.uid` is `"u1"`, `token.pending` undefined); the two no-account tests reject with `User not found and not created` (the 404 makes it call the mocked `createUser`, which returns nothing); the session tests fail on the missing `pending`. "A gatekeeper failure fails the sign-in" already passes and must keep passing.
 
 - [ ] **Step 3: Implement**
 
-In `pages/api/auth/[...nextauth].ts` (PR 2 already imports `JWT` from `next-auth/jwt`; do not import it again):
+In `pages/api/auth/[...nextauth].ts` (the merged file already imports `axios`, `JWT` from `next-auth/jwt`, `GetUserByProviderResponse`, `getUserByProviderID` and `logError`; do not import them again):
 
-1. Replace PR 2's line
+1. Replace the merged line
 
 ```ts
 import NextAuth, { AuthOptions, User } from "next-auth";
@@ -747,7 +791,7 @@ and, immediately after the import of `lib/sessionToken` added in Task 2, insert:
 import { fetchOrcidPublicEmail, isPlaceholderEmail } from "../../../lib/orcidEmail";
 ```
 
-2. Replace the first line of PR 2's sign-in block:
+2. Replace the first two lines of the merged sign-in block:
 
 ```ts
       if (trigger == "signIn") {
@@ -763,7 +807,7 @@ with:
         if (account?.provider == "credentials") {
 ```
 
-The ORCID branch claims invitations itself, and only for a verified account; PR 2's `await claimPendingInvitations(token.uid as string);` stays inside the `else if` and keeps serving password and GitHub sign-ins.
+The ORCID branch claims invitations itself, and only for a verified account; the merged `await claimPendingInvitations(token.uid as string);` stays inside the `else if` and keeps serving password and GitHub sign-ins. The merged inner `else` (`getUserByProviderAuthentication` + `hydrateWithUserInfo`) is now reached only by GitHub.
 
 3. Replace the existing line:
 
@@ -794,9 +838,9 @@ with:
     };
 ```
 
-so that, after PR 2 removed the `credentials` branch, the `github` branch is followed directly by `  } else {` / `throw new Error("Invalid provider authentication: " + account.provider);`.
+so that the `github` branch is followed directly by the merged `  } else {` / `    throw new Error("Invalid provider authentication: " + account.provider);`.
 
-5. Immediately after the closing `}` of `export async function claimPendingInvitations(...)`, insert:
+5. Immediately after the closing `}` of `export async function claimPendingInvitations(uid: string): Promise<void> { ... }` (and so before `async function getUserByProviderAuthentication(account, token)`), insert:
 
 ```ts
 
@@ -844,13 +888,13 @@ export async function signInWithOrcid(token: JWT, account: Account): Promise<JWT
 - [ ] **Step 4: Run it and watch it pass**
 
 Run: `npx jest --coverage=false lib/__tests__/orcidPendingSignIn.test.ts lib/__tests__/sessionTokenVersion.test.ts lib/__tests__/passwordSignIn.test.ts "pages/api/auth/__tests__"`
-Expected: PASS.
+Expected: PASS — 4 suites; `orcidPendingSignIn.test.ts` has 8 tests at this point.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "pages/api/auth/[...nextauth].ts" lib/__tests__/orcidPendingSignIn.test.ts
-git commit -m "$(cat <<'EOF'
+command git add "pages/api/auth/[...nextauth].ts" lib/__tests__/orcidPendingSignIn.test.ts
+command git commit -m "$(cat <<'EOF'
 feat: an ORCID sign-in without a confirmed email is pending
 
 The token carries pending {orcid, name, emailHint} and no uid until the
@@ -930,7 +974,7 @@ describe("refreshing a pending session after the code was confirmed", () => {
 - [ ] **Step 2: Run it and watch it fail**
 
 Run: `npx jest --coverage=false lib/__tests__/orcidPendingSignIn.test.ts -t "refreshing a pending session"`
-Expected: FAIL — "signs in once the account has a confirmed email" fails: `getUserByProviderID` was not called and `token.uid` is undefined (the `update` branch only runs for `token.uid`).
+Expected: FAIL — "signs in once the account has a confirmed email" fails: `getUserByProviderID` was not called and `token.uid` is undefined (the merged `update` branch is `else if (trigger == "update" && token.uid)`, and a pending token has no `uid`). The other three already pass: with no branch taken the token comes back unchanged, which is what they expect.
 
 - [ ] **Step 3: Implement**
 
@@ -977,13 +1021,13 @@ export async function refreshPendingSignIn(token: JWT): Promise<JWT> {
 - [ ] **Step 4: Run it and watch it pass**
 
 Run: `npx jest --coverage=false lib/__tests__/orcidPendingSignIn.test.ts lib/__tests__/sessionTokenVersion.test.ts lib/__tests__/passwordSignIn.test.ts "pages/api/auth/__tests__"`
-Expected: PASS.
+Expected: PASS — 4 suites; `orcidPendingSignIn.test.ts` now has 12 tests.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add "pages/api/auth/[...nextauth].ts" lib/__tests__/orcidPendingSignIn.test.ts
-git commit -m "$(cat <<'EOF'
+command git add "pages/api/auth/[...nextauth].ts" lib/__tests__/orcidPendingSignIn.test.ts
+command git commit -m "$(cat <<'EOF'
 feat: update() completes a pending ORCID sign-in
 
 The jwt callback re-reads the ORCID iD already in the token, never one
@@ -1029,7 +1073,7 @@ How the login page knows: the page already shows development-only UI (the GitHub
 
 - [ ] **Step 1: Write the failing tests**
 
-Replace the whole of `lib/__tests__/authProviders.test.ts` (as PR 2 leaves it) with:
+Replace the whole of `lib/__tests__/authProviders.test.ts` (as merged: `providerIdsWhen(nodeEnv)` reading `provider.id`, three tests) with:
 
 ```ts
 jest.mock("../share", () => ({ claimInvitations: jest.fn() }));
@@ -1706,7 +1750,7 @@ export function DevOrcidMockForm(props: { callbackUrl: string }) {
 }
 ```
 
-In `pages/account/login/index.tsx` (as PR 2 leaves it):
+In `pages/account/login/index.tsx` (as merged):
 
 1. Immediately before PR 2's line `import { SignInForm } from "../../../components/Account/SignInForm";` insert:
 
@@ -1734,7 +1778,7 @@ The "Create account" tab is left alone: an ORCID sign-in and an ORCID sign-up ar
 - [ ] **Step 5: Run them and watch them pass, then type-check**
 
 Run: `npx jest --coverage=false lib/__tests__/authProviders.test.ts lib/__tests__/devOrcidMock.test.ts components/Account/__tests__/DevOrcidMockForm.test.tsx lib/__tests__/orcidPendingSignIn.test.ts lib/__tests__/orcidEmail.test.ts lib/__tests__/sessionTokenVersion.test.ts lib/__tests__/passwordSignIn.test.ts "pages/api/auth/__tests__"`
-Expected: PASS. `orcidPendingSignIn.test.ts` is unchanged and still passes: a real ORCID sign-in still reads the public email from `pub.orcid.org` with the access token, now through `orcidSignIn`.
+Expected: PASS — 8 suites: `authProviders.test.ts` 10 tests (was 3), `devOrcidMock.test.ts` 16, `DevOrcidMockForm.test.tsx` 10, `orcidPendingSignIn.test.ts` 12, `orcidEmail.test.ts` 16, `sessionTokenVersion.test.ts` 8, plus PR 2's `passwordSignIn.test.ts` and `[...nextauth].test.ts`. `orcidPendingSignIn.test.ts` is unchanged and still passes: a real ORCID sign-in still reads the public email from `pub.orcid.org` with the access token, now through `orcidSignIn`.
 
 Run: `npx tsc --noEmit -p .`
 Expected: no output.
@@ -1742,8 +1786,8 @@ Expected: no output.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add contants/AccountConstants.ts lib/orcidEmail.ts lib/devOrcidMock.ts types/next-auth.d.ts "pages/api/auth/[...nextauth].ts" components/Account/DevOrcidMockForm.tsx pages/account/login/index.tsx .env.local.template lib/__tests__/authProviders.test.ts lib/__tests__/devOrcidMock.test.ts components/Account/__tests__/DevOrcidMockForm.test.tsx
-git commit -m "$(cat <<'EOF'
+command git add contants/AccountConstants.ts lib/orcidEmail.ts lib/devOrcidMock.ts types/next-auth.d.ts "pages/api/auth/[...nextauth].ts" components/Account/DevOrcidMockForm.tsx pages/account/login/index.tsx .env.local.template lib/__tests__/authProviders.test.ts lib/__tests__/devOrcidMock.test.ts components/Account/__tests__/DevOrcidMockForm.test.tsx
+command git commit -m "$(cat <<'EOF'
 feat: a development-only ORCID mock to test the ORCID flows locally
 
 Production ORCID accepts only HTTPS redirect URIs, so no ORCID flow could
@@ -1771,8 +1815,8 @@ EOF
 - Modify: `lib/__tests__/embargoRoutes.test.ts`, `lib/__tests__/membersAccessRoute.test.ts`, `lib/__tests__/shareRoutes.test.ts`, `lib/__tests__/accountRoutes.test.ts` (PR 2)
 
 **Interfaces:**
-- Consumes: `getToken({ req })`, `TOKEN_VERSION`.
-- Produces: `auth` step requires `token.uid` and `token.v === TOKEN_VERSION` (PR 2's `publicChain` is untouched); `export const pendingOnlyChain`, declared next to `publicChain`, = `requestLogging` + a step requiring `token.pending`, no `token.uid`, and `token.v === TOKEN_VERSION`; 401 `"401 Unauthorized"` otherwise.
+- Consumes: `getToken({ req })`, `TOKEN_VERSION`; the merged `auth` step (`if (!token)` only) used by `middlewareChain` and `authOnlyChain`, and so by `bffRouter()` and PR 2's `PUT /api/account/password`.
+- Produces: `auth` step requires `token.uid` and `token.v === TOKEN_VERSION` (PR 2's `publicChain` is untouched; the unused `lib/auth.ts` is left alone); `export const pendingOnlyChain`, declared next to `publicChain`, = `requestLogging` + a step requiring `token.pending`, no `token.uid`, and `token.v === TOKEN_VERSION`; 401 `"401 Unauthorized"` otherwise.
 
 The version check here is defence in depth: `getToken` decodes the cookie without running the `jwt` callback, so between deploy and the browser's next `/api/auth/session` call an old cookie would still pass the BFF.
 
@@ -1780,14 +1824,14 @@ The version check here is defence in depth: `getToken` decodes the cookie withou
 
 In `lib/__tests__/middlewareChain.test.ts`:
 
-1. Replace PR 2's line `import middlewareChain, { authOnlyChain, publicChain } from "../middlewareChain";` with:
+1. Replace the merged line `import middlewareChain, { authOnlyChain, publicChain } from "../middlewareChain";` with:
 
 ```ts
 import middlewareChain, { authOnlyChain, pendingOnlyChain, publicChain } from "../middlewareChain";
 import { TOKEN_VERSION } from "../sessionToken";
 ```
 
-2. Replace every `mockGetToken.mockResolvedValue({ uid: "u1" } as any);` with `mockGetToken.mockResolvedValue({ uid: "u1", v: TOKEN_VERSION } as any);` (three occurrences; PR 2's public-chain test mocks `null` and stays as it is).
+2. Replace every `mockGetToken.mockResolvedValue({ uid: "u1" } as any);` with `mockGetToken.mockResolvedValue({ uid: "u1", v: TOKEN_VERSION } as any);` (three occurrences, in "the dataset chain lets a signed-in account with no tenancy through", "the default chain still requires a tenancy" and "the default chain passes with a tenancy cookie"; the anonymous test and PR 2's public-chain test mock `null` and stay as they are).
 
 3. Append at the end of the file:
 
@@ -1859,7 +1903,7 @@ In `lib/middlewareChain.ts`:
 import { TOKEN_VERSION } from "./sessionToken";
 ```
 
-2. Immediately after PR 2's line `export const publicChain = createRouter<NextApiRequest, NextApiResponse>().use(requestLogging);` insert:
+2. Immediately after the merged line `export const publicChain = createRouter<NextApiRequest, NextApiResponse>().use(requestLogging);` (under its comment `// Account routes a signed-out visitor needs: sign-up, code confirmation, password reset.`) insert:
 
 ```ts
 
@@ -1904,7 +1948,7 @@ async function pendingOnly(req: NextApiRequest, res: NextApiResponse, next: any)
 
 - [ ] **Step 4: Bring the route tests' tokens up to the version**
 
-Every test whose route goes through `middlewareChain`, `authOnlyChain` or `bffRouter` with a signed-in token now needs `v: 2`. `telemetryRoute.test.ts` reads `getToken` directly and is left alone.
+Every test whose route goes through `middlewareChain`, `authOnlyChain` or `bffRouter` with a signed-in token now needs `v: 2`. In the merged tree those are the module-level `getToken` mocks of `embargoRoutes.test.ts`, `membersAccessRoute.test.ts` and `shareRoutes.test.ts`, and the two "changing the password" tests of `accountRoutes.test.ts`. `telemetryRoute.test.ts` (`pages/api/telemetry.ts` reads `getToken` itself) and `appLocalContext.test.ts` (`NewContext`, no chain) are left alone.
 
 ```bash
 sed -i '' 's/getToken: jest.fn(async () => ({ uid: "u1" }))/getToken: jest.fn(async () => ({ uid: "u1", v: 2 }))/' \
@@ -1913,10 +1957,11 @@ sed -i '' 's/getToken: jest.fn(async () => ({ uid: "u1" }))/getToken: jest.fn(as
   lib/__tests__/shareRoutes.test.ts
 sed -i '' 's/jest.mocked(getToken).mockResolvedValue({ uid: "u1" } as any);/jest.mocked(getToken).mockResolvedValue({ uid: "u1", v: 2 } as any);/' \
   lib/__tests__/accountRoutes.test.ts
-grep -rn 'uid: "u1" }' lib/__tests__/embargoRoutes.test.ts lib/__tests__/membersAccessRoute.test.ts lib/__tests__/shareRoutes.test.ts lib/__tests__/accountRoutes.test.ts
+grep -n 'getToken.*uid: "u1" }' lib/__tests__/embargoRoutes.test.ts lib/__tests__/membersAccessRoute.test.ts lib/__tests__/shareRoutes.test.ts lib/__tests__/accountRoutes.test.ts
+grep -c 'v: 2' lib/__tests__/embargoRoutes.test.ts lib/__tests__/membersAccessRoute.test.ts lib/__tests__/shareRoutes.test.ts lib/__tests__/accountRoutes.test.ts
 ```
 
-Expected: the final `grep` prints nothing (both `PUT /api/account/password` tests in `accountRoutes.test.ts` now carry `v: 2`).
+Expected: the first `grep` prints nothing; the second prints `:1` for `embargoRoutes`, `membersAccessRoute` and `shareRoutes` and `:2` for `accountRoutes` (it was `:0` for all four; both `PUT /api/account/password` tests in `accountRoutes.test.ts` now carry `v: 2`). The first `grep` is anchored on `getToken` because `shareRoutes.test.ts` also has `expect.objectContaining({ uid: "u1" })`, which is an assertion, not a token.
 
 - [ ] **Step 5: Run it and watch it pass**
 
@@ -1924,13 +1969,13 @@ Run: `npx jest --coverage=false lib/__tests__/middlewareChain.test.ts lib/__test
 Expected: PASS.
 
 Then run the whole suite to catch any other chained route test: `npx jest --coverage=false`
-Expected: PASS. A failure with status 401 in a route test means its mocked token needs `v: 2`.
+Expected: PASS — `Test Suites: 88 passed, 88 total`, `Tests: 690 passed, 690 total` (the baseline 83 / 614, plus Tasks 1–5's five new suites with 62 tests, `authProviders.test.ts` +7 and `middlewareChain.test.ts` +7). A failure with status 401 in a route test means its mocked token needs `v: 2`.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add lib/middlewareChain.ts lib/__tests__/middlewareChain.test.ts lib/__tests__/embargoRoutes.test.ts lib/__tests__/membersAccessRoute.test.ts lib/__tests__/shareRoutes.test.ts lib/__tests__/accountRoutes.test.ts
-git commit -m "$(cat <<'EOF'
+command git add lib/middlewareChain.ts lib/__tests__/middlewareChain.test.ts lib/__tests__/embargoRoutes.test.ts lib/__tests__/membersAccessRoute.test.ts lib/__tests__/shareRoutes.test.ts lib/__tests__/accountRoutes.test.ts
+command git commit -m "$(cat <<'EOF'
 feat: the BFF requires a user id and the current token version
 
 A pending ORCID sign-in has no uid and would otherwise reach the
@@ -2005,7 +2050,7 @@ Expected: FAIL — `Module '"../account"' has no exported member 'requestEmailVe
 
 - [ ] **Step 3: Implement**
 
-Append to the end of `lib/account.ts`:
+Append to the end of `lib/account.ts` (after the merged `changePassword`, the file's last function):
 
 ```ts
 
@@ -2026,14 +2071,14 @@ export async function confirmEmailVerification(challengeId: string, code: string
 
 - [ ] **Step 4: Run it and watch it pass**
 
-Run: `npx jest --coverage=false lib/__tests__/accountEmailVerification.test.ts`
-Expected: PASS.
+Run: `npx jest --coverage=false lib/__tests__/accountEmailVerification.test.ts lib/__tests__/account.test.ts`
+Expected: PASS — the new file's 3 tests and PR 2's 9.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lib/account.ts lib/__tests__/accountEmailVerification.test.ts
-git commit -m "$(cat <<'EOF'
+command git add lib/account.ts lib/__tests__/accountEmailVerification.test.ts
+command git commit -m "$(cat <<'EOF'
 feat: gatekeeper calls to request and confirm an email verification
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
@@ -2052,11 +2097,14 @@ EOF
 - Test: `lib/__tests__/emailVerificationRoutes.test.ts`
 
 **Interfaces:**
-- Consumes: `pendingOnlyChain` (Task 6); PR 2's `accountHandler(router)` from `lib/accountRoute.ts` (gatekeeper status and `{detail}` unchanged, `500 {detail: "unavailable"}` without a response, `405` on another verb); `requestEmailVerification`, `confirmEmailVerification` (Task 7); `getToken`.
+- Consumes: `pendingOnlyChain` (Task 6); from the merged `lib/accountRoute.ts`: the private `requireJsonContentType` step, `challengeIdOr404(req, res): string | undefined` and `accountHandler(router)` (gatekeeper status and `{detail}` unchanged, `500 {detail: "unavailable"}` without a response, `405` on another verb); `requestEmailVerification`, `confirmEmailVerification` (Task 7); `getToken`.
 - Produces:
-  - `pendingAccountRouter(): NodeRouter<NextApiRequest, NextApiResponse>` in `lib/accountRoute.ts`, next to `publicAccountRouter()`.
+  - `pendingAccountRouter()` in `lib/accountRoute.ts`, next to `publicAccountRouter()`: `createRouter<NextApiRequest, NextApiResponse>().use(pendingOnlyChain).use(requireJsonContentType)`. Its return type is the same `NodeRouter` that `accountHandler` takes.
   - `POST /api/account/email-verifications` body `{email}` → `202 {challengeId}`
-  - `POST /api/account/email-verifications/[challengeId]/confirm` body `{code}` → `204`
+  - `POST /api/account/email-verifications/[challengeId]/confirm` body `{code}` → `204`; a non-UUID `challengeId` → `404 {detail: "challenge_not_found"}` without a gatekeeper call
+  - either route: a non-pending token → `401`; a `Content-Type` that is present and not JSON → `415 {detail: "invalid_request"}`
+
+The pending chain runs before the JSON gate, so an anonymous or signed-in request is a `401` whatever it sends. The JSON gate is the same step PR 2 puts on the public routes, for the same reason: these routes act on a session cookie, and a cross-site form can only post `application/x-www-form-urlencoded`, `multipart/form-data` or `text/plain`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -2073,7 +2121,9 @@ import requestHandler from "../../pages/api/account/email-verifications/index";
 import { confirmEmailVerification, requestEmailVerification } from "../account";
 
 const ORCID = "0000-0001-2345-6789";
+const CHALLENGE_ID = "550e8400-e29b-41d4-a716-446655440000";
 const pendingToken = { pending: { orcid: ORCID, name: "Ada Lovelace" }, v: 2 };
+const JSON_BODY = { "content-type": "application/json" };
 
 function gatekeeperError(status: number, detail: string) {
     return new AxiosError("gatekeeper", "ERR", undefined, {}, {
@@ -2094,13 +2144,13 @@ function fakeRes() {
     return res;
 }
 
-async function send(handler: any, method: string, query: Record<string, string>, body: unknown = undefined) {
+async function send(handler: any, method: string, query: Record<string, string>, body: unknown = undefined, headers: Record<string, string> = JSON_BODY) {
     const res = fakeRes();
     const original = process.stdout.write;
     // @ts-ignore
     process.stdout.write = () => true;
     try {
-        await handler({ method, url: "/api/account/email-verifications", headers: {}, cookies: {}, query, body } as any, res);
+        await handler({ method, url: "/api/account/email-verifications", headers, cookies: {}, query, body } as any, res);
     } finally {
         process.stdout.write = original;
     }
@@ -2113,12 +2163,12 @@ beforeEach(() => {
 
 describe("POST /api/account/email-verifications", () => {
     test("takes the ORCID iD and name from the session and only the email from the browser", async () => {
-        jest.mocked(requestEmailVerification).mockResolvedValue({ challengeId: "c1" });
+        jest.mocked(requestEmailVerification).mockResolvedValue({ challengeId: CHALLENGE_ID });
 
         const res = await send(requestHandler, "POST", {}, { email: " ada@usp.br ", orcid: "9999-9999-9999-9999", name: "Mallory" });
 
         expect(res.statusCode).toBe(202);
-        expect(res.json).toHaveBeenCalledWith({ challengeId: "c1" });
+        expect(res.json).toHaveBeenCalledWith({ challengeId: CHALLENGE_ID });
         expect(requestEmailVerification).toHaveBeenCalledWith({ orcid: ORCID, name: "Ada Lovelace", email: "ada@usp.br" });
     });
 
@@ -2134,6 +2184,14 @@ describe("POST /api/account/email-verifications", () => {
 
         expect(res.statusCode).toBe(400);
         expect(res.json).toHaveBeenCalledWith({ detail });
+    });
+
+    test("a cross-site form post is refused before the gatekeeper is asked", async () => {
+        const res = await send(requestHandler, "POST", {}, "email=ada@usp.br", { "content-type": "application/x-www-form-urlencoded" });
+
+        expect(res.statusCode).toBe(415);
+        expect(res.json).toHaveBeenCalledWith({ detail: "invalid_request" });
+        expect(requestEmailVerification).not.toHaveBeenCalled();
     });
 
     test("a signed-in user cannot use it", async () => {
@@ -2160,12 +2218,12 @@ describe("POST /api/account/email-verifications/[challengeId]/confirm", () => {
     test("confirms the code and answers 204", async () => {
         jest.mocked(confirmEmailVerification).mockResolvedValue({ userId: "u1" });
 
-        const res = await send(confirmHandler, "POST", { challengeId: "c1" }, { code: "123456" });
+        const res = await send(confirmHandler, "POST", { challengeId: CHALLENGE_ID }, { code: "123456" });
 
         expect(res.statusCode).toBe(204);
         expect(res.end).toHaveBeenCalled();
         expect(res.json).not.toHaveBeenCalled();
-        expect(confirmEmailVerification).toHaveBeenCalledWith("c1", "123456");
+        expect(confirmEmailVerification).toHaveBeenCalledWith(CHALLENGE_ID, "123456");
     });
 
     test.each`
@@ -2178,16 +2236,24 @@ describe("POST /api/account/email-verifications/[challengeId]/confirm", () => {
     `("forwards $status $detail unchanged", async ({ status, detail }) => {
         jest.mocked(confirmEmailVerification).mockRejectedValue(gatekeeperError(status, detail));
 
-        const res = await send(confirmHandler, "POST", { challengeId: "c1" }, { code: "123456" });
+        const res = await send(confirmHandler, "POST", { challengeId: CHALLENGE_ID }, { code: "123456" });
 
         expect(res.statusCode).toBe(status);
         expect(res.json).toHaveBeenCalledWith({ detail });
     });
 
+    test("a challenge id that is not a UUID never reaches the gatekeeper", async () => {
+        const res = await send(confirmHandler, "POST", { challengeId: "../../users" }, { code: "123456" });
+
+        expect(res.statusCode).toBe(404);
+        expect(res.json).toHaveBeenCalledWith({ detail: "challenge_not_found" });
+        expect(confirmEmailVerification).not.toHaveBeenCalled();
+    });
+
     test("a gatekeeper that does not answer is a 500 with a code", async () => {
         jest.mocked(confirmEmailVerification).mockRejectedValue(new Error("ECONNREFUSED"));
 
-        const res = await send(confirmHandler, "POST", { challengeId: "c1" }, { code: "123456" });
+        const res = await send(confirmHandler, "POST", { challengeId: CHALLENGE_ID }, { code: "123456" });
 
         expect(res.statusCode).toBe(500);
         expect(res.json).toHaveBeenCalledWith({ detail: "unavailable" });
@@ -2196,7 +2262,7 @@ describe("POST /api/account/email-verifications/[challengeId]/confirm", () => {
     test("a signed-in user cannot use it", async () => {
         jest.mocked(getToken).mockResolvedValue({ uid: "u1", v: 2 } as any);
 
-        const res = await send(confirmHandler, "POST", { challengeId: "c1" }, { code: "123456" });
+        const res = await send(confirmHandler, "POST", { challengeId: CHALLENGE_ID }, { code: "123456" });
 
         expect(res.statusCode).toBe(401);
         expect(confirmEmailVerification).not.toHaveBeenCalled();
@@ -2204,28 +2270,41 @@ describe("POST /api/account/email-verifications/[challengeId]/confirm", () => {
 });
 ```
 
+`jest.config.ts` sets `clearMocks: true`, so every test starts with no recorded calls and the `not.toHaveBeenCalled()` assertions hold whatever ran before.
+
 - [ ] **Step 2: Run it and watch it fail**
 
 Run: `npx jest --coverage=false lib/__tests__/emailVerificationRoutes.test.ts`
-Expected: FAIL — `Cannot find module '../../pages/api/account/email-verifications/[challengeId]/confirm'`.
+Expected: FAIL — "Test suite failed to run": `Cannot find module '../../pages/api/account/email-verifications/[challengeId]/confirm'`.
 
 - [ ] **Step 3: Implement**
 
 In `lib/accountRoute.ts`:
 
-1. Replace PR 2's line `import { publicChain } from "./middlewareChain";` with:
+1. Replace the merged line `import { publicChain } from "./middlewareChain";` with:
 
 ```ts
 import { pendingOnlyChain, publicChain } from "./middlewareChain";
 ```
 
-2. Immediately after the closing `}` of `export function publicAccountRouter() { ... }`, insert:
+2. Replace the merged function
 
 ```ts
+export function publicAccountRouter() {
+    return createRouter<NextApiRequest, NextApiResponse>().use(publicChain).use(requireJsonContentType);
+}
+```
+
+with
+
+```ts
+export function publicAccountRouter() {
+    return createRouter<NextApiRequest, NextApiResponse>().use(publicChain).use(requireJsonContentType);
+}
 
 /** Email verification of an ORCID sign-in that has no account, or no confirmed email, yet. */
 export function pendingAccountRouter() {
-    return createRouter<NextApiRequest, NextApiResponse>().use(pendingOnlyChain);
+    return createRouter<NextApiRequest, NextApiResponse>().use(pendingOnlyChain).use(requireJsonContentType);
 }
 ```
 
@@ -2250,32 +2329,40 @@ Create `pages/api/account/email-verifications/[challengeId]/confirm.ts`:
 
 ```ts
 import { confirmEmailVerification } from "../../../../../lib/account";
-import { accountHandler, pendingAccountRouter } from "../../../../../lib/accountRoute";
+import { accountHandler, challengeIdOr404, pendingAccountRouter } from "../../../../../lib/accountRoute";
 
 const router = pendingAccountRouter()
     .post(async (req, res) => {
-        await confirmEmailVerification(req.query.challengeId as string, req.body?.code);
+        const challengeId = challengeIdOr404(req, res);
+        if (!challengeId) {
+            return;
+        }
+        await confirmEmailVerification(challengeId, req.body?.code);
         res.status(204).end();
     });
 
 export default accountHandler(router);
 ```
 
+The request route reads `getToken` a second time instead of passing the token down the chain; `pendingOnlyChain` has already refused any token without `pending`, so the destructuring cannot meet `null`.
+
 - [ ] **Step 4: Run it and watch it pass**
 
 Run: `npx jest --coverage=false lib/__tests__/emailVerificationRoutes.test.ts lib/__tests__/accountRoutes.test.ts lib/__tests__/serverLogging.invariant.test.ts`
-Expected: PASS.
+Expected: PASS — `emailVerificationRoutes.test.ts` 17 tests; PR 2's `accountRoutes.test.ts` unchanged apart from Task 6's `v: 2`.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lib/accountRoute.ts pages/api/account/email-verifications lib/__tests__/emailVerificationRoutes.test.ts
-git commit -m "$(cat <<'EOF'
+command git add lib/accountRoute.ts pages/api/account/email-verifications lib/__tests__/emailVerificationRoutes.test.ts
+command git commit -m "$(cat <<'EOF'
 feat: BFF routes to confirm the email of a pending ORCID sign-in
 
 The ORCID iD and name come from the token; the browser sends only the
-email or the code. Errors go through accountHandler, so the gatekeeper's
-status and detail reach the screen unchanged.
+email or the code. The routes take the same JSON-only gate and the same
+challenge-id check as the public account routes, and errors go through
+accountHandler, so the gatekeeper's status and detail reach the screen
+unchanged.
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 EOF
@@ -2354,7 +2441,7 @@ Expected: FAIL — `Property 'requestEmailVerification' does not exist on type '
 
 - [ ] **Step 3: Implement**
 
-In `gateways/BFFAPI.ts`, immediately after the closing `}` of PR 2's last method:
+In `gateways/BFFAPI.ts`, immediately after the closing `}` of the merged last method:
 
 ```ts
     async changePassword(currentPassword: string, newPassword: string): Promise<void> {
@@ -2378,14 +2465,14 @@ In `gateways/BFFAPI.ts`, immediately after the closing `}` of PR 2's last method
 
 - [ ] **Step 4: Run it and watch it pass**
 
-Run: `npx jest --coverage=false gateways/__tests__/BFFAPI.emailVerification.test.ts`
-Expected: PASS.
+Run: `npx jest --coverage=false gateways/__tests__/BFFAPI.emailVerification.test.ts gateways/__tests__/BFFAPI.account.test.ts`
+Expected: PASS — the new file's 3 tests, and PR 2's account tests unchanged.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add gateways/BFFAPI.ts gateways/__tests__/BFFAPI.emailVerification.test.ts
-git commit -m "$(cat <<'EOF'
+command git add gateways/BFFAPI.ts gateways/__tests__/BFFAPI.emailVerification.test.ts
+command git commit -m "$(cat <<'EOF'
 feat: BFFAPI methods for the ORCID email confirmation
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
@@ -2401,23 +2488,38 @@ EOF
 - Modify: `contants/InternalRoutesConstants.ts`
 - Modify: `lib/authRoutes.ts`
 - Modify: `pages/_app.tsx`
-- Test: `lib/__tests__/authRoutes.test.ts` (append)
+- Test: `lib/__tests__/authRoutes.test.ts` (change the import, append)
 
 **Interfaces:**
+- Consumes: the merged private `isInternalPath(path?: string)` and `safeCallbackUrl(rawCallbackUrl?: string)` in `lib/authRoutes.ts`; `ROUTE_PAGE_HOME`.
 - Produces:
   - `ROUTE_PAGE_CONFIRM_EMAIL = "/account/confirm-email"`
-  - `safeReturnPath(value: unknown): string` — the value when it is an internal path, else `"/"`
-  - `confirmEmailUrlFor(returnTo?: string): string` — `"/account/confirm-email?callbackUrl=<encoded internal path>"`
+  - `confirmEmailUrlFor(returnTo?: string): string` — `"/account/confirm-email?callbackUrl=<encoded returnTo>"` when `returnTo` is an internal path, else `callbackUrl=%2F`; the same rule as `loginUrlFor`.
   - `pendingSessionRedirect(pending: boolean, pathname: string, asPath: string): string | null`
 - `_app.tsx` `Auth`: once `status === "authenticated"`, a pending session on any `auth` page other than confirm-email goes to `confirmEmailUrlFor(router.asPath)`; a non-pending session on confirm-email goes to `ROUTE_PAGE_HOME`; while a redirect is due, the page's `loading` element is shown.
 
+The earlier draft of this task added a `safeReturnPath` helper. The merged PR 2 code already has `safeCallbackUrl` for every `callbackUrl` read from a query, so this task adds no sanitiser: the confirmation page (Task 13) reads its query with `safeCallbackUrl`, as the login page does, and only the URL this PR builds needs `confirmEmailUrlFor`.
+
 - [ ] **Step 1: Write the failing test**
 
-Append to `lib/__tests__/authRoutes.test.ts`:
+In `lib/__tests__/authRoutes.test.ts`:
+
+1. Replace the merged second line
 
 ```ts
-import { confirmEmailUrlFor, pendingSessionRedirect, safeReturnPath } from "../authRoutes";
+import { loginPhaseFor, loginTabFor, loginUrlFor, safeCallbackUrl, SIGN_OUT_CALLBACK_URL } from "../authRoutes";
+```
+
+with
+
+```ts
+import { confirmEmailUrlFor, loginPhaseFor, loginTabFor, loginUrlFor, pendingSessionRedirect, safeCallbackUrl, SIGN_OUT_CALLBACK_URL } from "../authRoutes";
 import { ROUTE_PAGE_CONFIRM_EMAIL } from "../../contants/InternalRoutesConstants";
+```
+
+2. Append at the end of the file:
+
+```ts
 
 test("the confirmation page lives at /account/confirm-email", () => {
   expect(ROUTE_PAGE_CONFIRM_EMAIL).toBe("/account/confirm-email");
@@ -2429,19 +2531,20 @@ test("the confirmation page remembers where the person was going", () => {
 });
 
 test.each`
-  value
+  returnTo
   ${"https://evil.example/app"}
   ${"//evil.example/app"}
+  ${"/\\evil.example/app"}
   ${""}
   ${undefined}
-  ${["/app/home", "/app/datasets"]}
-`("a return path that is not internal becomes the home page ($value)", ({ value }) => {
-  expect(safeReturnPath(value)).toBe("/");
-  expect(confirmEmailUrlFor(value)).toBe("/account/confirm-email?callbackUrl=%2F");
+`("a return path that is not internal becomes the home page ($returnTo)", ({ returnTo }) => {
+  expect(confirmEmailUrlFor(returnTo)).toBe("/account/confirm-email?callbackUrl=%2F");
 });
 
-test("an internal return path is kept", () => {
-  expect(safeReturnPath("/invitations/tok")).toBe("/invitations/tok");
+test("the confirmation page reads its callbackUrl back with the login page's sanitiser", () => {
+  const url = new URL(confirmEmailUrlFor("/invitations/tok?x=1"), "http://localhost");
+
+  expect(safeCallbackUrl(url.searchParams.get("callbackUrl"))).toBe("/invitations/tok?x=1");
 });
 
 test("a pending session on an app page is sent to confirm its email", () => {
@@ -2458,21 +2561,23 @@ test("a signed-in session has nothing to confirm", () => {
   expect(pendingSessionRedirect(false, "/app/home", "/app/home")).toBeNull();
 });
 
-test("on the login page, a pending session goes to confirm with the login's own callbackUrl", () => {
-  expect(pendingSessionRedirect(true, "/account/login", "/invitations/tok"))
+test("on the login page, a pending session goes to confirm with the callbackUrl the login page already sanitised", () => {
+  expect(pendingSessionRedirect(true, "/account/login", safeCallbackUrl("%2Finvitations%2Ftok")))
     .toBe("/account/confirm-email?callbackUrl=%2Finvitations%2Ftok");
-  expect(pendingSessionRedirect(false, "/account/login", "/invitations/tok")).toBeNull();
+  expect(pendingSessionRedirect(true, "/account/login", safeCallbackUrl("https%3A%2F%2Fevil.example")))
+    .toBe("/account/confirm-email?callbackUrl=%2F");
+  expect(pendingSessionRedirect(false, "/account/login", safeCallbackUrl("%2Finvitations%2Ftok"))).toBeNull();
 });
 ```
 
 - [ ] **Step 2: Run it and watch it fail**
 
 Run: `npx jest --coverage=false lib/__tests__/authRoutes.test.ts`
-Expected: FAIL — `Module '"../authRoutes"' has no exported member 'confirmEmailUrlFor'` (and the other two names).
+Expected: FAIL — "Test suite failed to run": ts-jest reports `Module '"../authRoutes"' has no exported member 'confirmEmailUrlFor'` (and `pendingSessionRedirect`), and `Module '"../../contants/InternalRoutesConstants"' has no exported member 'ROUTE_PAGE_CONFIRM_EMAIL'`.
 
 - [ ] **Step 3: Implement**
 
-In `contants/InternalRoutesConstants.ts`, immediately after PR 2's line `export const ROUTE_PAGE_RESET_PASSWORD = (token: string) => "/account/reset-password/" + token;` insert:
+In `contants/InternalRoutesConstants.ts`, immediately after the merged line `export const ROUTE_PAGE_RESET_PASSWORD = (token: string) => "/account/reset-password/" + token;` insert:
 
 ```ts
 
@@ -2480,31 +2585,31 @@ In `contants/InternalRoutesConstants.ts`, immediately after PR 2's line `export 
  * Route to the email confirmation of a pending ORCID sign-in.
  * @constant
  */
-export const ROUTE_PAGE_CONFIRM_EMAIL = '/account/confirm-email';
+export const ROUTE_PAGE_CONFIRM_EMAIL = "/account/confirm-email";
 ```
 
 In `lib/authRoutes.ts`:
 
-1. Add as the first line of the file:
+1. The merged file has no imports. Insert, above its first line `export const SIGN_OUT_CALLBACK_URL = "/";`:
 
 ```ts
 import { ROUTE_PAGE_CONFIRM_EMAIL, ROUTE_PAGE_HOME } from "../contants/InternalRoutesConstants";
 
 ```
 
-2. Append to the end of the file (after PR 2's `loginPhaseFor`):
+(`InternalRoutesConstants.ts` imports nothing, so this adds no cycle.)
+
+2. Append to the end of the file (after the merged `loginPhaseFor`):
 
 ```ts
 
-/** The value when it is an internal path, so a query parameter cannot be used as an open redirect. */
-export function safeReturnPath(value: unknown): string {
-    return typeof value === "string" && isInternalPath(value) ? value : "/";
-}
-
+/** Confirmation page URL that returns the person to `returnTo`; the same internal-path rule as `loginUrlFor`. */
 export function confirmEmailUrlFor(returnTo?: string): string {
-    return `${ROUTE_PAGE_CONFIRM_EMAIL}?callbackUrl=${encodeURIComponent(safeReturnPath(returnTo))}`;
+    const callbackUrl = typeof returnTo === "string" && isInternalPath(returnTo) ? returnTo : "/";
+    return `${ROUTE_PAGE_CONFIRM_EMAIL}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
 }
 
+/** A pending session must confirm its email first, and only a pending session belongs on the confirmation page. */
 export function pendingSessionRedirect(pending: boolean, pathname: string, asPath: string): string | null {
     const onConfirmPage = pathname === ROUTE_PAGE_CONFIRM_EMAIL;
     if (pending && !onConfirmPage) {
@@ -2519,13 +2624,13 @@ export function pendingSessionRedirect(pending: boolean, pathname: string, asPat
 
 In `pages/_app.tsx`:
 
-1. Replace the line `import { loginUrlFor } from "../lib/authRoutes";` with:
+1. Replace the merged line `import { loginUrlFor } from "../lib/authRoutes";` with:
 
 ```ts
 import { loginUrlFor, pendingSessionRedirect } from "../lib/authRoutes";
 ```
 
-2. Replace the whole `Auth` function (from `function Auth({ authContext, children }) {` to the end of the file) with:
+2. Replace the whole merged `Auth` function (from `function Auth({ authContext, children }) {` to the end of the file) with:
 
 ```tsx
 function Auth({ authContext, children }) {
@@ -2566,16 +2671,18 @@ function Auth({ authContext, children }) {
 }
 ```
 
+(`useEffect`, `Router` and `useRouter` are already imported by the merged `_app.tsx`.)
+
 - [ ] **Step 4: Run it and watch it pass**
 
 Run: `npx jest --coverage=false lib/__tests__/authRoutes.test.ts`
-Expected: PASS.
+Expected: PASS — the merged tests plus the 12 new ones.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add contants/InternalRoutesConstants.ts lib/authRoutes.ts pages/_app.tsx lib/__tests__/authRoutes.test.ts
-git commit -m "$(cat <<'EOF'
+command git add contants/InternalRoutesConstants.ts lib/authRoutes.ts pages/_app.tsx lib/__tests__/authRoutes.test.ts
+command git commit -m "$(cat <<'EOF'
 feat: a pending session is sent to confirm its email
 
 Every auth-gated page sends a pending ORCID session to
@@ -2595,16 +2702,16 @@ EOF
 - Modify: `pages/account/login/index.tsx`
 
 **Interfaces:**
-- Consumes: `pendingSessionRedirect(pending, pathname, asPath)` (Task 10, including its login-page test), `useSession`, PR 2's login page (`const callbackUrl = decodeURIComponent(props.callbackUrl || "/");`).
-- Produces: on `/account/login`, a pending session is replaced with `/account/confirm-email?callbackUrl=<the login's callbackUrl>`; any other visitor sees the page as before.
+- Consumes: `pendingSessionRedirect(pending, pathname, asPath)` (Task 10, including its login-page test), `useSession`, and the merged login page's `const callbackUrl = safeCallbackUrl(props.callbackUrl);`.
+- Produces: on `/account/login`, a pending session is replaced with `/account/confirm-email?callbackUrl=<the login's callbackUrl, as safeCallbackUrl left it>`; any other visitor sees the page as before.
 
-Why: the login page is not `auth`-gated, so `_app.tsx` does not route it. Several pages send a session without `uid` to login: the invitation page (server-rendered; `invitationAccount` needs `uid`), the DOI landing's "Sign in", a bookmarked login URL. A person invited by email who signs in with ORCID for the first time is pending, so ORCID returns them to `/invitations/<token>`, which sends them to `/account/login?callbackUrl=%2Finvitations%2F<token>`; without this redirect they would pick ORCID again and go round in a circle. With it they confirm their email and come back to the invitation, which the confirmed account then claims in the `jwt` callback. The decision is the pure function tested in Task 10; the page only wires it, so it is covered by `npm run build` and manual checks 8 and 9 in Task 15.
+Why: the login page is not `auth`-gated, so `_app.tsx` does not route it. Several pages send a session without `uid` to login: the invitation page (server-rendered; the merged `invitationAccount` returns `null` without `uid`, and `invitationPageProps` then redirects to `loginUrlFor(ROUTE_PAGE_INVITATION({ token }))`), the DOI landing's "Sign in", a bookmarked login URL. A person invited by email who signs in with ORCID for the first time is pending, so ORCID returns them to `/invitations/<token>`, which sends them to `/account/login?phase=sign-in&callbackUrl=%2Finvitations%2F<token>`; without this redirect they would pick ORCID again and go round in a circle. With it they confirm their email and come back to the invitation, which the confirmed account then claims in the `jwt` callback. The page reuses the `callbackUrl` PR 2 already sanitised; it does not decode or check the query again. The decision is the pure function tested in Task 10; the page only wires it, so it is covered by `npm run build` and manual checks 8 and 9 in Task 15.
 
 - [ ] **Step 1: Implement**
 
-In `pages/account/login/index.tsx`:
+In `pages/account/login/index.tsx` (as Task 5 left it):
 
-1. Replace PR 2's import lines
+1. Replace the merged import lines
 
 ```tsx
 import { signIn } from "next-auth/react";
@@ -2615,7 +2722,7 @@ import Router from "next/router";
 ```
 
 ```tsx
-import { loginPhaseFor, loginTabFor } from "../../../lib/authRoutes";
+import { loginPhaseFor, loginTabFor, safeCallbackUrl } from "../../../lib/authRoutes";
 ```
 
 with, respectively,
@@ -2630,19 +2737,19 @@ import { useEffect } from "react";
 ```
 
 ```tsx
-import { loginPhaseFor, loginTabFor, pendingSessionRedirect } from "../../../lib/authRoutes";
+import { loginPhaseFor, loginTabFor, pendingSessionRedirect, safeCallbackUrl } from "../../../lib/authRoutes";
 ```
 
-2. Replace PR 2's first line of `LoginPage`
+2. Replace the merged first line of `LoginPage`
 
 ```tsx
-  const callbackUrl = decodeURIComponent(props.callbackUrl || "/");
+  const callbackUrl = safeCallbackUrl(props.callbackUrl);
 ```
 
 with
 
 ```tsx
-  const callbackUrl = decodeURIComponent(props.callbackUrl || "/");
+  const callbackUrl = safeCallbackUrl(props.callbackUrl);
   const router = useRouter();
   const { data: session } = useSession();
   const pendingRedirect = pendingSessionRedirect(session?.user?.pending === true, router.pathname, callbackUrl);
@@ -2654,6 +2761,8 @@ with
   }, [pendingRedirect]);
 ```
 
+`LoginPage` has no early return, so the hooks run in the same order on every render.
+
 - [ ] **Step 2: Build**
 
 Run: `npm run build`
@@ -2662,8 +2771,8 @@ Expected: exit code 0; `/account/login` still listed.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add pages/account/login/index.tsx
-git commit -m "$(cat <<'EOF'
+command git add pages/account/login/index.tsx
+command git commit -m "$(cat <<'EOF'
 fix: a pending ORCID sign-in on the login page confirms its email first
 
 The invitation page sends a session without uid to login, and ORCID
@@ -2683,7 +2792,7 @@ EOF
 - Test: `components/Account/__tests__/ConfirmEmailForm.test.tsx`
 
 **Interfaces:**
-- Consumes: `useSession().update`, `signOut`, `Router.replace`, `BFFAPI.requestEmailVerification` / `confirmEmailVerification` / `resendChallenge`, `VerificationCodeForm({ email, onSubmit, onResend })` (PR 2, named export; shows `accountErrorMessage(detail)` for a rejected `onSubmit` and owns the 90 s resend countdown), `ACCOUNT_ERROR_MESSAGES` / `accountErrorMessage(detail?: string): string` (PR 2, already maps `email_belongs_to_another_account` to the exact 409 copy), `emailField` from `lib/accountValidation.ts` (PR 2), `EDIT_FORM_LABEL_CLASS` / `EDIT_FORM_INPUT_CLASS` / `EDIT_FORM_ERROR_CLASS`, `SIGN_OUT_CALLBACK_URL`.
+- Consumes: `useSession().update`, `signOut`, `Router.replace`, `BFFAPI.requestEmailVerification` / `confirmEmailVerification` (Task 9) / `resendChallenge` (merged; the gatekeeper resends an email-verification challenge), `VerificationCodeForm({ email, onSubmit, onResend })` (merged, named export; on a rejected `onSubmit` it shows `accountErrorMessage(detail)` in `role="alert"`, clears the boxes and refocuses the first one; it guards double submission and owns the 90 s resend countdown), `ACCOUNT_ERROR_MESSAGES` / `accountErrorMessage(detail?: string): string` (PR 2, already maps `email_belongs_to_another_account` to the exact 409 copy), `emailField` from `lib/accountValidation.ts` (PR 2), `EDIT_FORM_LABEL_CLASS` / `EDIT_FORM_INPUT_CLASS` / `EDIT_FORM_ERROR_CLASS`, `SIGN_OUT_CALLBACK_URL`.
 - Produces: `ConfirmEmailForm({ emailHint, callbackUrl }: { emailHint?: string; callbackUrl: string })`.
 
 Behaviour:
@@ -2695,7 +2804,7 @@ Behaviour:
 
 - [ ] **Step 1: (no constants to add)**
 
-PR 2 Task 1 already maps `email_belongs_to_another_account`, `invalid_email` ("This email address is not valid."), `invalid_name`, `invalid_password` and `invalid_orcid` in `ACCOUNT_ERROR_MESSAGES`; this task uses them as they are.
+The merged `ACCOUNT_ERROR_MESSAGES` already maps `email_belongs_to_another_account`, `invalid_email` ("This email address is not valid."), `invalid_name`, `invalid_orcid`, `invalid_request`, the code errors and `resend_too_soon`; this task uses them as they are and adds none.
 
 - [ ] **Step 2: Write the failing test**
 
@@ -2922,6 +3031,7 @@ const EMAIL_SCHEMA = Yup.object({
 
 export function ConfirmEmailForm(props: Props) {
     const { update } = useSession();
+    const [bffGateway] = useState(() => new BFFAPI());
     const [email, setEmail] = useState(props.emailHint ?? "");
     const [challenge, setChallenge] = useState<Challenge | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -2931,7 +3041,7 @@ export function ConfirmEmailForm(props: Props) {
         setError(null);
         setEmail(typed);
         try {
-            const { challengeId } = await new BFFAPI().requestEmailVerification(typed);
+            const { challengeId } = await bffGateway.requestEmailVerification(typed);
             setChallenge({ id: challengeId, email: typed });
         } catch (e) {
             setError(accountErrorMessage(e?.response?.data?.detail));
@@ -2940,7 +3050,7 @@ export function ConfirmEmailForm(props: Props) {
 
     async function confirmCode(code: string) {
         try {
-            await new BFFAPI().confirmEmailVerification(challenge.id, code);
+            await bffGateway.confirmEmailVerification(challenge.id, code);
         } catch (e) {
             if (e?.response?.status === 409) {
                 setChallenge(null);
@@ -2954,7 +3064,7 @@ export function ConfirmEmailForm(props: Props) {
     }
 
     async function resendCode() {
-        await new BFFAPI().resendChallenge(challenge.id);
+        await bffGateway.resendChallenge(challenge.id);
     }
 
     return (
@@ -3010,18 +3120,18 @@ export function ConfirmEmailForm(props: Props) {
 }
 ```
 
-(The field error is not `role="alert"`, as in PR 2's forms; the request and 409 errors are. The 409 hides the code step, so `VerificationCodeForm`'s own alert and this one never show together.)
+(The gateway is kept in state as in the merged `SignUpForm`. The field error is not `role="alert"`, as in PR 2's forms; the request and 409 errors are. The 409 hides the code step, so `VerificationCodeForm`'s own alert and this one never show together.)
 
 - [ ] **Step 5: Run it and watch it pass**
 
 Run: `npx jest --coverage=false components/Account/__tests__/ConfirmEmailForm.test.tsx`
-Expected: PASS.
+Expected: PASS — 12 tests.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add components/Account/ConfirmEmailForm.tsx components/Account/__tests__/ConfirmEmailForm.test.tsx
-git commit -m "$(cat <<'EOF'
+command git add components/Account/ConfirmEmailForm.tsx components/Account/__tests__/ConfirmEmailForm.test.tsx
+command git commit -m "$(cat <<'EOF'
 feat: ConfirmEmailForm for a pending ORCID sign-in
 
 Email pre-filled from the hint, then the 6-digit code; on success the
@@ -3041,10 +3151,10 @@ EOF
 - Create: `pages/account/confirm-email.tsx`
 
 **Interfaces:**
-- Consumes: `ConfirmEmailForm` (Task 12), `BareLayout`, `safeReturnPath` (Task 10), `useSession().data.user.emailHint`.
+- Consumes: `ConfirmEmailForm` (Task 12), `BareLayout`, the merged `safeCallbackUrl(rawCallbackUrl?: string)`, `useSession().data.user.emailHint`.
 - Produces: page at `ROUTE_PAGE_CONFIRM_EMAIL`, `auth`-gated so that `_app.tsx` sends a signed-out visitor to login and a non-pending one home.
 
-The page has no logic of its own beyond reading the session and the query; it is covered by `npm run build` and the manual checks in Task 15.
+The page has no logic of its own beyond reading the session and the query; it is covered by `npm run build` and the manual checks in Task 15. It reads `callbackUrl` with the same `safeCallbackUrl` as the login page, so both pages accept and refuse exactly the same values; `router.query.callbackUrl` can be an array, which is treated as absent.
 
 - [ ] **Step 1: Implement**
 
@@ -3055,20 +3165,21 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { ConfirmEmailForm } from "../../components/Account/ConfirmEmailForm";
 import { BareLayout } from "../../components/Public/BareLayout";
-import { safeReturnPath } from "../../lib/authRoutes";
+import { safeCallbackUrl } from "../../lib/authRoutes";
 
 const COLUMN = "mx-auto w-full max-w-[560px] px-4 md:px-8 pt-20 pb-24";
 
 export default function ConfirmEmailPage() {
     const { data: session } = useSession();
     const router = useRouter();
+    const rawCallbackUrl = router.query.callbackUrl;
 
     return (
         <BareLayout>
             <div className={COLUMN}>
                 <ConfirmEmailForm
                     emailHint={session?.user?.emailHint}
-                    callbackUrl={safeReturnPath(router.query.callbackUrl)}
+                    callbackUrl={safeCallbackUrl(typeof rawCallbackUrl === "string" ? rawCallbackUrl : undefined)}
                 />
             </div>
         </BareLayout>
@@ -3089,8 +3200,8 @@ Expected: build succeeds and the route list contains `○ /account/confirm-email
 - [ ] **Step 3: Commit**
 
 ```bash
-git add pages/account/confirm-email.tsx
-git commit -m "$(cat <<'EOF'
+command git add pages/account/confirm-email.tsx
+command git commit -m "$(cat <<'EOF'
 feat: /account/confirm-email page
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
@@ -3106,21 +3217,30 @@ EOF
 - Modify: `lib/users.ts`
 - Create: `components/Account/ConnectOrcid.tsx`
 - Modify: `pages/app/profile/index.tsx`
-- Test: `lib/__tests__/users.test.ts` (append), `components/Account/__tests__/ConnectOrcid.test.tsx`
+- Modify: `components/Account/PasswordSignInMethod.tsx`
+- Test: `lib/__tests__/users.test.ts` (change the import, append), `components/Account/__tests__/ConnectOrcid.test.tsx`, `components/Account/__tests__/PasswordSignInMethod.test.tsx` (one test changed)
 
 **Interfaces:**
 - Produces:
   - `hasSignInProvider(user: { providers?: { name: string }[] } | undefined | null, provider: string): boolean`
-  - `ConnectOrcid({ accountEmail }: { accountEmail: string })` — an `<li>` with the same grid as PR 2's `PasswordSignInMethod` row ("ORCID" | "Not connected…" | button); the button calls `signIn("orcid", { callbackUrl: ROUTE_PAGE_PROFILE })`.
+  - `ConnectOrcid({ accountEmail }: { accountEmail: string })` — an `<li>` with the same grid as the merged `PasswordSignInMethod` row (`grid grid-cols-[140px_minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 text-sm`: "ORCID" | "Not connected…" | button); the button calls `signIn("orcid", { callbackUrl: ROUTE_PAGE_PROFILE })`.
+  - `PasswordSignInMethod`: without a password the row says "Not set" whether or not the email is confirmed; "Set a password" is still offered only when `email_verified_at` is set.
 
 Why this links rather than creating a second account: NextAuth replaces the session with a fresh ORCID one, so the `jwt` callback looks the ORCID iD up. It has no account, so the session is pending and `_app` sends it to `/account/confirm-email?callbackUrl=%2Fapp%2Fprofile`. The person types the email of the account they were signed into; the gatekeeper's email-verification confirm hits the row "ORCID iD has no account, email has an account → attach the ORCID provider to that account, confirm it". `update()` then finds the ORCID iD on that same account, with a confirmed email, and hydrates the same `uid`; the profile now lists ORCID. The row tells the person which email to use, because the session they were in is gone by the time they reach the confirmation page and the hint may differ.
 
+Why the password row loses "Not set. Available once your email is confirmed.": after this PR no production session with a `uid` can belong to an account whose `email_verified_at` is null. A password sign-in is refused by the gatekeeper for an unconfirmed email (`AccountService.login` raises `unverified`); an ORCID sign-in stays pending, with no `uid`, until the email is confirmed (Tasks 3 and 4); and every token issued before this PR is signed out (Task 2). Only the development-only GitHub provider still creates accounts without a confirmed email, and those have no way to confirm one, so the copy promised something nobody can do. The row now says "Not set". The button keeps its `email_verified_at` condition: the gatekeeper sends no reset link to an unconfirmed email, so offering one would end in "We sent a link" for a link that never comes.
+
 - [ ] **Step 1: Write the failing tests**
 
-Append to `lib/__tests__/users.test.ts`:
+In `lib/__tests__/users.test.ts`, replace the merged line `import { canEditDataset, canSeeAccessHistory } from "../users";` with:
 
 ```ts
-import { hasSignInProvider } from "../users";
+import { canEditDataset, canSeeAccessHistory, hasSignInProvider } from "../users";
+```
+
+and append at the end of the file:
+
+```ts
 
 describe("hasSignInProvider", () => {
     test("finds a provider by name", () => {
@@ -3169,10 +3289,33 @@ describe("ConnectOrcid", () => {
 });
 ```
 
+In `components/Account/__tests__/PasswordSignInMethod.test.tsx`, replace the merged test
+
+```tsx
+    test("an unconfirmed email is offered no link the gatekeeper would not send", () => {
+        renderRow(unconfirmed);
+
+        expect(screen.queryByRole("button", { name: "Set a password" })).toBeNull();
+        expect(screen.getByText("Not set. Available once your email is confirmed.")).toBeTruthy();
+    });
+```
+
+with
+
+```tsx
+    test("an unconfirmed email is offered no link the gatekeeper would not send, and no promise either", () => {
+        renderRow(unconfirmed);
+
+        expect(screen.queryByRole("button", { name: "Set a password" })).toBeNull();
+        expect(screen.getByText("Not set")).toBeTruthy();
+        expect(screen.queryByText(/once your email is confirmed/)).toBeNull();
+    });
+```
+
 - [ ] **Step 2: Run them and watch them fail**
 
-Run: `npx jest --coverage=false lib/__tests__/users.test.ts components/Account/__tests__/ConnectOrcid.test.tsx`
-Expected: FAIL — `Module '"../users"' has no exported member 'hasSignInProvider'` and `Cannot find module '../ConnectOrcid'`.
+Run: `npx jest --coverage=false lib/__tests__/users.test.ts components/Account/__tests__/ConnectOrcid.test.tsx components/Account/__tests__/PasswordSignInMethod.test.tsx`
+Expected: FAIL — `users.test.ts` and `ConnectOrcid.test.tsx` fail to run (`Module '"../users"' has no exported member 'hasSignInProvider'`, `Cannot find module '../ConnectOrcid'`); in `PasswordSignInMethod.test.tsx` only the changed test fails, on `Unable to find an element with the text: Not set`.
 
 - [ ] **Step 3: Implement**
 
@@ -3238,22 +3381,48 @@ with
                     {!hasSignInProvider(user, "orcid") && <ConnectOrcid accountEmail={user.email} />}
 ```
 
-(`user` is non-null there: PR 2 renders the `<ul>` only under `user ? (`.)
+(`user` is non-null there: the merged page renders the `<ul>` only under `user ? (`.)
+
+In `components/Account/PasswordSignInMethod.tsx`, replace the merged
+
+```tsx
+    function state(): string {
+        if (user.has_password) {
+            return "Set";
+        }
+        return user.email_verified_at ? "Not set" : "Not set. Available once your email is confirmed.";
+    }
+```
+
+with
+
+```tsx
+    function state(): string {
+        return user.has_password ? "Set" : "Not set";
+    }
+```
+
+The `{!user.has_password && user.email_verified_at && (` button condition below it stays as it is.
 
 - [ ] **Step 4: Run them and watch them pass**
 
-Run: `npx jest --coverage=false lib/__tests__/users.test.ts components/Account/__tests__/ConnectOrcid.test.tsx`
-Expected: PASS.
+Run: `npx jest --coverage=false lib/__tests__/users.test.ts components/Account/__tests__/ConnectOrcid.test.tsx components/Account/__tests__/PasswordSignInMethod.test.tsx`
+Expected: PASS — `users.test.ts` with 2 more tests, `ConnectOrcid.test.tsx` 2 tests, `PasswordSignInMethod.test.tsx` the same 4 tests.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lib/users.ts lib/__tests__/users.test.ts components/Account/ConnectOrcid.tsx components/Account/__tests__/ConnectOrcid.test.tsx pages/app/profile/index.tsx
-git commit -m "$(cat <<'EOF'
+command git add lib/users.ts lib/__tests__/users.test.ts components/Account/ConnectOrcid.tsx components/Account/__tests__/ConnectOrcid.test.tsx pages/app/profile/index.tsx components/Account/PasswordSignInMethod.tsx components/Account/__tests__/PasswordSignInMethod.test.tsx
+command git commit -m "$(cat <<'EOF'
 feat: Connect ORCID from the profile
 
 It starts an ORCID sign-in that lands on the email confirmation; the
 account's own email attaches the iD to it.
+
+The password row no longer says "Available once your email is
+confirmed": a signed-in production session always has a confirmed
+email now, and the development-only GitHub accounts that do not have
+no way to confirm one.
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 EOF
@@ -3269,7 +3438,10 @@ EOF
 - [ ] **Step 1: Unit tests**
 
 From the worktree: `npx jest --coverage=false`
-Expected: every suite passes, PR 2's included; no route test reports a 401 (a 401 means a mocked signed-in token is missing `v: 2`).
+Expected: `Test Suites: 93 passed, 93 total` and `Tests: 741 passed, 741 total`. That is the baseline 83 / 614 plus ten new suites (`orcidEmail` 16, `sessionTokenVersion` 8, `orcidPendingSignIn` 12, `devOrcidMock` 16, `DevOrcidMockForm` 10, `accountEmailVerification` 3, `emailVerificationRoutes` 17, `BFFAPI.emailVerification` 3, `ConfirmEmailForm` 12, `ConnectOrcid` 2 = 99 tests) and 28 tests added to existing suites (`authProviders` +7, `middlewareChain` +7, `authRoutes` +12, `users` +2; `PasswordSignInMethod` changes one test and keeps its count). No route test reports a 401 (a 401 means a mocked signed-in token is missing `v: 2`).
+
+Then: `npx tsc --noEmit -p .`
+Expected: no output.
 
 - [ ] **Step 2: Build**
 
@@ -3284,9 +3456,9 @@ make ENV_FILE_PATH=integration-test.env integration-test-up
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:9094/api/v1/health-check/
 ```
 
-Expected: `200`. Mailpit UI at `http://localhost:8025`.
+Expected: `200`. Mailpit UI at `http://localhost:8025`. The gatekeeper checkout is on `main`, which has PR 1 (`16e081a feat: email and password authentication (RFC 008, PR 1) (#142)`); check with `command git -C /Users/caio.maia/workspace/datamap/gatekeeper log --oneline -1 main` if in doubt.
 
-Copy `/Users/caio.maia/workspace/datamap/datamap-webapp/.env.local` into the worktree and set `DATAMAP_BASE_URL=http://localhost:9094/api/v1`, the integration API key/secret, and `ENABLE_DEV_ORCID_MOCK=true`. Then `npm run dev` from the worktree and check the mock is on:
+The worktree already has a copy of `.env.local`. In it, set `DATAMAP_BASE_URL=http://localhost:9094/api/v1`, the integration API key/secret, and `ENABLE_DEV_ORCID_MOCK=true` (the file is git-ignored; never commit it). Then `npm run dev` from the worktree and check the mock is on:
 
 ```bash
 curl -s http://localhost:3000/api/auth/providers
@@ -3345,15 +3517,20 @@ make ENV_FILE_PATH=integration-test.env integration-test-down
 | `pendingOnlyChain` requires `pending` and no `uid` | 6 |
 | `requestEmailVerification` / `confirmEmailVerification` in `lib/account.ts` | 7 |
 | BFF `POST /api/account/email-verifications` and `.../[challengeId]/confirm`, `pendingOnlyChain` (via `pendingAccountRouter`), iD and name from the token, status and `detail` forwarded by PR 2's `accountHandler` | 8 |
+| The pending routes take PR 2's JSON Content-Type gate (`415 invalid_request`) and PR 2's `challengeIdOr404` (a non-UUID id never reaches the gatekeeper) | 8 |
 | Gatekeeper validation codes shown with PR 2's copy on the confirmation screen | 8 (forwarded), 12 (`invalid_email` test) |
-| A pending session reaching `/account/login` goes to confirm its email (covers invitation links) | 10, 11, 15.8, 15.9 |
+| A pending session reaching `/account/login` goes to confirm its email (covers invitation links), reusing the `callbackUrl` PR 2's `safeCallbackUrl` already sanitised | 10, 11, 15.8, 15.9 |
+| One sanitiser for a `callbackUrl` read from a query (PR 2's `safeCallbackUrl`, on the login and confirmation pages) and the `loginUrlFor` rule for the URL this PR builds (`confirmEmailUrlFor`) | 10, 11, 13 |
 | BFFAPI `requestEmailVerification(email)`, `confirmEmailVerification(challengeId, code)` rejecting with the Axios error | 9 |
 | `ROUTE_PAGE_CONFIRM_EMAIL = "/account/confirm-email"` | 10 |
 | Confirm-email screen: `BareLayout`, 560 px column, Formik + PR 2's `emailField`, email pre-filled, then PR 2's `VerificationCodeForm` (90 s resend), `role="alert"` errors, English copy | 12, 13 |
 | 409 copy "This email belongs to another DataMap account. Contact the DataMap team." | 12 |
 | Sign-out escape on the confirmation screen | 12 |
-| Profile "Connect ORCID" → ORCID sign-in → email verification attaches the iD | 14, 15.5 |
-| Webapp Jest: pending state in `jwt`, token version, `middlewareChain` refusing a token without `uid`, confirm-email form | 2, 3, 4, 5, 6, 12 |
+| Profile "Connect ORCID" → ORCID sign-in → email verification attaches the iD; the row sits after PR 2's `PasswordSignInMethod` | 14, 15.5 |
+| PR 2's "Not set. Available once your email is confirmed." becomes unreachable in production and is dropped; the "Set a password" button keeps its confirmed-email condition | 14 |
+| Webapp Jest: pending state in `jwt`, token version, `middlewareChain` refusing a token without `uid`, confirm-email form; whole suite 93 suites / 741 tests | 2, 3, 4, 5, 6, 12, 15.1 |
 | Manual checks against gatekeeper + Mailpit | 15 |
 
 Not in the contract, added because the flow breaks without it: the login page's pending redirect (Task 11; without it an invitation link loops through login and ORCID), the version check in the BFF `auth` step (Task 6; `getToken` never runs the `jwt` callback), `session.user.emailHint` (Task 3; pre-fill), and the development ORCID mock (Task 5; production ORCID accepts only HTTPS redirect URIs, so without it none of the ORCID cases in Task 15 could be run from localhost).
+
+Re-anchored on the merged PR 2 (`2552647`), not its plan: the login page's `safeCallbackUrl` (the plan had `decodeURIComponent`, and a `safeReturnPath` that would have duplicated it); `challengeIdOr404` and the JSON gate in `lib/accountRoute.ts`; the merged `jwt` callback's inner `else` and `getUserByProviderAuthentication`; the provider order `orcid`, `credentials`, then development-only; `metrics` templating of `auth/email-verifications`, already merged; the full `ACCOUNT_ERROR_MESSAGES`, to which this PR adds nothing; and the session-route test's import path, which the package's `exports` map would otherwise refuse.
