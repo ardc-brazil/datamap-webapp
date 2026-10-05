@@ -1,4 +1,5 @@
 import { APIError } from "../types/APIError";
+import { tenancyErrorMessage } from "./TenancyConstants";
 
 export const MAX_EMBARGO_DAYS = 90;
 
@@ -34,6 +35,10 @@ export function messageForApiError(error: unknown): string {
 
     if (code && EMBARGO_ERROR_MESSAGES[code]) {
         return EMBARGO_ERROR_MESSAGES[code];
+    }
+    const detail = typeof apiError?.detail === "string" ? apiError.detail : undefined;
+    if (detail === "public_members_cannot_edit" || detail === "tenancy_cannot_change") {
+        return tenancyErrorMessage(detail);
     }
     if (apiError?.httpCode === 403) {
         return "You are not allowed to do this on this dataset.";

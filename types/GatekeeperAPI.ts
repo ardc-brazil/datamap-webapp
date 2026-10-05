@@ -279,6 +279,9 @@ export interface ShareTenancy {
     path: string
     members: number
     members_can_edit: boolean
+    is_default: boolean
+    is_legacy: boolean
+    datasets: number
 }
 
 /** @interface */
@@ -390,4 +393,80 @@ export interface MembersAccessRequest {
 export interface MembersAccessResponse {
     members_can_edit: boolean
     access: DatasetAccess
+}
+
+/** @interface */
+export interface TenancySummary {
+    path: string
+    display_name: string
+    is_default: boolean
+    is_legacy: boolean
+}
+
+/** @interface */
+export interface GatekeeperPage<T> {
+    items: T[]
+    total_count: number
+    limit: number
+    offset: number
+}
+
+/** @interface */
+export interface UserRef {
+    id: string
+    name: string
+}
+
+/** @interface */
+export interface UserBrief {
+    id: string
+    name: string
+    email: string | null
+}
+
+/** @interface */
+export interface TenancyRequest {
+    id: string
+    requested_name: string
+    reason: string
+    status: "pending" | "approved" | "declined" | "withdrawn"
+    tenancy: TenancySummary | null
+    created_tenancy: boolean
+    decision_message: string | null
+    created_at: string
+    decided_at: string | null
+}
+
+/** @interface */
+export interface TenancyInvitation {
+    id: string
+    tenancy: TenancySummary
+    invited_by: UserRef | null
+    datasets: number
+    created_at: string
+}
+
+/** @interface */
+export interface WorkspaceMember {
+    id: string
+    name: string
+    orcid: string | null
+}
+
+/** @interface */
+export interface WorkspaceInvitation {
+    id: string
+    user: UserRef
+    invited_by: UserRef | null
+    created_at: string
+    can_withdraw: boolean
+}
+
+/** @interface */
+export interface InviteeLookup {
+    user: UserBrief
+    tenancy_member: boolean
+    invitation_pending: boolean
+    can_invite: boolean
+    datasets: number
 }
