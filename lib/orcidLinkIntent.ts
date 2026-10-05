@@ -2,9 +2,14 @@ import { createHmac, timingSafeEqual } from "crypto";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ORCID_LINK_INTENT_COOKIE_NAME, ORCID_LINK_INTENT_MAX_AGE_SECONDS } from "../contants/AccountConstants";
 
-const SECURE = process.env.NODE_ENV === "production";
+// The rule NextAuth and getToken use for their own cookies.
+function secureCookies(): boolean {
+    return process.env.NEXTAUTH_URL?.startsWith("https://") ?? false;
+}
 
-export const ORCID_LINK_INTENT_COOKIE = SECURE ? `__Secure-${ORCID_LINK_INTENT_COOKIE_NAME}` : ORCID_LINK_INTENT_COOKIE_NAME;
+export function orcidLinkIntentCookie(): string {
+    return secureCookies() ? `__Secure-${ORCID_LINK_INTENT_COOKIE_NAME}` : ORCID_LINK_INTENT_COOKIE_NAME;
+}
 
 // Only the sign-in callbacks read it, so no other route ever receives it.
 const COOKIE_PATH = "/api/auth/callback";
@@ -55,12 +60,12 @@ export function verifyOrcidLinkIntent(value: string | undefined, secret: string,
 
 function cookie(value: string, maxAge: number): string {
     return [
-        `${ORCID_LINK_INTENT_COOKIE}=${value}`,
+        `${orcidLinkIntentCookie()}=${value}`,
         `Path=${COOKIE_PATH}`,
         `Max-Age=${maxAge}`,
         "HttpOnly",
         "SameSite=Lax",
-        ...(SECURE ? ["Secure"] : []),
+        ...(secureCookies() ? ["Secure"] : []),
     ].join("; ");
 }
 
@@ -77,7 +82,7 @@ export function setOrcidLinkIntent(res: NextApiResponse, uid: string, secret: st
 
 /** Reads the intent once: the cookie is expired whether or not it verifies. */
 export function takeOrcidLinkIntent(req: Pick<NextApiRequest, "cookies">, res: NextApiResponse, secret: string, now: number = Date.now()): string | null {
-    const value = req.cookies?.[ORCID_LINK_INTENT_COOKIE];
+    const value = req.cookies?.[orcidLinkIntentCookie()];
     if (value === undefined) {
         return null;
     }

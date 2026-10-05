@@ -179,7 +179,7 @@ async function orcidLinkIntentOf({ req, res }: AuthRequest): Promise<string | nu
     return null;
   }
   const session = await getToken({ req: req as NextApiRequest, secret });
-  return session?.uid === uid ? uid : null;
+  return session?.uid === uid && session.v === TOKEN_VERSION ? uid : null;
 }
 
 /** A string ends the sign-in on the profile and keeps the session; otherwise the iD is new and the pending sign-in suggests this account's email. */

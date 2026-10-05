@@ -60,3 +60,7 @@ export const ORCID_LINK_OUTCOMES: Record<OrcidLinkOutcomeKind, { message: string
     connected: { message: "Your ORCID iD is connected.", role: "status" },
     unavailable: { message: ORCID_CONNECT_FAILED_MESSAGE, role: "alert" },
 };
+
+export const ORCID_CONNECT_UID_STORAGE_KEY = "datamap.orcid-connect-uid";
+
+export const ORCID_ACCOUNT_SWITCHED_MESSAGE = "You are now signed in to a different DataMap account — the one that already uses this ORCID iD.";

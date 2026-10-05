@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Router, { useRouter } from "next/router";
 import { ConnectOrcid } from "../../../components/Account/ConnectOrcid";
+import { OrcidAccountSwitchNotice } from "../../../components/Account/OrcidAccountSwitchNotice";
 import { OrcidLinkOutcome } from "../../../components/Account/OrcidLinkOutcome";
 import { PasswordSignInMethod } from "../../../components/Account/PasswordSignInMethod";
 import LoggedLayout from "../../../components/LoggedLayout";
@@ -83,6 +84,7 @@ export default function ProfilePage(props) {
               </ProfileSection>
 
               <ProfileSection title="Sign-in methods">
+                <OrcidAccountSwitchNotice currentUid={session.user.uid} />
                 <OrcidLinkOutcome outcome={query[ORCID_LINK_OUTCOME_PARAM]} />
                 {user ? (
                   <ul className="divide-y divide-primary-100">
@@ -93,7 +95,7 @@ export default function ProfilePage(props) {
                       </li>
                     ))}
                     <PasswordSignInMethod user={user} />
-                    {!hasSignInProvider(user, "orcid") && <ConnectOrcid accountEmail={user.email} />}
+                    {!hasSignInProvider(user, "orcid") && <ConnectOrcid accountEmail={user.email} accountUid={user.id} />}
                   </ul>
                 ) : (
                   <p className="m-0 px-4 py-3 text-sm italic text-primary-500">No sign-in method linked.</p>

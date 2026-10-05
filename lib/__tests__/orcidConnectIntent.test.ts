@@ -17,7 +17,7 @@ import { getToken } from "next-auth/jwt";
 import { DEV_ORCID_MOCK_PROVIDER_ID } from "../../contants/AccountConstants";
 import { authOptions, authOptionsFor, TOKEN_VERSION } from "../../pages/api/auth/[...nextauth]";
 import { fetchOrcidPublicEmail } from "../orcidEmail";
-import { ORCID_LINK_INTENT_COOKIE, signOrcidLinkIntent } from "../orcidLinkIntent";
+import { orcidLinkIntentCookie, signOrcidLinkIntent } from "../orcidLinkIntent";
 import { getUserByProviderID, getUserByUID } from "../users";
 
 const ORCID = "0000-0001-2345-6789";
@@ -43,14 +43,14 @@ function fakeRes() {
 }
 
 function callbackRequest(intentFor?: string) {
-    const cookies = intentFor ? { [ORCID_LINK_INTENT_COOKIE]: signOrcidLinkIntent(intentFor, SECRET) } : {};
+    const cookies = intentFor ? { [orcidLinkIntentCookie()]: signOrcidLinkIntent(intentFor, SECRET) } : {};
     return { req: { cookies, headers: {} } as any, res: fakeRes() };
 }
 
 function clearedIntent(res: any): boolean {
     const value = res.headers["set-cookie"];
     const cookies: string[] = Array.isArray(value) ? value : value ? [value] : [];
-    return cookies.some((cookie) => cookie.startsWith(`${ORCID_LINK_INTENT_COOKIE}=;`) && cookie.includes("Max-Age=0"));
+    return cookies.some((cookie) => cookie.startsWith(`${orcidLinkIntentCookie()}=;`) && cookie.includes("Max-Age=0"));
 }
 
 async function signInThenJwt(context: ReturnType<typeof callbackRequest>, account: Record<string, unknown> = orcidAccount, user: Record<string, unknown> = orcidUser) {
@@ -155,7 +155,7 @@ describe("an ORCID sign-in without a valid intent behaves as before", () => {
     test("an intent signed with another secret is ignored and cleared", async () => {
         jest.mocked(getUserByProviderID).mockResolvedValue({ id: ACCOUNT_A, email: "a@usp.br", email_verified_at: "2026-10-01T12:00:00Z" } as any);
         const context = callbackRequest();
-        context.req.cookies[ORCID_LINK_INTENT_COOKIE] = signOrcidLinkIntent(ACCOUNT_B, "another-secret");
+        context.req.cookies[orcidLinkIntentCookie()] = signOrcidLinkIntent(ACCOUNT_B, "another-secret");
 
         const { allowed } = await signInThenJwt(context);
 
@@ -183,6 +183,17 @@ describe("an ORCID sign-in without a valid intent behaves as before", () => {
         const { allowed } = await signInThenJwt(callbackRequest(ACCOUNT_B));
 
         expect(allowed).toBe(true);
+    });
+
+    test("an intent from a session issued before the current token version is ignored", async () => {
+        jest.mocked(getToken).mockResolvedValue({ uid: ACCOUNT_B, v: TOKEN_VERSION - 1 } as any);
+        jest.mocked(getUserByProviderID).mockResolvedValue({ id: ACCOUNT_A, email: "a@usp.br", email_verified_at: "2026-10-01T12:00:00Z" } as any);
+        const context = callbackRequest(ACCOUNT_B);
+
+        const { allowed } = await signInThenJwt(context);
+
+        expect(allowed).toBe(true);
+        expect(clearedIntent(context.res)).toBe(true);
     });
 
     test("a password sign-in never reads the intent", async () => {

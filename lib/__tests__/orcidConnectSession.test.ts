@@ -13,7 +13,7 @@ jest.mock("../users", () => ({
 import { createHash } from "crypto";
 import { encode } from "next-auth/jwt";
 import { TOKEN_VERSION } from "../sessionToken";
-import { ORCID_LINK_INTENT_COOKIE, signOrcidLinkIntent } from "../orcidLinkIntent";
+import { orcidLinkIntentCookie, signOrcidLinkIntent } from "../orcidLinkIntent";
 
 const SECRET = "test-nextauth-secret";
 const ORCID = "0000-0001-2345-6789";
@@ -122,10 +122,10 @@ describe("connecting an ORCID iD that belongs to another account, through the Ne
     test("with the intent, the sign-in comes back to the profile and sets no session cookie", async () => {
         const sessionB = await encode({ token: { uid: ACCOUNT_B, v: TOKEN_VERSION }, secret: SECRET });
 
-        const res = await signInWithTheMockAs({ [SESSION_COOKIE]: sessionB, [ORCID_LINK_INTENT_COOKIE]: signOrcidLinkIntent(ACCOUNT_B, SECRET) });
+        const res = await signInWithTheMockAs({ [SESSION_COOKIE]: sessionB, [orcidLinkIntentCookie()]: signOrcidLinkIntent(ACCOUNT_B, SECRET) });
 
         expect(res.json).toHaveBeenCalledWith({ url: "/app/profile?orcid=already_linked" });
         expect(setCookieNames(res)).not.toContain(SESSION_COOKIE);
-        expect(setCookieNames(res)).toContain(ORCID_LINK_INTENT_COOKIE);
+        expect(setCookieNames(res)).toContain(orcidLinkIntentCookie());
     });
 });

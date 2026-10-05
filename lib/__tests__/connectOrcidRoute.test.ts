@@ -3,7 +3,7 @@ jest.mock("next-auth/jwt", () => ({ getToken: jest.fn() }));
 import { getToken } from "next-auth/jwt";
 import connectOrcidHandler from "../../pages/api/account/connect-orcid";
 import { TOKEN_VERSION } from "../sessionToken";
-import { ORCID_LINK_INTENT_COOKIE, verifyOrcidLinkIntent } from "../orcidLinkIntent";
+import { orcidLinkIntentCookie, verifyOrcidLinkIntent } from "../orcidLinkIntent";
 
 const SECRET = "test-nextauth-secret";
 const UID = "b0000000-0000-0000-0000-00000000000b";
@@ -37,7 +37,7 @@ async function send(method: string, headers: Record<string, string> = { "content
 function intentCookie(res: any): string | undefined {
     const value = res.headers["set-cookie"];
     const cookies: string[] = Array.isArray(value) ? value : value ? [value] : [];
-    return cookies.find((cookie) => cookie.startsWith(`${ORCID_LINK_INTENT_COOKIE}=`));
+    return cookies.find((cookie) => cookie.startsWith(`${orcidLinkIntentCookie()}=`));
 }
 
 const previousSecret = process.env.NEXTAUTH_SECRET;
@@ -77,7 +77,7 @@ describe("starting to connect ORCID", () => {
         expect(res.statusCode).toBe(204);
         const cookie = intentCookie(res);
         expect(cookie).toContain("HttpOnly");
-        const value = cookie.split(";")[0].slice(ORCID_LINK_INTENT_COOKIE.length + 1);
+        const value = cookie.split(";")[0].slice(orcidLinkIntentCookie().length + 1);
         expect(verifyOrcidLinkIntent(value, SECRET)).toBe(UID);
         expect(res.json).not.toHaveBeenCalled();
     });

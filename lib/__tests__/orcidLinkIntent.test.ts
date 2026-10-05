@@ -1,6 +1,6 @@
 import { ORCID_LINK_INTENT_MAX_AGE_SECONDS } from "../../contants/AccountConstants";
 import {
-    ORCID_LINK_INTENT_COOKIE,
+    orcidLinkIntentCookie,
     setOrcidLinkIntent,
     signOrcidLinkIntent,
     takeOrcidLinkIntent,
@@ -73,7 +73,7 @@ describe("the ORCID link intent cookie", () => {
         setOrcidLinkIntent(res, UID, SECRET, NOW);
 
         const [cookie] = setCookies(res);
-        expect(cookie).toMatch(new RegExp(`^${ORCID_LINK_INTENT_COOKIE}=[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+;`));
+        expect(cookie).toMatch(new RegExp(`^${orcidLinkIntentCookie()}=[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+;`));
         expect(cookie).toContain("Max-Age=600");
         expect(cookie).toContain("HttpOnly");
         expect(cookie).toContain("SameSite=Lax");
@@ -81,12 +81,41 @@ describe("the ORCID link intent cookie", () => {
         expect(cookie).not.toContain(UID);
     });
 
-    test("is not marked Secure outside production, so it works on http://localhost", () => {
-        const res = fakeRes();
+    describe.each([
+        ["https://datamap.pcs.usp.br", true],
+        ["http://localhost:3000", false],
+        [undefined, false],
+    ])("when NEXTAUTH_URL is %p", (url, secure) => {
+        const saved = process.env.NEXTAUTH_URL;
 
-        setOrcidLinkIntent(res, UID, SECRET, NOW);
+        beforeEach(() => {
+            if (url === undefined) {
+                delete process.env.NEXTAUTH_URL;
+            } else {
+                process.env.NEXTAUTH_URL = url;
+            }
+        });
 
-        expect(setCookies(res)[0]).not.toContain("Secure");
+        afterEach(() => {
+            process.env.NEXTAUTH_URL = saved;
+        });
+
+        test(`the cookie is ${secure ? "" : "not "}Secure and ${secure ? "" : "not "}__Secure- prefixed, as NextAuth decides for its own`, () => {
+            const res = fakeRes();
+
+            setOrcidLinkIntent(res, UID, SECRET, NOW);
+
+            const [cookie] = setCookies(res);
+            expect(orcidLinkIntentCookie()).toBe(secure ? "__Secure-datamap.orcid-link-intent" : "datamap.orcid-link-intent");
+            expect(cookie.startsWith(`${orcidLinkIntentCookie()}=`)).toBe(true);
+            expect(/;\s*Secure(;|$)/.test(cookie)).toBe(secure);
+        });
+
+        test("the intent is read back under the same name", () => {
+            const res = fakeRes();
+
+            expect(takeOrcidLinkIntent({ cookies: { [orcidLinkIntentCookie()]: signOrcidLinkIntent(UID, SECRET, NOW) } } as any, res, SECRET, NOW)).toBe(UID);
+        });
     });
 
     test("taking the intent returns the user id and expires the cookie, keeping cookies set before it", () => {
@@ -94,12 +123,12 @@ describe("the ORCID link intent cookie", () => {
         const res = fakeRes();
         res.setHeader("Set-Cookie", ["other=1; Path=/"]);
 
-        const uid = takeOrcidLinkIntent({ cookies: { [ORCID_LINK_INTENT_COOKIE]: intent } } as any, res, SECRET, NOW);
+        const uid = takeOrcidLinkIntent({ cookies: { [orcidLinkIntentCookie()]: intent } } as any, res, SECRET, NOW);
 
         expect(uid).toBe(UID);
         expect(setCookies(res)).toEqual([
             "other=1; Path=/",
-            expect.stringMatching(new RegExp(`^${ORCID_LINK_INTENT_COOKIE}=; .*Max-Age=0`)),
+            expect.stringMatching(new RegExp(`^${orcidLinkIntentCookie()}=; .*Max-Age=0`)),
         ]);
         expect(setCookies(res)[1]).toContain("Path=/api/auth/callback");
     });
@@ -107,7 +136,7 @@ describe("the ORCID link intent cookie", () => {
     test("an invalid intent is expired too and yields nothing", () => {
         const res = fakeRes();
 
-        expect(takeOrcidLinkIntent({ cookies: { [ORCID_LINK_INTENT_COOKIE]: "forged.value" } } as any, res, SECRET, NOW)).toBeNull();
+        expect(takeOrcidLinkIntent({ cookies: { [orcidLinkIntentCookie()]: "forged.value" } } as any, res, SECRET, NOW)).toBeNull();
         expect(setCookies(res)).toHaveLength(1);
     });
 
