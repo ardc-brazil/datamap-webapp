@@ -14,7 +14,7 @@
 - Jest: `npx jest --coverage=false <paths>`. ts-jest type-checks (`strict: false`): a type error fails the suite. Component tests start with `/** @jest-environment jsdom */`. Tests never live under `pages/` (Next compiles `pages/` as routes); route tests go in `lib/__tests__/`, hook tests in `hooks/__tests__/`, component tests in `components/**/__tests__/`. Shared test data lives in `fake-data/adminFixtures.ts` (a file inside `__tests__/` would be collected as a suite).
 - A component test imports the component from its own file under `components/`, never a page. A test that has to render `LoggedLayout` mocks `components/TenancyStore` (it pulls `typescript-cookie`).
 - Gatekeeper admin routes (PR A), all `admin` auth, base `DATAMAP_BASE_URL` (already ends in `/api/v1`): `GET /admin/tenancy-requests/counts` → `{open, join, new, closed}`; `GET /admin/tenancy-requests?status=open|closed&kind=join|new&q&limit&offset` → `Page<AdminTenancyRequest>`; `GET /admin/tenancy-requests/{id}` → `AdminTenancyRequestDetail`; `POST /admin/tenancy-requests/{id}/approve` with exactly one of `{tenancy}` / `{new_tenancy: {display_name, namespace}}`; `POST /admin/tenancy-requests/{id}/decline` `{message: str | null}`; `GET /admin/tenancies` → `AdminTenancy[]`; `POST /admin/tenancies` `{display_name, namespace}` → `201 AdminTenancy`; `GET /admin/tenancies/{path}/members?limit&offset` → `TenancyMembers`; `GET /admin/tenancies/{path}/members/{user_id}` → `RemovalImpact`; `POST /admin/tenancies/{path}/members` `{user_id}` → `201 TenancyMember`; `DELETE /admin/tenancies/{path}/members/{user_id}` → `204`; `DELETE /admin/tenancy-invitations/{id}` → `204`; `GET /admin/users?q=` (≥ 2 chars) → `AdminUserHit[]`.
-- The tenancy path goes into the gatekeeper URL **unencoded** (`/admin/tenancies/datamap/production/atto/members`). In the BFF it travels as the `tenancy` query parameter (`encodeURIComponent` in the browser); the BFF accepts it only if it matches `TENANCY_PATH_PATTERN = /^[A-Za-z0-9_-]+(\/[A-Za-z0-9_-]+)+$/`, so `..` never reaches the gatekeeper.
+- The tenancy path goes into the gatekeeper URL **unencoded** (`/admin/tenancies/datamap/production/atto/members`). In the BFF it travels as the `tenancy` query parameter (`encodeURIComponent` in the browser); the BFF accepts it only if it matches `TENANCY_PATH_PATTERN = /^[A-Za-z0-9_-]+(\/[A-Za-z0-9_-]+)+$/`, so `..` never reaches the gatekeeper. The pattern and the parameter helpers (`tenancyOr400`, `pageOr400`, `uuidOr404`, `userIdOr400`, `invalidRequest`) are PR B's, in `contants/TenancyConstants.ts` and `lib/routeParams.ts`, because PR B's workspace routes put the same path in a gatekeeper URL; this plan imports them.
 - Admin calls send only `{ headers: { "X-User-Id": uid } }`; `uid` always comes from the NextAuth token, never from the browser. The browser sends a user id only for the member an admin adds or removes.
 - `Page<T>` is `GatekeeperPage<T> { items: T[], total_count: number, limit: number, offset: number }`. JSON from the gatekeeper is snake_case and passes through the BFF unchanged; browser bodies are camelCase.
 - BFF routes: `GET /api/admin/tenancy-requests/counts`, `GET /api/admin/tenancy-requests`, `GET /api/admin/tenancy-requests/[requestId]`, `POST .../[requestId]/approve` (`{tenancy}` or `{newTenancy: {displayName, namespace}}`), `POST .../[requestId]/decline` (`{message?}`), `GET|POST /api/admin/tenancies`, `GET|POST /api/admin/tenancies/members?tenancy=`, `GET|DELETE /api/admin/tenancies/members/[userId]?tenancy=`, `DELETE /api/admin/tenancy-invitations/[invitationId]`, `GET /api/admin/users?q=`.
@@ -22,13 +22,24 @@
 - SWR keys: counts `/api/admin/tenancy-requests/counts` with `{ revalidateOnFocus: true, refreshInterval: 60_000 }`; queue `adminRequestsKey(query)` = `/api/admin/tenancy-requests?status=…&kind=…&q=…&limit=50&offset=…` (kind only for open, q only when not blank); recently closed `/api/admin/tenancy-requests?status=closed&limit=5&offset=0`; detail `/api/admin/tenancy-requests/${id}`; tenancies `/api/admin/tenancies`; members `/api/admin/tenancies/members?tenancy=${encodeURIComponent(path)}&limit=50&offset=${n}` through `useSWRInfinite`; removal impact `/api/admin/tenancies/members/${userId}?tenancy=${encodeURIComponent(path)}`; users `/api/admin/users?q=${encodeURIComponent(q)}`, `null` below 2 characters. After a mutation: `mutate` on every key starting with `/api/admin/tenancy-requests` (counts included) and/or `/api/admin/tenancies`, and the members list's own `mutate`.
 - Session (built by PR B's Task 2, not here): `token.admin` is `true` only for an account whose `roles` include `"admin"`, and absent otherwise; `session.user.admin = token.admin === true`; `types/next-auth.d.ts` has `Session.user.admin: boolean` and `JWT.admin?: boolean`. No `TOKEN_VERSION` bump. This plan does not touch `pages/api/auth/[...nextauth].ts` or `types/next-auth.d.ts`.
 - Errors: every admin BFF route answers through `accountHandler` (`lib/accountRoute.ts`), never `bffHandler`: `bffHandler` goes through `httpErrorHandler`, which rewrites the `detail` of a `401`/`403`/`404` to fixed English, so `request_not_found`, `tenancy_not_found`, `member_not_found`, `no_account` and `not_found` would never reach the browser. PR B does the same for its routes.
-- PR B's Task 19 already makes `httpErrorHandler` keep a `401` detail, makes `lib/fetcher.js` attach `error.detail`, and wraps pages in `RequireSession`'s `SWRConfig` that handles `unauthorized_tenancy`. This plan relies on `error.detail` and redoes none of it.
+- PR B's Task 17 already makes `httpErrorHandler` keep a `401` detail, makes `lib/fetcher.js` attach `error.detail`, and wraps pages in `RequireSession`'s `SWRConfig` that handles `unauthorized_tenancy`. This plan relies on `error.detail` and redoes none of it.
 - URL parameters: `/app/admin/requests?request={id}` opens that request's review dialog; `/app/admin/tenancies?tenancy={path}` selects that tenancy. Both are set and cleared with `router.replace(..., { shallow: true })`.
-- Validation (both sides): `namespace` `^[a-z0-9-]+$`, 2–63 characters, not `public`; `display_name` 1–64 trimmed; decline `message` 0–1000 trimmed. `slugifyNamespace(name)`: lower-case, runs of anything outside `[a-z0-9]` become one `-`, trimmed of `-`, cut to 63.
+- Validation (both sides): `namespace` `^[a-z0-9-]+$`, 2–63 characters, not `public`; `display_name` 1–64 trimmed; decline `message` 0–1000 trimmed. `slugifyNamespace(name)`: diacritics stripped first (`name.normalize("NFD").replace(/[\u0300-\u036f]/g, "")`, so "João Ciência" gives `joao-ciencia`), then lower-case, runs of anything outside `[a-z0-9]` become one `-`, trimmed of `-`, cut to 63.
 - Routes: `ROUTE_PAGE_ADMIN = "/app/admin"`, `ROUTE_PAGE_ADMIN_REQUESTS`, `ROUTE_PAGE_ADMIN_USERS`, `ROUTE_PAGE_ADMIN_TENANCIES`, `ROUTE_PAGE_ADMIN_ACTIVITY` = `ROUTE_PAGE_ADMIN + "/requests" | "/users" | "/tenancies" | "/activity"`. `/app/admin` redirects to `/app/admin/requests`. Every new page is in `contants/TelemetryConstants.ts` `PAGES`.
 - Not built (RFC 009 decisions 7–9): Reader/Contributor/Admin labels or dropdowns, the role radio cards in the review dialog, the Environment field and the environment pills (every new tenancy is `datamap/production/{namespace}`), the user detail page, system-role toggles, account disabling, API clients, the Activity log. Users and Activity show only their empty state.
-- Copy is English and verbatim from RFC 009 §Admin area where it gives it: "Requests" / "{open} open · {join} for existing tenancies, {new} for new ones"; pills "Open", "Join existing", "New tenancy", "Closed"; search "Name, email or ORCID"; columns "Account | Request | Requested | Email"; "{n} days waiting"; "verified" / "unverified"; "Review"; "Decline…"; "Recently closed"; "Activity →"; "Approved", "Approved · new tenancy", "Declined", "by {admin} · {when}"; "Join {tenancy}"; "New tenancy: {display name}"; "{requester} · {email} · requested {relative}"; "Join existing" / "New tenancy"; "datamap/production/{namespace} · requester becomes a member"; "Email not verified. A new tenancy can't be created for an unverified account."; "{first name} is emailed either way."; "Approve" / "Create and approve"; "Decline request?"; "{requester} · join {tenancy}" / "{requester} · new tenancy {name}"; "Message to {first name}" (optional); placeholder "Ask a member of the tenancy to invite you from a dataset's Share dialog"; "— Stays in public · can request again"; "Decline"; "Tenancies" / "{n} tenancies · root `datamap` · everyone is in `public`"; "+ New tenancy"; "Legacy · staging"; "Members · {n}"; "+ Add"; "invited by {name}"; "Withdraw"; "Show {n} more"; "Everyone · {n} accounts"; "Add to {tenancy}"; "{first name} is emailed."; "Remove from {tenancy}?" / "{name} · member since {date}"; "— Loses access to the {n} datasets of the tenancy", "— Keeps {n} datasets shared explicitly", "— Still owns {n} datasets of the tenancy", "— Stays in public"; "Remove"; "New tenancy" with "Display name", "Namespace", "Create"; "Users" / "Coming soon. Until then, add and remove people from Tenancies."; "Activity" / "Coming soon: every admin action, who and when."; sidebar "Admin" and footer "All tenancies".
+- Copy is English and verbatim from RFC 009 §Admin area where it gives it: "Requests" / "{open} open · {join} for existing tenancies, {new} for new ones"; pills "Open", "Join existing", "New tenancy", "Closed"; search "Name, email or ORCID"; columns "Account | Request | Requested | Email"; "{n} days waiting"; "verified" / "unverified"; "Review"; "Decline…"; "Recently closed"; "Activity →"; "Approved", "Approved · new tenancy", "Declined", "by {admin} · {when}"; "Join {tenancy}"; "New tenancy: {display name}"; "{requester} · {email} · requested {relative}"; "Join existing" / "New tenancy"; "datamap/production/{namespace} · requester becomes a member"; "Email not verified. A new tenancy can't be created for an unverified account."; "{first name} is emailed either way."; "Approve" / "Create and approve"; "Decline request?"; "{requester} · join {tenancy}" / "{requester} · new tenancy {name}"; "Message to {first name}" (optional); placeholder "Ask a member of the tenancy to invite you from its Members page"; "— Stays in public · can request again"; "Decline"; "Tenancies" / "{n} tenancies · root `datamap` · everyone is in `public`"; "+ New tenancy"; "Legacy · staging"; "Members · {n}"; "+ Add"; "invited by {name}"; "Withdraw"; "Show {n} more"; "Everyone · {n} accounts"; "Add to {tenancy}"; "{first name} is emailed."; "Remove from {tenancy}?" / "{name} · member since {date}"; "— Loses access to the {n} datasets of the tenancy", "— Keeps {n} datasets shared explicitly", "— Still owns {n} datasets of the tenancy", "— Stays in public"; "Remove"; "New tenancy" with "Display name", "Namespace", "Create"; "Users" / "Coming soon. Until then, add and remove people from Tenancies."; "Activity" / "Coming soon: every admin action, who and when."; sidebar "Admin" and footer "All tenancies".
 - Every commit message ends with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Do not push until the whole plan is done and the owner asks.
+
+### What PR A ships, beyond the contract this plan was first written from
+
+PR A is `ardc-brazil/gatekeeper#145`; its deviations are listed in `gatekeeper/.superpowers/sdd/final-rereview.md`, `final-review-fix-report.md` and `workspace-invitations-report.md`. The ones that reach this plan:
+
+- **Approve can answer `404 no_account`** when the requester's account is missing or disabled. It is checked before anything else, and the request stays pending, so Decline still works. The review dialog says so, disables **Approve** and keeps **Decline…** (Task 14).
+- **Invitations belong to the tenancy, not to a dataset.** Members invite from the workspace Members page (PR B), never from a dataset's Share dialog. `AdminTenancyInvitation` is `{ id, user: UserBrief, invited_by: UserRef | null, created_at }`, with no `dataset`. The admin design spec's 1j drew the invitation inside the Share dialog with "from “{dataset}”"; the Tenancies panel shows the invitee's name, email and "Invited by {inviter} {date} · not accepted yet" instead (Task 17).
+- **An invitation can close without the inviter.** When an admin adds the invitee (**+ Add**) or approves the invitee's request into the same tenancy, PR A withdraws the pending invitation in the same transaction (`closed_by` = the admin). Both actions already revalidate the member list, so the row leaves. A **Withdraw** on a row that is no longer pending answers `404 invitation_not_found`; the panel shows the sentence and revalidates (Task 17).
+- **`POST /users` ignores `roles`.** Admin roles are granted with `PUT /users/{id}/roles` or, in this plan's manual check, a `casbin_rule` row. Nothing in this plan calls `POST /users`.
+- **No dataset changes tenancy**, admins included (`400 tenancy_cannot_change`). The admin area has no dataset screen, so nothing here changes.
+- **The decline placeholder** follows the RFC's new text: "Ask a member of the tenancy to invite you from its Members page".
 
 ### Design → Tailwind tokens
 
@@ -61,16 +72,20 @@ The existing `PopupModal` paints destructive buttons `error-600` (`#FF3A3A`); th
 
 ### Assumptions about PR B (merged before Task 1)
 
-Taken from PR B's plan (`docs/superpowers/plans/2026-10-05-rfc-009-pr-b-webapp-user.md`, commit `072e182`) and checked in Task 1, Step 3. If a check fails, stop and ask the owner; do not recreate B's code here.
+Taken from PR B's plan (`docs/superpowers/plans/2026-10-05-rfc-009-pr-b-webapp-user.md`, as revised in the commit "docs: RFC 009 webapp plans follow what the gatekeeper ships") and checked in Task 1, Step 3. If a check fails, stop and ask the owner; do not recreate B's code here.
 
 - **Session flag (B's Task 2).** `hydrateWithUserInfo` sets `token.admin = true` for an account whose `roles` include `"admin"` and deletes it otherwise, on sign-in and on every `update()`; the session callback sets `session.user.admin = token.admin === true`; `types/next-auth.d.ts` declares `Session.user.admin: boolean` and `JWT.admin?: boolean`. The contract assigned this to C; the owner moved it to B. This plan consumes it.
-- **Constants (B's Task 3).** `contants/TenancyConstants.ts` with the contract's exact block (this plan imports `PRODUCTION_PREFIX`, `NAMESPACE_PATTERN`, `NAMESPACE_MIN_LENGTH`, `NAMESPACE_MAX_LENGTH`, `DISPLAY_NAME_MAX_LENGTH`, `MESSAGE_MAX_LENGTH`) plus B's keys, copy and `tenancyErrorMessage`.
-- **Types (B's Task 3).** `types/GatekeeperAPI.ts` gains, after `MembersAccessResponse`, `TenancySummary`, `GatekeeperPage<T>`, `UserRef { id, name }`, `UserBrief { id, name, email: string | null }`, `TenancyRequest`, `TenancyInvitation`, `ShareLookup` and, last, `DatasetTenancyInvitation`. C's shapes go after that last one.
+- **Constants (B's Task 3).** `contants/TenancyConstants.ts` with the contract's exact block (this plan imports `PRODUCTION_PREFIX`, `NAMESPACE_PATTERN`, `NAMESPACE_MIN_LENGTH`, `NAMESPACE_MAX_LENGTH`, `DISPLAY_NAME_MAX_LENGTH`, `MESSAGE_MAX_LENGTH`) plus `TENANCY_PATH_PATTERN = /^[A-Za-z0-9_-]+(\/[A-Za-z0-9_-]+)+$/` and B's keys, copy and `tenancyErrorMessage`.
+- **Route parameters (B's Tasks 5–6).** `lib/routeParams.ts` exports `invalidRequest(res): undefined` (`400 {detail: "invalid_request"}`), `uuidOr404(req, res, name, detail)`, `tenancyOr400(req, res)` (checks `TENANCY_PATH_PATTERN`), `pageOr400(req, res, defaultLimit)` and `userIdOr400(req, res)` (a UUID `userId` in the body); each answers the error itself and returns `undefined`.
+- **Self-route headers (B's Task 4).** `lib/tenancies.ts` exports `asUser(uid)` → `{ headers: { "X-User-Id": uid } }`.
+- **Types (B's Task 3).** `types/GatekeeperAPI.ts` gains, after `MembersAccessResponse`, `TenancySummary`, `GatekeeperPage<T>`, `UserRef { id, name }`, `UserBrief { id, name, email: string | null }`, `TenancyRequest`, `TenancyInvitation`, `WorkspaceMember`, `WorkspaceInvitation` and, last, `InviteeLookup`. C's shapes go after that last one.
 - **Icon (B's Task 3).** `components/Tenancy/TenancyIcon.tsx` exports `TenancyIcon({ tenancy, pending }: { tenancy?: Pick<TenancySummary, "is_default">; pending?: boolean })`: a 32 px `rounded-md` chip, `aria-hidden`, `data-icon` = `public` or `tenancy`, no size prop. The tenancy list uses it as is.
-- **BFFAPI (B's Task 7).** Seven methods after `confirmEmailVerification`, the last one `withdrawTenancyInvitation(datasetId, invitationId)`; the `../types/GatekeeperAPI` import list grows. C's methods go after B's last one, with their own import line.
-- **Errors (B's Tasks 5–6).** B's routes use `accountHandler`, `requireJsonRequest` on `POST`, and `isUuid` before the gatekeeper — the same choices as this plan.
-- **Revoked tenancy (B's Task 19).** `httpErrorHandler` keeps a `401` detail; `lib/fetcher.js` attaches `error.detail` (a string `detail` from the JSON body); `RequireSession` is rewritten with the same `Props`, signature, `loginUrlFor` import and loading branch, and now returns its children inside `<SWRConfig value={{ onError }}>`.
-- **Telemetry (B's Task 7).** B adds three `UI_EVENTS`; `PAGES` and `TelemetryConstants.test.ts` are untouched.
+- **BFFAPI (B's Task 7).** Seven methods after `confirmEmailVerification`, the last one `withdrawWorkspaceInvitation(tenancy, invitationId)`; the `../types/GatekeeperAPI` import list grows. C's methods go after B's last one, with their own import line.
+- **Errors (B's Tasks 5–6).** B's routes use `accountHandler`, `requireJsonRequest` on `POST`, and the `lib/routeParams.ts` helpers before the gatekeeper — the same choices as this plan.
+- **Revoked tenancy (B's Task 17).** `httpErrorHandler` keeps a `401` detail; `lib/fetcher.js` attaches `error.detail` (a string `detail` from the JSON body); `RequireSession` is rewritten with the same `Props`, signature, `loginUrlFor` import and loading branch, and now returns its children inside `<SWRConfig value={{ onError }}>`.
+- **Telemetry (B's Tasks 7 and 22).** B adds three `UI_EVENTS` and the page `"/app/members"` (between `"/app/home"` and `"/app/notebooks"`); `TelemetryConstants.test.ts` gains a `describe("the workspace Members page", ...)` placed before `describe("members' access", ...)`, which stays last.
+- **Sidebar (B's Task 23).** `components/LoggedLayout.tsx` imports `useMembersPageTenancy` from `hooks/UseWorkspace` and renders a **Members** `MenuItem` after Notebooks; the Profile `<ul>` and the tenancy footer are unchanged. A test that renders `LoggedLayout` mocks `hooks/UseWorkspace`.
+- **Routes (B's Task 22).** `contants/InternalRoutesConstants.ts` gains `ROUTE_PAGE_MEMBERS` after `ROUTE_PAGE_TENANCY_SELECTOR`; `ROUTE_PAGE_PROFILE` is unchanged.
 
 ### Code this plan anchors on
 
@@ -79,20 +94,20 @@ Read on `origin/main` at `f632843` and in PR B's plan. Every edit quotes these l
 - `components/Auth/RequireSession.tsx` (after B's rewrite): `import { loginUrlFor } from "../../lib/authRoutes";`, `interface Props { loading: ReactNode; children: ReactNode }`, `export function RequireSession({ loading, children }: Props) {`, the loading branch `if (status === "loading" && !session) { return <>{loading}</>; }`.
 - `pages/_app.tsx`: `CustomAppProps.Component.auth` is `{ role: string; loading: any }`; it renders `<RequireSession loading={Component.auth.loading}>`. Pages declare e.g. `HomePage.auth = { role: "admin", loading: <div>loading...</div> };`.
 - `pages/404.tsx`: default export `Custom404` ("404 - Page Not Found", redirect home after 3 s).
-- `components/LoggedLayout.tsx`: `Props` ends with `tenancyOptional?: boolean;`; sidebar `MenuItem`s for Home/Datasets/Notebooks, `<hr>`, Profile in `<ul className="p-2">`, then the tenancy footer `{!menuClosed && tenancySelected && (...)}`; the sticky 64 px header holds only `<AvatarButton />`.
+- `components/LoggedLayout.tsx`: `Props` ends with `tenancyOptional?: boolean;`; sidebar `MenuItem`s for Home/Datasets/Notebooks and B's conditional Members, `<hr>`, Profile in `<ul className="p-2">`, then the tenancy footer `{!menuClosed && tenancySelected && (...)}`; the sticky 64 px header holds only `<AvatarButton />`.
 - `lib/middlewareChain.ts`: `auth` (needs `token.uid` and `token.v === TOKEN_VERSION`), `authOnlyChain`, `publicChain`, `pendingOnlyChain`.
 - `lib/bffRoute.ts`: `bffRouter()` and `bffHandler()`; imports `import { authOnlyChain } from "./middlewareChain";`. `accountHandler` (`lib/accountRoute.ts`) forwards `{ detail: response.data.detail ?? "unavailable" }` with the gatekeeper's status (`500 {detail: "unavailable"}` without a response).
 - `lib/accountRoute.ts`: `isUuid(value)`, exported `requireJsonRequest(req, res, next)` (refuses a missing or non-JSON `Content-Type` with `415 {detail: "invalid_request"}`), `accountHandler(router)`.
 - `lib/appLocalContext.ts`: `NewContext(req)` → `{ uid, tenancy, requestId }`; `uid` only for a token with the current version.
 - `lib/rpc.ts`: default export `axiosInstance`. `lib/share.ts` shows the call style (`axiosInstance.get(path, { headers, params })`).
-- `lib/fetcher.js`: SWR fetcher; a non-2xx throws an `Error` with `status` and (B's Task 19) `detail`.
+- `lib/fetcher.js`: SWR fetcher; a non-2xx throws an `Error` with `status` and (B's Task 17) `detail`.
 - `lib/embargoDisplay.ts`: `formatShortDate(iso, withYear = true)` ("Sep 28, 2026" / "Oct 1", UTC) and `initialsOf(name)`.
 - `components/Share/PersonInitial.tsx`: `PersonInitial({ name?, owner?, pendingIcon? })`, a 32 px `secondary-900` initials circle, or a dashed one with `pendingIcon`.
 - `hooks/UseDebouncedValue.ts` (`useDebouncedValue(value, delayMs)`), `hooks/UseComponentVisible.ts` (default export; `{ ref, isComponentVisible, setIsComponentVisible }`).
-- `gateways/BFFAPI.ts`: class `BFFAPI`; imports `import { UserDetailsResponse } from "../lib/users";`; after B, its last method is B's `withdrawTenancyInvitation`. Account and tenancy methods let the Axios error reject; this plan's methods do the same.
+- `gateways/BFFAPI.ts`: class `BFFAPI`; imports `import { UserDetailsResponse } from "../lib/users";`; after B, its last method is B's `withdrawWorkspaceInvitation`. Account and tenancy methods let the Axios error reject; this plan's methods do the same.
 - `contants/InternalRoutesConstants.ts`: `ROUTE_APP_CONTEXT = '/app'`, `ROUTE_PAGE_PROFILE = ROUTE_APP_CONTEXT + '/profile'`.
 - `contants/TelemetryConstants.ts`: `PAGES` (sorted), with `"/anonymous/[token]",` followed by `"/app/datasets",`. `contants/__tests__/TelemetryConstants.test.ts` walks `pages/` and ends with `describe("members' access", ...)`.
-- `types/GatekeeperAPI.ts` (after B) ends with B's `DatasetTenancyInvitation` (`id`, `user: UserBrief`, `invited_by: UserBrief | null`, `created_at`, `can_withdraw`).
+- `types/GatekeeperAPI.ts` (after B) ends with B's `InviteeLookup` (`user: UserBrief`, `tenancy_member`, `invitation_pending`, `can_invite`, `datasets`).
 
 ---
 
@@ -106,12 +121,12 @@ Read on `origin/main` at `f632843` and in PR B's plan. Every edit quotes these l
 | `lib/bffRoute.ts` (modify) | `adminBffRouter()`: `adminChain` + JSON gate on changes |
 | `types/GatekeeperAPI.ts` (modify) | C's gatekeeper shapes and `TenancyDecision` |
 | `lib/admin.ts` | server-side gatekeeper calls (contract signatures) |
-| `lib/adminRoute.ts` | BFF parameter and body parsing (`400`/`404` before the gatekeeper) |
+| `lib/adminRoute.ts` | admin BFF parameter and body parsing (`400`/`404` before the gatekeeper); re-exports PR B's `lib/routeParams.ts` helpers |
 | `pages/api/admin/tenancy-requests/counts.ts`, `index.ts`, `[requestId]/index.ts`, `[requestId]/approve.ts`, `[requestId]/decline.ts` | request BFF routes |
 | `pages/api/admin/tenancies/index.ts`, `members/index.ts`, `members/[userId].ts` | tenancy BFF routes |
 | `pages/api/admin/tenancy-invitations/[invitationId].ts`, `pages/api/admin/users.ts` | withdraw, user search |
 | `gateways/BFFAPI.ts` (modify) | six admin mutations |
-| `contants/AdminConstants.ts` | sizes, intervals, tabs, copy, `adminErrorMessage`, `adminErrorFrom`, `slugifyNamespace`, `TENANCY_PATH_PATTERN` |
+| `contants/AdminConstants.ts` | sizes, intervals, tabs, copy, `adminErrorMessage`, `adminErrorFrom`, `slugifyNamespace` |
 | `contants/InternalRoutesConstants.ts` (modify) | admin routes |
 | `contants/TelemetryConstants.ts` (modify) | five admin pages |
 | `lib/adminDisplay.ts` | waiting time, relative dates, first name, outcome labels, plural |
@@ -165,8 +180,11 @@ Expected: `npm ci` ends with `added … packages`; `pwd` prints the worktree pat
 - [ ] **Step 3: Check PR B's shared code and this plan's anchors**
 
 ```bash
-grep -c "export const PRODUCTION_PREFIX\|export const NAMESPACE_PATTERN\|export const NAMESPACE_MIN_LENGTH\|export const NAMESPACE_MAX_LENGTH\|export const DISPLAY_NAME_MAX_LENGTH\|export const MESSAGE_MAX_LENGTH" contants/TenancyConstants.ts
-grep -c "export interface TenancySummary\|export interface GatekeeperPage\|export interface UserRef\|export interface UserBrief\|export interface DatasetTenancyInvitation" types/GatekeeperAPI.ts
+grep -c "export const PRODUCTION_PREFIX\|export const NAMESPACE_PATTERN\|export const NAMESPACE_MIN_LENGTH\|export const NAMESPACE_MAX_LENGTH\|export const DISPLAY_NAME_MAX_LENGTH\|export const MESSAGE_MAX_LENGTH\|export const TENANCY_PATH_PATTERN" contants/TenancyConstants.ts
+grep -c "export interface TenancySummary\|export interface GatekeeperPage\|export interface UserRef\|export interface UserBrief\|export interface InviteeLookup" types/GatekeeperAPI.ts
+grep -c "export function invalidRequest\|export function uuidOr404\|export function tenancyOr400\|export function pageOr400\|export function userIdOr400" lib/routeParams.ts
+grep -c "export function asUser" lib/tenancies.ts
+grep -c "useMembersPageTenancy" components/LoggedLayout.tsx
 grep -c "export function TenancyIcon" components/Tenancy/TenancyIcon.tsx
 grep -c "admin: boolean\|admin?: boolean" types/next-auth.d.ts
 grep -c "session.user.admin = token.admin === true" "pages/api/auth/[...nextauth].ts"
@@ -176,10 +194,10 @@ grep -c "if (status === \"loading\" && !session) {\|export function RequireSessi
 grep -c "<RequireSession loading={Component.auth.loading}>" pages/_app.tsx
 grep -c "export const pendingOnlyChain" lib/middlewareChain.ts
 grep -c "import { authOnlyChain } from \"./middlewareChain\";" lib/bffRoute.ts
-grep -c "async withdrawTenancyInvitation(datasetId: string, invitationId: string)\|import { UserDetailsResponse } from \"../lib/users\";" gateways/BFFAPI.ts
+grep -c "async withdrawWorkspaceInvitation(tenancy: string, invitationId: string)\|import { UserDetailsResponse } from \"../lib/users\";" gateways/BFFAPI.ts
 ```
 
-Expected, in order: `6`, `5`, `1`, `2`, `1`, `1`, `3`, `3`, `1`, `1`, `1`, `2`. A `0` or a short count means PR B landed differently from its plan: find where the statement went and use that as the anchor in the task that edits it.
+Expected, in order: `7`, `5`, `5`, `1`, `2`, `1`, `2`, `1`, `1`, `3`, `3`, `1`, `1`, `1`, `2`. A `0` or a short count means PR B landed differently from its plan: find where the statement went and use that as the anchor in the task that edits it.
 
 - [ ] **Step 4: Baseline**
 
@@ -642,7 +660,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Create: `lib/admin.ts`
 - Test: `lib/__tests__/admin.test.ts`
 
-**Interfaces:** Consumes `axiosInstance` from `lib/rpc.ts`, PR B's `TenancySummary`, `GatekeeperPage<T>`, `UserRef` and `UserBrief`. Produces the contract's `lib/admin.ts` signatures, `TenancyRequestsQuery`, and the types `TenancyRequestCounts`, `TenancyRequestKind`, `AdminRequester`, `AdminTenancyRequest`, `AdminTenancyRequestDetail`, `AdminTenancy`, `TenancyMember`, `AdminTenancyInvitation`, `TenancyMembers`, `RemovalImpact`, `AdminUserHit`, `TenancyDecision`.
+**Interfaces:** Consumes `axiosInstance` from `lib/rpc.ts`, PR B's `asUser` (`lib/tenancies.ts`), `TenancySummary`, `GatekeeperPage<T>`, `UserRef` and `UserBrief`. Produces the contract's `lib/admin.ts` signatures, `TenancyRequestsQuery`, and the types `TenancyRequestCounts`, `TenancyRequestKind`, `AdminRequester`, `AdminTenancyRequest`, `AdminTenancyRequestDetail`, `AdminTenancy`, `TenancyMember`, `AdminTenancyInvitation`, `TenancyMembers`, `RemovalImpact`, `AdminUserHit`, `TenancyDecision`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -812,12 +830,12 @@ In `types/GatekeeperAPI.ts`, replace PR B's last block:
 
 ```ts
 /** @interface */
-export interface DatasetTenancyInvitation {
-    id: string
+export interface InviteeLookup {
     user: UserBrief
-    invited_by: UserBrief | null
-    created_at: string
-    can_withdraw: boolean
+    tenancy_member: boolean
+    invitation_pending: boolean
+    can_invite: boolean
+    datasets: number
 }
 ```
 
@@ -825,12 +843,12 @@ with:
 
 ```ts
 /** @interface */
-export interface DatasetTenancyInvitation {
-    id: string
+export interface InviteeLookup {
     user: UserBrief
-    invited_by: UserBrief | null
-    created_at: string
-    can_withdraw: boolean
+    tenancy_member: boolean
+    invitation_pending: boolean
+    can_invite: boolean
+    datasets: number
 }
 
 /** @interface */
@@ -900,7 +918,6 @@ export interface AdminTenancyInvitation {
     id: string
     user: UserBrief
     invited_by: UserRef | null
-    dataset: { id: string, name: string } | null
     created_at: string
 }
 
@@ -945,13 +962,9 @@ import {
     TenancyRequestCounts,
 } from "../types/GatekeeperAPI";
 import axiosInstance from "./rpc";
+import { asUser } from "./tenancies";
 
 export type TenancyRequestsQuery = { status: "open" | "closed"; kind?: "join" | "new"; q?: string; limit?: number; offset?: number };
-
-// Admin routes span every tenancy, so no tenancy header: only the acting user.
-function asUser(uid: string) {
-    return { headers: { "X-User-Id": uid } };
-}
 
 export async function getTenancyRequestCounts(uid: string): Promise<TenancyRequestCounts> {
     const response = await axiosInstance.get("/admin/tenancy-requests/counts", asUser(uid));
@@ -1049,7 +1062,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Interfaces:** Consumes `NAMESPACE_MAX_LENGTH` (B's `TenancyConstants`), `formatShortDate` from `lib/embargoDisplay.ts`, Task 4's types. Produces:
 - `ROUTE_PAGE_ADMIN`, `ROUTE_PAGE_ADMIN_REQUESTS`, `ROUTE_PAGE_ADMIN_USERS`, `ROUTE_PAGE_ADMIN_TENANCIES`, `ROUTE_PAGE_ADMIN_ACTIVITY`;
-- `ADMIN_PAGE_SIZE = 50`, `RECENTLY_CLOSED_LIMIT = 5`, `ADMIN_COUNTS_REFRESH_MS = 60_000`, `ADMIN_SEARCH_DEBOUNCE_MS = 300`, `ADMIN_USER_SEARCH_MIN_LENGTH = 2`, `WAITING_STALE_DAYS = 3`, `TENANCY_PATH_PATTERN`, `type RequestFilter`, `interface AdminTab`, `ADMIN_TABS`, `ADMIN_COPY`, `adminErrorMessage(detail?: string): string`, `adminErrorFrom(error: unknown): string`, `slugifyNamespace(name: string): string`;
+- `ADMIN_PAGE_SIZE = 50`, `RECENTLY_CLOSED_LIMIT = 5`, `ADMIN_COUNTS_REFRESH_MS = 60_000`, `ADMIN_SEARCH_DEBOUNCE_MS = 300`, `ADMIN_USER_SEARCH_MIN_LENGTH = 2`, `WAITING_STALE_DAYS = 3`, `type RequestFilter`, `interface AdminTab`, `ADMIN_TABS`, `ADMIN_COPY`, `adminErrorMessage(detail?: string): string`, `adminErrorFrom(error: unknown): string`, `slugifyNamespace(name: string): string`;
 - `daysSince(iso, now): number`, `waitingLabel(createdAt, now): { text: string; stale: boolean }`, `requestedAgo(createdAt, now): string`, `firstName(name): string`, `requestTarget(request): string`, `closedOutcome(request): { text: string; tone: "approved" | "declined" }`, `closedTenancyName(request): string`, `plural(n, one, many): string`;
 - fixtures `PUBLIC_TENANCY`, `DATA_AMAZON`, `ATTO`, `adminRequest()`, `newTenancyRequest()`, `adminRequestDetail()`, `adminTenancy()`, `ADMIN_TENANCIES`, `tenancyMember()`, `tenancyInvitation()`.
 
@@ -1058,7 +1071,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 Create `contants/__tests__/AdminConstants.test.ts`:
 
 ```ts
-import { ADMIN_COPY, ADMIN_TABS, TENANCY_PATH_PATTERN, adminErrorFrom, adminErrorMessage, slugifyNamespace } from "../AdminConstants";
+import { ADMIN_COPY, ADMIN_TABS, adminErrorFrom, adminErrorMessage, slugifyNamespace } from "../AdminConstants";
 
 const GENERIC = "Something went wrong. Try again.";
 
@@ -1090,11 +1103,12 @@ describe("admin error messages", () => {
 });
 
 describe("slugifyNamespace", () => {
-    test("turns a display name into a namespace", () => {
+    test("turns a display name into a namespace, accents dropped rather than split", () => {
         expect(slugifyNamespace("Cerrado Flux")).toBe("cerrado-flux");
         expect(slugifyNamespace("  LBA Legacy!! ")).toBe("lba-legacy");
         expect(slugifyNamespace("Data_Amazon 2")).toBe("data-amazon-2");
-        expect(slugifyNamespace("João Silva")).toBe("jo-o-silva");
+        expect(slugifyNamespace("João Silva")).toBe("joao-silva");
+        expect(slugifyNamespace("João Ciência")).toBe("joao-ciencia");
         expect(slugifyNamespace("---")).toBe("");
         expect(slugifyNamespace("a".repeat(100))).toHaveLength(63);
     });
@@ -1105,16 +1119,6 @@ describe("the admin tabs", () => {
         expect(ADMIN_TABS.map((tab) => tab.label)).toEqual(["Requests", "Users", "Tenancies", "Activity"]);
         expect(ADMIN_TABS.map((tab) => tab.href)).toEqual(["/app/admin/requests", "/app/admin/users", "/app/admin/tenancies", "/app/admin/activity"]);
         expect(ADMIN_TABS.filter((tab) => tab.showsOpenCount).map((tab) => tab.label)).toEqual(["Requests"]);
-    });
-});
-
-describe("TENANCY_PATH_PATTERN", () => {
-    test("accepts tenancy paths and nothing that could leave the members route", () => {
-        expect(TENANCY_PATH_PATTERN.test("datamap/production/atto")).toBe(true);
-        expect(TENANCY_PATH_PATTERN.test("datamap/staging/data-amazon")).toBe(true);
-        for (const value of ["atto", "datamap/../users", "datamap//atto", "datamap/production/atto?x=1", "/datamap/production/atto", "datamap/production/atto/"]) {
-            expect(TENANCY_PATH_PATTERN.test(value)).toBe(false);
-        }
     });
 });
 ```
@@ -1226,9 +1230,6 @@ export const ADMIN_SEARCH_DEBOUNCE_MS = 300;
 export const ADMIN_USER_SEARCH_MIN_LENGTH = 2;
 export const WAITING_STALE_DAYS = 3;
 
-/** Slash-separated segments only: no `..`, no empty segment, nothing a URL would read as more than a path. */
-export const TENANCY_PATH_PATTERN = /^[A-Za-z0-9_-]+(\/[A-Za-z0-9_-]+)+$/;
-
 export type RequestFilter = "open" | "join" | "new" | "closed";
 
 export interface AdminTab {
@@ -1257,8 +1258,9 @@ export const ADMIN_COPY = {
     recentlyClosedLoadError: "Recently closed requests could not be loaded.",
     activityLink: "Activity →",
     unverifiedBanner: "Email not verified. A new tenancy can't be created for an unverified account.",
+    approveNoAccount: "This account is disabled or no longer exists, so it cannot be approved. Decline the request instead.",
     nothingToJoin: "This account is already in every tenancy it could join.",
-    declinePlaceholder: "Ask a member of the tenancy to invite you from a dataset's Share dialog",
+    declinePlaceholder: "Ask a member of the tenancy to invite you from its Members page",
     declineBullet: "Stays in public · can request again",
     tenanciesTitle: "Tenancies",
     tenanciesEmpty: "No tenancies yet.",
@@ -1310,6 +1312,8 @@ export function adminErrorFrom(error: unknown): string {
 
 export function slugifyNamespace(name: string): string {
     return name
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "")
@@ -1447,7 +1451,6 @@ export function tenancyInvitation(overrides: Partial<AdminTenancyInvitation> = {
         id: "2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e6f",
         user: { id: "3d4e5f6a-7b8c-4d9e-8f0a-1b2c3d4e5f6a", name: "Rafael Souza", email: "rafael.souza@usp.br" },
         invited_by: { id: "1b2c3d4e-5f60-4a7b-8c9d-0e1f2a3b4c5d", name: "Luciana Rizzo" },
-        dataset: { id: "4e5f6a7b-8c9d-4e0f-9a1b-2c3d4e5f6a7b", name: "GoAmazon 2014/5" },
         created_at: "2026-10-02T10:00:00+00:00",
         ...overrides,
     };
@@ -1457,7 +1460,7 @@ export function tenancyInvitation(overrides: Partial<AdminTenancyInvitation> = {
 - [ ] **Step 7: Run them**
 
 Run: `npx jest --coverage=false contants lib/__tests__/adminDisplay.test.ts`
-Expected: PASS — 6 + 6 new tests, and every other suite under `contants/` unchanged.
+Expected: PASS — 5 + 6 new tests, and every other suite under `contants/` unchanged (`TENANCY_PATH_PATTERN` is PR B's and tested in `TenancyConstants.test.ts`).
 
 - [ ] **Step 8: Commit**
 
@@ -1479,7 +1482,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Create: `pages/api/admin/tenancy-requests/counts.ts`, `pages/api/admin/tenancy-requests/index.ts`, `pages/api/admin/tenancy-requests/[requestId]/index.ts`, `pages/api/admin/tenancy-requests/[requestId]/approve.ts`, `pages/api/admin/tenancy-requests/[requestId]/decline.ts`
 - Test: `lib/__tests__/adminRequestRoutes.test.ts`
 
-**Interfaces:** Consumes `adminBffRouter()` (Task 3), `accountHandler` and `isUuid` (`lib/accountRoute.ts`), `NewContext`, Task 4's calls, `TENANCY_PATH_PATTERN`, `ADMIN_PAGE_SIZE`, `ADMIN_USER_SEARCH_MIN_LENGTH`. Produces `lib/adminRoute.ts`: `uuidOr404(req, res, name, detail)`, `tenancyOr400(req, res)`, `pageOr400(req, res)`, `requestsQueryOr400(req, res)`, `decisionOr400(req, res)`, `declineMessageOr400(req, res)`, `newTenancyOr400(req, res)`, `userIdOr400(req, res)`, `userSearchOr400(req, res)` — each answers the error itself and returns `undefined`, so a route does `if (!value) return;`.
+**Interfaces:** Consumes `adminBffRouter()` (Task 3), `accountHandler` (`lib/accountRoute.ts`), `NewContext`, Task 4's calls, PR B's `TENANCY_PATH_PATTERN` and `lib/routeParams.ts` (`invalidRequest`, `uuidOr404`, `tenancyOr400`, `pageOr400`, `userIdOr400`), `ADMIN_PAGE_SIZE`, `ADMIN_USER_SEARCH_MIN_LENGTH`. Produces `lib/adminRoute.ts`: `uuidOr404`, `tenancyOr400` and `userIdOr400` re-exported from PR B's `lib/routeParams.ts` (so the admin routes import every parser from one place), `pageOr400(req, res)` (PR B's with `ADMIN_PAGE_SIZE` as the default limit), `requestsQueryOr400(req, res)`, `decisionOr400(req, res)`, `declineMessageOr400(req, res)`, `newTenancyOr400(req, res)`, `userIdOr400(req, res)`, `userSearchOr400(req, res)` — each answers the error itself and returns `undefined`, so a route does `if (!value) return;`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1680,43 +1683,16 @@ Expected: FAIL — `Cannot find module '../../pages/api/admin/tenancy-requests/[
 
 ```ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { ADMIN_PAGE_SIZE, ADMIN_USER_SEARCH_MIN_LENGTH, TENANCY_PATH_PATTERN } from "../contants/AdminConstants";
+import { ADMIN_PAGE_SIZE, ADMIN_USER_SEARCH_MIN_LENGTH } from "../contants/AdminConstants";
+import { TENANCY_PATH_PATTERN } from "../contants/TenancyConstants";
 import { TenancyDecision } from "../types/GatekeeperAPI";
-import { isUuid } from "./accountRoute";
 import { TenancyRequestsQuery } from "./admin";
+import { invalidRequest, pageOr400 as pageWithDefaultOr400 } from "./routeParams";
 
-const WHOLE_NUMBER = /^\d+$/;
-
-function invalid(res: NextApiResponse): undefined {
-    res.status(400).json({ detail: "invalid_request" });
-    return undefined;
-}
-
-function wholeNumber(value: string | string[] | undefined, fallback: number): number | null {
-    if (value === undefined) {
-        return fallback;
-    }
-    return typeof value === "string" && WHOLE_NUMBER.test(value) ? Number(value) : null;
-}
-
-export function uuidOr404(req: NextApiRequest, res: NextApiResponse, name: string, detail: string): string | undefined {
-    const value = req.query[name];
-    if (isUuid(value)) {
-        return value;
-    }
-    res.status(404).json({ detail });
-    return undefined;
-}
-
-export function tenancyOr400(req: NextApiRequest, res: NextApiResponse): string | undefined {
-    const value = req.query.tenancy;
-    return typeof value === "string" && TENANCY_PATH_PATTERN.test(value) ? value : invalid(res);
-}
+export { tenancyOr400, userIdOr400, uuidOr404 } from "./routeParams";
 
 export function pageOr400(req: NextApiRequest, res: NextApiResponse): { limit: number; offset: number } | undefined {
-    const limit = wholeNumber(req.query.limit, ADMIN_PAGE_SIZE);
-    const offset = wholeNumber(req.query.offset, 0);
-    return limit === null || offset === null ? invalid(res) : { limit, offset };
+    return pageWithDefaultOr400(req, res, ADMIN_PAGE_SIZE);
 }
 
 export function requestsQueryOr400(req: NextApiRequest, res: NextApiResponse): TenancyRequestsQuery | undefined {
@@ -1726,7 +1702,7 @@ export function requestsQueryOr400(req: NextApiRequest, res: NextApiResponse): T
     if ((status !== "open" && status !== "closed")
         || (kind !== undefined && kind !== "join" && kind !== "new")
         || (q !== undefined && typeof q !== "string")) {
-        return invalid(res);
+        return invalidRequest(res);
     }
     const page = pageOr400(req, res);
     if (!page) {
@@ -1752,7 +1728,7 @@ export function decisionOr400(req: NextApiRequest, res: NextApiResponse): Tenanc
     if (hasNew && !hasTenancy && typeof fresh?.displayName === "string" && typeof fresh?.namespace === "string") {
         return { newTenancy: { displayName: fresh.displayName, namespace: fresh.namespace } };
     }
-    return invalid(res);
+    return invalidRequest(res);
 }
 
 export function declineMessageOr400(req: NextApiRequest, res: NextApiResponse): { message?: string } | undefined {
@@ -1760,23 +1736,18 @@ export function declineMessageOr400(req: NextApiRequest, res: NextApiResponse): 
     if (message === undefined || message === null) {
         return {};
     }
-    return typeof message === "string" ? { message } : invalid(res);
+    return typeof message === "string" ? { message } : invalidRequest(res);
 }
 
 export function newTenancyOr400(req: NextApiRequest, res: NextApiResponse): { displayName: string; namespace: string } | undefined {
     const { displayName, namespace } = req.body ?? {};
-    return typeof displayName === "string" && typeof namespace === "string" ? { displayName, namespace } : invalid(res);
-}
-
-export function userIdOr400(req: NextApiRequest, res: NextApiResponse): string | undefined {
-    const userId = req.body?.userId;
-    return isUuid(userId) ? userId : invalid(res);
+    return typeof displayName === "string" && typeof namespace === "string" ? { displayName, namespace } : invalidRequest(res);
 }
 
 export function userSearchOr400(req: NextApiRequest, res: NextApiResponse): string | undefined {
     const q = req.query.q;
     const value = typeof q === "string" ? q.trim() : "";
-    return value.length >= ADMIN_USER_SEARCH_MIN_LENGTH ? value : invalid(res);
+    return value.length >= ADMIN_USER_SEARCH_MIN_LENGTH ? value : invalidRequest(res);
 }
 ```
 
@@ -2407,16 +2378,16 @@ import { AdminTenancy, AdminTenancyRequest, TenancyDecision, TenancyMember } fro
 and replace PR B's last method:
 
 ```ts
-    async withdrawTenancyInvitation(datasetId: string, invitationId: string): Promise<void> {
-        await axios.delete(`/api/datasets/${datasetId}/tenancy-invitations/${encodeURIComponent(invitationId)}`);
+    async withdrawWorkspaceInvitation(tenancy: string, invitationId: string): Promise<void> {
+        await axios.delete(`/api/workspace/invitations/${encodeURIComponent(invitationId)}?tenancy=${encodeURIComponent(tenancy)}`);
     }
 ```
 
 with:
 
 ```ts
-    async withdrawTenancyInvitation(datasetId: string, invitationId: string): Promise<void> {
-        await axios.delete(`/api/datasets/${datasetId}/tenancy-invitations/${encodeURIComponent(invitationId)}`);
+    async withdrawWorkspaceInvitation(tenancy: string, invitationId: string): Promise<void> {
+        await axios.delete(`/api/workspace/invitations/${encodeURIComponent(invitationId)}?tenancy=${encodeURIComponent(tenancy)}`);
     }
 
     async approveTenancyRequest(requestId: string, decision: TenancyDecision): Promise<AdminTenancyRequest> {
@@ -3246,6 +3217,7 @@ jest.mock("../../TenancyStore", () => ({
 }));
 jest.mock("../../Profile/AvatarButton", () => ({ __esModule: true, default: () => null }));
 jest.mock("../../../hooks/UseAdmin", () => ({ useAdminCounts: () => ({ data: { open: 4, join: 2, new: 2, closed: 31 } }) }));
+jest.mock("../../../hooks/UseWorkspace", () => ({ useMembersPageTenancy: () => ({ tenancy: null, loading: false }) }));
 
 import LoggedLayout from "../../LoggedLayout";
 
@@ -3709,7 +3681,7 @@ describe("DeclineRequestDialog", () => {
         expect(screen.getByRole("dialog", { name: "Decline request?" })).toBeTruthy();
         expect(screen.getByText("Fernanda Lima · join Data Amazon")).toBeTruthy();
         const message = screen.getByLabelText(/Message to Fernanda/) as HTMLTextAreaElement;
-        expect(message.placeholder).toBe("Ask a member of the tenancy to invite you from a dataset's Share dialog");
+        expect(message.placeholder).toBe("Ask a member of the tenancy to invite you from its Members page");
         expect(screen.getByText("optional")).toBeTruthy();
         expect(screen.getByText("Stays in public · can request again")).toBeTruthy();
     });
@@ -3883,7 +3855,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Interfaces:** Consumes `useAdminRequest`, `useAdminTenancies` (Task 9), `AdminDialog`, `BFFAPI.approveTenancyRequest`, `slugifyNamespace`, `adminErrorFrom`, `adminErrorMessage`, `requestedAgo`, `firstName`, `plural`, `formatShortDate`, B's `PRODUCTION_PREFIX`, `NAMESPACE_*`, `DISPLAY_NAME_MAX_LENGTH`. Produces `ReviewRequestDialog({ requestId, now?, onClose, onApproved, onDecline }: { requestId: string; now?: Date; onClose(): void; onApproved(): void; onDecline(request: AdminTenancyRequest): void })`.
 
-Behaviour (RFC 009 §Review dialog): loading and error states; a request already decided shows who decided it and offers only Close; a pending one opens on the suggestion's side of **Join existing** / **New tenancy**. Join: a picker of production, enabled, non-public tenancies the requester is not in, prefilled with the suggestion; info rows Tenancy / Reason / Currently in. New: Display name (the requested name) and Namespace (its slug), both editable, preview `datamap/production/{namespace} · requester becomes a member`; an unverified requester gets the amber banner and a disabled **Create and approve**. No role cards.
+Behaviour (RFC 009 §Review dialog): loading and error states; a request already decided shows who decided it and offers only Close; a pending one opens on the suggestion's side of **Join existing** / **New tenancy**. Join: a picker of production, enabled, non-public tenancies the requester is not in, prefilled with the suggestion; info rows Tenancy / Reason / Currently in. New: Display name (the requested name) and Namespace (its slug), both editable, preview `datamap/production/{namespace} · requester becomes a member`; an unverified requester gets the amber banner and a disabled **Create and approve**. No role cards. An approval answered `404 no_account` (the requester's account is disabled or gone; PR A checks it first and leaves the request pending) shows "This account is disabled or no longer exists, so it cannot be approved. Decline the request instead.", disables the primary button and keeps **Decline…**.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -4026,6 +3998,19 @@ describe("ReviewRequestDialog", () => {
         expect(onApproved).not.toHaveBeenCalled();
     });
 
+    test("an account that is gone cannot be approved, and Decline… stays", async () => {
+        mockApprove.mockRejectedValue({ response: { status: 404, data: { detail: "no_account" } } });
+        const { onApproved, onDecline } = renderDialog();
+
+        fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+
+        expect(await screen.findByText("This account is disabled or no longer exists, so it cannot be approved. Decline the request instead.")).toBeTruthy();
+        expect((screen.getByRole("button", { name: "Approve" }) as HTMLButtonElement).disabled).toBe(true);
+        expect(onApproved).not.toHaveBeenCalled();
+        fireEvent.click(screen.getByRole("button", { name: "Decline…" }));
+        expect(onDecline).toHaveBeenCalledWith(expect.objectContaining({ id: REQUEST_ID }));
+    });
+
     test("Decline… hands the request to the decline prompt", () => {
         const { onDecline } = renderDialog();
 
@@ -4164,6 +4149,7 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
     const options = joinable(tenancies, detail);
     const suggested = options.find((tenancy) => tenancy.path === detail.suggested_tenancy?.path);
     const [error, setError] = useState<string | null>(null);
+    const [accountGone, setAccountGone] = useState(false);
     const formik = useFormik({
         initialValues: {
             mode: (detail.kind === "join" ? "join" : "new") as Mode,
@@ -4181,7 +4167,9 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
                 await new BFFAPI().approveTenancyRequest(detail.id, decision);
                 onApproved();
             } catch (e) {
-                setError(adminErrorFrom(e));
+                const gone = (e as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail === "no_account";
+                setAccountGone(gone);
+                setError(gone ? ADMIN_COPY.approveNoAccount : adminErrorFrom(e));
             }
         },
     });
@@ -4190,7 +4178,7 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
     const joining = values.mode === "join";
     const selected = options.find((tenancy) => tenancy.path === values.tenancy);
     const unverified = !detail.requester.email_verified;
-    const blocked = joining ? options.length === 0 : unverified;
+    const blocked = accountGone || (joining ? options.length === 0 : unverified);
     const shown = (field: "tenancy" | "displayName" | "namespace") => (formik.touched[field] || formik.submitCount > 0) && formik.errors[field];
     const title = joining
         ? `Join ${selected?.display_name ?? "an existing tenancy"}`
@@ -4293,7 +4281,7 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
 - [ ] **Step 4: Run it**
 
 Run: `npx jest --coverage=false components/Admin/Requests/__tests__/ReviewRequestDialog.test.tsx`
-Expected: PASS, 12 tests.
+Expected: PASS, 13 tests.
 
 - [ ] **Step 5: Commit**
 
@@ -5633,7 +5621,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Interfaces:** Consumes `useAdminTenancies`, `useTenancyMembers`, `revalidateAdminTenancies` (Task 9), `BFFAPI.withdrawTenancyInvitationAsAdmin`, B's `TenancyIcon`, `PersonInitial`, `AdminPageHeader`, `AdminLoadError`, Task 16's dialogs. Produces:
 - `TenancyList({ tenancies, selectedPath, onSelect })` — public first with a `lock` and no chevron, production by display name (the gatekeeper's order), then the **Legacy · staging** group; each row icon, name, path, members, datasets; no environment pill;
-- `TenancyMembersPanel({ tenancy })` — public: "Everyone · {n} accounts" and no list; otherwise "Members · {n}", **+ Add** (not for legacy or disabled), members with initials, name, email, "invited by {name}", a remove button (not for legacy or disabled), pending invitations below with the dashed icon and **Withdraw**, "Show {n} more" by 50; loading, empty and error states;
+- `TenancyMembersPanel({ tenancy })` — public: "Everyone · {n} accounts" and no list; otherwise "Members · {n}", **+ Add** (not for legacy or disabled), members with initials, name, email, "invited by {name}", a remove button (not for legacy or disabled), pending invitations below with the dashed icon, the invitee's name and email, "Invited by {inviter} {date} · not accepted yet" and **Withdraw**, "Show {n} more" by 50; loading, empty and error states. Invitations carry no dataset (PR A removed it; members invite from the workspace Members page), so the admin design spec's 1j "from “{dataset}”" is not drawn. A **Withdraw** answered `404 invitation_not_found` (answered meanwhile, or closed by **+ Add** or an approval) shows the sentence and revalidates the list, so the row leaves;
 - `TenanciesView()` and `defaultTenancy(tenancies)` — header, list, panel, **+ New tenancy**; `?tenancy={path}` selects, a click sets it; without it the first production tenancy that is not public is selected;
 - the page `/app/admin/tenancies`.
 
@@ -5789,6 +5777,7 @@ describe("TenancyMembersPanel", () => {
         expect(screen.getByText("invited by Luciana Rizzo")).toBeTruthy();
         expect(screen.getByRole("button", { name: "Remove Marcia Yamasoe" })).toBeTruthy();
         expect(screen.getByText("Rafael Souza")).toBeTruthy();
+        expect(screen.getByText("rafael.souza@usp.br")).toBeTruthy();
         expect(screen.getByText("Invited by Luciana Rizzo Oct 2 · not accepted yet")).toBeTruthy();
         expect(screen.queryByText(/Show \d+ more/)).toBeNull();
     });
@@ -5820,6 +5809,17 @@ describe("TenancyMembersPanel", () => {
 
         await waitFor(() => expect(mockMutate).toHaveBeenCalled());
         expect(mockWithdraw).toHaveBeenCalledWith("2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e6f");
+    });
+
+    test("an invitation answered or closed meanwhile says so and leaves the list", async () => {
+        mockMutate.mockClear();
+        mockWithdraw.mockRejectedValue({ response: { status: 404, data: { detail: "invitation_not_found" } } });
+
+        render(<TenancyMembersPanel tenancy={adminTenancy()} />);
+        fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
+
+        expect(await screen.findByText("This invitation was already answered or withdrawn.")).toBeTruthy();
+        expect(mockMutate).toHaveBeenCalled();
     });
 
     test("+ Add and remove open their dialogs; a change refreshes members and the tenancy list", () => {
@@ -6062,6 +6062,9 @@ export function TenancyMembersPanel({ tenancy }: { tenancy: AdminTenancy }) {
             await mutate();
         } catch (e) {
             setActionError(adminErrorFrom(e));
+            if ((e as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail === "invitation_not_found") {
+                await mutate();
+            }
         }
     }
 
@@ -6116,6 +6119,7 @@ export function TenancyMembersPanel({ tenancy }: { tenancy: AdminTenancy }) {
                                         <PersonInitial pendingIcon="mail" />
                                         <div className="min-w-0 flex-1">
                                             <p className="m-0 truncate text-[13px] font-semibold text-primary-900">{invitation.user.name}</p>
+                                            {invitation.user.email && <p className="m-0 truncate text-xs text-primary-500">{invitation.user.email}</p>}
                                             <p className="m-0 truncate text-xs text-primary-500">
                                                 {`Invited by ${invitation.invited_by?.name ?? "a member"} ${formatShortDate(invitation.created_at, false)} · not accepted yet`}
                                             </p>
@@ -6239,7 +6243,7 @@ AdminTenanciesPage.auth = {
 - [ ] **Step 7: Run them**
 
 Run: `npx jest --coverage=false components/Admin/Tenancies contants/__tests__/TelemetryConstants.test.ts`
-Expected: PASS — `TenancyList` 3, `TenancyMembersPanel` 9, `TenanciesView` 6, Task 16's three suites still green; the page walk passes with `/app/admin/tenancies`.
+Expected: PASS — `TenancyList` 3, `TenancyMembersPanel` 10, `TenanciesView` 6, Task 16's three suites still green; the page walk passes with `/app/admin/tenancies`.
 
 - [ ] **Step 8: Commit**
 
@@ -6261,7 +6265,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - [ ] **Step 1: Unit tests and types**
 
 From the worktree: `npx jest --coverage=false 2>&1 | grep -E "^(Test Suites|Tests):"`
-Expected: `Test Suites: {BASE_SUITES + 26} passed` and `Tests: {BASE_TESTS + 180} passed` (with PR B landed as its plan says, 128 / 982 → **154 / 1162**). The 26 new suites and their tests: `RequireSessionAdmin` 5, `adminChain` 8, `admin` 15, `AdminConstants` 6, `adminDisplay` 6, `adminRequestRoutes` 14, `adminTenancyRoutes` 11, `BFFAPI.admin` 8, `adminKeys` 8, `UseAdmin` 8, `AdminDialog` 6, `AdminParts` 4, `AdminNavItem` 5, `LoggedLayoutAdmin` 2, `AdminTabs` 3, `DeclineRequestDialog` 7, `ReviewRequestDialog` 12, `RequestsTable` 4, `RecentlyClosed` 4, `RequestsView` 10, `NewTenancyDialog` 5, `AddMemberDialog` 5, `RemoveMemberDialog` 5, `TenancyList` 3, `TenancyMembersPanel` 9, `TenanciesView` 6 (= 179), plus 1 in `TelemetryConstants`. A route test answering `401` means a mocked token lost `v: TOKEN_VERSION`; one answering `404` means it lost `admin: true`.
+Expected: `Test Suites: {BASE_SUITES + 26} passed` and `Tests: {BASE_TESTS + 181} passed` (with PR B landed as its plan says, 132 / 1014 → **158 / 1195**). The 26 new suites and their tests: `RequireSessionAdmin` 5, `adminChain` 8, `admin` 15, `AdminConstants` 5, `adminDisplay` 6, `adminRequestRoutes` 14, `adminTenancyRoutes` 11, `BFFAPI.admin` 8, `adminKeys` 8, `UseAdmin` 8, `AdminDialog` 6, `AdminParts` 4, `AdminNavItem` 5, `LoggedLayoutAdmin` 2, `AdminTabs` 3, `DeclineRequestDialog` 7, `ReviewRequestDialog` 13, `RequestsTable` 4, `RecentlyClosed` 4, `RequestsView` 10, `NewTenancyDialog` 5, `AddMemberDialog` 5, `RemoveMemberDialog` 5, `TenancyList` 3, `TenancyMembersPanel` 10, `TenanciesView` 6 (= 180), plus 1 in `TelemetryConstants`. A route test answering `401` means a mocked token lost `v: TOKEN_VERSION`; one answering `404` means it lost `admin: true`.
 
 Then: `npx tsc --noEmit -p .`
 Expected: no output.
@@ -6273,7 +6277,7 @@ Expected: exit code 0; the route list shows the pages `/app/admin`, `/app/admin/
 
 - [ ] **Step 3: Start the gatekeeper with PR A, and Mailpit**
 
-PR A must be in the gatekeeper checkout: `main` once it is merged, otherwise its worktree (`/Users/caio.maia/workspace/datamap/gatekeeper/.claude/worktrees/rfc-009-tenancies`). Check with `command git -C <checkout> log --oneline -3`. The commands are the ones PR B's Task 20 uses:
+PR A (`ardc-brazil/gatekeeper#145`) must be in the gatekeeper checkout: `main` once it is merged, otherwise its branch `feat/rfc-009-gatekeeper` (worktree `/Users/caio.maia/workspace/datamap/gatekeeper/.claude/worktrees/rfc-009-gatekeeper`). Check with `command git -C <checkout> log --oneline -3`. The commands are the ones PR B's Task 24 uses:
 
 ```bash
 cd <gatekeeper checkout with PR A>
@@ -6325,10 +6329,11 @@ A separate browser profile (or private window) per account.
 11. **Tenancies.** `/app/admin/tenancies`: "{n} tenancies · root `datamap` · everyone is in `public`"; **Public** first with a lock and no chevron, then Cerrado Flux and Data Amazon (by name), then, if the seed has any `datamap/staging/*`, the **Legacy · staging** group; no environment pills. Without a parameter the first production tenancy other than Public is selected. Click **Public** → the URL gets `?tenancy=datamap%2Fproduction%2Fpublic` and the panel reads "Everyone · {n} accounts" with no list and no **+ Add**. Reload → still selected. Open Data Amazon: "Members · {n}", Bruno listed with his email.
 12. **Add a member.** On Cerrado Flux **+ Add** → "Add to Cerrado Flux"; typing one letter keeps the hint; `ana` → Ana Souza; pick her → "Ana is emailed." → **Add** → she is listed; `dispatch` → "You now have access to Cerrado Flux". Add her again → "They are already a member of this tenancy.".
 13. **Remove a member.** As Ana (now in Cerrado Flux) create one dataset there (the app's new-dataset form, in Cerrado Flux; stop before the upload if MinIO has no bucket — the dataset row is enough). As Carla, the `close` button on Ana → "Remove from Cerrado Flux?", "Ana Souza · member since {today}", "— Loses access to the {n} datasets of the tenancy", "— Still owns 1 dataset of the tenancy", "— Stays in public", red **Remove** → she leaves the list. No email is sent (`dispatch` sends nothing new for her).
-14. **Pending invitation.** As Bruno (member of Data Amazon) share one of his Data Amazon datasets with `eva@example.org` choosing **Invite to Data Amazon** (PR B). As Carla on Data Amazon: Eva below the members with the dashed icon, "Invited by Bruno Lima {date} · not accepted yet" and red **Withdraw** → gone; Eva's home no longer shows the invitation. The email "Open tenancy" link of the admin notice (`/app/admin/tenancies?tenancy=datamap/production/data-amazon`) opens with Data Amazon selected.
+14. **Pending invitation.** As Bruno (member of Data Amazon), sidebar → **Members** → **+ Invite** → `eva@example.org` → **Send invitation** (PR B). As Carla on Data Amazon: Eva below the members with the dashed icon, `eva@example.org`, "Invited by Bruno Lima {date} · not accepted yet" and red **Withdraw**, and nothing about a dataset → **Withdraw** → gone; Eva's home and Bruno's Members page no longer show it. Have Bruno invite her again, then as Carla **+ Add** Eva to Data Amazon → she is listed as a member and her pending row is gone (PR A withdraws it); Eva's home shows no invitation. With a stale tab still showing a pending row, **Withdraw** → "This invitation was already answered or withdrawn." and the row leaves. The email "Open tenancy" link of the admin notice (`/app/admin/tenancies?tenancy=datamap/production/data-amazon`) opens with Data Amazon selected.
 15. **Legacy is read-only.** If the seed has a `datamap/staging/*` tenancy, select it: members listed, no **+ Add**, no remove buttons, no invitations. If not, `psqlgk "INSERT INTO tenancies (name, is_enabled) VALUES ('datamap/staging/data-amazon', true) ON CONFLICT DO NOTHING;"` and reload.
 16. **New tenancy.** **+ New tenancy** → "New tenancy" with Display name, Namespace and the preview, no Environment. Type "Cerrado Flux" → namespace `cerrado-flux` → **Create** → "A tenancy with this namespace already exists.". Change the display name to "Cerrado Flux" and the namespace to `cflux` → "Another tenancy already has this display name.". "Manaus Radar" → created, listed, selected, `?tenancy=datamap%2Fproduction%2Fmanaus-radar`.
-17. **Losing the role.** Ask the owner to run `psqlgk "DELETE FROM casbin_rule WHERE ptype = 'g' AND v0 = '$CARLA' AND v1 = 'admin';"`. In Carla's open admin tab, **+ New tenancy** → the gatekeeper refuses (generic error; the BFF still trusted the old claim, the gatekeeper did not). Sign out and in → no **Admin** entry, the admin URLs are not found.
+17. **An account that is gone.** As Ana request "ATTO". Disable her: `psqlgk "UPDATE users SET is_enabled = false WHERE id = '$ANA';"`. As Carla **Review** it → **Approve** → "This account is disabled or no longer exists, so it cannot be approved. Decline the request instead.", **Approve** greyed, **Decline…** still there → **Decline** works and the row leaves. Restore: `psqlgk "UPDATE users SET is_enabled = true WHERE id = '$ANA';"`.
+18. **Losing the role.** Ask the owner to run `psqlgk "DELETE FROM casbin_rule WHERE ptype = 'g' AND v0 = '$CARLA' AND v1 = 'admin';"`. In Carla's open admin tab, **+ New tenancy** → the gatekeeper refuses (generic error; the BFF still trusted the old claim, the gatekeeper did not). Sign out and in → no **Admin** entry, the admin URLs are not found.
 
 - [ ] **Step 5: Stop the stack**
 
@@ -6345,7 +6350,7 @@ dc down
 
 | RFC 009 / contract requirement | Task |
 |---|---|
-| `session.user.admin` from the `admin` role (built by PR B, consumed here) | 1 (checked), 2, 11, 18.2, 18.17 |
+| `session.user.admin` from the `admin` role (built by PR B, consumed here) | 1 (checked), 2, 11, 18.2, 18.18 |
 | Page gate: `auth = { admin: true }`; `RequireSession` renders the not-found page for a non-admin session | 2, 12, 15, 17, 18.1 |
 | `adminChain` (`requestLogging`, `auth`, `adminOnly`), `404 {detail: "not_found"}` for non-admins; `adminBffRouter()` | 3, 18.1 |
 | Gatekeeper status and `{detail}` reach the browser on every admin route | 6, 7 (`accountHandler`), 13–17 (`adminErrorFrom`) |
@@ -6361,20 +6366,31 @@ dc down
 | Requests (1a): header counts, pills with counts, search, table Account / Request / Requested / Email, Join/New pills, reason, "{n} days waiting" amber from 3 days, verified/unverified, **Review** and the `more_horiz` menu with "Decline…", pager by 50, loading/empty/error | 15, 18.4 |
 | Recently closed: last 5, "Approved" / "Approved · new tenancy" green, "Declined" red, "by {admin} · {when}", "Activity →" | 15, 18.6, 18.8, 18.10 |
 | Review (1c, 560 px): header, Join existing / New tenancy switch on the suggestion's side, picker limited to production / enabled / not public / not the requester's, info rows, Display name + Namespace prefilled, preview, unverified banner and disabled **Create and approve**, "{first name} is emailed either way.", **Decline…**, no role cards; loading, error, already decided | 14, 18.6–18.9 |
+| Approve answered `404 no_account` (PR A, beyond the contract): a message, **Approve** disabled, **Decline…** kept | 14, 18.17 |
 | Decline (1e, 440 px): title, subtitle for join / new, optional message with placeholder, bullet, red **Decline**, message ≤ 1000 | 13, 18.10 |
 | `?request={id}` opens the review; `?tenancy={path}` selects a tenancy | 15, 17, 18.5, 18.11, 18.14 |
 | Tenancies (1d): header with counts and **+ New tenancy**; Public first with lock and no chevron, production by display name, **Legacy · staging** group; icon, name, path, members, datasets; no environment pill | 17, 18.11, 18.15 |
-| Member panel: name, path, "Members · {n}", **+ Add**, members with initials, name, email, "invited by", remove; pending invitations dashed with **Withdraw**; "Show {n} more" by 50; Public "Everyone · {n} accounts"; legacy read-only | 17, 18.11–18.15 |
+| Member panel: name, path, "Members · {n}", **+ Add**, members with initials, name, email, "invited by", remove; pending invitations dashed with the invitee's email and **Withdraw**, no dataset; "Show {n} more" by 50; Public "Everyone · {n} accounts"; legacy read-only | 17, 18.11–18.15 |
+| An invitation withdrawn by PR A when an admin adds the invitee or approves their request leaves the panel; a stale **Withdraw** reads `invitation_not_found` and revalidates | 17, 18.14 |
 | **+ Add** dialog: user search "Name, email or ORCID", pick, "{first name} is emailed.", **Cancel** / **Add** | 16, 18.12 |
 | Remove prompt: title, "member since", the four bullets (two only when non-zero), red **Remove** | 16, 18.13 |
 | New tenancy dialog without Environment: Display name, Namespace, preview, **Cancel** / **Create** | 16, 18.16 |
-| Namespace / display-name / message validation as the gatekeeper's | 5, 13, 14, 16 |
+| Namespace / display-name / message validation as the gatekeeper's; `slugifyNamespace` drops diacritics before slugging ("João Ciência" → `joao-ciencia`) | 5, 13, 14, 16 |
+| Decline placeholder "Ask a member of the tenancy to invite you from its Members page" (RFC, after invitations moved to the Members page) | 5, 13 |
 | Not built: per-tenancy roles, environment picker or pills, user detail, system roles, Activity log | Global Constraints; 14 (no role cards), 16 (no Environment), 17 (no pills) |
 | New pages in `TelemetryConstants` `PAGES` | 12 |
 | Webapp Jest from the RFC: `RequireSession` hiding admin pages; the review dialog's disabled state for an unconfirmed email; the admin sidebar entry and badge | 2, 14, 11 |
 | Component tests for each screen state (loading, empty, error) | 11, 13–17 |
 | End-to-end against the gatekeeper with PR A, an admin seeded with the `admin` role | 18 |
 
-Not in the contract, added because the flows break or leak without them: `accountHandler` instead of `bffHandler` on the admin routes (Tasks 6–7; `bffHandler` rewrites the `401`/`403`/`404` `detail` to fixed English, so `request_not_found`, `tenancy_not_found`, `member_not_found`, `no_account` and `not_found` would never reach the browser — PR B made the same call); the JSON gate on `DELETE` too, with `BFFAPI` sending `{ data: {} }` (Task 3, 8; Axios drops the `Content-Type` of a body-less request); `TENANCY_PATH_PATTERN` on every `tenancy` parameter and `decisionOr400`'s path check (Tasks 5–7; the path goes into the gatekeeper URL unencoded, so `..` must not reach it); the read-only "already decided" state of the review dialog (Task 14; a `?request=` link from an old email would otherwise offer **Approve** on a closed request); and `q` left out of the queue key when blank (Task 9; the contract's key lists `q=…` without saying whether an empty one is sent).
+Not in the contract, added because the flows break or leak without them: `accountHandler` instead of `bffHandler` on the admin routes (Tasks 6–7; `bffHandler` rewrites the `401`/`403`/`404` `detail` to fixed English, so `request_not_found`, `tenancy_not_found`, `member_not_found`, `no_account` and `not_found` would never reach the browser — PR B made the same call); the JSON gate on `DELETE` too, with `BFFAPI` sending `{ data: {} }` (Task 3, 8; Axios drops the `Content-Type` of a body-less request); PR B's `TENANCY_PATH_PATTERN` on every `tenancy` parameter and `decisionOr400`'s path check (Tasks 6–7; the path goes into the gatekeeper URL unencoded, so `..` must not reach it); the read-only "already decided" state of the review dialog (Task 14; a `?request=` link from an old email would otherwise offer **Approve** on a closed request); and `q` left out of the queue key when blank (Task 9; the contract's key lists `q=…` without saying whether an empty one is sent).
 
-Re-anchored on PR B's plan (`072e182`), not on `main` alone: the session `admin` flag is B's Task 2, so this plan only consumes it; `RequireSession` is the file B's Task 19 rewrites (same `Props`, signature and loading branch, now inside `SWRConfig`); `types/GatekeeperAPI.ts` gains C's shapes after B's `DatasetTenancyInvitation`, reusing B's `TenancySummary`, `GatekeeperPage`, `UserRef` and `UserBrief`; `BFFAPI` gains C's methods after B's `withdrawTenancyInvitation`; `lib/fetcher.js` errors carry `detail` (B's Task 19), which the review dialog reads; hook tests live in `hooks/__tests__/` as B's do.
+Re-anchored on PR B's plan as revised with this one, not on `main` alone:
+- the session `admin` flag is B's Task 2, so this plan only consumes it;
+- `RequireSession` is the file B's Task 17 rewrites (same `Props`, signature and loading branch, now inside `SWRConfig`);
+- `types/GatekeeperAPI.ts` gains C's shapes after B's `InviteeLookup`, reusing B's `TenancySummary`, `GatekeeperPage`, `UserRef` and `UserBrief`;
+- `BFFAPI` gains C's methods after B's `withdrawWorkspaceInvitation`;
+- `lib/fetcher.js` errors carry `detail` (B's Task 17), which the review dialog reads;
+- `lib/admin.ts` uses B's `asUser`, and `lib/adminRoute.ts` re-exports B's `lib/routeParams.ts` helpers and uses B's `TENANCY_PATH_PATTERN`, so neither is written twice;
+- `LoggedLayout` already holds B's Members entry, which `LoggedLayoutAdmin.test.tsx` mocks;
+- hook tests live in `hooks/__tests__/` as B's do.

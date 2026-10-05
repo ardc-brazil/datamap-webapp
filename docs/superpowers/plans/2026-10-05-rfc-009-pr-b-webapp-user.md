@@ -2,44 +2,70 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** A signed-in person always has somewhere to work and a way to ask for more: the tenancy selector appears only with more than one tenancy, an account with none sees "You're not in any tenancy" with **Request access**, requests and their answers live on the selector, the profile and the home, pending tenancy invitations are accepted or declined from the home and the profile, owners and editors invite an existing account into their tenancy from the Share dialog, and nobody is offered "members can edit" on a dataset in Public.
+**Goal:** A signed-in person always has somewhere to work and a way to ask for more. The tenancy selector appears only with more than one tenancy. An account with none sees "You're not in any tenancy" with **Request access**. Requests and their answers live on the selector, the profile and the home. Pending tenancy invitations are accepted or declined from the home and the profile. Members of a tenancy open to members invite an existing account into it from the workspace **Members** page. Nobody is offered "members can edit" on a dataset in Public, and no dataset changes tenancy.
 
-**Architecture:** Gatekeeper calls go through two server-side client modules: a new `lib/tenancies.ts` (self routes, `X-User-Id` only) and three additions to `lib/share.ts` (dataset routes, `buildHeaders(context)`). Ten BFF routes proxy them: the user routes on `bffRouter()` (`authOnlyChain`, so an account with zero tenancies reaches them) and the dataset routes on the same router as `share/candidates.ts`; every route answers errors through `accountHandler`, which forwards the gatekeeper status and `{detail}` verbatim, and every `POST` passes `requireJsonRequest`. The browser reaches them through seven new `BFFAPI` methods (mutations, rejecting with the Axios error) and three SWR hooks in `hooks/UseTenancies.ts` (reads). The UI is a set of components under `components/Tenancy/` — `TenancyIcon` (shared with PR C), `RequestAccessDialog`, `TenancyRequestRow`/`TenancyRequestNotice`, `AccessPending`, `TenancySelector`, `TenancyInvitationsPanel`, `ProfileTenancies` — mounted by the tenancy, home and profile pages and by the avatar menu. Pure rules (which request to show, which selection applies, whether the session is stale, whether a 401 means the tenancy was revoked) live in small `lib/` modules with their own tests. The Share dialog gains an outsider card in `ShareInput` (exact email/ORCID lookup, "Share this dataset only" / "Invite to {tenancy}"), pending tenancy invitations in `AccessList`, and the Public rules in `lib/membersAccess.ts`. The session gains the `admin` flag PR C reads.
+**Architecture:** Gatekeeper calls go through two server-side client modules, both sending only `X-User-Id`: `lib/tenancies.ts` (the user's own tenancies, requests and invitations) and `lib/workspace.ts` (the selected tenancy's members, invitations and lookup, with the tenancy path in the gatekeeper URL). Twelve BFF routes proxy them on `bffRouter()` (`authOnlyChain`, so an account with zero tenancies reaches them). Every route answers errors through `accountHandler`, which forwards the gatekeeper status and `{detail}` verbatim. Query and path parameters are checked by the shared helpers of `lib/routeParams.ts` before the gatekeeper is called, and every `POST` passes `requireJsonRequest`. The browser reaches the routes through seven new `BFFAPI` methods (mutations, rejecting with the Axios error) and SWR hooks in `hooks/UseTenancies.ts` and `hooks/UseWorkspace.ts` (reads). The UI is a set of components:
+- under `components/Tenancy/`: `TenancyIcon` (shared with PR C), `RequestAccessDialog`, `TenancyRequestRow`/`TenancyRequestNotice`, `AccessPending`, `TenancySelector`, `TenancyInvitationsPanel`, `ProfileTenancies`, mounted by the tenancy, home and profile pages and by the avatar menu;
+- under `components/Workspace/`: `InviteMemberDialog`, `WorkspaceInvitations` and `WorkspaceMembers`, mounted by the new page `/app/members`, which the sidebar links to only for a tenancy open to members.
 
-**Tech Stack:** Next.js 14 (pages router), NextAuth 4.24.9 (JWT strategy), next-connect 1.0.0-next.4, Axios, SWR 2.2, Zustand 5, Formik 2.4 + Yup 1, TailwindCSS 3, Jest 29 + ts-jest, @testing-library/react 14 with `jest-environment-jsdom`.
+Pure rules live in small `lib/` modules with their own tests: which request to show, which selection applies, whether the session is stale, which tenancy has a Members page, whether a 401 means the tenancy was revoked. The Share dialog stays RFC 003 dataset sharing; it only gains the Public rules in `lib/membersAccess.ts`. The session gains the `admin` flag PR C reads.
+
+**Tech Stack:** Next.js 14 (pages router), NextAuth 4.24.9 (JWT strategy), next-connect 1.0.0-next.4, Axios, SWR 2.2 (`useSWR`, `useSWRInfinite`, global `mutate`), Zustand 5, Formik 2.4 + Yup 1, TailwindCSS 3, Jest 29 + ts-jest, @testing-library/react 14 with `jest-environment-jsdom`.
 
 ## Global Constraints
 
 - Worktree: already created. `/Users/caio.maia/workspace/datamap/datamap-webapp/.claude/worktrees/rfc-009-user-side`, branch `feat/rfc-009-user-side` from `origin/main` at `f632843`. `npm ci` is done and `.env.local` is copied in. Baseline: **102 suites, 841 tests**. Every command runs from that directory, never from the main checkout. Every git call is spelled `command git`. Before every commit: `pwd` (must print the worktree path) and `command git branch --show-current` (must print `feat/rfc-009-user-side`).
 - Jest: `npx jest --coverage=false <paths>`. `ts-jest` type-checks every test and the code it imports (`tsconfig.json` has `strict: false`), so a type error fails the suite.
-- Tests never live under `pages/`. Route and NextAuth tests go in `lib/__tests__/`, component tests in `components/**/__tests__/`, hook tests in `hooks/__tests__/`. A component test starts with the `/** @jest-environment jsdom */` docblock. Any test whose subject imports `components/TenancyStore` (directly, or through `lib/fetcher`) mocks that module or the importer, because `typescript-cookie` does not resolve under Jest.
-- This PR adds no page under `pages/` (the request form is a dialog), so `contants/TelemetryConstants.ts` `PAGES` does not change. It adds three UI events.
+- Tests never live under `pages/`. Route and NextAuth tests go in `lib/__tests__/`, component tests in `components/**/__tests__/`, hook tests in `hooks/__tests__/`. A component test starts with the `/** @jest-environment jsdom */` docblock and imports its component from its own file under `components/`, never a page. Any test whose subject imports `components/TenancyStore` (directly, or through `lib/fetcher` or `hooks/UseWorkspace`) mocks that module or the importer, because `typescript-cookie` does not resolve under Jest.
+- This PR adds one page, `/app/members` (`pages/app/members/index.tsx`). It goes into `contants/TelemetryConstants.ts` `PAGES` in the task that creates it (Task 22), or "include every page the app has" fails. It also adds three UI events.
 - English copy. No comment that narrates code. Constants and copy that are reused live in `contants/TenancyConstants.ts`.
+- Forms use Formik and Yup. Reads use SWR; writes go through `BFFAPI`.
 - Every commit message ends with a blank line and `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 
-### From the contract (`gatekeeper/docs/superpowers/plans/2026-10-05-rfc-009-contract.md`), fixed
+### From the contract (`gatekeeper/docs/superpowers/plans/2026-10-05-rfc-009-contract.md`) and what PR A ships, fixed
 
-- `DEFAULT_TENANCY = "datamap/production/public"`, `PRODUCTION_PREFIX = "datamap/production/"`, `LEGACY_PREFIX = "datamap/staging/"`, `NAMESPACE_PATTERN = /^[a-z0-9-]+$/`, `NAMESPACE_MIN_LENGTH = 2`, `NAMESPACE_MAX_LENGTH = 63`, `DISPLAY_NAME_MAX_LENGTH = 64`, `TENANCY_NAME_MAX_LENGTH = 128`, `REASON_MAX_LENGTH = 1000`, `MESSAGE_MAX_LENGTH = 1000`, `TENANCY_ICON = "tenancy"`, `PUBLIC_TENANCY_ICON = "public"`, `isDefaultTenancy`, `isLegacyTenancy`, `tenancyNamespace` — `contants/TenancyConstants.ts`, created by this PR with exactly the contract's content, plus `tenancyErrorMessage(detail?: string): string` and B's copy.
+PR A is `ardc-brazil/gatekeeper#145`. Its shipped route table is in `gatekeeper/.superpowers/sdd/workspace-invitations-report.md` (rounds 1 and 2); its other deviations are in `final-rereview.md` and `final-review-fix-report.md`. Where those and the contract disagree, this plan follows what PR A ships.
+
+- `DEFAULT_TENANCY = "datamap/production/public"`, `PRODUCTION_PREFIX = "datamap/production/"`, `LEGACY_PREFIX = "datamap/staging/"`, `NAMESPACE_PATTERN = /^[a-z0-9-]+$/`, `NAMESPACE_MIN_LENGTH = 2`, `NAMESPACE_MAX_LENGTH = 63`, `DISPLAY_NAME_MAX_LENGTH = 64`, `TENANCY_NAME_MAX_LENGTH = 128`, `REASON_MAX_LENGTH = 1000`, `MESSAGE_MAX_LENGTH = 1000`, `TENANCY_ICON = "tenancy"`, `PUBLIC_TENANCY_ICON = "public"`, `isDefaultTenancy`, `isLegacyTenancy`, `tenancyNamespace` — `contants/TenancyConstants.ts`, created by this PR with exactly the contract's content, plus `tenancyErrorMessage(detail?: string): string`, `TENANCY_PATH_PATTERN` (shared with PR C) and B's copy and keys.
 - `TenancyIcon({ tenancy, pending }: { tenancy?: Pick<TenancySummary, "is_default">; pending?: boolean })` in `components/Tenancy/TenancyIcon.tsx`: `public` for the default tenancy, `tenancy` otherwise, dashed outline when `pending`.
-- `types/GatekeeperAPI.ts`: `TenancySummary { path, display_name, is_default, is_legacy }`, `GatekeeperPage<T> { items, total_count, limit, offset }` (shared), and B's `UserRef`, `UserBrief`, `TenancyRequest`, `TenancyInvitation`, `ShareLookup`, `DatasetTenancyInvitation`; `ShareTenancy` gains `is_default`, `is_legacy`, `datasets`; `ShareState` gains `tenancy_invitations`, `can_invite_to_tenancy`.
-- Gatekeeper self routes (send only `X-User-Id`): `GET /users/{id}/tenancies` → `200 TenancySummary[]`; `GET /users/{id}/tenancy-requests` → `200 TenancyRequest[]` (latest 5, newest first); `POST /users/{id}/tenancy-requests {tenancy_name, reason}` → `201 TenancyRequest`, `400 tenancy_name_invalid | reason_invalid`, `409 request_pending`, `429 too_many_requests`; `DELETE /users/{id}/tenancy-requests/{request_id}` → `204`, `404 request_not_found`; `GET /users/{id}/tenancy-invitations` → `200 TenancyInvitation[]`; `POST .../tenancy-invitations/{id}/accept` → `200 {tenancy: TenancySummary}`, `404 invitation_not_found`, `409 tenancy_disabled`; `POST .../decline` → `204`, `404 invitation_not_found`.
-- Gatekeeper dataset routes (`buildHeaders(context)`): `GET /datasets/{id}/share/lookup?value=` → `200 ShareLookup`, `400 invalid_request`, `403 forbidden`, `404 no_account`; `POST /datasets/{id}/tenancy-invitations {user_id}` → `201 DatasetTenancyInvitation`, `403 forbidden`, `404 no_account`, `409 already_member | invitation_pending | public_tenancy_locked | legacy_tenancy_read_only | tenancy_disabled`; `DELETE /datasets/{id}/tenancy-invitations/{invitation_id}` → `204`, `403 forbidden`, `404 invitation_not_found`. `PUT /datasets/{id}/members-access` with `true` on Public → `400 public_members_cannot_edit`.
-- `lib/tenancies.ts`: `listMyTenancies(uid)`, `listMyTenancyRequests(uid)`, `createTenancyRequest(uid, { tenancyName, reason })`, `withdrawTenancyRequest(uid, requestId)`, `listMyTenancyInvitations(uid)`, `acceptTenancyInvitation(uid, invitationId)`, `declineTenancyInvitation(uid, invitationId)`. `lib/share.ts`: `lookupShareTarget(context, datasetId, value)`, `inviteToTenancy(context, datasetId, userId)`, `withdrawTenancyInvitation(context, datasetId, invitationId)`. Each throws the Axios error on a non-2xx.
-- BFF routes: `GET /api/tenancies`; `GET`/`POST /api/tenancy-requests` (browser body `{tenancyName, reason}`); `DELETE /api/tenancy-requests/[requestId]`; `GET /api/tenancy-invitations`; `POST /api/tenancy-invitations/[invitationId]/accept`; `POST /api/tenancy-invitations/[invitationId]/decline`; `GET /api/datasets/[datasetId]/share/lookup?value=`; `POST /api/datasets/[datasetId]/tenancy-invitations` (browser body `{userId}`, the invitee from `ShareLookup.user.id`); `DELETE /api/datasets/[datasetId]/tenancy-invitations/[invitationId]`. Responses pass the gatekeeper JSON through unchanged (snake_case). The user always comes from the NextAuth token.
-- BFFAPI: `requestTenancyAccess(input: { tenancyName: string; reason: string }): Promise<TenancyRequest>`, `withdrawTenancyRequest(requestId: string): Promise<void>`, `acceptTenancyInvitation(invitationId: string): Promise<{ tenancy: TenancySummary }>`, `declineTenancyInvitation(invitationId: string): Promise<void>`, `lookupShareTarget(datasetId: string, value: string): Promise<ShareLookup>`, `inviteToTenancy(datasetId: string, userId: string): Promise<DatasetTenancyInvitation>`, `withdrawTenancyInvitation(datasetId: string, invitationId: string): Promise<void>`. They reject with the Axios error; callers show `tenancyErrorMessage(e?.response?.data?.detail)`. `lookupShareTarget` is imperative and debounced 300 ms in the share input, not SWR.
-- SWR keys: `/api/tenancies` (default options), `/api/tenancy-requests` and `/api/tenancy-invitations` (`revalidateOnFocus: true`), `/api/datasets/${id}/share` (existing, unchanged).
+- `types/GatekeeperAPI.ts`, after `MembersAccessResponse`, in this order: `TenancySummary { path, display_name, is_default, is_legacy }` and `GatekeeperPage<T> { items, total_count, limit, offset }` (shared), then B's `UserRef { id, name }`, `UserBrief { id, name, email: string | null }`, `TenancyRequest`, `TenancyInvitation { id, tenancy, invited_by, datasets, created_at }` (no `dataset`: PR A removed it), `WorkspaceMember { id, name, orcid: string | null }`, `WorkspaceInvitation { id, user: UserRef, invited_by: UserRef | null, created_at, can_withdraw }`, and, last, `InviteeLookup { user: UserBrief, tenancy_member, invitation_pending, can_invite, datasets }`. `ShareTenancy` gains `is_default`, `is_legacy`, `datasets`. `ShareState` gains nothing: the share state has no tenancy invitation.
+- Gatekeeper user routes (self; send only `X-User-Id`): `GET /users/{id}/tenancies` → `200 TenancySummary[]` (enabled tenancies only); `GET /users/{id}/tenancy-requests` → `200 TenancyRequest[]` (latest 5, newest first); `POST /users/{id}/tenancy-requests {tenancy_name, reason}` → `201 TenancyRequest`, `400 tenancy_name_invalid | reason_invalid`, `409 request_pending`, `429 too_many_requests`; `DELETE /users/{id}/tenancy-requests/{request_id}` → `204`, `404 request_not_found`; `GET /users/{id}/tenancy-invitations` → `200 TenancyInvitation[]` (pending only); `POST .../tenancy-invitations/{id}/accept` → `200 {tenancy: TenancySummary}`, `404 invitation_not_found`, `409 tenancy_disabled`; `POST .../decline` → `204`, `404 invitation_not_found`.
+- Gatekeeper workspace routes (self + member; send only `X-User-Id`; `{path}` is the tenancy path, unencoded, e.g. `/users/u1/tenancies/datamap/production/atto/members`). Checks run in this order, after request validation (`400 invalid_request`): the caller is a member of `{path}`, else `404 tenancy_not_found` — **admins included**; then the tenancy is open to members, else `409 public_tenancy_locked` (public), `409 legacy_tenancy_read_only` (staging) or `409 tenancy_disabled`; then the route's own errors. Every route answers `401` when `{id}` is not `X-User-Id`.
+  - `GET .../members?limit&offset` (limit 1–100, default 50) → `200 GatekeeperPage<WorkspaceMember>`, ordered by name, never an email.
+  - `GET .../invitations` → `200 WorkspaceInvitation[]`, pending, newest first.
+  - `POST .../invitations {user_id}` → `201 WorkspaceInvitation`; `404 no_account`, `409 already_member`, `409 invitation_pending`.
+  - `DELETE .../invitations/{invitation_id}` → `204` (withdrawn); `403 forbidden` (not the inviter), `404 invitation_not_found` (unknown, not pending, or of another tenancy).
+  - `GET .../lookup?value=` (exact email or ORCID iD) → `200 InviteeLookup`; `user.email` is `null` when looked up by ORCID iD; `can_invite = !tenancy_member && !invitation_pending`; `datasets` is the tenancy's dataset count; `400 invalid_request`, `404 no_account`.
+- Removed from the gatekeeper, so never called: `GET /datasets/{id}/share/lookup`, `POST /datasets/{id}/tenancy-invitations`, `DELETE /datasets/{id}/tenancy-invitations/{id}`. `GET /datasets/{id}/share` keeps RFC 003's shape plus `tenancy.{is_default, is_legacy, datasets}`; under an active embargo `tenancy` is `null`, as on `main`. `PUT /datasets/{id}/members-access` with `true` on Public → `400 public_members_cannot_edit`.
+- A dataset never changes tenancy. `PUT /datasets/{id}` with a `tenancy` other than the dataset's own answers `400 tenancy_cannot_change` and saves nothing; for this PR that holds for everyone, admins included. Every edit form keeps sending `props.dataset.tenancy`, and the webapp shows no "move" control.
+- A pending invitation can turn `withdrawn` without the inviter doing anything: when an admin adds the invitee as a member, or approves the invitee's request into the same tenancy. It then disappears from the invitee's list and the tenancy's, and any action on it answers `404 invitation_not_found`.
+- `POST /users` ignores `roles`. This PR does not touch `lib/users.ts`, so `createUser` keeps sending `"roles": []`, which the gatekeeper ignores.
+- `lib/tenancies.ts`: `listMyTenancies(uid)`, `listMyTenancyRequests(uid)`, `createTenancyRequest(uid, { tenancyName, reason })`, `withdrawTenancyRequest(uid, requestId)`, `listMyTenancyInvitations(uid)`, `acceptTenancyInvitation(uid, invitationId)`, `declineTenancyInvitation(uid, invitationId)`. `lib/workspace.ts`: `listWorkspaceMembers(uid, tenancy, { limit, offset })`, `listWorkspaceInvitations(uid, tenancy)`, `inviteToWorkspace(uid, tenancy, userId)`, `withdrawWorkspaceInvitation(uid, tenancy, invitationId)`, `lookupInvitee(uid, tenancy, value)`. Each throws the Axios error on a non-2xx. `lib/share.ts` gains nothing.
+- BFF routes: `GET /api/tenancies`; `GET`/`POST /api/tenancy-requests` (browser body `{tenancyName, reason}`); `DELETE /api/tenancy-requests/[requestId]`; `GET /api/tenancy-invitations`; `POST /api/tenancy-invitations/[invitationId]/accept`; `POST /api/tenancy-invitations/[invitationId]/decline`; `GET /api/workspace/members?tenancy&limit&offset`; `GET /api/workspace/invitations?tenancy`; `POST /api/workspace/invitations?tenancy` (browser body `{userId}`, the invitee from `InviteeLookup.user.id`); `DELETE /api/workspace/invitations/[invitationId]?tenancy`; `GET /api/workspace/lookup?tenancy&value`. Files: `pages/api/workspace/members.ts`, `lookup.ts`, `invitations/index.ts`, `invitations/[invitationId].ts`. The tenancy path travels as the `tenancy` query parameter (encoded by the browser). Responses pass the gatekeeper JSON through unchanged (snake_case). The user always comes from the NextAuth token.
+- BFFAPI: `requestTenancyAccess(input: { tenancyName: string; reason: string }): Promise<TenancyRequest>`, `withdrawTenancyRequest(requestId: string): Promise<void>`, `acceptTenancyInvitation(invitationId: string): Promise<{ tenancy: TenancySummary }>`, `declineTenancyInvitation(invitationId: string): Promise<void>`, `lookupInvitee(tenancy: string, value: string): Promise<InviteeLookup>`, `inviteToWorkspace(tenancy: string, userId: string): Promise<WorkspaceInvitation>`, `withdrawWorkspaceInvitation(tenancy: string, invitationId: string): Promise<void>`. They reject with the Axios error; callers show `tenancyErrorMessage(e?.response?.data?.detail)`. `lookupInvitee` is imperative and debounced 300 ms in the invite input, not SWR.
+- SWR keys: `/api/tenancies` (default options), `/api/tenancy-requests` and `/api/tenancy-invitations` (`revalidateOnFocus: true`), `/api/datasets/${id}/share` (existing, unchanged), `/api/workspace/members?tenancy=${encodeURIComponent(path)}&limit=50&offset=${n}` (`useSWRInfinite`, "Show {n} more"), `/api/workspace/invitations?tenancy=${encodeURIComponent(path)}` (default; revalidated after an invitation is sent or withdrawn).
 - Session refresh: accepting an invitation → `update()`, `setTenancySelected(tenancy.path)`, `router.push(ROUTE_PAGE_HOME)`; the latest request turning `approved` → `update()` and offer "Switch to {display_name}"; `/app/tenancy` compares `GET /api/tenancies` paths with `session.user.tenancies` and calls `update()` when they differ; a `401` whose `detail` starts with `unauthorized_tenancy` → clear the selected tenancy, `update()`, go to `ROUTE_PAGE_TENANCY_SELECTOR`.
 - Session `admin` flag (the controller assigned it to this PR; the contract lists it under C): `session.user.admin = token.admin === true`, `types/next-auth.d.ts` gains `admin: boolean` on `Session.user`, populated on sign-in and on every `update()`, no `TOKEN_VERSION` bump (stays `2`). The token carries `admin: true` only for an account whose `roles` include `"admin"`, and no `admin` key otherwise; a token without it reads as `false`, exactly as the contract says.
 
 ### Decided in this plan, from the real code
 
-- **Errors go through `accountHandler`, not `bffHandler`.** `bffHandler` sends `httpErrorHandler`'s output, which replaces the gatekeeper `detail` with fixed English for `401`, `403` and `404` (`lib/rpc.ts`: "user not authorized…", "user not allowed…", "Resource does not exists"), so `no_account`, `forbidden`, `request_not_found` and `invitation_not_found` would never reach the browser. `accountHandler` (`lib/accountRoute.ts`) answers `res.status(status).json({ detail: response?.data?.detail ?? "unavailable" })`, and `pages/api/account/password.ts` already pairs it with `bffRouter()`. Every route of this PR uses it.
+- **Errors go through `accountHandler`, not `bffHandler`.** `bffHandler` sends `httpErrorHandler`'s output, which replaces the gatekeeper `detail` with fixed English for `401`, `403` and `404` (`lib/rpc.ts`: "user not authorized…", "user not allowed…", "Resource does not exists"). With it, `no_account`, `forbidden`, `tenancy_not_found`, `request_not_found` and `invitation_not_found` would never reach the browser. `accountHandler` (`lib/accountRoute.ts`) answers `res.status(status).json({ detail: response?.data?.detail ?? "unavailable" })`, and `pages/api/account/password.ts` already pairs it with `bffRouter()`. Every route of this PR uses it.
 - **Every `POST` passes `requireJsonRequest`** (exported from `lib/accountRoute.ts`, `415 {detail: "invalid_request"}` when the `Content-Type` is not `application/json`). `BFFAPI` posts `{}` to the body-less accept and decline routes so Axios sends `application/json`.
-- **Path ids are checked with `isUuid`** before the gatekeeper is called: a bad `requestId` answers `404 {detail: "request_not_found"}`, a bad `invitationId` `404 {detail: "invitation_not_found"}`, a bad invitee `userId` `400 {detail: "invalid_request"}`.
-- **A revoked tenancy reaches the browser.** Today it cannot: `httpErrorHandler` drops the `401` detail, `pages/api/datasets/index.ts` ends a failed list with an empty body, and `lib/fetcher.js` reads no body on error. This PR keeps the `401` detail in `httpErrorHandler`, makes the list route answer `{detail}`, attaches `error.detail` in the fetcher, recovers in a `SWRConfig` `onError` inside `RequireSession`, and sends a server-rendered dataset page to the selector.
-- **SWR keys, the 30-day window and B's copy live in `contants/TenancyConstants.ts`**, after the contract's block, so components import the keys without importing `lib/fetcher` (and so `TenancyStore`).
+- **Parameters are checked by `lib/routeParams.ts`** before the gatekeeper is called, and each helper answers the error itself and returns `undefined`. `invalidRequest(res)` answers `400 {detail: "invalid_request"}`. `uuidOr404(req, res, name, detail)` answers, for example, `404 {detail: "request_not_found"}` for a bad `requestId`. `tenancyOr400` accepts only a `tenancy` matching `TENANCY_PATH_PATTERN = /^[A-Za-z0-9_-]+(\/[A-Za-z0-9_-]+)+$/`, because the path goes into the gatekeeper URL unencoded and `..` must never reach it. `pageOr400(req, res, defaultLimit)` parses whole-number `limit`/`offset`. `userIdOr400` takes a UUID `userId` from the body. PR C's `lib/adminRoute.ts` re-exports these instead of writing its own.
+- **`asUser(uid)` is exported once, from `lib/tenancies.ts`**; `lib/workspace.ts` (and PR C's `lib/admin.ts`) import it.
+- **The Members page is `/app/members`** (`ROUTE_PAGE_MEMBERS`), a sibling of Home, Datasets and Notebooks. The sidebar shows a **Members** entry (icon `group`) after Notebooks, only when the selected tenancy is one of the user's enabled tenancies (`GET /api/tenancies`), not Public and not legacy. The page itself says so for any other selection, and maps the gatekeeper's `404`/`409` codes to their sentences.
+- **A revoked tenancy reaches the browser.** Today it cannot: `httpErrorHandler` drops the `401` detail, `pages/api/datasets/index.ts` ends a failed list with an empty body, and `lib/fetcher.js` reads no body on error. This PR keeps the `401` detail in `httpErrorHandler`, makes the list route answer `{detail}`, attaches `error.detail` in the fetcher, recovers in a `SWRConfig` `onError` inside `RequireSession`, and sends a server-rendered dataset page to the selector. The workspace reads use the same `error.detail` to say why the Members page cannot load.
+- **A gone invitation leaves the list.** When accept, decline or withdraw answers `404 invitation_not_found` (an admin closed it, or it was answered elsewhere), the list it came from is revalidated, so the row disappears, and the sentence says it may have been withdrawn.
+- **SWR keys, the 30-day window, B's copy and the workspace key builders (`workspaceMembersKey`, `workspaceInvitationsKey`) live in `contants/TenancyConstants.ts`**, so components import the keys without importing `lib/fetcher` (and so `TenancyStore`).
 - **`TenancyIcon` is 32 px** (`h-8 w-8`, `rounded-md`, icon 18 px), the size of the Share dialog's avatar column; the contract fixes no size and no size prop.
-- Verbatim copy (RFC 009 and the design's 1i/1j): "Welcome, {first name}" / "Choose the tenancy you want to work in."; "Requested {date} · waiting for an administrator" (amber, `text-embargo-800`); "Declined {date}"; "+ Request access to another tenancy"; "You're not in any tenancy" / "Your account is not part of any tenancy, so there is nothing to work in yet. Ask for access to the group or project you work with; an administrator reviews it and you're emailed with the answer."; dialog "Request access" / "Name the tenancy you need. An administrator reviews it; you're emailed with the answer." / field **Tenancy** with helper "The name of the group or project. If it exists, this is a request to join; if not, a request to create it. Only administrators can tell which." / field **Why** / **Cancel** / **Send request**; `409 request_pending` → "You already have a request waiting. Withdraw it to send another."; home card "{inviter} invited you to {tenancy}" / "{n} datasets · from “{dataset}” · {date}" / **Decline** / **Accept**; home line "Your request for {name} is waiting for an administrator · Withdraw"; Share card "{email} · not a member of {tenancy}", "Share this dataset only" / "{level} · as today", "Invite to {tenancy}" / "Member of the tenancy · sees its {n} datasets once they accept · administrators are notified"; access row "Invited to {tenancy} {date} · not accepted yet" with **Withdraw**; footer "Owners and editors can invite to the tenancy"; Public members row "Everyone on DataMap · can read"; new-dataset hint in Public "Visible to every DataMap account; only you and people you share with can edit"; profile "Everyone is in public"; avatar menu "Request access to a tenancy".
+- Verbatim copy (RFC 009 and the design's 1i/1j):
+  - selector: "Welcome, {first name}" / "Choose the tenancy you want to work in."; "Requested {date} · waiting for an administrator" (amber, `text-embargo-800`); "Declined {date}"; "+ Request access to another tenancy";
+  - zero tenancies: "You're not in any tenancy" / "Your account is not part of any tenancy, so there is nothing to work in yet. Ask for access to the group or project you work with; an administrator reviews it and you're emailed with the answer.";
+  - request dialog: "Request access" / "Name the tenancy you need. An administrator reviews it; you're emailed with the answer." / field **Tenancy** with helper "The name of the group or project. If it exists, this is a request to join; if not, a request to create it. Only administrators can tell which." / field **Why** / **Cancel** / **Send request**; `409 request_pending` → "You already have a request waiting. Withdraw it to send another.";
+  - home: card "{inviter} invited you to {tenancy}" / "{n} datasets · {date}" / **Decline** / **Accept**; line "Your request for {name} is waiting for an administrator · Withdraw";
+  - Members page: **+ Invite**; invite card "Member of the tenancy · sees its {n} datasets once they accept · administrators are notified"; pending row "{invitee} · invited by {inviter} {date} · not accepted yet" with **Withdraw**;
+  - Public: members row "Everyone on DataMap · can read"; new-dataset hint "Visible to every DataMap account; only you and people you share with can edit"; profile "Everyone is in public";
+  - avatar menu: "Request access to a tenancy".
 - Tailwind tokens for the design's literals: ink `primary-900`, secondary text `primary-600`, muted `primary-500`, borders `primary-200`/`primary-300`, icon chip `secondary-500` (`#E9F0EF`), avatar `secondary-900` (`#D7E4E3`), amber `embargo-800` on `embargo-100`, red `danger-700`.
 
 ---
@@ -50,26 +76,30 @@
 |---|---|
 | `pages/api/auth/[...nextauth].ts` (modify) | `hydrateWithUserInfo` sets/drops `token.admin`; the session callback exposes `session.user.admin` |
 | `types/next-auth.d.ts` (modify) | `Session.user.admin: boolean`, `JWT.admin?: boolean` |
-| `contants/TenancyConstants.ts` (create) | Contract constants, SWR keys, B copy, `tenancyErrorMessage` |
-| `contants/EmbargoConstants.ts` (modify) | `messageForApiError` maps `public_members_cannot_edit` |
-| `contants/TelemetryConstants.ts` (modify) | UI events `tenancy_access_requested`, `tenancy_invitation_accepted`, `tenancy_invitation_sent` |
-| `types/GatekeeperAPI.ts` (modify) | RFC 009 shapes; `ShareTenancy` and `ShareState` additions |
+| `contants/TenancyConstants.ts` (create) | Contract constants, `TENANCY_PATH_PATTERN`, SWR keys and key builders, B copy, `tenancyErrorMessage` |
+| `contants/EmbargoConstants.ts` (modify) | `messageForApiError` maps `public_members_cannot_edit` and `tenancy_cannot_change` |
+| `contants/TelemetryConstants.ts` (modify) | UI events `tenancy_access_requested`, `tenancy_invitation_accepted`, `tenancy_invitation_sent`; page `/app/members` |
+| `contants/InternalRoutesConstants.ts` (modify) | `ROUTE_PAGE_MEMBERS` |
+| `types/GatekeeperAPI.ts` (modify) | RFC 009 shapes; `ShareTenancy` additions |
 | `components/Tenancy/TenancyIcon.tsx` (create) | The shared tenancy chip |
-| `lib/tenancies.ts` (create) | Gatekeeper self routes |
-| `lib/share.ts` (modify) | Lookup, invite, withdraw |
+| `lib/tenancies.ts` (create) | Gatekeeper self routes; `asUser` |
+| `lib/workspace.ts` (create) | Gatekeeper workspace routes |
+| `lib/routeParams.ts` (create) | `invalidRequest`, `uuidOr404`, `tenancyOr400`, `pageOr400`, `userIdOr400` |
 | `pages/api/tenancies/index.ts` (create) | `GET` the user's tenancies |
 | `pages/api/tenancy-requests/index.ts` (create) | `GET` list, `POST` create |
 | `pages/api/tenancy-requests/[requestId].ts` (create) | `DELETE` withdraw |
 | `pages/api/tenancy-invitations/index.ts` (create) | `GET` pending invitations |
 | `pages/api/tenancy-invitations/[invitationId]/accept.ts` (create) | `POST` accept |
 | `pages/api/tenancy-invitations/[invitationId]/decline.ts` (create) | `POST` decline |
-| `pages/api/datasets/[datasetId]/share/lookup.ts` (create) | `GET` exact email/ORCID lookup |
-| `pages/api/datasets/[datasetId]/tenancy-invitations/index.ts` (create) | `POST` invite |
-| `pages/api/datasets/[datasetId]/tenancy-invitations/[invitationId].ts` (create) | `DELETE` withdraw |
+| `pages/api/workspace/members.ts` (create) | `GET` a page of members |
+| `pages/api/workspace/lookup.ts` (create) | `GET` exact email/ORCID lookup |
+| `pages/api/workspace/invitations/index.ts` (create) | `GET` pending, `POST` invite |
+| `pages/api/workspace/invitations/[invitationId].ts` (create) | `DELETE` withdraw |
 | `gateways/BFFAPI.ts` (modify) | Seven methods |
 | `lib/tenancyRequests.ts` (create) | Which request outcome to show; whether an approval is missing from the session |
-| `lib/tenancySelection.ts` (create) | Selection rule, stale-session check, first name, path label |
+| `lib/tenancySelection.ts` (create) | Selection rule, stale-session check, first name, path label, which tenancy has a Members page |
 | `hooks/UseTenancies.ts` (create) | SWR hooks; `useLatestTenancyRequest` calls `update()` on approval |
+| `hooks/UseWorkspace.ts` (create) | `useMembersPageTenancy`, `useWorkspaceMembers` (infinite), `useWorkspaceInvitations` |
 | `components/Tenancy/RequestAccessDialog.tsx` (create) | Formik + Yup request form |
 | `components/Tenancy/TenancyRequestStatus.tsx` (create) | `TenancyRequestRow` (selector, profile) and `TenancyRequestNotice` (home) |
 | `components/Tenancy/AccessPending.tsx` (modify) | Zero-tenancy copy with **Request access** |
@@ -81,21 +111,25 @@
 | `components/Tenancy/ProfileTenancies.tsx` (create) | Profile's Tenancies section body |
 | `pages/app/profile/index.tsx` (modify) | Uses `ProfileTenancies` and the invitations panel |
 | `lib/membersAccess.ts` (modify) | Public: never member-editable, no toggle, "Everyone on DataMap · can read" |
-| `components/Share/ShareDialog.tsx` (modify) | Public members row; tenancy invite wiring; footer; withdraw |
+| `components/Share/ShareDialog.tsx` (modify) | Public members row |
 | `components/Embargo/AccessSummary.tsx` (modify) | Public members row |
 | `components/Embargo/EmbargoChoice.tsx` (modify) | `isPublic`: Public hint, no members toggle |
 | `components/Embargo/EmbargoFields.tsx` (modify) | `membersEditable` hides "Change" |
 | `components/Embargo/SetEmbargoDialog.tsx` (modify) | Passes `membersEditable` |
 | `pages/app/datasets/new.tsx` (modify) | New datasets start with members read-only; `isPublic` |
-| `components/Share/ShareInput.tsx` (modify) | Lookup and the outsider card |
-| `components/Share/AccessList.tsx` (modify) | Pending tenancy invitations with Withdraw |
 | `lib/tenancyRevocation.ts` (create) | `isTenancyRevoked(status, detail)` |
 | `lib/rpc.ts` (modify) | `401` keeps the gatekeeper `detail` |
 | `pages/api/datasets/index.ts` (modify) | A failed list answers `{detail}` |
 | `lib/fetcher.js` (modify) | Errors carry `detail` |
 | `components/Auth/RequireSession.tsx` (modify) | `SWRConfig` `onError` recovers from a revoked tenancy |
 | `lib/requestErrorHandler.ts` (modify) | A revoked tenancy on a dataset page goes to the selector |
-| Tests | `lib/__tests__/sessionAdminClaim.test.ts`, `contants/__tests__/TenancyConstants.test.ts`, `components/Tenancy/__tests__/TenancyIcon.test.tsx`, `lib/__tests__/tenancies.test.ts`, `lib/__tests__/shareTenancyInvitations.test.ts`, `lib/__tests__/tenancyRoutes.test.ts`, `lib/__tests__/tenancyInvitationRoutes.test.ts`, `gateways/__tests__/BFFAPI.tenancies.test.ts`, `lib/__tests__/tenancyRequests.test.ts`, `lib/__tests__/tenancySelection.test.ts`, `hooks/__tests__/UseTenancies.test.tsx`, `components/Tenancy/__tests__/RequestAccessDialog.test.tsx`, `components/Tenancy/__tests__/TenancyRequestStatus.test.tsx`, `components/Tenancy/__tests__/AccessPending.test.tsx` (rewritten), `components/Tenancy/__tests__/TenancySelector.test.tsx`, `components/Profile/__tests__/AvatarButton.test.tsx`, `components/Tenancy/__tests__/TenancyInvitationsPanel.test.tsx`, `components/Tenancy/__tests__/ProfileTenancies.test.tsx`, `lib/__tests__/membersAccessPublic.test.ts`, `components/Embargo/__tests__/EmbargoChoicePublic.test.tsx`, `components/Share/__tests__/ShareInputTenancyInvite.test.tsx`, `components/Share/__tests__/AccessListTenancyInvitations.test.tsx`, `components/Share/__tests__/ShareDialogTenancy.test.tsx`, `lib/__tests__/tenancyRevocation.test.ts`, `lib/__tests__/fetcher.test.ts`, `lib/__tests__/datasetListRoute.test.ts`, `components/Auth/__tests__/RequireSessionRevoked.test.tsx`; additions to `lib/__tests__/rpc.test.ts` and `lib/__tests__/requestErrorHandler.test.ts` |
+| `pages/api/datasets/[datasetId].ts` (modify) | A failed `PUT` answers `{detail}`, so `tenancy_cannot_change` reaches the browser |
+| `components/Workspace/InviteMemberDialog.tsx` (create) | Formik + Yup invite input, debounced lookup, the account card, **Send invitation** |
+| `components/Workspace/WorkspaceInvitations.tsx` (create) | Pending invitations with **Withdraw** for the inviter |
+| `components/Workspace/WorkspaceMembers.tsx` (create) | The Members page body: members 50 at a time, invitations, **+ Invite** |
+| `pages/app/members/index.tsx` (create) | The Members page |
+| `components/LoggedLayout.tsx` (modify) | The sidebar **Members** entry |
+| Tests | `lib/__tests__/sessionAdminClaim.test.ts`, `contants/__tests__/TenancyConstants.test.ts`, `components/Tenancy/__tests__/TenancyIcon.test.tsx`, `lib/__tests__/tenancies.test.ts`, `lib/__tests__/workspace.test.ts`, `lib/__tests__/tenancyRoutes.test.ts`, `lib/__tests__/workspaceRoutes.test.ts`, `gateways/__tests__/BFFAPI.tenancies.test.ts`, `lib/__tests__/tenancyRequests.test.ts`, `lib/__tests__/tenancySelection.test.ts`, `hooks/__tests__/UseTenancies.test.tsx`, `components/Tenancy/__tests__/RequestAccessDialog.test.tsx`, `components/Tenancy/__tests__/TenancyRequestStatus.test.tsx`, `components/Tenancy/__tests__/AccessPending.test.tsx` (rewritten), `components/Tenancy/__tests__/TenancySelector.test.tsx`, `components/Profile/__tests__/AvatarButton.test.tsx`, `components/Tenancy/__tests__/TenancyInvitationsPanel.test.tsx`, `components/Tenancy/__tests__/ProfileTenancies.test.tsx`, `lib/__tests__/membersAccessPublic.test.ts`, `components/Embargo/__tests__/EmbargoChoicePublic.test.tsx`, `components/Share/__tests__/ShareDialogPublic.test.tsx`, `lib/__tests__/tenancyRevocation.test.ts`, `lib/__tests__/fetcher.test.ts`, `lib/__tests__/datasetListRoute.test.ts`, `components/Auth/__tests__/RequireSessionRevoked.test.tsx`, `lib/__tests__/datasetUpdateRoute.test.ts`, `hooks/__tests__/UseWorkspace.test.ts`, `components/Workspace/__tests__/InviteMemberDialog.test.tsx`, `components/Workspace/__tests__/WorkspaceInvitations.test.tsx`, `components/Workspace/__tests__/WorkspaceMembers.test.tsx`, `components/Workspace/__tests__/LoggedLayoutMembers.test.tsx`; additions to `lib/__tests__/rpc.test.ts`, `lib/__tests__/requestErrorHandler.test.ts`, `components/DatasetDetails/__tests__/DatasetColaboratorsForm.test.tsx` and `contants/__tests__/TelemetryConstants.test.ts` |
 
 ---
 
@@ -281,7 +315,7 @@ command git commit -m "feat: the session says whether the account is an admin" -
 - Test: `contants/__tests__/TenancyConstants.test.ts`, `components/Tenancy/__tests__/TenancyIcon.test.tsx`
 
 **Interfaces:**
-- Produces: everything in the contract's `TenancyConstants.ts` block; `TENANCIES_KEY`, `TENANCY_REQUESTS_KEY`, `TENANCY_INVITATIONS_KEY`, `REQUEST_OUTCOME_VISIBLE_DAYS = 30`, `PUBLIC_TENANCY_NOTE`, `PUBLIC_MEMBERS_DETAIL`, `PUBLIC_DATASET_HINT`, `SHARE_INVITE_FOOTER`, `REQUEST_PENDING_MESSAGE`, `TENANCY_GENERIC_ERROR_MESSAGE`, `TENANCY_ERROR_MESSAGES`, `tenancyErrorMessage(detail?: string): string`; the types listed in the Global Constraints; `TenancyIcon`.
+- Produces: everything in the contract's `TenancyConstants.ts` block; `TENANCY_PATH_PATTERN`, `TENANCIES_KEY`, `TENANCY_REQUESTS_KEY`, `TENANCY_INVITATIONS_KEY`, `WORKSPACE_PAGE_SIZE = 50`, `REQUEST_OUTCOME_VISIBLE_DAYS = 30`, `PUBLIC_TENANCY_NOTE`, `PUBLIC_MEMBERS_DETAIL`, `PUBLIC_DATASET_HINT`, `REQUEST_PENDING_MESSAGE`, `TENANCY_GENERIC_ERROR_MESSAGE`, `TENANCY_ERROR_MESSAGES`, `tenancyErrorMessage(detail?: string): string`; the types listed in the Global Constraints; `TenancyIcon`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -299,6 +333,7 @@ import {
     REASON_MAX_LENGTH,
     TENANCY_GENERIC_ERROR_MESSAGE,
     TENANCY_NAME_MAX_LENGTH,
+    TENANCY_PATH_PATTERN,
     isDefaultTenancy,
     isLegacyTenancy,
     tenancyErrorMessage,
@@ -324,9 +359,19 @@ describe("tenancy constants", () => {
         expect(tenancyNamespace("datamap/production/data-amazon")).toBe("data-amazon");
     });
 
+    test("a tenancy path is plain segments, nothing that could leave the gatekeeper route it is put in", () => {
+        expect(TENANCY_PATH_PATTERN.test("datamap/production/atto")).toBe(true);
+        expect(TENANCY_PATH_PATTERN.test("datamap/staging/data-amazon")).toBe(true);
+        for (const value of ["atto", "datamap/../users", "datamap//atto", "datamap/production/atto?x=1", "/datamap/production/atto", "datamap/production/atto/", "../../admin/tenancies"]) {
+            expect(TENANCY_PATH_PATTERN.test(value)).toBe(false);
+        }
+    });
+
     test("a known error code has its own sentence", () => {
         expect(tenancyErrorMessage("request_pending")).toBe("You already have a request waiting. Withdraw it to send another.");
         expect(tenancyErrorMessage("too_many_requests")).toBe("You have sent three requests in the last 24 hours. Try again tomorrow.");
+        expect(tenancyErrorMessage("tenancy_not_found")).toBe("You are not a member of this tenancy.");
+        expect(tenancyErrorMessage("forbidden")).toBe("Only the member who sent an invitation can withdraw it.");
     });
 
     test("anything else is the generic sentence, including names an object already has", () => {
@@ -339,6 +384,13 @@ describe("tenancy constants", () => {
         const error = new APIError("BAD_REQUEST", 400, "public_members_cannot_edit", true, undefined, "public_members_cannot_edit");
 
         expect(messageForApiError(error)).toBe("Members of Public can only read. Share the dataset with the people who should edit it.");
+    });
+
+    test("a dataset sent with another tenancy is told that datasets stay where they were created", () => {
+        const error = new APIError("BAD_REQUEST", 400, "tenancy_cannot_change", true, undefined, "tenancy_cannot_change");
+
+        expect(messageForApiError(error)).toBe("A dataset stays in the tenancy it was created in.");
+        expect(tenancyErrorMessage("tenancy_cannot_change")).toBe("A dataset stays in the tenancy it was created in.");
     });
 });
 ```
@@ -402,16 +454,19 @@ export const isDefaultTenancy = (path: string) => path === DEFAULT_TENANCY;
 export const isLegacyTenancy = (path: string) => path.startsWith(LEGACY_PREFIX);
 export const tenancyNamespace = (path: string) => path.split("/").pop() ?? path;
 
+/** Slash-separated segments only: no `..`, no empty segment, nothing a URL would read as more than a path. */
+export const TENANCY_PATH_PATTERN = /^[A-Za-z0-9_-]+(\/[A-Za-z0-9_-]+)+$/;
+
 export const TENANCIES_KEY = "/api/tenancies";
 export const TENANCY_REQUESTS_KEY = "/api/tenancy-requests";
 export const TENANCY_INVITATIONS_KEY = "/api/tenancy-invitations";
 
+export const WORKSPACE_PAGE_SIZE = 50;
 export const REQUEST_OUTCOME_VISIBLE_DAYS = 30;
 
 export const PUBLIC_TENANCY_NOTE = "Everyone is in public";
 export const PUBLIC_MEMBERS_DETAIL = "Everyone on DataMap · can read";
 export const PUBLIC_DATASET_HINT = "Visible to every DataMap account; only you and people you share with can edit";
-export const SHARE_INVITE_FOOTER = "Owners and editors can invite to the tenancy";
 export const REQUEST_PENDING_MESSAGE = "You already have a request waiting. Withdraw it to send another.";
 export const TENANCY_GENERIC_ERROR_MESSAGE = "Something went wrong. Please try again.";
 
@@ -423,14 +478,16 @@ export const TENANCY_ERROR_MESSAGES: Record<string, string> = {
     too_many_requests: "You have sent three requests in the last 24 hours. Try again tomorrow.",
     request_not_found: "This request is no longer waiting. Reload the page to see where it stands.",
     invitation_not_found: "This invitation is no longer open. It may have been withdrawn.",
+    tenancy_not_found: "You are not a member of this tenancy.",
     tenancy_disabled: "This tenancy is disabled, so nobody can join it now.",
-    no_account: "No DataMap account has this email or ORCID.",
+    no_account: "No DataMap account has this email or ORCID iD.",
     already_member: "This person is already a member of the tenancy.",
     invitation_pending: "This person already has an invitation to the tenancy waiting.",
-    public_tenancy_locked: "Everyone is already in Public.",
-    legacy_tenancy_read_only: "Legacy tenancies are read-only; nobody can be invited to them.",
-    forbidden: "Only the owner and editors who are members of the tenancy can invite to it.",
+    public_tenancy_locked: "Everyone on DataMap is in Public, so it has no Members page.",
+    legacy_tenancy_read_only: "Legacy tenancies are read-only, so they have no Members page.",
+    forbidden: "Only the member who sent an invitation can withdraw it.",
     public_members_cannot_edit: "Members of Public can only read. Share the dataset with the people who should edit it.",
+    tenancy_cannot_change: "A dataset stays in the tenancy it was created in.",
 };
 
 export function tenancyErrorMessage(detail?: string): string {
@@ -465,8 +522,9 @@ and replace:
 with:
 
 ```ts
-    if (apiError?.detail === "public_members_cannot_edit") {
-        return tenancyErrorMessage("public_members_cannot_edit");
+    const detail = typeof apiError?.detail === "string" ? apiError.detail : undefined;
+    if (detail === "public_members_cannot_edit" || detail === "tenancy_cannot_change") {
+        return tenancyErrorMessage(detail);
     }
     if (apiError?.httpCode === 403) {
         return "You are not allowed to do this on this dataset.";
@@ -495,24 +553,6 @@ export interface ShareTenancy {
     is_default: boolean
     is_legacy: boolean
     datasets: number
-}
-```
-
-replace:
-
-```ts
-    anonymous_links: AnonymousLink[]
-    tenancy: ShareTenancy | null
-}
-```
-
-with:
-
-```ts
-    anonymous_links: AnonymousLink[]
-    tenancy: ShareTenancy | null
-    tenancy_invitations: DatasetTenancyInvitation[]
-    can_invite_to_tenancy: boolean
 }
 ```
 
@@ -580,26 +620,33 @@ export interface TenancyInvitation {
     id: string
     tenancy: TenancySummary
     invited_by: UserRef | null
-    dataset: { id: string, name: string } | null
     datasets: number
     created_at: string
 }
 
 /** @interface */
-export interface ShareLookup {
+export interface WorkspaceMember {
+    id: string
+    name: string
+    orcid: string | null
+}
+
+/** @interface */
+export interface WorkspaceInvitation {
+    id: string
+    user: UserRef
+    invited_by: UserRef | null
+    created_at: string
+    can_withdraw: boolean
+}
+
+/** @interface */
+export interface InviteeLookup {
     user: UserBrief
     tenancy_member: boolean
     invitation_pending: boolean
     can_invite: boolean
-}
-
-/** @interface */
-export interface DatasetTenancyInvitation {
-    id: string
-    user: UserBrief
-    invited_by: UserBrief | null
-    created_at: string
-    can_withdraw: boolean
+    datasets: number
 }
 ```
 
@@ -632,7 +679,7 @@ export function TenancyIcon({ tenancy, pending }: { tenancy?: Pick<TenancySummar
 - [ ] **Step 4: Run them, the embargo constants and the share suites**
 
 Run: `npx jest --coverage=false contants/__tests__/TenancyConstants.test.ts components/Tenancy/__tests__/TenancyIcon.test.tsx contants/__tests__/EmbargoConstants.test.ts components/Share lib/__tests__/share.test.ts`
-Expected: PASS (5 + 3 new tests; the existing share suites build their states as `any`, so the new required fields do not break them).
+Expected: PASS (7 + 3 new tests; the existing share suites build their states as `any`, so the new required `ShareTenancy` fields do not break them).
 
 - [ ] **Step 5: Commit**
 
@@ -649,12 +696,12 @@ command git commit -m "feat: tenancy constants, types and icon shared by the RFC
 
 **Files:**
 - Create: `lib/tenancies.ts`
-- Modify: `lib/share.ts`
-- Test: `lib/__tests__/tenancies.test.ts`, `lib/__tests__/shareTenancyInvitations.test.ts`
+- Create: `lib/workspace.ts`
+- Test: `lib/__tests__/tenancies.test.ts`, `lib/__tests__/workspace.test.ts`
 
 **Interfaces:**
-- Consumes: `axiosInstance` and `buildHeaders` from `lib/rpc.ts`; the types of Task 3.
-- Produces: the ten client functions of the contract, with the signatures in the Global Constraints.
+- Consumes: `axiosInstance` from `lib/rpc.ts`; the types of Task 3.
+- Produces: the twelve client functions of the contract, with the signatures in the Global Constraints, and `asUser(uid: string): { headers: { "X-User-Id": string } }` exported from `lib/tenancies.ts`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -731,52 +778,63 @@ describe("the user's own tenancy calls", () => {
 });
 ```
 
-Create `lib/__tests__/shareTenancyInvitations.test.ts`:
+Create `lib/__tests__/workspace.test.ts`:
 
 ```ts
-import { inviteToTenancy, lookupShareTarget, withdrawTenancyInvitation } from "../share";
-import axiosInstance, { buildHeaders } from "../rpc";
+import { inviteToWorkspace, listWorkspaceInvitations, listWorkspaceMembers, lookupInvitee, withdrawWorkspaceInvitation } from "../workspace";
+import axiosInstance from "../rpc";
 
 jest.mock("../rpc");
 const mockGet = jest.mocked(axiosInstance.get);
 const mockPost = jest.mocked(axiosInstance.post);
 const mockDelete = jest.mocked(axiosInstance.delete);
 
-const context = { uid: "u1", tenancy: "datamap/production/data-amazon" };
-const headers = { headers: { "X-User-Id": "u1", "X-Datamap-Tenancies": "datamap/production/data-amazon" } };
+const asUser = { headers: { "X-User-Id": "u1" } };
+const AMAZON = "datamap/production/data-amazon";
 
-beforeEach(() => {
-    jest.mocked(buildHeaders).mockReturnValue(headers as any);
-});
+describe("the workspace calls", () => {
+    test("members put the path in the URL as it is, and the page in parameters", async () => {
+        mockGet.mockResolvedValue({ data: { items: [], total_count: 0, limit: 50, offset: 50 } });
 
-describe("tenancy invitations from the share dialog", () => {
-    test("the lookup sends the typed value as a parameter", async () => {
-        mockGet.mockResolvedValue({ data: { user: { id: "u7" }, can_invite: true } });
+        await listWorkspaceMembers("u1", AMAZON, { limit: 50, offset: 50 });
 
-        expect(await lookupShareTarget(context, "d1", "fernanda@inpe.br")).toEqual({ user: { id: "u7" }, can_invite: true });
-        expect(mockGet).toHaveBeenCalledWith("/datasets/d1/share/lookup", { ...headers, params: { value: "fernanda@inpe.br" } });
+        expect(mockGet).toHaveBeenCalledWith("/users/u1/tenancies/datamap/production/data-amazon/members", { ...asUser, params: { limit: 50, offset: 50 } });
     });
 
-    test("inviting sends the invitee's id", async () => {
+    test("pending invitations of the tenancy", async () => {
+        mockGet.mockResolvedValue({ data: [{ id: "ti1" }] });
+
+        expect(await listWorkspaceInvitations("u1", AMAZON)).toEqual([{ id: "ti1" }]);
+        expect(mockGet).toHaveBeenCalledWith("/users/u1/tenancies/datamap/production/data-amazon/invitations", asUser);
+    });
+
+    test("inviting sends the invitee in the gatekeeper's names", async () => {
         mockPost.mockResolvedValue({ data: { id: "ti1", can_withdraw: true } });
 
-        expect(await inviteToTenancy(context, "d1", "u7")).toEqual({ id: "ti1", can_withdraw: true });
-        expect(mockPost).toHaveBeenCalledWith("/datasets/d1/tenancy-invitations", { user_id: "u7" }, headers);
+        expect(await inviteToWorkspace("u1", AMAZON, "u7")).toEqual({ id: "ti1", can_withdraw: true });
+        expect(mockPost).toHaveBeenCalledWith("/users/u1/tenancies/datamap/production/data-amazon/invitations", { user_id: "u7" }, asUser);
     });
 
     test("withdrawing deletes the invitation", async () => {
         mockDelete.mockResolvedValue({ status: 204 });
 
-        await expect(withdrawTenancyInvitation(context, "d1", "ti1")).resolves.toBeUndefined();
-        expect(mockDelete).toHaveBeenCalledWith("/datasets/d1/tenancy-invitations/ti1", headers);
+        await expect(withdrawWorkspaceInvitation("u1", AMAZON, "ti1")).resolves.toBeUndefined();
+        expect(mockDelete).toHaveBeenCalledWith("/users/u1/tenancies/datamap/production/data-amazon/invitations/ti1", asUser);
+    });
+
+    test("the lookup sends the typed value as a parameter", async () => {
+        mockGet.mockResolvedValue({ data: { user: { id: "u7" }, can_invite: true, datasets: 108 } });
+
+        expect(await lookupInvitee("u1", AMAZON, "fernanda@inpe.br")).toEqual({ user: { id: "u7" }, can_invite: true, datasets: 108 });
+        expect(mockGet).toHaveBeenCalledWith("/users/u1/tenancies/datamap/production/data-amazon/lookup", { ...asUser, params: { value: "fernanda@inpe.br" } });
     });
 });
 ```
 
 - [ ] **Step 2: Run them and watch them fail**
 
-Run: `npx jest --coverage=false lib/__tests__/tenancies.test.ts lib/__tests__/shareTenancyInvitations.test.ts`
-Expected: FAIL — `Cannot find module '../tenancies'`, and `lookupShareTarget` is not exported from `../share`.
+Run: `npx jest --coverage=false lib/__tests__/tenancies.test.ts lib/__tests__/workspace.test.ts`
+Expected: FAIL — `Cannot find module '../tenancies'` and `Cannot find module '../workspace'`.
 
 - [ ] **Step 3: Implement**
 
@@ -786,7 +844,8 @@ Create `lib/tenancies.ts`:
 import { TenancyInvitation, TenancyRequest, TenancySummary } from "../types/GatekeeperAPI";
 import axiosInstance from "./rpc";
 
-function asUser(uid: string) {
+/** Self routes span tenancies, so they carry only the acting user, never a tenancy header. */
+export function asUser(uid: string) {
     return { headers: { "X-User-Id": uid } };
 }
 
@@ -828,67 +887,54 @@ export async function declineTenancyInvitation(uid: string, invitationId: string
 }
 ```
 
-In `lib/share.ts`, replace:
+Create `lib/workspace.ts`:
 
 ```ts
-    ShareUser,
-} from "../types/GatekeeperAPI";
-```
+import { GatekeeperPage, InviteeLookup, WorkspaceInvitation, WorkspaceMember } from "../types/GatekeeperAPI";
+import axiosInstance from "./rpc";
+import { asUser } from "./tenancies";
 
-with:
-
-```ts
-    ShareUser,
-    DatasetTenancyInvitation,
-    ShareLookup,
-} from "../types/GatekeeperAPI";
-```
-
-and replace:
-
-```ts
-    const response = await axiosInstance.put(`/datasets/${datasetId}/members-access`, request, buildHeaders(context));
-    return response.data as MembersAccessResponse;
-}
-```
-
-with:
-
-```ts
-    const response = await axiosInstance.put(`/datasets/${datasetId}/members-access`, request, buildHeaders(context));
-    return response.data as MembersAccessResponse;
+function workspaceRoute(uid: string, tenancy: string, rest: string): string {
+    return `/users/${uid}/tenancies/${tenancy}/${rest}`;
 }
 
-export async function lookupShareTarget(context: AppLocalContext, datasetId: string, value: string): Promise<ShareLookup> {
-    const response = await axiosInstance.get(`/datasets/${datasetId}/share/lookup`, {
-        ...buildHeaders(context),
-        params: { value },
-    });
-    return response.data as ShareLookup;
+export async function listWorkspaceMembers(uid: string, tenancy: string, page: { limit: number; offset: number }): Promise<GatekeeperPage<WorkspaceMember>> {
+    const response = await axiosInstance.get(workspaceRoute(uid, tenancy, "members"), { ...asUser(uid), params: { limit: page.limit, offset: page.offset } });
+    return response.data as GatekeeperPage<WorkspaceMember>;
 }
 
-export async function inviteToTenancy(context: AppLocalContext, datasetId: string, userId: string): Promise<DatasetTenancyInvitation> {
-    const response = await axiosInstance.post(`/datasets/${datasetId}/tenancy-invitations`, { user_id: userId }, buildHeaders(context));
-    return response.data as DatasetTenancyInvitation;
+export async function listWorkspaceInvitations(uid: string, tenancy: string): Promise<WorkspaceInvitation[]> {
+    const response = await axiosInstance.get(workspaceRoute(uid, tenancy, "invitations"), asUser(uid));
+    return response.data as WorkspaceInvitation[];
 }
 
-export async function withdrawTenancyInvitation(context: AppLocalContext, datasetId: string, invitationId: string): Promise<void> {
-    await axiosInstance.delete(`/datasets/${datasetId}/tenancy-invitations/${invitationId}`, buildHeaders(context));
+export async function inviteToWorkspace(uid: string, tenancy: string, userId: string): Promise<WorkspaceInvitation> {
+    const response = await axiosInstance.post(workspaceRoute(uid, tenancy, "invitations"), { user_id: userId }, asUser(uid));
+    return response.data as WorkspaceInvitation;
+}
+
+export async function withdrawWorkspaceInvitation(uid: string, tenancy: string, invitationId: string): Promise<void> {
+    await axiosInstance.delete(workspaceRoute(uid, tenancy, `invitations/${invitationId}`), asUser(uid));
+}
+
+export async function lookupInvitee(uid: string, tenancy: string, value: string): Promise<InviteeLookup> {
+    const response = await axiosInstance.get(workspaceRoute(uid, tenancy, "lookup"), { ...asUser(uid), params: { value } });
+    return response.data as InviteeLookup;
 }
 ```
 
-- [ ] **Step 4: Run them and the existing share client tests**
+- [ ] **Step 4: Run them**
 
-Run: `npx jest --coverage=false lib/__tests__/tenancies.test.ts lib/__tests__/shareTenancyInvitations.test.ts lib/__tests__/share.test.ts`
-Expected: PASS (7 + 3 new tests).
+Run: `npx jest --coverage=false lib/__tests__/tenancies.test.ts lib/__tests__/workspace.test.ts`
+Expected: PASS (7 + 5 new tests).
 
 - [ ] **Step 5: Commit**
 
 ```bash
 pwd
 command git branch --show-current
-command git add lib/tenancies.ts lib/share.ts lib/__tests__/tenancies.test.ts lib/__tests__/shareTenancyInvitations.test.ts
-command git commit -m "feat: gatekeeper calls for tenancy requests, invitations and the share lookup" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+command git add lib/tenancies.ts lib/workspace.ts lib/__tests__/tenancies.test.ts lib/__tests__/workspace.test.ts
+command git commit -m "feat: gatekeeper calls for tenancy requests, invitations and the workspace members" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -896,6 +942,7 @@ command git commit -m "feat: gatekeeper calls for tenancy requests, invitations 
 ### Task 5: BFF routes for the user's tenancies, requests and invitations
 
 **Files:**
+- Create: `lib/routeParams.ts`
 - Create: `pages/api/tenancies/index.ts`
 - Create: `pages/api/tenancy-requests/index.ts`
 - Create: `pages/api/tenancy-requests/[requestId].ts`
@@ -906,7 +953,7 @@ command git commit -m "feat: gatekeeper calls for tenancy requests, invitations 
 
 **Interfaces:**
 - Consumes: `bffRouter()` (`lib/bffRoute.ts`), `accountHandler`, `requireJsonRequest`, `isUuid` (`lib/accountRoute.ts`), `NewContext` (`lib/appLocalContext.ts`), the seven functions of `lib/tenancies.ts`.
-- Produces: the seven user routes of the contract. The uid is `NewContext(req).uid`, from the token.
+- Produces: the seven user routes of the contract. The uid is `NewContext(req).uid`, from the token. `lib/routeParams.ts` with `invalidRequest(res): undefined` (`400 {detail: "invalid_request"}`) and `uuidOr404(req, res, name, detail): string | undefined`; Task 6 adds the tenancy, page and invitee helpers to it.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1110,6 +1157,27 @@ Expected: FAIL — `Cannot find module '../../pages/api/tenancies/index'`.
 
 - [ ] **Step 3: Implement**
 
+Create `lib/routeParams.ts`:
+
+```ts
+import type { NextApiRequest, NextApiResponse } from "next";
+import { isUuid } from "./accountRoute";
+
+export function invalidRequest(res: NextApiResponse): undefined {
+    res.status(400).json({ detail: "invalid_request" });
+    return undefined;
+}
+
+export function uuidOr404(req: NextApiRequest, res: NextApiResponse, name: string, detail: string): string | undefined {
+    const value = req.query[name];
+    if (isUuid(value)) {
+        return value;
+    }
+    res.status(404).json({ detail });
+    return undefined;
+}
+```
+
 Create `pages/api/tenancies/index.ts`:
 
 ```ts
@@ -1133,6 +1201,7 @@ Create `pages/api/tenancy-requests/index.ts`:
 import { accountHandler, requireJsonRequest } from "../../../lib/accountRoute";
 import { NewContext } from "../../../lib/appLocalContext";
 import { bffRouter } from "../../../lib/bffRoute";
+import { invalidRequest } from "../../../lib/routeParams";
 import { createTenancyRequest, listMyTenancyRequests } from "../../../lib/tenancies";
 
 const router = bffRouter()
@@ -1144,7 +1213,7 @@ const router = bffRouter()
         const tenancyName = req.body?.tenancyName;
         const reason = req.body?.reason;
         if (typeof tenancyName !== "string" || typeof reason !== "string") {
-            res.status(400).json({ detail: "invalid_request" });
+            invalidRequest(res);
             return;
         }
         const { uid } = await NewContext(req);
@@ -1157,16 +1226,16 @@ export default accountHandler(router);
 Create `pages/api/tenancy-requests/[requestId].ts`:
 
 ```ts
-import { accountHandler, isUuid } from "../../../lib/accountRoute";
+import { accountHandler } from "../../../lib/accountRoute";
 import { NewContext } from "../../../lib/appLocalContext";
 import { bffRouter } from "../../../lib/bffRoute";
+import { uuidOr404 } from "../../../lib/routeParams";
 import { withdrawTenancyRequest } from "../../../lib/tenancies";
 
 const router = bffRouter()
     .delete(async (req, res) => {
-        const requestId = req.query.requestId;
-        if (!isUuid(requestId)) {
-            res.status(404).json({ detail: "request_not_found" });
+        const requestId = uuidOr404(req, res, "requestId", "request_not_found");
+        if (!requestId) {
             return;
         }
         const { uid } = await NewContext(req);
@@ -1197,16 +1266,16 @@ export default accountHandler(router);
 Create `pages/api/tenancy-invitations/[invitationId]/accept.ts`:
 
 ```ts
-import { accountHandler, isUuid, requireJsonRequest } from "../../../../lib/accountRoute";
+import { accountHandler, requireJsonRequest } from "../../../../lib/accountRoute";
 import { NewContext } from "../../../../lib/appLocalContext";
 import { bffRouter } from "../../../../lib/bffRoute";
+import { uuidOr404 } from "../../../../lib/routeParams";
 import { acceptTenancyInvitation } from "../../../../lib/tenancies";
 
 const router = bffRouter()
     .post(requireJsonRequest, async (req, res) => {
-        const invitationId = req.query.invitationId;
-        if (!isUuid(invitationId)) {
-            res.status(404).json({ detail: "invitation_not_found" });
+        const invitationId = uuidOr404(req, res, "invitationId", "invitation_not_found");
+        if (!invitationId) {
             return;
         }
         const { uid } = await NewContext(req);
@@ -1219,16 +1288,16 @@ export default accountHandler(router);
 Create `pages/api/tenancy-invitations/[invitationId]/decline.ts`:
 
 ```ts
-import { accountHandler, isUuid, requireJsonRequest } from "../../../../lib/accountRoute";
+import { accountHandler, requireJsonRequest } from "../../../../lib/accountRoute";
 import { NewContext } from "../../../../lib/appLocalContext";
 import { bffRouter } from "../../../../lib/bffRoute";
+import { uuidOr404 } from "../../../../lib/routeParams";
 import { declineTenancyInvitation } from "../../../../lib/tenancies";
 
 const router = bffRouter()
     .post(requireJsonRequest, async (req, res) => {
-        const invitationId = req.query.invitationId;
-        if (!isUuid(invitationId)) {
-            res.status(404).json({ detail: "invitation_not_found" });
+        const invitationId = uuidOr404(req, res, "invitationId", "invitation_not_found");
+        if (!invitationId) {
             return;
         }
         const { uid } = await NewContext(req);
@@ -1249,39 +1318,43 @@ Expected: PASS (14 new tests). A 401 on any authenticated case means the mocked 
 ```bash
 pwd
 command git branch --show-current
-command git add pages/api/tenancies pages/api/tenancy-requests pages/api/tenancy-invitations lib/__tests__/tenancyRoutes.test.ts
+command git add lib/routeParams.ts pages/api/tenancies pages/api/tenancy-requests pages/api/tenancy-invitations lib/__tests__/tenancyRoutes.test.ts
 command git commit -m "feat: BFF routes for the user's tenancies, requests and invitations" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 6: BFF routes for the share dialog's lookup and tenancy invitations
+### Task 6: BFF routes for the workspace Members page
 
 **Files:**
-- Create: `pages/api/datasets/[datasetId]/share/lookup.ts`
-- Create: `pages/api/datasets/[datasetId]/tenancy-invitations/index.ts`
-- Create: `pages/api/datasets/[datasetId]/tenancy-invitations/[invitationId].ts`
-- Test: `lib/__tests__/tenancyInvitationRoutes.test.ts`
+- Modify: `lib/routeParams.ts`
+- Create: `pages/api/workspace/members.ts`
+- Create: `pages/api/workspace/lookup.ts`
+- Create: `pages/api/workspace/invitations/index.ts`
+- Create: `pages/api/workspace/invitations/[invitationId].ts`
+- Test: `lib/__tests__/workspaceRoutes.test.ts`
 
 **Interfaces:**
-- Consumes: `bffRouter()` (the router `share/candidates.ts` uses), `accountHandler`, `requireJsonRequest`, `isUuid`, `NewContext`, `lookupShareTarget`, `inviteToTenancy`, `withdrawTenancyInvitation`.
-- Produces: `GET /api/datasets/[datasetId]/share/lookup?value=`, `POST /api/datasets/[datasetId]/tenancy-invitations` (`{userId}` → `201`), `DELETE /api/datasets/[datasetId]/tenancy-invitations/[invitationId]` (`204`).
+- Consumes: `bffRouter()`, `accountHandler`, `requireJsonRequest`, `isUuid`, `NewContext`, `invalidRequest` and `uuidOr404` (Task 5), `TENANCY_PATH_PATTERN` and `WORKSPACE_PAGE_SIZE` (Task 3), the five functions of `lib/workspace.ts`.
+- Produces: `tenancyOr400(req, res): string | undefined`, `pageOr400(req, res, defaultLimit: number): { limit: number; offset: number } | undefined`, `userIdOr400(req, res): string | undefined` in `lib/routeParams.ts`; `GET /api/workspace/members?tenancy&limit&offset`, `GET /api/workspace/lookup?tenancy&value`, `GET`/`POST /api/workspace/invitations?tenancy` (`{userId}` → `201`), `DELETE /api/workspace/invitations/[invitationId]?tenancy` (`204`). The gatekeeper decides membership; the BFF only checks the shape of what the browser sent.
 
 - [ ] **Step 1: Write the failing test**
 
-Create `lib/__tests__/tenancyInvitationRoutes.test.ts`:
+Create `lib/__tests__/workspaceRoutes.test.ts`:
 
 ```ts
 jest.mock("next-auth/jwt", () => ({ getToken: jest.fn(async () => ({ uid: "u1", v: 2 })) }));
-jest.mock("../share");
+jest.mock("../workspace");
 
 import { AxiosError, AxiosHeaders } from "axios";
-import lookupHandler from "../../pages/api/datasets/[datasetId]/share/lookup";
-import inviteHandler from "../../pages/api/datasets/[datasetId]/tenancy-invitations/index";
-import withdrawHandler from "../../pages/api/datasets/[datasetId]/tenancy-invitations/[invitationId]";
-import { inviteToTenancy, lookupShareTarget, withdrawTenancyInvitation } from "../share";
+import withdrawHandler from "../../pages/api/workspace/invitations/[invitationId]";
+import invitationsHandler from "../../pages/api/workspace/invitations/index";
+import lookupHandler from "../../pages/api/workspace/lookup";
+import membersHandler from "../../pages/api/workspace/members";
+import { inviteToWorkspace, listWorkspaceInvitations, listWorkspaceMembers, lookupInvitee, withdrawWorkspaceInvitation } from "../workspace";
 
 const JSON_HEADERS = { "content-type": "application/json" };
+const AMAZON = "datamap/production/data-amazon";
 const INVITEE = "7d1f0a2b-3c4d-4e5f-8a9b-0c1d2e3f4a5b";
 const INVITATION_ID = "0b9e8d7c-6a5b-4c3d-8e2f-1a2b3c4d5e6f";
 
@@ -1310,186 +1383,347 @@ async function send(handler: any, method: string, query: Record<string, string> 
     // @ts-ignore
     process.stdout.write = () => true;
     try {
-        await handler({ method, url: "/api/x", headers, cookies: {}, query, body } as any, res);
+        await handler({ method, url: "/api/workspace/x", headers, cookies: {}, query, body } as any, res);
     } finally {
         process.stdout.write = original;
     }
     return res;
 }
 
-describe("the share dialog's tenancy routes", () => {
-    test("the lookup passes the typed value and answers the gatekeeper's JSON", async () => {
-        jest.mocked(lookupShareTarget).mockResolvedValue({ user: { id: INVITEE }, can_invite: true } as any);
+beforeEach(() => {
+    jest.mocked(listWorkspaceMembers).mockReset();
+    jest.mocked(listWorkspaceInvitations).mockReset();
+    jest.mocked(inviteToWorkspace).mockReset();
+    jest.mocked(withdrawWorkspaceInvitation).mockReset();
+    jest.mocked(lookupInvitee).mockReset();
+});
 
-        const res = await send(lookupHandler, "GET", { datasetId: "d1", value: "fernanda@inpe.br" });
+describe("the workspace BFF routes", () => {
+    test("members are read for the user in the token, 50 at a time from the start", async () => {
+        jest.mocked(listWorkspaceMembers).mockResolvedValue({ items: [], total_count: 0, limit: 50, offset: 0 });
+
+        const res = await send(membersHandler, "GET", { tenancy: AMAZON });
 
         expect(res.statusCode).toBe(200);
-        expect(lookupShareTarget).toHaveBeenCalledWith(expect.objectContaining({ uid: "u1" }), "d1", "fernanda@inpe.br");
-        expect(res.json).toHaveBeenCalledWith({ user: { id: INVITEE }, can_invite: true });
+        expect(listWorkspaceMembers).toHaveBeenCalledWith("u1", AMAZON, { limit: 50, offset: 0 });
+        expect(res.json).toHaveBeenCalledWith({ items: [], total_count: 0, limit: 50, offset: 0 });
     });
 
-    test("a lookup without a value is invalid_request and never reaches the gatekeeper", async () => {
-        jest.mocked(lookupShareTarget).mockClear();
+    test("the next page is asked for by its offset", async () => {
+        jest.mocked(listWorkspaceMembers).mockResolvedValue({ items: [], total_count: 120, limit: 50, offset: 50 });
 
-        const res = await send(lookupHandler, "GET", { datasetId: "d1" });
+        await send(membersHandler, "GET", { tenancy: AMAZON, limit: "50", offset: "50" });
 
-        expect(res.statusCode).toBe(400);
-        expect(res.json).toHaveBeenCalledWith({ detail: "invalid_request" });
-        expect(lookupShareTarget).not.toHaveBeenCalled();
+        expect(listWorkspaceMembers).toHaveBeenCalledWith("u1", AMAZON, { limit: 50, offset: 50 });
     });
 
-    test("an unknown account keeps its 404 code", async () => {
-        jest.mocked(lookupShareTarget).mockRejectedValue(gatekeeperError(404, { detail: "no_account" }));
+    test("a tenancy that is not a plain path never reaches the gatekeeper", async () => {
+        for (const query of [{}, { tenancy: "../../admin/tenancies/datamap/production/atto" }, { tenancy: "datamap/production/../../users" }, { tenancy: "atto" }]) {
+            const res = await send(membersHandler, "GET", query);
+            expect(res.statusCode).toBe(400);
+            expect(res.json).toHaveBeenCalledWith({ detail: "invalid_request" });
+        }
+        expect(listWorkspaceMembers).not.toHaveBeenCalled();
+    });
 
-        const res = await send(lookupHandler, "GET", { datasetId: "d1", value: "nobody@inpe.br" });
+    test("paging that is not a whole number is refused", async () => {
+        for (const query of [{ tenancy: AMAZON, offset: "-1" }, { tenancy: AMAZON, limit: "ten" }]) {
+            const res = await send(membersHandler, "GET", query);
+            expect(res.statusCode).toBe(400);
+        }
+        expect(listWorkspaceMembers).not.toHaveBeenCalled();
+    });
+
+    test("someone who is not a member keeps the gatekeeper's 404 code", async () => {
+        jest.mocked(listWorkspaceMembers).mockRejectedValue(gatekeeperError(404, { detail: "tenancy_not_found" }));
+
+        const res = await send(membersHandler, "GET", { tenancy: AMAZON });
 
         expect(res.statusCode).toBe(404);
-        expect(res.json).toHaveBeenCalledWith({ detail: "no_account" });
+        expect(res.json).toHaveBeenCalledWith({ detail: "tenancy_not_found" });
+    });
+
+    test("Public keeps the gatekeeper's 409 code", async () => {
+        jest.mocked(listWorkspaceInvitations).mockRejectedValue(gatekeeperError(409, { detail: "public_tenancy_locked" }));
+
+        const res = await send(invitationsHandler, "GET", { tenancy: "datamap/production/public" });
+
+        expect(res.statusCode).toBe(409);
+        expect(res.json).toHaveBeenCalledWith({ detail: "public_tenancy_locked" });
+    });
+
+    test("pending invitations of the tenancy", async () => {
+        jest.mocked(listWorkspaceInvitations).mockResolvedValue([{ id: INVITATION_ID } as any]);
+
+        const res = await send(invitationsHandler, "GET", { tenancy: AMAZON });
+
+        expect(res.statusCode).toBe(200);
+        expect(listWorkspaceInvitations).toHaveBeenCalledWith("u1", AMAZON);
     });
 
     test("inviting sends the invitee and answers 201", async () => {
-        jest.mocked(inviteToTenancy).mockResolvedValue({ id: INVITATION_ID, can_withdraw: true } as any);
+        jest.mocked(inviteToWorkspace).mockResolvedValue({ id: INVITATION_ID, can_withdraw: true } as any);
 
-        const res = await send(inviteHandler, "POST", { datasetId: "d1" }, { userId: INVITEE }, JSON_HEADERS);
+        const res = await send(invitationsHandler, "POST", { tenancy: AMAZON }, { userId: INVITEE }, JSON_HEADERS);
 
         expect(res.statusCode).toBe(201);
-        expect(inviteToTenancy).toHaveBeenCalledWith(expect.objectContaining({ uid: "u1" }), "d1", INVITEE);
+        expect(inviteToWorkspace).toHaveBeenCalledWith("u1", AMAZON, INVITEE);
+        expect(res.json).toHaveBeenCalledWith({ id: INVITATION_ID, can_withdraw: true });
     });
 
     test("an invitee that is not a UUID is invalid_request", async () => {
-        jest.mocked(inviteToTenancy).mockClear();
-
-        const res = await send(inviteHandler, "POST", { datasetId: "d1" }, { userId: "u1" }, JSON_HEADERS);
+        const res = await send(invitationsHandler, "POST", { tenancy: AMAZON }, { userId: "u7" }, JSON_HEADERS);
 
         expect(res.statusCode).toBe(400);
         expect(res.json).toHaveBeenCalledWith({ detail: "invalid_request" });
-        expect(inviteToTenancy).not.toHaveBeenCalled();
-    });
-
-    test("a 409 keeps its code", async () => {
-        jest.mocked(inviteToTenancy).mockRejectedValue(gatekeeperError(409, { detail: "already_member" }));
-
-        const res = await send(inviteHandler, "POST", { datasetId: "d1" }, { userId: INVITEE }, JSON_HEADERS);
-
-        expect(res.statusCode).toBe(409);
-        expect(res.json).toHaveBeenCalledWith({ detail: "already_member" });
+        expect(inviteToWorkspace).not.toHaveBeenCalled();
     });
 
     test("an invitation that is not JSON is refused", async () => {
-        jest.mocked(inviteToTenancy).mockClear();
-
-        const res = await send(inviteHandler, "POST", { datasetId: "d1" }, `userId=${INVITEE}`, { "content-type": "application/x-www-form-urlencoded" });
+        const res = await send(invitationsHandler, "POST", { tenancy: AMAZON }, `userId=${INVITEE}`, { "content-type": "application/x-www-form-urlencoded" });
 
         expect(res.statusCode).toBe(415);
-        expect(inviteToTenancy).not.toHaveBeenCalled();
+        expect(inviteToWorkspace).not.toHaveBeenCalled();
+    });
+
+    test("an invitation the gatekeeper refuses keeps its code", async () => {
+        jest.mocked(inviteToWorkspace).mockRejectedValue(gatekeeperError(409, { detail: "invitation_pending" }));
+
+        const res = await send(invitationsHandler, "POST", { tenancy: AMAZON }, { userId: INVITEE }, JSON_HEADERS);
+
+        expect(res.statusCode).toBe(409);
+        expect(res.json).toHaveBeenCalledWith({ detail: "invitation_pending" });
     });
 
     test("withdrawing answers 204", async () => {
-        jest.mocked(withdrawTenancyInvitation).mockResolvedValue(undefined);
+        jest.mocked(withdrawWorkspaceInvitation).mockResolvedValue(undefined);
 
-        const res = await send(withdrawHandler, "DELETE", { datasetId: "d1", invitationId: INVITATION_ID });
+        const res = await send(withdrawHandler, "DELETE", { tenancy: AMAZON, invitationId: INVITATION_ID });
 
         expect(res.statusCode).toBe(204);
-        expect(withdrawTenancyInvitation).toHaveBeenCalledWith(expect.objectContaining({ uid: "u1" }), "d1", INVITATION_ID);
+        expect(withdrawWorkspaceInvitation).toHaveBeenCalledWith("u1", AMAZON, INVITATION_ID);
     });
 
     test("withdrawing someone else's invitation keeps the 403 code", async () => {
-        jest.mocked(withdrawTenancyInvitation).mockRejectedValue(gatekeeperError(403, { detail: "forbidden" }));
+        jest.mocked(withdrawWorkspaceInvitation).mockRejectedValue(gatekeeperError(403, { detail: "forbidden" }));
 
-        const res = await send(withdrawHandler, "DELETE", { datasetId: "d1", invitationId: INVITATION_ID });
+        const res = await send(withdrawHandler, "DELETE", { tenancy: AMAZON, invitationId: INVITATION_ID });
 
         expect(res.statusCode).toBe(403);
         expect(res.json).toHaveBeenCalledWith({ detail: "forbidden" });
+    });
+
+    test("an invitation id that is not a UUID is not found, and the gatekeeper is not called", async () => {
+        const res = await send(withdrawHandler, "DELETE", { tenancy: AMAZON, invitationId: "../members" });
+
+        expect(res.statusCode).toBe(404);
+        expect(res.json).toHaveBeenCalledWith({ detail: "invitation_not_found" });
+        expect(withdrawWorkspaceInvitation).not.toHaveBeenCalled();
+    });
+
+    test("the lookup passes the typed value, trimmed", async () => {
+        jest.mocked(lookupInvitee).mockResolvedValue({ user: { id: INVITEE }, can_invite: true, datasets: 108 } as any);
+
+        const res = await send(lookupHandler, "GET", { tenancy: AMAZON, value: " fernanda@inpe.br " });
+
+        expect(res.statusCode).toBe(200);
+        expect(lookupInvitee).toHaveBeenCalledWith("u1", AMAZON, "fernanda@inpe.br");
+        expect(res.json).toHaveBeenCalledWith({ user: { id: INVITEE }, can_invite: true, datasets: 108 });
+    });
+
+    test("a lookup without a value is invalid_request; an unknown account keeps its 404 code", async () => {
+        const empty = await send(lookupHandler, "GET", { tenancy: AMAZON, value: "  " });
+        jest.mocked(lookupInvitee).mockRejectedValue(gatekeeperError(404, { detail: "no_account" }));
+        const unknown = await send(lookupHandler, "GET", { tenancy: AMAZON, value: "nobody@inpe.br" });
+
+        expect(empty.statusCode).toBe(400);
+        expect(empty.json).toHaveBeenCalledWith({ detail: "invalid_request" });
+        expect(unknown.statusCode).toBe(404);
+        expect(unknown.json).toHaveBeenCalledWith({ detail: "no_account" });
+        expect(lookupInvitee).toHaveBeenCalledTimes(1);
     });
 });
 ```
 
 - [ ] **Step 2: Run it and watch it fail**
 
-Run: `npx jest --coverage=false lib/__tests__/tenancyInvitationRoutes.test.ts`
-Expected: FAIL — `Cannot find module '../../pages/api/datasets/[datasetId]/share/lookup'`.
+Run: `npx jest --coverage=false lib/__tests__/workspaceRoutes.test.ts`
+Expected: FAIL — `Cannot find module '../../pages/api/workspace/invitations/[invitationId]'`.
 
 - [ ] **Step 3: Implement**
 
-Create `pages/api/datasets/[datasetId]/share/lookup.ts`:
+In `lib/routeParams.ts`, replace:
 
 ```ts
-import { accountHandler } from "../../../../../lib/accountRoute";
-import { NewContext } from "../../../../../lib/appLocalContext";
-import { bffRouter } from "../../../../../lib/bffRoute";
-import { lookupShareTarget } from "../../../../../lib/share";
+import type { NextApiRequest, NextApiResponse } from "next";
+import { isUuid } from "./accountRoute";
+```
+
+with:
+
+```ts
+import type { NextApiRequest, NextApiResponse } from "next";
+import { TENANCY_PATH_PATTERN } from "../contants/TenancyConstants";
+import { isUuid } from "./accountRoute";
+
+const WHOLE_NUMBER = /^\d+$/;
+
+function wholeNumber(value: string | string[] | undefined, fallback: number): number | null {
+    if (value === undefined) {
+        return fallback;
+    }
+    return typeof value === "string" && WHOLE_NUMBER.test(value) ? Number(value) : null;
+}
+```
+
+and append to `lib/routeParams.ts`:
+
+```ts
+
+export function tenancyOr400(req: NextApiRequest, res: NextApiResponse): string | undefined {
+    const value = req.query.tenancy;
+    return typeof value === "string" && TENANCY_PATH_PATTERN.test(value) ? value : invalidRequest(res);
+}
+
+export function pageOr400(req: NextApiRequest, res: NextApiResponse, defaultLimit: number): { limit: number; offset: number } | undefined {
+    const limit = wholeNumber(req.query.limit, defaultLimit);
+    const offset = wholeNumber(req.query.offset, 0);
+    return limit === null || offset === null ? invalidRequest(res) : { limit, offset };
+}
+
+export function userIdOr400(req: NextApiRequest, res: NextApiResponse): string | undefined {
+    const userId = req.body?.userId;
+    return isUuid(userId) ? userId : invalidRequest(res);
+}
+```
+
+Create `pages/api/workspace/members.ts`:
+
+```ts
+import { WORKSPACE_PAGE_SIZE } from "../../../contants/TenancyConstants";
+import { accountHandler } from "../../../lib/accountRoute";
+import { NewContext } from "../../../lib/appLocalContext";
+import { bffRouter } from "../../../lib/bffRoute";
+import { pageOr400, tenancyOr400 } from "../../../lib/routeParams";
+import { listWorkspaceMembers } from "../../../lib/workspace";
 
 const router = bffRouter()
     .get(async (req, res) => {
-        const value = req.query.value;
-        if (typeof value !== "string" || value.trim() === "") {
-            res.status(400).json({ detail: "invalid_request" });
+        const tenancy = tenancyOr400(req, res);
+        if (!tenancy) {
             return;
         }
-        const context = await NewContext(req);
-        res.json(await lookupShareTarget(context, req.query.datasetId as string, value.trim()));
+        const page = pageOr400(req, res, WORKSPACE_PAGE_SIZE);
+        if (!page) {
+            return;
+        }
+        const { uid } = await NewContext(req);
+        res.json(await listWorkspaceMembers(uid, tenancy, page));
     });
 
 export default accountHandler(router);
 ```
 
-Create `pages/api/datasets/[datasetId]/tenancy-invitations/index.ts`:
+Create `pages/api/workspace/lookup.ts`:
 
 ```ts
-import { accountHandler, isUuid, requireJsonRequest } from "../../../../../lib/accountRoute";
-import { NewContext } from "../../../../../lib/appLocalContext";
-import { bffRouter } from "../../../../../lib/bffRoute";
-import { inviteToTenancy } from "../../../../../lib/share";
+import { accountHandler } from "../../../lib/accountRoute";
+import { NewContext } from "../../../lib/appLocalContext";
+import { bffRouter } from "../../../lib/bffRoute";
+import { invalidRequest, tenancyOr400 } from "../../../lib/routeParams";
+import { lookupInvitee } from "../../../lib/workspace";
 
 const router = bffRouter()
-    .post(requireJsonRequest, async (req, res) => {
-        const userId = req.body?.userId;
-        if (!isUuid(userId)) {
-            res.status(400).json({ detail: "invalid_request" });
+    .get(async (req, res) => {
+        const tenancy = tenancyOr400(req, res);
+        if (!tenancy) {
             return;
         }
-        const context = await NewContext(req);
-        res.status(201).json(await inviteToTenancy(context, req.query.datasetId as string, userId));
+        const value = typeof req.query.value === "string" ? req.query.value.trim() : "";
+        if (!value) {
+            invalidRequest(res);
+            return;
+        }
+        const { uid } = await NewContext(req);
+        res.json(await lookupInvitee(uid, tenancy, value));
     });
 
 export default accountHandler(router);
 ```
 
-Create `pages/api/datasets/[datasetId]/tenancy-invitations/[invitationId].ts`:
+Create `pages/api/workspace/invitations/index.ts`:
 
 ```ts
-import { accountHandler, isUuid } from "../../../../../lib/accountRoute";
-import { NewContext } from "../../../../../lib/appLocalContext";
-import { bffRouter } from "../../../../../lib/bffRoute";
-import { withdrawTenancyInvitation } from "../../../../../lib/share";
+import { accountHandler, requireJsonRequest } from "../../../../lib/accountRoute";
+import { NewContext } from "../../../../lib/appLocalContext";
+import { bffRouter } from "../../../../lib/bffRoute";
+import { tenancyOr400, userIdOr400 } from "../../../../lib/routeParams";
+import { inviteToWorkspace, listWorkspaceInvitations } from "../../../../lib/workspace";
+
+const router = bffRouter()
+    .get(async (req, res) => {
+        const tenancy = tenancyOr400(req, res);
+        if (!tenancy) {
+            return;
+        }
+        const { uid } = await NewContext(req);
+        res.json(await listWorkspaceInvitations(uid, tenancy));
+    })
+    .post(requireJsonRequest, async (req, res) => {
+        const tenancy = tenancyOr400(req, res);
+        if (!tenancy) {
+            return;
+        }
+        const userId = userIdOr400(req, res);
+        if (!userId) {
+            return;
+        }
+        const { uid } = await NewContext(req);
+        res.status(201).json(await inviteToWorkspace(uid, tenancy, userId));
+    });
+
+export default accountHandler(router);
+```
+
+Create `pages/api/workspace/invitations/[invitationId].ts`:
+
+```ts
+import { accountHandler } from "../../../../lib/accountRoute";
+import { NewContext } from "../../../../lib/appLocalContext";
+import { bffRouter } from "../../../../lib/bffRoute";
+import { tenancyOr400, uuidOr404 } from "../../../../lib/routeParams";
+import { withdrawWorkspaceInvitation } from "../../../../lib/workspace";
 
 const router = bffRouter()
     .delete(async (req, res) => {
-        const invitationId = req.query.invitationId;
-        if (!isUuid(invitationId)) {
-            res.status(404).json({ detail: "invitation_not_found" });
+        const tenancy = tenancyOr400(req, res);
+        if (!tenancy) {
             return;
         }
-        const context = await NewContext(req);
-        await withdrawTenancyInvitation(context, req.query.datasetId as string, invitationId);
+        const invitationId = uuidOr404(req, res, "invitationId", "invitation_not_found");
+        if (!invitationId) {
+            return;
+        }
+        const { uid } = await NewContext(req);
+        await withdrawWorkspaceInvitation(uid, tenancy, invitationId);
         res.status(204).end();
     });
 
 export default accountHandler(router);
 ```
 
-- [ ] **Step 4: Run it and the existing share route tests**
+- [ ] **Step 4: Run it and the user routes again**
 
-Run: `npx jest --coverage=false lib/__tests__/tenancyInvitationRoutes.test.ts lib/__tests__/shareRoutes.test.ts`
-Expected: PASS (9 new tests).
+Run: `npx jest --coverage=false lib/__tests__/workspaceRoutes.test.ts lib/__tests__/tenancyRoutes.test.ts lib/__tests__/serverLogging.invariant.test.ts`
+Expected: PASS (16 new tests; `tenancyRoutes` unchanged at 14).
 
 - [ ] **Step 5: Commit**
 
 ```bash
 pwd
 command git branch --show-current
-command git add "pages/api/datasets/[datasetId]/share/lookup.ts" "pages/api/datasets/[datasetId]/tenancy-invitations" lib/__tests__/tenancyInvitationRoutes.test.ts
-command git commit -m "feat: BFF routes for the share lookup and tenancy invitations" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+command git add lib/routeParams.ts pages/api/workspace lib/__tests__/workspaceRoutes.test.ts
+command git commit -m "feat: BFF routes for the workspace members, lookup and invitations" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -1531,6 +1765,7 @@ import { trackUiEvent } from "../../lib/telemetryClient";
 import { BFFAPI } from "../BFFAPI";
 
 const bff = new BFFAPI();
+const AMAZON = "datamap/production/data-amazon";
 
 describe("BFFAPI tenancies", () => {
     test("a request sends the browser's names and is counted", async () => {
@@ -1550,9 +1785,9 @@ describe("BFFAPI tenancies", () => {
     });
 
     test("accepting posts JSON and answers the tenancy", async () => {
-        jest.mocked(axios.post).mockResolvedValue({ status: 200, data: { tenancy: { path: "datamap/production/data-amazon" } } });
+        jest.mocked(axios.post).mockResolvedValue({ status: 200, data: { tenancy: { path: AMAZON } } });
 
-        expect(await bff.acceptTenancyInvitation("ti1")).toEqual({ tenancy: { path: "datamap/production/data-amazon" } });
+        expect(await bff.acceptTenancyInvitation("ti1")).toEqual({ tenancy: { path: AMAZON } });
         expect(axios.post).toHaveBeenCalledWith("/api/tenancy-invitations/ti1/accept", {});
         expect(trackUiEvent).toHaveBeenCalledWith("tenancy_invitation_accepted");
     });
@@ -1565,27 +1800,27 @@ describe("BFFAPI tenancies", () => {
         expect(axios.post).toHaveBeenCalledWith("/api/tenancy-invitations/ti1/decline", {});
     });
 
-    test("the lookup encodes the typed value", async () => {
+    test("the lookup encodes the tenancy and the typed value", async () => {
         jest.mocked(axios.get).mockResolvedValue({ status: 200, data: { can_invite: true } });
 
-        expect(await bff.lookupShareTarget("d1", "a+b@inpe.br")).toEqual({ can_invite: true });
-        expect(axios.get).toHaveBeenCalledWith("/api/datasets/d1/share/lookup?value=a%2Bb%40inpe.br");
+        expect(await bff.lookupInvitee(AMAZON, "a+b@inpe.br")).toEqual({ can_invite: true });
+        expect(axios.get).toHaveBeenCalledWith("/api/workspace/lookup?tenancy=datamap%2Fproduction%2Fdata-amazon&value=a%2Bb%40inpe.br");
     });
 
     test("inviting sends the invitee and is counted", async () => {
         jest.mocked(axios.post).mockResolvedValue({ status: 201, data: { id: "ti1" } });
 
-        expect(await bff.inviteToTenancy("d1", "u7")).toEqual({ id: "ti1" });
-        expect(axios.post).toHaveBeenCalledWith("/api/datasets/d1/tenancy-invitations", { userId: "u7" });
+        expect(await bff.inviteToWorkspace(AMAZON, "u7")).toEqual({ id: "ti1" });
+        expect(axios.post).toHaveBeenCalledWith("/api/workspace/invitations?tenancy=datamap%2Fproduction%2Fdata-amazon", { userId: "u7" });
         expect(trackUiEvent).toHaveBeenCalledWith("tenancy_invitation_sent");
     });
 
     test("withdrawing an invitation deletes it", async () => {
         jest.mocked(axios.delete).mockResolvedValue({ status: 204 });
 
-        await bff.withdrawTenancyInvitation("d1", "ti1");
+        await bff.withdrawWorkspaceInvitation(AMAZON, "ti1");
 
-        expect(axios.delete).toHaveBeenCalledWith("/api/datasets/d1/tenancy-invitations/ti1");
+        expect(axios.delete).toHaveBeenCalledWith("/api/workspace/invitations/ti1?tenancy=datamap%2Fproduction%2Fdata-amazon");
     });
 
     test("a failure rejects with the Axios error, so the caller reads its code", async () => {
@@ -1634,10 +1869,10 @@ with:
 
 ```ts
     ShareUser,
-    DatasetTenancyInvitation,
-    ShareLookup,
+    InviteeLookup,
     TenancyRequest,
     TenancySummary,
+    WorkspaceInvitation,
 } from "../types/GatekeeperAPI";
 ```
 
@@ -1676,19 +1911,19 @@ with:
         await axios.post(`/api/tenancy-invitations/${encodeURIComponent(invitationId)}/decline`, {});
     }
 
-    async lookupShareTarget(datasetId: string, value: string): Promise<ShareLookup> {
-        const response = await axios.get(`/api/datasets/${datasetId}/share/lookup?value=${encodeURIComponent(value)}`);
-        return response.data as ShareLookup;
+    async lookupInvitee(tenancy: string, value: string): Promise<InviteeLookup> {
+        const response = await axios.get(`/api/workspace/lookup?tenancy=${encodeURIComponent(tenancy)}&value=${encodeURIComponent(value)}`);
+        return response.data as InviteeLookup;
     }
 
-    async inviteToTenancy(datasetId: string, userId: string): Promise<DatasetTenancyInvitation> {
-        const response = await axios.post(`/api/datasets/${datasetId}/tenancy-invitations`, { userId });
+    async inviteToWorkspace(tenancy: string, userId: string): Promise<WorkspaceInvitation> {
+        const response = await axios.post(`/api/workspace/invitations?tenancy=${encodeURIComponent(tenancy)}`, { userId });
         trackUiEvent("tenancy_invitation_sent");
-        return response.data as DatasetTenancyInvitation;
+        return response.data as WorkspaceInvitation;
     }
 
-    async withdrawTenancyInvitation(datasetId: string, invitationId: string): Promise<void> {
-        await axios.delete(`/api/datasets/${datasetId}/tenancy-invitations/${encodeURIComponent(invitationId)}`);
+    async withdrawWorkspaceInvitation(tenancy: string, invitationId: string): Promise<void> {
+        await axios.delete(`/api/workspace/invitations/${encodeURIComponent(invitationId)}?tenancy=${encodeURIComponent(tenancy)}`);
     }
 ```
 
@@ -1703,7 +1938,7 @@ Expected: PASS (8 new tests).
 pwd
 command git branch --show-current
 command git add gateways/BFFAPI.ts contants/TelemetryConstants.ts gateways/__tests__/BFFAPI.tenancies.test.ts
-command git commit -m "feat: BFFAPI methods for tenancy requests and invitations" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+command git commit -m "feat: BFFAPI methods for tenancy requests, invitations and the workspace" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -2701,7 +2936,7 @@ with:
 - [ ] **Step 4: Run it**
 
 Run: `npx jest --coverage=false components/Tenancy/__tests__/AccessPending.test.tsx`
-Expected: PASS (6 tests; the suite had 5). `pages/app/tenancy/index.tsx` still renders `<AccessPending />` without the prop until Task 12; `ts-jest` does not compile that page, and Task 12 replaces it before the type check in Task 20.
+Expected: PASS (6 tests; the suite had 5). `pages/app/tenancy/index.tsx` still renders `<AccessPending />` without the prop until Task 12; `ts-jest` does not compile that page, and Task 12 replaces it before the type check in Task 24.
 
 - [ ] **Step 5: Commit**
 
@@ -3195,7 +3430,7 @@ command git commit -m "feat: the avatar menu offers to request access, and to sw
 
 **Interfaces:**
 - Consumes: `useTenancyInvitations`, `BFFAPI.acceptTenancyInvitation`, `BFFAPI.declineTenancyInvitation`, `useSession().update`, `useTenancyStore`, `TenancyIcon`, `TenancyRequestNotice`, `formatShortDate`, `tenancyErrorMessage`.
-- Produces: `TenancyInvitationsPanel(props: { className?: string })` — one card per pending invitation (design 1j: `tenancy` icon, "{inviter} invited you to {tenancy}", "{n} datasets · from “{dataset}” · {date}", **Decline** / **Accept**; "As Reader" dropped). Accept: `acceptTenancyInvitation` → `update()` → `setTenancySelected(tenancy.path)` → revalidate → `Router.push(ROUTE_PAGE_HOME)`. Renders nothing without invitations.
+- Produces: `TenancyInvitationsPanel(props: { className?: string })` — one card per pending invitation (design 1j: `tenancy` icon, "{inviter} invited you to {tenancy}", "{n} datasets · {date}", **Decline** / **Accept**; "As Reader" and the design's "from “{dataset}”" dropped, since an invitation belongs to the tenancy and PR A sends no dataset). Accept: `acceptTenancyInvitation` → `update()` → `setTenancySelected(tenancy.path)` → revalidate → `Router.push(ROUTE_PAGE_HOME)`. A `404 invitation_not_found` (withdrawn by the inviter or closed by an admin meanwhile) shows its sentence and revalidates, so the card leaves. Renders nothing without invitations.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -3234,7 +3469,6 @@ const invitation = {
     id: "ti1",
     tenancy: AMAZON,
     invited_by: { id: "o", name: "Luciana Rizzo" },
-    dataset: { id: "d1", name: "GoAmazon 2014/5 — Aerosol size distribution" },
     datasets: 108,
     created_at: "2026-10-04T09:50:00+00:00",
 };
@@ -3251,11 +3485,11 @@ beforeEach(() => {
 });
 
 describe("TenancyInvitationsPanel", () => {
-    test("one card per invitation, with who, where, how many datasets and from which", () => {
+    test("one card per invitation, with who, where and how many datasets", () => {
         render(<TenancyInvitationsPanel />);
 
         expect(screen.getByText("Luciana Rizzo invited you to Data Amazon")).toBeTruthy();
-        expect(screen.getByText("108 datasets · from “GoAmazon 2014/5 — Aerosol size distribution” · Oct 4")).toBeTruthy();
+        expect(screen.getByText("108 datasets · Oct 4")).toBeTruthy();
     });
 
     test("Accept joins, refreshes the session, selects the tenancy and opens the home, in that order", async () => {
@@ -3281,13 +3515,15 @@ describe("TenancyInvitationsPanel", () => {
         expect(update).not.toHaveBeenCalled();
     });
 
-    test("an invitation that is gone says so", async () => {
+    test("an invitation closed meanwhile says so and leaves the list", async () => {
         acceptTenancyInvitation.mockReset().mockRejectedValue({ response: { status: 404, data: { detail: "invitation_not_found" } } });
         render(<TenancyInvitationsPanel />);
 
         fireEvent.click(screen.getByRole("button", { name: "Accept" }));
 
         await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("This invitation is no longer open. It may have been withdrawn."));
+        expect(mutate).toHaveBeenCalled();
+        expect(update).not.toHaveBeenCalled();
         expect(push).not.toHaveBeenCalled();
     });
 
@@ -3298,8 +3534,8 @@ describe("TenancyInvitationsPanel", () => {
         expect(container.innerHTML).toBe("");
     });
 
-    test("an invitation without an inviter or a dataset still reads well", () => {
-        invitations = [{ ...invitation, invited_by: null, dataset: null, datasets: 1 }];
+    test("an invitation without an inviter still reads well", () => {
+        invitations = [{ ...invitation, invited_by: null, datasets: 1 }];
         render(<TenancyInvitationsPanel />);
 
         expect(screen.getByText("You were invited to Data Amazon")).toBeTruthy();
@@ -3337,11 +3573,7 @@ function invitationTitle(invitation: TenancyInvitation): string {
 }
 
 function invitationDetail(invitation: TenancyInvitation): string {
-    return [
-        `${invitation.datasets} ${invitation.datasets === 1 ? "dataset" : "datasets"}`,
-        invitation.dataset ? `from “${invitation.dataset.name}”` : "",
-        formatShortDate(invitation.created_at, false),
-    ].filter(Boolean).join(" · ");
+    return `${invitation.datasets} ${invitation.datasets === 1 ? "dataset" : "datasets"} · ${formatShortDate(invitation.created_at, false)}`;
 }
 
 export function TenancyInvitationsPanel(props: { className?: string }) {
@@ -3356,6 +3588,14 @@ export function TenancyInvitationsPanel(props: { className?: string }) {
         return null;
     }
 
+    async function failed(e: any) {
+        const detail = e?.response?.data?.detail;
+        setError(tenancyErrorMessage(detail));
+        if (detail === "invitation_not_found") {
+            await mutate();
+        }
+    }
+
     async function accept(invitation: TenancyInvitation) {
         setBusy(true);
         setError(null);
@@ -3366,7 +3606,7 @@ export function TenancyInvitationsPanel(props: { className?: string }) {
             await mutate();
             Router.push(ROUTE_PAGE_HOME);
         } catch (e) {
-            setError(tenancyErrorMessage(e?.response?.data?.detail));
+            await failed(e);
         } finally {
             setBusy(false);
         }
@@ -3379,7 +3619,7 @@ export function TenancyInvitationsPanel(props: { className?: string }) {
             await bffGateway.declineTenancyInvitation(invitation.id);
             await mutate();
         } catch (e) {
-            setError(tenancyErrorMessage(e?.response?.data?.detail));
+            await failed(e);
         } finally {
             setBusy(false);
         }
@@ -3742,7 +3982,7 @@ command git commit -m "feat: the profile lists tenancies by name, the request an
 - Modify: `components/Embargo/EmbargoFields.tsx`
 - Modify: `components/Embargo/SetEmbargoDialog.tsx`
 - Modify: `pages/app/datasets/new.tsx`
-- Test: `lib/__tests__/membersAccessPublic.test.ts`, `components/Embargo/__tests__/EmbargoChoicePublic.test.tsx`
+- Test: `lib/__tests__/membersAccessPublic.test.ts`, `components/Embargo/__tests__/EmbargoChoicePublic.test.tsx`, `components/Share/__tests__/ShareDialogPublic.test.tsx`
 
 **Interfaces:**
 - Consumes: `isDefaultTenancy`, `PUBLIC_MEMBERS_DETAIL`, `PUBLIC_DATASET_HINT`; `ShareTenancy.is_default` (Task 3).
@@ -3830,10 +4070,50 @@ describe("EmbargoChoice in Public", () => {
 });
 ```
 
+Create `components/Share/__tests__/ShareDialogPublic.test.tsx`:
+
+```tsx
+/** @jest-environment jsdom */
+import { describe, expect, jest, test } from '@jest/globals';
+import { render, screen } from '@testing-library/react';
+
+const shareState: any = {
+    owner: { id: "o", name: "Ana Souza", email: "ana@example.org" },
+    permissions: [],
+    invitations: [],
+    anonymous_links: [],
+    tenancy: { name: "Public", path: "datamap/production/public", members: 47, members_can_edit: false, is_default: true, is_legacy: false, datasets: 300 },
+};
+
+jest.mock("../../../gateways/BFFAPI", () => ({ BFFAPI: jest.fn().mockImplementation(() => ({})) }));
+jest.mock("swr", () => ({
+    __esModule: true,
+    default: () => ({ data: shareState, error: undefined, mutate: jest.fn() }),
+}));
+jest.mock("next-auth/react", () => ({ useSession: () => ({ data: null }) }));
+jest.mock("next/router", () => ({ useRouter: () => ({ replace: jest.fn(async () => true), asPath: "/app/datasets/d3" }) }));
+jest.mock("../../../lib/fetcher", () => ({ fetcher: jest.fn() }));
+jest.mock("../ShareInput", () => ({ ShareInput: () => null }));
+
+import { ShareDialog } from "../ShareDialog";
+
+const publicDataset: any = { id: "d3", name: "Open aerosol optical depth", tenancy: "datamap/production/public", embargo: null, access: { level: "owner" } };
+
+describe("ShareDialog in Public", () => {
+    test("members are everyone on DataMap and there is nothing to change", () => {
+        render(<ShareDialog dataset={publicDataset} show onClose={jest.fn()} />);
+
+        expect(screen.getByText("Members of Public")).toBeTruthy();
+        expect(screen.getByText("Everyone on DataMap · can read")).toBeTruthy();
+        expect(screen.queryByRole("button", { name: "Change what members of Public can do" })).toBeNull();
+    });
+});
+```
+
 - [ ] **Step 2: Run them and watch them fail**
 
-Run: `npx jest --coverage=false lib/__tests__/membersAccessPublic.test.ts components/Embargo/__tests__/EmbargoChoicePublic.test.tsx`
-Expected: FAIL — `membersCanEditOf` answers `true` for Public, `everyone` is not a known option (type error), `isPublic` is not a prop of `EmbargoChoice` (type error).
+Run: `npx jest --coverage=false lib/__tests__/membersAccessPublic.test.ts components/Embargo/__tests__/EmbargoChoicePublic.test.tsx components/Share/__tests__/ShareDialogPublic.test.tsx`
+Expected: FAIL — `membersCanEditOf` answers `true` for Public, `everyone` is not a known option (type error), `isPublic` is not a prop of `EmbargoChoice` (type error), and the dialog's members row reads "47 people · …" instead of "Everyone on DataMap · can read".
 
 - [ ] **Step 3: Implement**
 
@@ -4115,805 +4395,20 @@ with:
 - [ ] **Step 4: Run them and every suite that touches members access**
 
 Run: `npx jest --coverage=false lib/__tests__/membersAccessPublic.test.ts lib/__tests__/membersAccess.test.ts components/Embargo components/Share lib/__tests__/membersAccessRoute.test.ts`
-Expected: PASS (4 + 3 new tests). The existing `EmbargoChoice`, `SetEmbargoDialog`, `AccessSummary` and `ShareDialog` tests keep passing: their datasets are in `data-amazon` and set `membersCanEdit` explicitly or start from the column.
+Expected: PASS (4 + 3 + 1 new tests). The existing `EmbargoChoice`, `SetEmbargoDialog`, `AccessSummary` and `ShareDialog` tests keep passing: their datasets are in `data-amazon` and set `membersCanEdit` explicitly or start from the column.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 pwd
 command git branch --show-current
-command git add lib/membersAccess.ts components/Share/ShareDialog.tsx components/Embargo/AccessSummary.tsx components/Embargo/EmbargoChoice.tsx components/Embargo/EmbargoFields.tsx components/Embargo/SetEmbargoDialog.tsx pages/app/datasets/new.tsx lib/__tests__/membersAccessPublic.test.ts components/Embargo/__tests__/EmbargoChoicePublic.test.tsx
+command git add lib/membersAccess.ts components/Share/ShareDialog.tsx components/Embargo/AccessSummary.tsx components/Embargo/EmbargoChoice.tsx components/Embargo/EmbargoFields.tsx components/Embargo/SetEmbargoDialog.tsx pages/app/datasets/new.tsx lib/__tests__/membersAccessPublic.test.ts components/Embargo/__tests__/EmbargoChoicePublic.test.tsx components/Share/__tests__/ShareDialogPublic.test.tsx
 command git commit -m "feat: members of Public only read, and new datasets start read-only for members" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 17: The share input offers to invite an outsider into the tenancy
-
-**Files:**
-- Modify: `components/Share/ShareInput.tsx` (rewritten)
-- Test: `components/Share/__tests__/ShareInputTenancyInvite.test.tsx`
-
-**Interfaces:**
-- Consumes: `BFFAPI.lookupShareTarget`, `classifyShareInput`, `useDebouncedValue(…, 300)`, `SHARE_LEVEL_LABELS`, `PersonInitial`.
-- Produces: `export interface TenancyInvite { tenancyName: string; datasets: number; onInvite(userId: string): Promise<boolean> }`; `ShareInput` gains `invite?: TenancyInvite | null`. With `invite`, a typed email or ORCID is looked up once it settles; when the answer has `can_invite`, the design's 1j card replaces the "Invite {email}" panel: avatar, name, "{email} · not a member of {tenancy}", radios **Share this dataset only** (default, "{level} · as today") and **Invite to {tenancy}** ("Member of the tenancy · sees its {n} datasets once they accept · administrators are notified"), and a button **Share** / **Send invitation**. "Share" grants exactly as today (`{email | orcid, level}`); "Send invitation" calls `invite.onInvite(user.id)`. Without `invite`, or when the lookup fails or `can_invite` is false, the input behaves as before.
-
-- [ ] **Step 1: Write the failing test**
-
-Create `components/Share/__tests__/ShareInputTenancyInvite.test.tsx`:
-
-```tsx
-/** @jest-environment jsdom */
-import { beforeEach, describe, expect, jest, test } from '@jest/globals';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-
-const searchShareCandidates = jest.fn() as any;
-const lookupShareTarget = jest.fn() as any;
-
-jest.mock("../../../gateways/BFFAPI", () => ({
-    BFFAPI: jest.fn().mockImplementation(() => ({ searchShareCandidates, lookupShareTarget })),
-}));
-
-import { ShareInput } from "../ShareInput";
-
-const outsider = {
-    user: { id: "u7", name: "Fernanda Lima", email: "fernanda.lima@inpe.br" },
-    tenancy_member: false,
-    invitation_pending: false,
-    can_invite: true,
-};
-
-function invite(onInvite: any = jest.fn()) {
-    return { tenancyName: "Data Amazon", datasets: 108, onInvite };
-}
-
-function type(text: string) {
-    fireEvent.change(screen.getByLabelText("Add people by name, email or ORCID"), { target: { value: text } });
-}
-
-async function settle() {
-    await act(async () => { jest.advanceTimersByTime(300); });
-    await act(async () => { await Promise.resolve(); });
-}
-
-beforeEach(() => {
-    jest.useFakeTimers();
-    searchShareCandidates.mockReset().mockResolvedValue([]);
-    lookupShareTarget.mockReset().mockResolvedValue(outsider);
-});
-
-describe("ShareInput inviting into the tenancy", () => {
-    test("without an invite, a typed email is never looked up", async () => {
-        render(<ShareInput datasetId="d1" tenancyName="Data Amazon" onGrant={jest.fn() as any} />);
-
-        type("fernanda.lima@inpe.br");
-        await settle();
-
-        expect(lookupShareTarget).not.toHaveBeenCalled();
-        expect(screen.getByRole("button", { name: /Invite fernanda.lima@inpe.br/ })).toBeTruthy();
-    });
-
-    test("an account outside the tenancy gets the card, sharing only this dataset by default", async () => {
-        render(<ShareInput datasetId="d1" tenancyName="Data Amazon" onGrant={jest.fn() as any} invite={invite()} />);
-
-        type("fernanda.lima@inpe.br");
-        await settle();
-
-        await waitFor(() => expect(lookupShareTarget).toHaveBeenCalledWith("d1", "fernanda.lima@inpe.br"));
-        expect(await screen.findByText("fernanda.lima@inpe.br · not a member of Data Amazon")).toBeTruthy();
-        expect((screen.getByRole("radio", { name: /Share this dataset only/ }) as HTMLInputElement).checked).toBe(true);
-        expect(screen.getByText("Can read · as today")).toBeTruthy();
-        expect(screen.getByText("Member of the tenancy · sees its 108 datasets once they accept · administrators are notified")).toBeTruthy();
-        expect(screen.queryByRole("button", { name: /Invite fernanda.lima@inpe.br/ })).toBeNull();
-    });
-
-    test("Share grants this dataset as before", async () => {
-        const onGrant = (jest.fn() as any).mockResolvedValue(true);
-        render(<ShareInput datasetId="d1" tenancyName="Data Amazon" onGrant={onGrant} invite={invite()} />);
-
-        type("fernanda.lima@inpe.br");
-        await settle();
-        fireEvent.click(await screen.findByRole("button", { name: "Share" }));
-
-        await waitFor(() => expect(onGrant).toHaveBeenCalledWith({ email: "fernanda.lima@inpe.br", level: "read" }));
-    });
-
-    test("choosing the tenancy sends an invitation for that account and clears the input", async () => {
-        const onInvite = (jest.fn() as any).mockResolvedValue(true);
-        const onGrant = jest.fn() as any;
-        render(<ShareInput datasetId="d1" tenancyName="Data Amazon" onGrant={onGrant} invite={invite(onInvite)} />);
-
-        type("fernanda.lima@inpe.br");
-        await settle();
-        fireEvent.click(await screen.findByRole("radio", { name: /Invite to Data Amazon/ }));
-        fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
-
-        await waitFor(() => expect(onInvite).toHaveBeenCalledWith("u7"));
-        expect(onGrant).not.toHaveBeenCalled();
-        await waitFor(() => expect((screen.getByLabelText("Add people by name, email or ORCID") as HTMLInputElement).value).toBe(""));
-    });
-
-    test("an account that cannot be invited keeps the usual invitation", async () => {
-        lookupShareTarget.mockResolvedValue({ ...outsider, tenancy_member: true, can_invite: false });
-        render(<ShareInput datasetId="d1" tenancyName="Data Amazon" onGrant={jest.fn() as any} invite={invite()} />);
-
-        type("fernanda.lima@inpe.br");
-        await settle();
-
-        await waitFor(() => expect(lookupShareTarget).toHaveBeenCalled());
-        expect(screen.queryByRole("radio", { name: /Invite to Data Amazon/ })).toBeNull();
-        expect(screen.getByRole("button", { name: /Invite fernanda.lima@inpe.br/ })).toBeTruthy();
-    });
-
-    test("no account behind the email keeps the usual invitation", async () => {
-        lookupShareTarget.mockRejectedValue({ response: { status: 404, data: { detail: "no_account" } } });
-        render(<ShareInput datasetId="d1" tenancyName="Data Amazon" onGrant={jest.fn() as any} invite={invite()} />);
-
-        type("nobody@inpe.br");
-        await settle();
-
-        await waitFor(() => expect(lookupShareTarget).toHaveBeenCalled());
-        expect(screen.queryByRole("radio", { name: /Invite to Data Amazon/ })).toBeNull();
-        expect(screen.getByRole("button", { name: /Invite nobody@inpe.br/ })).toBeTruthy();
-    });
-});
-```
-
-- [ ] **Step 2: Run it and watch it fail**
-
-Run: `npx jest --coverage=false components/Share/__tests__/ShareInputTenancyInvite.test.tsx`
-Expected: FAIL — `invite` is not a prop of `ShareInput` (type error); once it compiles, no lookup and no card.
-
-- [ ] **Step 3: Implement**
-
-Replace the whole of `components/Share/ShareInput.tsx` with:
-
-```tsx
-import { useEffect, useState } from "react";
-import { MaterialSymbol } from "react-material-symbols";
-import { SHARE_LEVEL_LABELS, SHARE_PERSON_DETAIL_CLASS, SHARE_PERSON_NAME_CLASS } from "../../contants/ShareConstants";
-import { BFFAPI } from "../../gateways/BFFAPI";
-import { useDebouncedValue } from "../../hooks/UseDebouncedValue";
-import { classifyShareInput } from "../../lib/shareTarget";
-import { GrantRequest, PermissionLevel, ShareLookup, ShareUser } from "../../types/GatekeeperAPI";
-import { PersonInitial } from "./PersonInitial";
-
-export interface TenancyInvite {
-    tenancyName: string
-    datasets: number
-    onInvite(userId: string): Promise<boolean>
-}
-
-interface Props {
-    datasetId: string
-    tenancyName: string
-    busy?: boolean
-    onGrant(request: GrantRequest): Promise<boolean>
-    invite?: TenancyInvite | null
-}
-
-type Reach = "dataset" | "tenancy";
-
-function Highlighted(props: { name: string, typed: string }) {
-    const start = props.name.toLowerCase().indexOf(props.typed.toLowerCase());
-    if (start < 0 || !props.typed) {
-        return <>{props.name}</>;
-    }
-    const end = start + props.typed.length;
-    return <>{props.name.slice(0, start)}<strong className="font-bold">{props.name.slice(start, end)}</strong>{props.name.slice(end)}</>;
-}
-
-export function ShareInput(props: Props) {
-    const [bffGateway] = useState(() => new BFFAPI());
-    const [text, setText] = useState("");
-    const [level, setLevel] = useState<PermissionLevel>("read");
-    const [suggestions, setSuggestions] = useState<ShareUser[]>([]);
-    const [lookup, setLookup] = useState<{ value: string, result: ShareLookup } | null>(null);
-    const [reach, setReach] = useState<Reach>("dataset");
-    const debounced = useDebouncedValue(text, 300);
-    const target = classifyShareInput(text);
-    const canInvite = Boolean(props.invite);
-
-    useEffect(() => {
-        const settled = classifyShareInput(debounced);
-        if (settled.kind !== "text" || settled.value.length < 2) {
-            setSuggestions([]);
-            return;
-        }
-        let cancelled = false;
-        bffGateway.searchShareCandidates(props.datasetId, settled.value)
-            .then((users) => { if (!cancelled) setSuggestions(users); })
-            .catch(() => { if (!cancelled) setSuggestions([]); });
-        return () => { cancelled = true; };
-    }, [debounced, props.datasetId, bffGateway]);
-
-    useEffect(() => {
-        const settled = classifyShareInput(debounced);
-        if (!canInvite || (settled.kind !== "email" && settled.kind !== "orcid")) {
-            setLookup(null);
-            return;
-        }
-        let cancelled = false;
-        bffGateway.lookupShareTarget(props.datasetId, settled.value)
-            .then((result) => {
-                if (!cancelled) {
-                    setLookup({ value: settled.value, result });
-                    setReach("dataset");
-                }
-            })
-            .catch(() => { if (!cancelled) setLookup(null); });
-        return () => { cancelled = true; };
-    }, [debounced, props.datasetId, canInvite, bffGateway]);
-
-    async function grant(request: GrantRequest) {
-        if (props.busy) {
-            return;
-        }
-        if (await props.onGrant(request)) {
-            setText("");
-            setSuggestions([]);
-            setLookup(null);
-        }
-    }
-
-    const outsider = props.invite && lookup && (target.kind === "email" || target.kind === "orcid") && lookup.value === target.value && lookup.result.can_invite
-        ? lookup.result
-        : null;
-
-    async function shareWithOutsider() {
-        if (!outsider || props.busy) {
-            return;
-        }
-        if (reach === "tenancy") {
-            if (await props.invite.onInvite(outsider.user.id)) {
-                setText("");
-                setLookup(null);
-            }
-            return;
-        }
-        await grant(target.kind === "email" ? { email: target.value, level } : { orcid: target.value, level });
-    }
-
-    const panel = "mt-1.5 w-full max-w-[460px] rounded-lg border border-primary-200 bg-primary-0 shadow-lg shadow-primary-900/10 overflow-hidden";
-    const option = "grid grid-cols-[32px_minmax(0,1fr)] gap-3 items-center w-full px-3.5 py-2.5 text-left hover:bg-primary-100";
-    const reaches: { value: Reach, label: string, hint: string }[] = props.invite
-        ? [
-            { value: "dataset", label: "Share this dataset only", hint: `${SHARE_LEVEL_LABELS[level]} · as today` },
-            {
-                value: "tenancy",
-                label: `Invite to ${props.invite.tenancyName}`,
-                hint: `Member of the tenancy · sees its ${props.invite.datasets} datasets once they accept · administrators are notified`,
-            },
-        ]
-        : [];
-
-    return (
-        <div className="relative">
-            <div className="flex gap-2">
-                <div className={`flex flex-1 items-center gap-2.5 h-11 px-3.5 rounded-md border bg-primary-0 ${text ? "border-primary-900" : "border-primary-300"}`}>
-                    <MaterialSymbol icon="person_add" size={20} grade={-25} weight={400} className="text-primary-400" />
-                    <input
-                        aria-label="Add people by name, email or ORCID"
-                        type="text"
-                        autoComplete="off"
-                        className="w-full h-full p-0 border-0 bg-transparent text-sm text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-0"
-                        placeholder="Add people by name, email or ORCID"
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                    />
-                </div>
-                <select
-                    aria-label="Access level"
-                    className="h-11 w-auto flex-none rounded-md border border-primary-300 bg-primary-0 pl-3 pr-8 text-sm font-medium text-primary-900"
-                    value={level}
-                    onChange={(e) => setLevel(e.target.value as PermissionLevel)}
-                >
-                    <option value="read">Can read</option>
-                    <option value="write">Can write</option>
-                </select>
-            </div>
-
-            {target.kind === "invalid_orcid" &&
-                <div role="alert" className="mt-1.5 grid grid-cols-[32px_minmax(0,1fr)] gap-3 items-center max-w-[460px] rounded-lg border border-danger-200 bg-danger-50 px-3.5 py-2.5">
-                    <MaterialSymbol icon="error" size={18} grade={-25} weight={400} className="justify-self-center text-danger-700" />
-                    <span className="flex flex-col">
-                        <span className="text-sm font-medium text-danger-700">{target.value} isn&apos;t a valid ORCID</span>
-                        <span className="text-xs text-danger-800">The last digit doesn&apos;t check out. Compare it with the person&apos;s ORCID page.</span>
-                    </span>
-                </div>
-            }
-
-            {outsider &&
-                <div className="mt-1.5 w-full max-w-[480px] rounded-lg border border-primary-200 bg-primary-0 shadow-lg shadow-primary-900/10 overflow-hidden">
-                    <div className="grid grid-cols-[32px_minmax(0,1fr)] gap-3 items-center px-3.5 pt-3 pb-2">
-                        <PersonInitial name={outsider.user.name} />
-                        <span className="flex flex-col min-w-0">
-                            <span className={SHARE_PERSON_NAME_CLASS}>{outsider.user.name}</span>
-                            <span className={SHARE_PERSON_DETAIL_CLASS}>{`${outsider.user.email ?? target.value} · not a member of ${props.invite.tenancyName}`}</span>
-                        </span>
-                    </div>
-                    <fieldset className="flex flex-col gap-2 m-0 px-3.5 pb-3 border-0">
-                        <legend className="sr-only">{`Share with ${outsider.user.name}`}</legend>
-                        {reaches.map((choice) => {
-                            const selected = reach === choice.value;
-                            return (
-                                <label key={choice.value} className={`flex flex-col gap-1 m-0 rounded-md bg-primary-0 px-3.5 py-3 cursor-pointer ${selected ? "border-[1.5px] border-primary-900" : "border border-primary-200"}`}>
-                                    <span className="flex items-center gap-2 text-[13px] font-semibold text-primary-900">
-                                        <input type="radio" name="share-reach" checked={selected} onChange={() => setReach(choice.value)} className="h-3.5 w-3.5 p-0 accent-primary-900" />
-                                        {choice.label}
-                                    </span>
-                                    <span className="pl-[22px] text-xs leading-[17px] text-primary-600">{choice.hint}</span>
-                                </label>
-                            );
-                        })}
-                    </fieldset>
-                    <div className="flex justify-end px-3.5 pb-3">
-                        <button
-                            type="button"
-                            disabled={props.busy}
-                            onClick={shareWithOutsider}
-                            className="h-8 px-3 rounded-md bg-primary-900 text-primary-50 text-[13px] font-semibold hover:bg-primary-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {reach === "tenancy" ? "Send invitation" : "Share"}
-                        </button>
-                    </div>
-                </div>
-            }
-
-            {(target.kind === "email" || target.kind === "orcid") && !outsider &&
-                <div className={panel}>
-                    <button
-                        type="button"
-                        className={option}
-                        disabled={props.busy}
-                        onClick={() => grant(target.kind === "email" ? { email: target.value, level } : { orcid: target.value, level })}
-                    >
-                        <PersonInitial pendingIcon={target.kind === "email" ? "mail" : "badge"} />
-                        <span className="flex flex-col min-w-0">
-                            <span className={SHARE_PERSON_NAME_CLASS}>Invite {target.kind === "email" ? target.value : `ORCID ${target.value}`}</span>
-                            <span className={SHARE_PERSON_DETAIL_CLASS}>
-                                {target.kind === "email"
-                                    ? "If they have no account yet, they'll get an email with a link"
-                                    : "If no account has this ORCID, you'll get a link to send them"}
-                            </span>
-                        </span>
-                    </button>
-                </div>
-            }
-
-            {target.kind === "text" && suggestions.length > 0 &&
-                <div className={panel}>
-                    <ul className="m-0 p-0 list-none">
-                        {suggestions.map((user) => (
-                            <li key={user.id}>
-                                <button type="button" aria-label={`${user.name} ${user.email}`} className={option} disabled={props.busy} onClick={() => grant({ user_id: user.id, level })}>
-                                    <PersonInitial name={user.name} />
-                                    <span className="flex flex-col min-w-0">
-                                        <span className={SHARE_PERSON_NAME_CLASS}><Highlighted name={user.name} typed={text.trim()} /></span>
-                                        <span className={SHARE_PERSON_DETAIL_CLASS}>{user.email}</span>
-                                    </span>
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                    <p className="m-0 px-3.5 py-2 border-t border-primary-100 text-xs text-primary-500">
-                        Someone outside {props.tenancyName}? Type their full email or ORCID.
-                    </p>
-                </div>
-            }
-        </div>
-    );
-}
-```
-
-- [ ] **Step 4: Run it and the existing share input and dialog tests**
-
-Run: `npx jest --coverage=false components/Share`
-Expected: PASS (6 new tests; `ShareInput.test.tsx` and `ShareDialog.test.tsx` unchanged and green, since without `invite` nothing is looked up).
-
-- [ ] **Step 5: Commit**
-
-```bash
-pwd
-command git branch --show-current
-command git add components/Share/ShareInput.tsx components/Share/__tests__/ShareInputTenancyInvite.test.tsx
-command git commit -m "feat: the share input offers to invite an account outside the tenancy" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
-```
-
----
-
-### Task 18: The Share dialog shows, sends and withdraws tenancy invitations
-
-**Files:**
-- Modify: `components/Share/AccessList.tsx`
-- Modify: `components/Share/ShareDialog.tsx`
-- Test: `components/Share/__tests__/AccessListTenancyInvitations.test.tsx`, `components/Share/__tests__/ShareDialogTenancy.test.tsx`
-
-**Interfaces:**
-- Consumes: `ShareState.tenancy_invitations`, `ShareState.can_invite_to_tenancy`, `ShareTenancy.{name, datasets, is_default, is_legacy}`, `BFFAPI.inviteToTenancy`, `BFFAPI.withdrawTenancyInvitation`, `tenancyErrorMessage`, `SHARE_INVITE_FOOTER`, `TenancyIcon`, `TenancyInvite` (Task 17).
-- Produces: `AccessList` gains `onWithdrawTenancyInvitation?(invitationId: string): void` and one row per pending tenancy invitation (dashed `tenancy` icon, invitee name, "Invited to {tenancy} {date} · not accepted yet", red **Withdraw** when `can_withdraw`). `ShareDialog` names the tenancy from `state.tenancy.name`, passes `invite` to `ShareInput` only when `can_invite_to_tenancy` and the tenancy is neither the default nor legacy, maps invite/withdraw errors through `tenancyErrorMessage`, and reads "Owners and editors can invite to the tenancy" in the footer when inviting is possible.
-
-- [ ] **Step 1: Write the failing tests**
-
-Create `components/Share/__tests__/AccessListTenancyInvitations.test.tsx`:
-
-```tsx
-/** @jest-environment jsdom */
-import { describe, expect, jest, test } from '@jest/globals';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { AccessList } from "../AccessList";
-
-const state: any = {
-    owner: { id: "o", name: "Luciana Rizzo", email: "luciana.rizzo@usp.br" },
-    permissions: [],
-    invitations: [],
-    anonymous_links: [],
-    tenancy: { name: "Data Amazon", path: "datamap/production/data-amazon", members: 14, members_can_edit: false, is_default: false, is_legacy: false, datasets: 108 },
-    tenancy_invitations: [
-        { id: "ti1", user: { id: "u5", name: "Rafael Souza", email: "rafael.souza@usp.br" }, invited_by: { id: "o", name: "Luciana Rizzo", email: null }, created_at: "2026-10-02T10:00:00+00:00", can_withdraw: true },
-        { id: "ti2", user: { id: "u6", name: "Marta Silva", email: null }, invited_by: { id: "u2", name: "Alan Calheiros", email: null }, created_at: "2026-10-03T10:00:00+00:00", can_withdraw: false },
-    ],
-    can_invite_to_tenancy: true,
-};
-
-describe("AccessList with tenancy invitations", () => {
-    test("each pending invitation says where and since when, with a dashed icon", () => {
-        const { container } = render(<AccessList state={state} onChangeLevel={jest.fn()} onRemove={jest.fn()} onRevokeInvitation={jest.fn()} />);
-
-        expect(screen.getByText("Rafael Souza")).toBeTruthy();
-        expect(screen.getByText("Invited to Data Amazon Oct 2 · not accepted yet")).toBeTruthy();
-        expect(screen.getByText("Invited to Data Amazon Oct 3 · not accepted yet")).toBeTruthy();
-        expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(2);
-    });
-
-    test("only the inviter can withdraw", () => {
-        const onWithdraw = jest.fn();
-        render(<AccessList state={state} onChangeLevel={jest.fn()} onRemove={jest.fn()} onRevokeInvitation={jest.fn()} onWithdrawTenancyInvitation={onWithdraw} />);
-
-        const buttons = screen.getAllByRole("button", { name: /Withdraw the invitation/ });
-        expect(buttons).toHaveLength(1);
-        fireEvent.click(buttons[0]);
-
-        expect(onWithdraw).toHaveBeenCalledWith("ti1");
-    });
-});
-```
-
-Create `components/Share/__tests__/ShareDialogTenancy.test.tsx`:
-
-```tsx
-/** @jest-environment jsdom */
-import { beforeEach, describe, expect, jest, test } from '@jest/globals';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-
-const inviteToTenancy = jest.fn() as any;
-const withdrawTenancyInvitation = jest.fn() as any;
-const mutate = jest.fn() as any;
-let shareState: any;
-
-jest.mock("../../../gateways/BFFAPI", () => ({
-    BFFAPI: jest.fn().mockImplementation(() => ({ inviteToTenancy, withdrawTenancyInvitation })),
-}));
-jest.mock("swr", () => ({
-    __esModule: true,
-    default: () => ({ data: shareState, error: undefined, mutate }),
-}));
-jest.mock("next-auth/react", () => ({ useSession: () => ({ data: null }) }));
-jest.mock("next/router", () => ({ useRouter: () => ({ replace: jest.fn(async () => true), asPath: "/app/datasets/d2" }) }));
-jest.mock("../../../lib/fetcher", () => ({ fetcher: jest.fn() }));
-jest.mock("../ShareInput", () => {
-    const React = require("react");
-    return {
-        ShareInput: (props: any) => props.invite
-            ? React.createElement("button", { type: "button", onClick: () => props.invite.onInvite("u9") }, "invite-stub")
-            : React.createElement("span", null, "no-invite"),
-    };
-});
-
-import { ShareDialog } from "../ShareDialog";
-
-const AMAZON_TENANCY = { name: "Data Amazon", path: "datamap/production/data-amazon", members: 14, members_can_edit: false, is_default: false, is_legacy: false, datasets: 108 };
-const PUBLIC_TENANCY = { name: "Public", path: "datamap/production/public", members: 47, members_can_edit: false, is_default: true, is_legacy: false, datasets: 300 };
-const amazonDataset: any = { id: "d2", name: "Manaus Radar Reflectivity 2023", tenancy: "datamap/production/data-amazon", embargo: null, access: { level: "owner" } };
-const publicDataset: any = { id: "d3", name: "Open aerosol optical depth", tenancy: "datamap/production/public", embargo: null, access: { level: "owner" } };
-
-function stateWith(overrides: any = {}) {
-    return {
-        owner: { id: "o", name: "Luciana Rizzo", email: "luciana.rizzo@usp.br" },
-        permissions: [],
-        invitations: [],
-        anonymous_links: [],
-        tenancy: AMAZON_TENANCY,
-        tenancy_invitations: [],
-        can_invite_to_tenancy: true,
-        ...overrides,
-    };
-}
-
-beforeEach(() => {
-    inviteToTenancy.mockReset();
-    withdrawTenancyInvitation.mockReset();
-    mutate.mockReset();
-});
-
-describe("ShareDialog and the tenancy", () => {
-    test("in Public, members are everyone on DataMap and there is nothing to change", () => {
-        shareState = stateWith({ tenancy: PUBLIC_TENANCY, can_invite_to_tenancy: false });
-        render(<ShareDialog dataset={publicDataset} show onClose={jest.fn()} />);
-
-        expect(screen.getByText("Members of Public")).toBeTruthy();
-        expect(screen.getByText("Everyone on DataMap · can read")).toBeTruthy();
-        expect(screen.queryByRole("button", { name: "Change what members of Public can do" })).toBeNull();
-    });
-
-    test("in Public nobody is invited to the tenancy, and the footer is the usual one", () => {
-        shareState = stateWith({ tenancy: PUBLIC_TENANCY, can_invite_to_tenancy: false });
-        render(<ShareDialog dataset={publicDataset} show onClose={jest.fn()} />);
-
-        expect(screen.getByText("no-invite")).toBeTruthy();
-        expect(screen.getByText("Anonymous links are available under embargo")).toBeTruthy();
-    });
-
-    test("when inviting is possible the footer says who can", () => {
-        shareState = stateWith();
-        render(<ShareDialog dataset={amazonDataset} show onClose={jest.fn()} />);
-
-        expect(screen.getByText("Owners and editors can invite to the tenancy")).toBeTruthy();
-    });
-
-    test("an invitation is sent for the account looked up, then the list is refreshed", async () => {
-        shareState = stateWith();
-        inviteToTenancy.mockResolvedValue({ id: "ti9", can_withdraw: true });
-        render(<ShareDialog dataset={amazonDataset} show onClose={jest.fn()} />);
-
-        fireEvent.click(screen.getByRole("button", { name: "invite-stub" }));
-
-        await waitFor(() => expect(mutate).toHaveBeenCalled());
-        expect(inviteToTenancy).toHaveBeenCalledWith("d2", "u9");
-    });
-
-    test("a refused invitation says why", async () => {
-        shareState = stateWith();
-        inviteToTenancy.mockRejectedValue({ response: { status: 409, data: { detail: "already_member" } } });
-        render(<ShareDialog dataset={amazonDataset} show onClose={jest.fn()} />);
-
-        fireEvent.click(screen.getByRole("button", { name: "invite-stub" }));
-
-        await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("This person is already a member of the tenancy."));
-    });
-
-    test("the inviter withdraws a pending invitation", async () => {
-        shareState = stateWith({
-            tenancy_invitations: [{ id: "ti1", user: { id: "u5", name: "Rafael Souza", email: "rafael.souza@usp.br" }, invited_by: null, created_at: "2026-10-02T10:00:00+00:00", can_withdraw: true }],
-        });
-        withdrawTenancyInvitation.mockResolvedValue(undefined);
-        render(<ShareDialog dataset={amazonDataset} show onClose={jest.fn()} />);
-
-        fireEvent.click(screen.getByRole("button", { name: "Withdraw the invitation of Rafael Souza to Data Amazon" }));
-
-        await waitFor(() => expect(withdrawTenancyInvitation).toHaveBeenCalledWith("d2", "ti1"));
-        expect(mutate).toHaveBeenCalled();
-    });
-});
-```
-
-- [ ] **Step 2: Run them and watch them fail**
-
-Run: `npx jest --coverage=false components/Share/__tests__/AccessListTenancyInvitations.test.tsx components/Share/__tests__/ShareDialogTenancy.test.tsx`
-Expected: FAIL — no tenancy invitation rows, `onWithdrawTenancyInvitation` is not a prop (type error), no invite reaches the stub ("no-invite" shown), no footer.
-
-- [ ] **Step 3: Implement**
-
-In `components/Share/AccessList.tsx`, replace:
-
-```tsx
-import { formatShortDate } from "../../lib/embargoDisplay";
-```
-
-with:
-
-```tsx
-import { formatShortDate } from "../../lib/embargoDisplay";
-import { TenancyIcon } from "../Tenancy/TenancyIcon";
-```
-
-replace:
-
-```tsx
-    onRevokeInvitation(invitationId: string): void
-    members?: MembersRow | null
-```
-
-with:
-
-```tsx
-    onRevokeInvitation(invitationId: string): void
-    onWithdrawTenancyInvitation?(invitationId: string): void
-    members?: MembersRow | null
-```
-
-replace:
-
-```tsx
-    const owner = props.state.owner;
-```
-
-with:
-
-```tsx
-    const owner = props.state.owner;
-    const tenancyName = props.state.tenancy?.name ?? "the tenancy";
-    const tenancyInvitations = props.state.tenancy_invitations ?? [];
-```
-
-and replace:
-
-```tsx
-                {props.members &&
-                    <li className={SHARE_ROW_CLASS}>
-```
-
-with:
-
-```tsx
-                {tenancyInvitations.map((invitation) => (
-                    <li key={invitation.id} className={SHARE_ROW_CLASS}>
-                        <TenancyIcon pending />
-                        <span className="flex flex-col min-w-0">
-                            <span className={SHARE_PERSON_NAME_CLASS}>{invitation.user.name}</span>
-                            <span className={SHARE_PERSON_DETAIL_CLASS}>{`Invited to ${tenancyName} ${formatShortDate(invitation.created_at, false)} · not accepted yet`}</span>
-                        </span>
-                        {invitation.can_withdraw
-                            ? <button
-                                type="button"
-                                aria-label={`Withdraw the invitation of ${invitation.user.name} to ${tenancyName}`}
-                                className={SHARE_DANGER_ACTION_CLASS}
-                                disabled={props.busy}
-                                onClick={() => props.onWithdrawTenancyInvitation?.(invitation.id)}
-                            >
-                                Withdraw
-                            </button>
-                            : <span></span>}
-                    </li>
-                ))}
-
-                {props.members &&
-                    <li className={SHARE_ROW_CLASS}>
-```
-
-In `components/Share/ShareDialog.tsx` (after Task 16), replace:
-
-```tsx
-import { isDefaultTenancy } from "../../contants/TenancyConstants";
-```
-
-with:
-
-```tsx
-import { SHARE_INVITE_FOOTER, isDefaultTenancy, tenancyErrorMessage } from "../../contants/TenancyConstants";
-```
-
-replace:
-
-```tsx
-    const tenancyName = tenancyDisplayName(props.dataset.tenancy);
-```
-
-with:
-
-```tsx
-    const tenancyName = state?.tenancy?.name ?? tenancyDisplayName(props.dataset.tenancy);
-```
-
-replace:
-
-```tsx
-    async function run<T>(action: () => Promise<T>): Promise<T | undefined> {
-```
-
-with:
-
-```tsx
-    async function run<T>(action: () => Promise<T>, toMessage: (e: unknown) => string = messageForApiError): Promise<T | undefined> {
-```
-
-replace:
-
-```tsx
-            setError(messageForApiError(e));
-```
-
-with:
-
-```tsx
-            setError(toMessage(e));
-```
-
-replace:
-
-```tsx
-        return result !== undefined;
-    }
-
-    function close() {
-```
-
-with:
-
-```tsx
-        return result !== undefined;
-    }
-
-    function tenancyMessage(e: unknown): string {
-        return tenancyErrorMessage((e as { response?: { data?: { detail?: string } } })?.response?.data?.detail);
-    }
-
-    async function onInvite(userId: string): Promise<boolean> {
-        const result = await run(() => bffGateway.inviteToTenancy(datasetId, userId), tenancyMessage);
-        return result !== undefined;
-    }
-
-    const invite = state?.can_invite_to_tenancy && state.tenancy && !state.tenancy.is_default && !state.tenancy.is_legacy
-        ? { tenancyName: state.tenancy.name, datasets: state.tenancy.datasets, onInvite }
-        : null;
-
-    function close() {
-```
-
-replace:
-
-```tsx
-                        <ShareInput datasetId={datasetId} tenancyName={tenancyName} onGrant={onGrant} busy={busy} />
-```
-
-with:
-
-```tsx
-                        <ShareInput datasetId={datasetId} tenancyName={tenancyName} onGrant={onGrant} busy={busy} invite={invite} />
-```
-
-replace:
-
-```tsx
-                                onRevokeInvitation={(id) => run(() => bffGateway.revokeInvitation(datasetId, id))}
-```
-
-with:
-
-```tsx
-                                onRevokeInvitation={(id) => run(() => bffGateway.revokeInvitation(datasetId, id))}
-                                onWithdrawTenancyInvitation={(id) => run(() => bffGateway.withdrawTenancyInvitation(datasetId, id), tenancyMessage)}
-```
-
-and replace:
-
-```tsx
-                            {embargoActive ? "Access continues after the embargo ends" : "Anonymous links are available under embargo"}
-```
-
-with:
-
-```tsx
-                            {state?.can_invite_to_tenancy ? SHARE_INVITE_FOOTER : embargoActive ? "Access continues after the embargo ends" : "Anonymous links are available under embargo"}
-```
-
-- [ ] **Step 4: Run them and every share suite**
-
-Run: `npx jest --coverage=false components/Share components/Embargo`
-Expected: PASS (2 + 6 new tests). The existing `ShareDialog.test.tsx` states have no `can_invite_to_tenancy`, so their footers and inputs are unchanged.
-
-- [ ] **Step 5: Commit**
-
-```bash
-pwd
-command git branch --show-current
-command git add components/Share/AccessList.tsx components/Share/ShareDialog.tsx components/Share/__tests__/AccessListTenancyInvitations.test.tsx components/Share/__tests__/ShareDialogTenancy.test.tsx
-command git commit -m "feat: owners and editors invite to the tenancy from the Share dialog" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
-```
-
----
-
-### Task 19: A member removed from a tenancy is sent to choose another
+### Task 17: A member removed from a tenancy is sent to choose another
 
 **Files:**
 - Create: `lib/tenancyRevocation.ts`
@@ -5336,14 +4831,1437 @@ command git commit -m "feat: a member removed from a tenancy is sent to choose a
 
 ---
 
-### Task 20: Verify
+### Task 18: A dataset stays in its tenancy
+
+**Files:**
+- Modify: `pages/api/datasets/[datasetId].ts`
+- Test: `lib/__tests__/datasetUpdateRoute.test.ts`; addition to `components/DatasetDetails/__tests__/DatasetColaboratorsForm.test.tsx`
+
+**Interfaces:**
+- Consumes: `updateDataset(context, request)` (`lib/dataset.ts`), `tenancyErrorMessage` / `messageForApiError` (Task 3, which already map `tenancy_cannot_change`).
+- Produces: a failed `PUT /api/datasets/[datasetId]` answers the gatekeeper status and `{detail}` instead of an empty body, so `400 tenancy_cannot_change` reaches the browser with its code. No UI changes: there is no "move" control in the webapp today (every `DatasetDetails/*` form and `DatasetDescription` send `props.dataset.tenancy`, and the new-dataset flow sends the tenancy it just created the dataset in), and none is added. A test pins that an edit sends the dataset's own tenancy.
+
+- [ ] **Step 1: Write the failing tests**
+
+Create `lib/__tests__/datasetUpdateRoute.test.ts`:
+
+```ts
+jest.mock("next-auth/jwt", () => ({ getToken: jest.fn(async () => ({ uid: "u1", v: 2 })) }));
+jest.mock("../dataset");
+
+import { AxiosError, AxiosHeaders } from "axios";
+import datasetHandler from "../../pages/api/datasets/[datasetId]";
+import { updateDataset } from "../dataset";
+
+const AMAZON = "datamap/production/data-amazon";
+const body = { id: "d1", name: "Ozone", data: {}, tenancy: AMAZON, is_enabled: true };
+
+function fakeRes() {
+    const res: any = { statusCode: 200, headers: {} };
+    res.setHeader = jest.fn((key: string, value: string) => (res.headers[key] = value));
+    res.getHeader = jest.fn((key: string) => res.headers[key]);
+    res.status = jest.fn((code: number) => {
+        res.statusCode = code;
+        return res;
+    });
+    res.end = jest.fn(() => res);
+    res.json = jest.fn(() => res);
+    return res;
+}
+
+async function put() {
+    const res = fakeRes();
+    const original = process.stdout.write;
+    // @ts-ignore
+    process.stdout.write = () => true;
+    try {
+        await datasetHandler({
+            method: "PUT", url: "/api/datasets/d1", query: { datasetId: "d1" }, cookies: {}, body,
+            headers: { "x-datamap-tenancy": AMAZON },
+        } as any, res);
+    } finally {
+        process.stdout.write = original;
+    }
+    return res;
+}
+
+describe("PUT /api/datasets/[datasetId]", () => {
+    test("an edit is passed on with the tenancy the form sent", async () => {
+        jest.mocked(updateDataset).mockResolvedValue({});
+
+        const res = await put();
+
+        expect(res.statusCode).toBe(200);
+        expect(jest.mocked(updateDataset).mock.calls[0][1]).toEqual(body);
+    });
+
+    test("a dataset sent with another tenancy reaches the browser with its code", async () => {
+        jest.mocked(updateDataset).mockRejectedValue(new AxiosError("gatekeeper", "ERR", undefined, {}, {
+            status: 400, data: { detail: "tenancy_cannot_change" }, statusText: "", headers: {}, config: { headers: new AxiosHeaders() },
+        } as any));
+
+        const res = await put();
+
+        expect(res.statusCode).toBe(400);
+        expect(res.json).toHaveBeenCalledWith({ detail: "tenancy_cannot_change" });
+    });
+});
+```
+
+In `components/DatasetDetails/__tests__/DatasetColaboratorsForm.test.tsx`, replace:
+
+```tsx
+        await waitFor(() => expect(updateDataset).toHaveBeenCalledTimes(1));
+        expect(updateDataset.mock.calls[0][0].data.colaborators).toEqual([
+            { name: "Ana", permission: "owner" },
+            { name: "Bruno" },
+        ]);
+    });
+});
+```
+
+with:
+
+```tsx
+        await waitFor(() => expect(updateDataset).toHaveBeenCalledTimes(1));
+        expect(updateDataset.mock.calls[0][0].data.colaborators).toEqual([
+            { name: "Ana", permission: "owner" },
+            { name: "Bruno" },
+        ]);
+    });
+
+    test("an edit keeps the dataset in the tenancy it was created in", async () => {
+        updateDataset.mockClear();
+        render(<DatasetColaboratorsForm dataset={dataset([{ name: "Ana" }])} user={{} as any} alwaysEdition />);
+
+        fireEvent.submit(screen.getAllByLabelText("Name")[0].closest("form") as HTMLFormElement);
+
+        await waitFor(() => expect(updateDataset).toHaveBeenCalledTimes(1));
+        expect(updateDataset.mock.calls[0][0].tenancy).toBe("t");
+    });
+});
+```
+
+- [ ] **Step 2: Run them and watch the route test fail**
+
+Run: `npx jest --coverage=false lib/__tests__/datasetUpdateRoute.test.ts components/DatasetDetails/__tests__/DatasetColaboratorsForm.test.tsx`
+Expected: FAIL — "a dataset sent with another tenancy…" gets `res.json` never called (the route ends with an empty body). The form test passes already: it pins today's behaviour so a later change cannot start moving datasets.
+
+- [ ] **Step 3: Implement**
+
+In `pages/api/datasets/[datasetId].ts`, replace:
+
+```ts
+      const result = await updateDataset(context, req.body);
+      res.json(result);
+    } catch (error) {
+      res.status(error?.response?.status).end()
+    }
+```
+
+with:
+
+```ts
+      const result = await updateDataset(context, req.body);
+      res.json(result);
+    } catch (error) {
+      res.status(error?.response?.status ?? 502).json({ detail: error?.response?.data?.detail });
+    }
+```
+
+- [ ] **Step 4: Run them and the dataset suites**
+
+Run: `npx jest --coverage=false lib/__tests__/datasetUpdateRoute.test.ts components/DatasetDetails lib/__tests__/datasetListRoute.test.ts`
+Expected: PASS (2 new tests, 1 test added to `DatasetColaboratorsForm`).
+
+- [ ] **Step 5: Commit**
+
+```bash
+pwd
+command git branch --show-current
+command git add "pages/api/datasets/[datasetId].ts" lib/__tests__/datasetUpdateRoute.test.ts components/DatasetDetails/__tests__/DatasetColaboratorsForm.test.tsx
+command git commit -m "feat: a dataset keeps its tenancy, and the refusal reaches the browser with its code" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 19: Workspace reads: which tenancy has a Members page, its members and its invitations
+
+**Files:**
+- Modify: `contants/TenancyConstants.ts`
+- Modify: `lib/tenancySelection.ts`
+- Create: `hooks/UseWorkspace.ts`
+- Test: `hooks/__tests__/UseWorkspace.test.ts`; additions to `lib/__tests__/tenancySelection.test.ts` and `contants/__tests__/TenancyConstants.test.ts`
+
+**Interfaces:**
+- Consumes: `WORKSPACE_PAGE_SIZE` (Task 3), `useMyTenancies` (Task 8), `useTenancyStore`, `fetcher`, `useSWR`, `useSWRInfinite` (`swr/infinite`).
+- Produces:
+  - `WORKSPACE_LOOKUP_DEBOUNCE_MS = 300`, `workspaceMembersKey(tenancy: string, offset: number): string`, `workspaceInvitationsKey(tenancy: string): string` in `contants/TenancyConstants.ts`;
+  - `membersPageTenancy(tenancies: TenancySummary[] | undefined | null, selected: string | undefined | null): TenancySummary | null` in `lib/tenancySelection.ts` — the selected tenancy when it is one of the user's (enabled) tenancies and neither Public nor legacy;
+  - `useMembersPageTenancy(): { tenancy: TenancySummary | null; loading: boolean }`, `useWorkspaceMembers(tenancy: string | null)` (`useSWRInfinite` over `GatekeeperPage<WorkspaceMember>`, stops after the last page), `useWorkspaceInvitations(tenancy: string | null)` (`useSWR<WorkspaceInvitation[]>`) in `hooks/UseWorkspace.ts`.
+
+- [ ] **Step 1: Write the failing tests**
+
+In `contants/__tests__/TenancyConstants.test.ts`, replace:
+
+```ts
+    TENANCY_PATH_PATTERN,
+    isDefaultTenancy,
+```
+
+with:
+
+```ts
+    TENANCY_PATH_PATTERN,
+    isDefaultTenancy,
+    workspaceInvitationsKey,
+    workspaceMembersKey,
+```
+
+and replace:
+
+```ts
+        expect(tenancyErrorMessage("tenancy_cannot_change")).toBe("A dataset stays in the tenancy it was created in.");
+    });
+});
+```
+
+with:
+
+```ts
+        expect(tenancyErrorMessage("tenancy_cannot_change")).toBe("A dataset stays in the tenancy it was created in.");
+    });
+
+    test("the workspace keys carry the tenancy encoded in the query, members 50 at a time", () => {
+        expect(workspaceMembersKey("datamap/production/data-amazon", 50)).toBe("/api/workspace/members?tenancy=datamap%2Fproduction%2Fdata-amazon&limit=50&offset=50");
+        expect(workspaceInvitationsKey("datamap/production/data-amazon")).toBe("/api/workspace/invitations?tenancy=datamap%2Fproduction%2Fdata-amazon");
+    });
+});
+```
+
+In `lib/__tests__/tenancySelection.test.ts`, replace:
+
+```ts
+import { firstNameOf, sessionTenanciesDiffer, tenancyPathLabel, tenancySelectionFor } from "../tenancySelection";
+```
+
+with:
+
+```ts
+import { firstNameOf, membersPageTenancy, sessionTenanciesDiffer, tenancyPathLabel, tenancySelectionFor } from "../tenancySelection";
+```
+
+and replace:
+
+```ts
+    test("a path reads with spaced separators", () => {
+        expect(tenancyPathLabel("datamap/production/public")).toBe("datamap / production / public");
+    });
+});
+```
+
+with:
+
+```ts
+    test("a path reads with spaced separators", () => {
+        expect(tenancyPathLabel("datamap/production/public")).toBe("datamap / production / public");
+    });
+});
+
+describe("which tenancy has a Members page", () => {
+    const LEGACY = { path: "datamap/staging/data-amazon", display_name: "Data Amazon", is_default: false, is_legacy: true };
+
+    test("the selected production tenancy the user belongs to", () => {
+        expect(membersPageTenancy([PUBLIC, AMAZON], AMAZON.path)).toEqual(AMAZON);
+    });
+
+    test("not Public, where everyone is, and not a legacy tenancy, which is read-only", () => {
+        expect(membersPageTenancy([PUBLIC, AMAZON, LEGACY], PUBLIC.path)).toBeNull();
+        expect(membersPageTenancy([PUBLIC, AMAZON, LEGACY], LEGACY.path)).toBeNull();
+    });
+
+    test("not a tenancy the user no longer has or that is disabled, nor before the list has loaded", () => {
+        expect(membersPageTenancy([PUBLIC], AMAZON.path)).toBeNull();
+        expect(membersPageTenancy(undefined, AMAZON.path)).toBeNull();
+        expect(membersPageTenancy([PUBLIC, AMAZON], "")).toBeNull();
+    });
+});
+```
+
+Create `hooks/__tests__/UseWorkspace.test.ts`:
+
+```ts
+const mockUseSWR = jest.fn((..._args: unknown[]) => ({ data: undefined }));
+const mockUseSWRInfinite = jest.fn((..._args: unknown[]) => ({ data: undefined }));
+let mockTenancies: unknown;
+
+jest.mock("swr", () => ({ __esModule: true, default: (...args: unknown[]) => mockUseSWR(...args) }));
+jest.mock("swr/infinite", () => ({ __esModule: true, default: (...args: unknown[]) => mockUseSWRInfinite(...args) }));
+jest.mock("../../lib/fetcher", () => ({ fetcher: jest.fn() }));
+jest.mock("../../components/TenancyStore", () => ({
+    useTenancyStore: (selector: (state: unknown) => unknown) => selector({ tenancySelected: "datamap/production/data-amazon" }),
+}));
+jest.mock("../UseTenancies", () => ({ useMyTenancies: () => ({ data: mockTenancies, error: undefined }) }));
+
+import { fetcher } from "../../lib/fetcher";
+import { useMembersPageTenancy, useWorkspaceInvitations, useWorkspaceMembers } from "../UseWorkspace";
+
+type GetKey = (index: number, previous: unknown) => string | null;
+
+const PUBLIC = { path: "datamap/production/public", display_name: "Public", is_default: true, is_legacy: false };
+const AMAZON = { path: "datamap/production/data-amazon", display_name: "Data Amazon", is_default: false, is_legacy: false };
+
+function lastCall(mock: jest.Mock): unknown[] {
+    return mock.mock.calls[mock.mock.calls.length - 1];
+}
+
+function page(offset: number, count: number, total: number) {
+    return { items: new Array(count).fill({}), total_count: total, limit: 50, offset };
+}
+
+describe("the workspace hooks", () => {
+    test("the Members page is for the selected tenancy, once the user's tenancies are known", () => {
+        mockTenancies = undefined;
+        expect(useMembersPageTenancy()).toEqual({ tenancy: null, loading: true });
+
+        mockTenancies = [PUBLIC, AMAZON];
+        expect(useMembersPageTenancy()).toEqual({ tenancy: AMAZON, loading: false });
+    });
+
+    test("members load 50 at a time and stop after the last page", () => {
+        useWorkspaceMembers(AMAZON.path);
+
+        const [getKey, fetch] = lastCall(mockUseSWRInfinite) as [GetKey, unknown];
+        expect(fetch).toBe(fetcher);
+        expect(getKey(0, null)).toBe("/api/workspace/members?tenancy=datamap%2Fproduction%2Fdata-amazon&limit=50&offset=0");
+        expect(getKey(1, page(0, 50, 120))).toBe("/api/workspace/members?tenancy=datamap%2Fproduction%2Fdata-amazon&limit=50&offset=50");
+        expect(getKey(3, page(100, 20, 120))).toBeNull();
+    });
+
+    test("without a tenancy nothing is fetched", () => {
+        useWorkspaceMembers(null);
+        useWorkspaceInvitations(null);
+
+        expect((lastCall(mockUseSWRInfinite)[0] as GetKey)(0, null)).toBeNull();
+        expect(mockUseSWR).toHaveBeenLastCalledWith(null, fetcher);
+    });
+
+    test("the pending invitations of the tenancy", () => {
+        useWorkspaceInvitations(AMAZON.path);
+
+        expect(mockUseSWR).toHaveBeenLastCalledWith("/api/workspace/invitations?tenancy=datamap%2Fproduction%2Fdata-amazon", fetcher);
+    });
+});
+```
+
+- [ ] **Step 2: Run them and watch them fail**
+
+Run: `npx jest --coverage=false hooks/__tests__/UseWorkspace.test.ts lib/__tests__/tenancySelection.test.ts contants/__tests__/TenancyConstants.test.ts`
+Expected: FAIL — `Cannot find module '../UseWorkspace'`; `membersPageTenancy`, `workspaceMembersKey` and `workspaceInvitationsKey` are not exported (type errors).
+
+- [ ] **Step 3: Implement**
+
+In `contants/TenancyConstants.ts`, replace:
+
+```ts
+export const WORKSPACE_PAGE_SIZE = 50;
+```
+
+with:
+
+```ts
+export const WORKSPACE_PAGE_SIZE = 50;
+export const WORKSPACE_LOOKUP_DEBOUNCE_MS = 300;
+
+export const workspaceMembersKey = (tenancy: string, offset: number) =>
+    `/api/workspace/members?tenancy=${encodeURIComponent(tenancy)}&limit=${WORKSPACE_PAGE_SIZE}&offset=${offset}`;
+export const workspaceInvitationsKey = (tenancy: string) =>
+    `/api/workspace/invitations?tenancy=${encodeURIComponent(tenancy)}`;
+```
+
+In `lib/tenancySelection.ts`, replace:
+
+```ts
+export function tenancyPathLabel(path: string): string {
+    return path.split("/").join(" / ");
+}
+```
+
+with:
+
+```ts
+export function tenancyPathLabel(path: string): string {
+    return path.split("/").join(" / ");
+}
+
+export function membersPageTenancy(tenancies: TenancySummary[] | undefined | null, selected: string | undefined | null): TenancySummary | null {
+    const tenancy = (tenancies ?? []).find((candidate) => candidate.path === selected);
+    return tenancy && !tenancy.is_default && !tenancy.is_legacy ? tenancy : null;
+}
+```
+
+Create `hooks/UseWorkspace.ts`:
+
+```ts
+import useSWR from "swr";
+import useSWRInfinite from "swr/infinite";
+import { useTenancyStore } from "../components/TenancyStore";
+import { WORKSPACE_PAGE_SIZE, workspaceInvitationsKey, workspaceMembersKey } from "../contants/TenancyConstants";
+import { fetcher } from "../lib/fetcher";
+import { membersPageTenancy } from "../lib/tenancySelection";
+import { GatekeeperPage, TenancySummary, WorkspaceInvitation, WorkspaceMember } from "../types/GatekeeperAPI";
+import { useMyTenancies } from "./UseTenancies";
+
+export function useMembersPageTenancy(): { tenancy: TenancySummary | null; loading: boolean } {
+    const { data, error } = useMyTenancies();
+    const selected = useTenancyStore((state) => state.tenancySelected);
+    return { tenancy: membersPageTenancy(data, selected), loading: !data && !error };
+}
+
+export function useWorkspaceMembers(tenancy: string | null) {
+    return useSWRInfinite<GatekeeperPage<WorkspaceMember>>(
+        (index: number, previous: GatekeeperPage<WorkspaceMember> | null) => {
+            if (!tenancy) {
+                return null;
+            }
+            if (previous && previous.offset + previous.items.length >= previous.total_count) {
+                return null;
+            }
+            return workspaceMembersKey(tenancy, index * WORKSPACE_PAGE_SIZE);
+        },
+        fetcher,
+    );
+}
+
+export function useWorkspaceInvitations(tenancy: string | null) {
+    return useSWR<WorkspaceInvitation[]>(tenancy ? workspaceInvitationsKey(tenancy) : null, fetcher);
+}
+```
+
+- [ ] **Step 4: Run them**
+
+Run: `npx jest --coverage=false hooks/__tests__/UseWorkspace.test.ts lib/__tests__/tenancySelection.test.ts contants/__tests__/TenancyConstants.test.ts`
+Expected: PASS (4 new hook tests; `tenancySelection` 9 → 12; `TenancyConstants` 7 → 8).
+
+- [ ] **Step 5: Commit**
+
+```bash
+pwd
+command git branch --show-current
+command git add contants/TenancyConstants.ts lib/tenancySelection.ts hooks/UseWorkspace.ts hooks/__tests__/UseWorkspace.test.ts lib/__tests__/tenancySelection.test.ts contants/__tests__/TenancyConstants.test.ts
+command git commit -m "feat: workspace reads, and which tenancy has a Members page" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 20: The invite dialog
+
+**Files:**
+- Create: `components/Workspace/InviteMemberDialog.tsx`
+- Test: `components/Workspace/__tests__/InviteMemberDialog.test.tsx`
+
+**Interfaces:**
+- Consumes: `BFFAPI.lookupInvitee`, `BFFAPI.inviteToWorkspace`, `classifyShareInput` (`lib/shareTarget.ts`), `useDebouncedValue`, `WORKSPACE_LOOKUP_DEBOUNCE_MS`, `tenancyErrorMessage`, `Modal` (`components/base/PopupModal.tsx`), `PersonInitial`, `EDIT_FORM_*` and `SHARE_PERSON_*` classes.
+- Produces: `InviteMemberDialog(props: { tenancy: TenancySummary; show: boolean; onClose(): void; onInvited(): void })` — RFC 009 §Members page, 520 px: title "Invite to {tenancy}", one Formik + Yup field **Email or ORCID iD**. An exact email or ORCID iD is looked up once it settles (300 ms). The card shows the account found: initials, name, the email when it was typed, else "ORCID iD {iD}" (the lookup by iD returns `email: null`), and one of:
+  - "Member of the tenancy · sees its {n} datasets once they accept · administrators are notified" (`can_invite`);
+  - "Already a member of {tenancy}.";
+  - "Already invited to {tenancy} · not accepted yet.".
+
+  `no_account` reads "No DataMap account has this email or ORCID iD.". **Send invitation** is enabled only for `can_invite`; it calls `inviteToWorkspace(tenancy.path, user.id)`, then `onInvited()` and `onClose()`. A refusal is shown through `tenancyErrorMessage` and the dialog stays open.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `components/Workspace/__tests__/InviteMemberDialog.test.tsx`:
+
+```tsx
+/** @jest-environment jsdom */
+import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+
+const lookupInvitee = jest.fn() as any;
+const inviteToWorkspace = jest.fn() as any;
+
+jest.mock("../../../gateways/BFFAPI", () => ({
+    BFFAPI: jest.fn().mockImplementation(() => ({ lookupInvitee, inviteToWorkspace })),
+}));
+
+import { InviteMemberDialog } from "../InviteMemberDialog";
+
+const AMAZON = { path: "datamap/production/data-amazon", display_name: "Data Amazon", is_default: false, is_legacy: false };
+const outsider = {
+    user: { id: "u7", name: "Fernanda Lima", email: "fernanda.lima@inpe.br" },
+    tenancy_member: false,
+    invitation_pending: false,
+    can_invite: true,
+    datasets: 108,
+};
+
+function renderDialog() {
+    const onClose = jest.fn();
+    const onInvited = jest.fn();
+    render(<InviteMemberDialog tenancy={AMAZON} show onClose={onClose} onInvited={onInvited} />);
+    return { onClose, onInvited };
+}
+
+function type(text: string) {
+    fireEvent.change(screen.getByLabelText("Email or ORCID iD"), { target: { value: text } });
+}
+
+async function settle() {
+    await act(async () => { jest.advanceTimersByTime(300); });
+    await act(async () => { await Promise.resolve(); });
+}
+
+function sendButton() {
+    return screen.getByRole("button", { name: "Send invitation" }) as HTMLButtonElement;
+}
+
+beforeEach(() => {
+    jest.useFakeTimers();
+    lookupInvitee.mockReset().mockResolvedValue(outsider);
+    inviteToWorkspace.mockReset();
+});
+
+afterEach(() => {
+    jest.useRealTimers();
+});
+
+describe("InviteMemberDialog", () => {
+    test("an exact email is looked up once typing settles, and the account found can be invited", async () => {
+        renderDialog();
+
+        expect(screen.getByRole("dialog", { name: "Invite to Data Amazon" })).toBeTruthy();
+        type("fernanda.lima@inpe.br");
+        expect(lookupInvitee).not.toHaveBeenCalled();
+        await settle();
+
+        expect(lookupInvitee).toHaveBeenCalledWith("datamap/production/data-amazon", "fernanda.lima@inpe.br");
+        expect(screen.getByText("Fernanda Lima")).toBeTruthy();
+        expect(screen.getByText("fernanda.lima@inpe.br")).toBeTruthy();
+        expect(screen.getByText("Member of the tenancy · sees its 108 datasets once they accept · administrators are notified")).toBeTruthy();
+        expect(sendButton().disabled).toBe(false);
+    });
+
+    test("an account found by ORCID iD shows the iD typed, since its email stays hidden", async () => {
+        lookupInvitee.mockResolvedValue({ ...outsider, user: { ...outsider.user, email: null } });
+        renderDialog();
+
+        type("https://orcid.org/0000-0002-1825-0097");
+        await settle();
+
+        expect(lookupInvitee).toHaveBeenCalledWith("datamap/production/data-amazon", "0000-0002-1825-0097");
+        expect(screen.getByText("ORCID iD 0000-0002-1825-0097")).toBeTruthy();
+        expect(screen.queryByText(/@/)).toBeNull();
+    });
+
+    test("a member cannot be invited again, and the card says so", async () => {
+        lookupInvitee.mockResolvedValue({ ...outsider, tenancy_member: true, can_invite: false });
+        renderDialog();
+
+        type("fernanda.lima@inpe.br");
+        await settle();
+
+        expect(screen.getByText("Already a member of Data Amazon.")).toBeTruthy();
+        expect(sendButton().disabled).toBe(true);
+    });
+
+    test("someone already invited cannot be invited twice", async () => {
+        lookupInvitee.mockResolvedValue({ ...outsider, invitation_pending: true, can_invite: false });
+        renderDialog();
+
+        type("fernanda.lima@inpe.br");
+        await settle();
+
+        expect(screen.getByText("Already invited to Data Amazon · not accepted yet.")).toBeTruthy();
+        expect(sendButton().disabled).toBe(true);
+    });
+
+    test("no account behind the value says so", async () => {
+        lookupInvitee.mockRejectedValue({ response: { status: 404, data: { detail: "no_account" } } });
+        renderDialog();
+
+        type("nobody@inpe.br");
+        await settle();
+
+        expect(screen.getByText("No DataMap account has this email or ORCID iD.")).toBeTruthy();
+        expect(sendButton().disabled).toBe(true);
+    });
+
+    test("a name is not looked up, and the form asks for the full email or ORCID iD", async () => {
+        renderDialog();
+
+        type("Fernanda");
+        await settle();
+        await act(async () => {
+            fireEvent.submit(screen.getByLabelText("Email or ORCID iD").closest("form") as HTMLFormElement);
+        });
+
+        expect(lookupInvitee).not.toHaveBeenCalled();
+        expect(screen.getByText("Type the full email or ORCID iD.")).toBeTruthy();
+    });
+
+    test("Send invitation invites the account found, tells the page and closes", async () => {
+        inviteToWorkspace.mockResolvedValue({ id: "ti1", can_withdraw: true });
+        const { onClose, onInvited } = renderDialog();
+
+        type("fernanda.lima@inpe.br");
+        await settle();
+        fireEvent.click(sendButton());
+
+        await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+        expect(inviteToWorkspace).toHaveBeenCalledWith("datamap/production/data-amazon", "u7");
+        expect(onInvited).toHaveBeenCalledTimes(1);
+    });
+
+    test("a refusal says why and keeps the dialog open", async () => {
+        inviteToWorkspace.mockRejectedValue({ response: { status: 409, data: { detail: "invitation_pending" } } });
+        const { onClose } = renderDialog();
+
+        type("fernanda.lima@inpe.br");
+        await settle();
+        fireEvent.click(sendButton());
+
+        await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("This person already has an invitation to the tenancy waiting."));
+        expect(onClose).not.toHaveBeenCalled();
+    });
+});
+```
+
+- [ ] **Step 2: Run it and watch it fail**
+
+Run: `npx jest --coverage=false components/Workspace/__tests__/InviteMemberDialog.test.tsx`
+Expected: FAIL — `Cannot find module '../InviteMemberDialog'`.
+
+- [ ] **Step 3: Implement**
+
+Create `components/Workspace/InviteMemberDialog.tsx`:
+
+```tsx
+import { useFormik } from "formik";
+import { useEffect, useState } from "react";
+import * as Yup from "yup";
+import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_INPUT_CLASS, EDIT_FORM_LABEL_CLASS } from "../../contants/EditFormConstants";
+import { SHARE_PERSON_DETAIL_CLASS, SHARE_PERSON_NAME_CLASS } from "../../contants/ShareConstants";
+import { WORKSPACE_LOOKUP_DEBOUNCE_MS, tenancyErrorMessage } from "../../contants/TenancyConstants";
+import { BFFAPI } from "../../gateways/BFFAPI";
+import { useDebouncedValue } from "../../hooks/UseDebouncedValue";
+import { classifyShareInput } from "../../lib/shareTarget";
+import { InviteeLookup, TenancySummary } from "../../types/GatekeeperAPI";
+import Modal from "../base/PopupModal";
+import { PersonInitial } from "../Share/PersonInitial";
+
+type Lookup = { value: string, found: InviteeLookup | null, error: string | null };
+
+function exactValue(raw: string): string | null {
+    const target = classifyShareInput(raw);
+    return target.kind === "email" || target.kind === "orcid" ? target.value : null;
+}
+
+const schema = Yup.object({
+    value: Yup.string()
+        .trim()
+        .required("Type an email or ORCID iD.")
+        .test("exact", "Type the full email or ORCID iD.", (value) => exactValue(value ?? "") !== null),
+});
+
+function inviteeStatus(found: InviteeLookup, tenancyName: string): string {
+    if (found.tenancy_member) {
+        return `Already a member of ${tenancyName}.`;
+    }
+    if (found.invitation_pending) {
+        return `Already invited to ${tenancyName} · not accepted yet.`;
+    }
+    return `Member of the tenancy · sees its ${found.datasets} ${found.datasets === 1 ? "dataset" : "datasets"} once they accept · administrators are notified`;
+}
+
+interface Props {
+    tenancy: TenancySummary
+    show: boolean
+    onClose(): void
+    onInvited(): void
+}
+
+export function InviteMemberDialog(props: Props) {
+    const [bffGateway] = useState(() => new BFFAPI());
+    const [lookup, setLookup] = useState<Lookup | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const formik = useFormik({
+        initialValues: { value: "" },
+        validationSchema: schema,
+        onSubmit: async () => {
+            if (!invitee) {
+                return;
+            }
+            setError(null);
+            try {
+                await bffGateway.inviteToWorkspace(props.tenancy.path, invitee.user.id);
+                props.onInvited();
+                close();
+            } catch (e) {
+                setError(tenancyErrorMessage(e?.response?.data?.detail));
+            }
+        },
+    });
+    const settled = useDebouncedValue(formik.values.value, WORKSPACE_LOOKUP_DEBOUNCE_MS);
+
+    useEffect(() => {
+        const value = exactValue(settled);
+        if (!value) {
+            setLookup(null);
+            return;
+        }
+        let cancelled = false;
+        bffGateway.lookupInvitee(props.tenancy.path, value)
+            .then((found) => { if (!cancelled) setLookup({ value, found, error: null }); })
+            .catch((e) => { if (!cancelled) setLookup({ value, found: null, error: tenancyErrorMessage(e?.response?.data?.detail) }); });
+        return () => { cancelled = true; };
+    }, [settled, props.tenancy.path, bffGateway]);
+
+    const typed = classifyShareInput(formik.values.value);
+    const current = lookup && lookup.value === exactValue(formik.values.value) ? lookup : null;
+    const found = current?.found ?? null;
+    const invitee = found?.can_invite ? found : null;
+
+    function close() {
+        formik.resetForm();
+        setLookup(null);
+        setError(null);
+        props.onClose();
+    }
+
+    return (
+        <Modal
+            title={`Invite to ${props.tenancy.display_name}`}
+            show={props.show}
+            confimButtonText="Send invitation"
+            cancelButtonText="Cancel"
+            cancel={close}
+            confim={() => { if (!formik.isSubmitting) formik.submitForm(); }}
+            confirmDisabled={!invitee || formik.isSubmitting}
+            maxWidthClassName="max-w-[520px]"
+        >
+            <form noValidate onSubmit={formik.handleSubmit} className="flex flex-col gap-4">
+                <p className="m-0 text-sm leading-5 text-primary-600">
+                    Type the exact email or ORCID iD of someone with a DataMap account. They accept the invitation in the app.
+                </p>
+                <div>
+                    <label htmlFor="invite-value" className={EDIT_FORM_LABEL_CLASS}>Email or ORCID iD</label>
+                    <input id="invite-value" type="text" autoComplete="off" className={EDIT_FORM_INPUT_CLASS} {...formik.getFieldProps("value")} />
+                    {typed.kind === "invalid_orcid"
+                        ? <p className={EDIT_FORM_ERROR_CLASS}>This ORCID iD is not valid. Check the last digit.</p>
+                        : formik.touched.value && formik.errors.value && <p className={EDIT_FORM_ERROR_CLASS}>{formik.errors.value}</p>}
+                </div>
+                {found &&
+                    <div className="grid grid-cols-[32px_minmax(0,1fr)] gap-3 items-center rounded-lg border border-primary-200 bg-primary-0 px-3.5 py-3">
+                        <PersonInitial name={found.user.name} />
+                        <span className="flex flex-col min-w-0">
+                            <span className={SHARE_PERSON_NAME_CLASS}>{found.user.name}</span>
+                            <span className={SHARE_PERSON_DETAIL_CLASS}>{found.user.email ?? `ORCID iD ${current.value}`}</span>
+                            <span className="mt-1 text-xs leading-[17px] text-primary-600">{inviteeStatus(found, props.tenancy.display_name)}</span>
+                        </span>
+                    </div>
+                }
+                {current?.error && <p className="m-0 text-sm text-primary-600">{current.error}</p>}
+                {error && <p role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
+                <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
+            </form>
+        </Modal>
+    );
+}
+```
+
+- [ ] **Step 4: Run it**
+
+Run: `npx jest --coverage=false components/Workspace/__tests__/InviteMemberDialog.test.tsx`
+Expected: PASS (8 tests).
+
+- [ ] **Step 5: Commit**
+
+```bash
+pwd
+command git branch --show-current
+command git add components/Workspace/InviteMemberDialog.tsx components/Workspace/__tests__/InviteMemberDialog.test.tsx
+command git commit -m "feat: invite an existing account into the tenancy by exact email or ORCID iD" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 21: Pending invitations of the tenancy
+
+**Files:**
+- Create: `components/Workspace/WorkspaceInvitations.tsx`
+- Test: `components/Workspace/__tests__/WorkspaceInvitations.test.tsx`
+
+**Interfaces:**
+- Consumes: `useWorkspaceInvitations` (Task 19), `BFFAPI.withdrawWorkspaceInvitation`, `tenancyErrorMessage`, `formatShortDate`, `PersonInitial`, `SHARE_*` classes.
+- Produces: `WorkspaceInvitations({ tenancy }: { tenancy: TenancySummary })` — "Pending invitations", one dashed row per invitation: the invitee's name, "invited by {inviter} {date} · not accepted yet", red **Withdraw** only when `can_withdraw`. Withdrawing revalidates the list. `404 invitation_not_found` (accepted, declined, or closed by an admin meanwhile) shows its sentence and revalidates, so the row leaves. Renders nothing without pending invitations.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `components/Workspace/__tests__/WorkspaceInvitations.test.tsx`:
+
+```tsx
+/** @jest-environment jsdom */
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+
+const withdrawWorkspaceInvitation = jest.fn() as any;
+const mutate = jest.fn() as any;
+let invitations: any;
+
+jest.mock("../../../gateways/BFFAPI", () => ({
+    BFFAPI: jest.fn().mockImplementation(() => ({ withdrawWorkspaceInvitation })),
+}));
+jest.mock("../../../hooks/UseWorkspace", () => ({
+    useWorkspaceInvitations: () => ({ data: invitations, mutate }),
+}));
+
+import { WorkspaceInvitations } from "../WorkspaceInvitations";
+
+const AMAZON = { path: "datamap/production/data-amazon", display_name: "Data Amazon", is_default: false, is_legacy: false };
+
+beforeEach(() => {
+    withdrawWorkspaceInvitation.mockReset();
+    mutate.mockReset().mockResolvedValue(undefined);
+    invitations = [
+        { id: "ti1", user: { id: "u5", name: "Rafael Souza" }, invited_by: { id: "u1", name: "Luciana Rizzo" }, created_at: "2026-10-02T10:00:00+00:00", can_withdraw: true },
+        { id: "ti2", user: { id: "u6", name: "Marta Silva" }, invited_by: { id: "u2", name: "Alan Calheiros" }, created_at: "2026-10-03T10:00:00+00:00", can_withdraw: false },
+    ];
+});
+
+describe("WorkspaceInvitations", () => {
+    test("each pending invitation says who invited and when, with a dashed icon", () => {
+        const { container } = render(<WorkspaceInvitations tenancy={AMAZON} />);
+
+        expect(screen.getByText("Pending invitations")).toBeTruthy();
+        expect(screen.getByText("Rafael Souza")).toBeTruthy();
+        expect(screen.getByText("invited by Luciana Rizzo Oct 2 · not accepted yet")).toBeTruthy();
+        expect(screen.getByText("invited by Alan Calheiros Oct 3 · not accepted yet")).toBeTruthy();
+        expect(container.querySelectorAll("span.border-dashed")).toHaveLength(2);
+    });
+
+    test("only the inviter can withdraw", () => {
+        render(<WorkspaceInvitations tenancy={AMAZON} />);
+
+        expect(screen.getAllByRole("button", { name: /Withdraw the invitation/ })).toHaveLength(1);
+        expect(screen.getByRole("button", { name: "Withdraw the invitation of Rafael Souza" })).toBeTruthy();
+    });
+
+    test("Withdraw takes the invitation back and refreshes the list", async () => {
+        withdrawWorkspaceInvitation.mockResolvedValue(undefined);
+        render(<WorkspaceInvitations tenancy={AMAZON} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Withdraw the invitation of Rafael Souza" }));
+
+        await waitFor(() => expect(mutate).toHaveBeenCalled());
+        expect(withdrawWorkspaceInvitation).toHaveBeenCalledWith("datamap/production/data-amazon", "ti1");
+    });
+
+    test("an invitation closed meanwhile says so and leaves the list", async () => {
+        withdrawWorkspaceInvitation.mockRejectedValue({ response: { status: 404, data: { detail: "invitation_not_found" } } });
+        render(<WorkspaceInvitations tenancy={AMAZON} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Withdraw the invitation of Rafael Souza" }));
+
+        await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("This invitation is no longer open. It may have been withdrawn."));
+        expect(mutate).toHaveBeenCalled();
+    });
+
+    test("nothing pending, nothing shown", () => {
+        invitations = [];
+        const { container } = render(<WorkspaceInvitations tenancy={AMAZON} />);
+
+        expect(container.innerHTML).toBe("");
+    });
+});
+```
+
+- [ ] **Step 2: Run it and watch it fail**
+
+Run: `npx jest --coverage=false components/Workspace/__tests__/WorkspaceInvitations.test.tsx`
+Expected: FAIL — `Cannot find module '../WorkspaceInvitations'`.
+
+- [ ] **Step 3: Implement**
+
+Create `components/Workspace/WorkspaceInvitations.tsx`:
+
+```tsx
+import { useState } from "react";
+import {
+    SHARE_DANGER_ACTION_CLASS,
+    SHARE_PERSON_DETAIL_CLASS,
+    SHARE_PERSON_NAME_CLASS,
+    SHARE_ROW_CLASS,
+    SHARE_SECTION_LABEL_CLASS,
+} from "../../contants/ShareConstants";
+import { tenancyErrorMessage } from "../../contants/TenancyConstants";
+import { BFFAPI } from "../../gateways/BFFAPI";
+import { useWorkspaceInvitations } from "../../hooks/UseWorkspace";
+import { formatShortDate } from "../../lib/embargoDisplay";
+import { TenancySummary, WorkspaceInvitation } from "../../types/GatekeeperAPI";
+import { PersonInitial } from "../Share/PersonInitial";
+
+function invitedLine(invitation: WorkspaceInvitation): string {
+    const by = invitation.invited_by ? `invited by ${invitation.invited_by.name}` : "invited";
+    return `${by} ${formatShortDate(invitation.created_at, false)} · not accepted yet`;
+}
+
+export function WorkspaceInvitations({ tenancy }: { tenancy: TenancySummary }) {
+    const { data: invitations, mutate } = useWorkspaceInvitations(tenancy.path);
+    const [bffGateway] = useState(() => new BFFAPI());
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    if (!invitations || invitations.length === 0) {
+        return null;
+    }
+
+    async function withdraw(invitation: WorkspaceInvitation) {
+        setBusy(true);
+        setError(null);
+        try {
+            await bffGateway.withdrawWorkspaceInvitation(tenancy.path, invitation.id);
+            await mutate();
+        } catch (e) {
+            const detail = e?.response?.data?.detail;
+            setError(tenancyErrorMessage(detail));
+            if (detail === "invitation_not_found") {
+                await mutate();
+            }
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    return (
+        <section aria-label="Pending invitations" className="mt-10">
+            <h3 className={SHARE_SECTION_LABEL_CLASS}>Pending invitations</h3>
+            <ul className="m-0 mt-3 p-0 px-4 list-none rounded-lg border border-dashed border-primary-300 bg-primary-0">
+                {invitations.map((invitation) => (
+                    <li key={invitation.id} className={SHARE_ROW_CLASS}>
+                        <PersonInitial pendingIcon="mail" />
+                        <span className="flex flex-col min-w-0">
+                            <span className={SHARE_PERSON_NAME_CLASS}>{invitation.user.name}</span>
+                            <span className={SHARE_PERSON_DETAIL_CLASS}>{invitedLine(invitation)}</span>
+                        </span>
+                        {invitation.can_withdraw
+                            ? <button
+                                type="button"
+                                aria-label={`Withdraw the invitation of ${invitation.user.name}`}
+                                className={SHARE_DANGER_ACTION_CLASS}
+                                disabled={busy}
+                                onClick={() => withdraw(invitation)}
+                            >
+                                Withdraw
+                            </button>
+                            : <span></span>}
+                    </li>
+                ))}
+            </ul>
+            {error && <p role="alert" className="m-0 mt-2 text-sm text-danger-700">{error}</p>}
+        </section>
+    );
+}
+```
+
+- [ ] **Step 4: Run it**
+
+Run: `npx jest --coverage=false components/Workspace/__tests__/WorkspaceInvitations.test.tsx`
+Expected: PASS (5 tests).
+
+- [ ] **Step 5: Commit**
+
+```bash
+pwd
+command git branch --show-current
+command git add components/Workspace/WorkspaceInvitations.tsx components/Workspace/__tests__/WorkspaceInvitations.test.tsx
+command git commit -m "feat: pending tenancy invitations, withdrawn by whoever sent them" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 22: The Members page
+
+**Files:**
+- Create: `components/Workspace/WorkspaceMembers.tsx`
+- Create: `pages/app/members/index.tsx`
+- Modify: `contants/InternalRoutesConstants.ts`
+- Modify: `contants/TelemetryConstants.ts`
+- Test: `components/Workspace/__tests__/WorkspaceMembers.test.tsx`; addition to `contants/__tests__/TelemetryConstants.test.ts`
+
+**Interfaces:**
+- Consumes: `useMembersPageTenancy`, `useWorkspaceMembers` (Task 19), `InviteMemberDialog` (Task 20), `WorkspaceInvitations` (Task 21), `workspaceInvitationsKey`, `WORKSPACE_PAGE_SIZE`, `tenancyErrorMessage`, global `mutate` from `swr`, `PersonInitial`, `LoggedLayout`.
+- Produces:
+  - `ROUTE_PAGE_MEMBERS = ROUTE_APP_CONTEXT + "/members"`;
+  - `NO_MEMBERS_PAGE` (exported copy);
+  - `WorkspaceMembers()`, which shows:
+    - a header "Members" / "{display name} · {path}" with **+ Invite**;
+    - "Members · {n}" with the members by name and their ORCID iD when they have one, never an email, 50 at a time with "Show {n} more";
+    - the pending invitations, and the invite dialog, whose success revalidates the invitations key;
+    - for a selection with no Members page (Public, legacy, not a membership), `NO_MEMBERS_PAGE` and no **+ Invite**;
+    - a load error through `tenancyErrorMessage(error.detail)`;
+  - the page `/app/members`, listed in `PAGES`.
+
+- [ ] **Step 1: Write the failing tests**
+
+Create `components/Workspace/__tests__/WorkspaceMembers.test.tsx`:
+
+```tsx
+/** @jest-environment jsdom */
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { fireEvent, render, screen } from '@testing-library/react';
+
+const setSize = jest.fn() as any;
+const mutate = jest.fn() as any;
+const membersCalls: unknown[] = [];
+let pageTenancy: any;
+let members: any;
+
+jest.mock("swr", () => ({ __esModule: true, default: jest.fn(), mutate: (...args: unknown[]) => mutate(...args) }));
+jest.mock("../../../hooks/UseWorkspace", () => ({
+    useMembersPageTenancy: () => pageTenancy,
+    useWorkspaceMembers: (tenancy: unknown) => {
+        membersCalls.push(tenancy);
+        return { ...members, size: 1, setSize, isValidating: false };
+    },
+}));
+jest.mock("../WorkspaceInvitations", () => {
+    const React = require("react");
+    return { WorkspaceInvitations: (props: any) => React.createElement("p", null, `invitations of ${props.tenancy.display_name}`) };
+});
+jest.mock("../InviteMemberDialog", () => {
+    const React = require("react");
+    return {
+        InviteMemberDialog: (props: any) => props.show
+            ? React.createElement("div", null,
+                `inviting to ${props.tenancy.display_name}`,
+                React.createElement("button", { type: "button", onClick: props.onInvited }, "stub invited"))
+            : null,
+    };
+});
+
+import { NO_MEMBERS_PAGE, WorkspaceMembers } from "../WorkspaceMembers";
+
+const AMAZON = { path: "datamap/production/data-amazon", display_name: "Data Amazon", is_default: false, is_legacy: false };
+
+function membersPage(items: unknown[], total = items.length) {
+    return [{ items, total_count: total, limit: 50, offset: 0 }];
+}
+
+beforeEach(() => {
+    setSize.mockReset();
+    mutate.mockReset();
+    membersCalls.length = 0;
+    pageTenancy = { tenancy: AMAZON, loading: false };
+    members = {
+        data: membersPage([
+            { id: "m1", name: "Luciana Rizzo", orcid: "0000-0002-1825-0097" },
+            { id: "m2", name: "Marcia Yamasoe", orcid: null },
+        ]),
+    };
+});
+
+describe("WorkspaceMembers", () => {
+    test("lists the members by name with their ORCID iD, and never an email", () => {
+        const { container } = render(<WorkspaceMembers />);
+
+        expect(screen.getByRole("heading", { name: "Members" })).toBeTruthy();
+        expect(screen.getByText("datamap/production/data-amazon")).toBeTruthy();
+        expect(screen.getByText("Members · 2")).toBeTruthy();
+        expect(screen.getByText("Luciana Rizzo")).toBeTruthy();
+        expect(screen.getByText("0000-0002-1825-0097")).toBeTruthy();
+        expect(screen.getByText("Marcia Yamasoe")).toBeTruthy();
+        expect(screen.getByText("invitations of Data Amazon")).toBeTruthy();
+        expect(container.textContent).not.toContain("@");
+        expect(membersCalls).toEqual(["datamap/production/data-amazon"]);
+    });
+
+    test("more than 50 members load 50 more at a time", () => {
+        members = { data: membersPage(Array.from({ length: 50 }, (_, i) => ({ id: `m${i}`, name: `Member ${i}`, orcid: null })), 120) };
+        render(<WorkspaceMembers />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Show 50 more" }));
+
+        expect(setSize).toHaveBeenCalledWith(2);
+    });
+
+    test("Public, a legacy tenancy or a tenancy the user is not in has no Members page and nothing to invite to", () => {
+        pageTenancy = { tenancy: null, loading: false };
+        render(<WorkspaceMembers />);
+
+        expect(screen.getByText(NO_MEMBERS_PAGE)).toBeTruthy();
+        expect(screen.queryByRole("button", { name: "+ Invite" })).toBeNull();
+        expect(membersCalls).toEqual([]);
+    });
+
+    test("+ Invite opens the dialog for the tenancy, and an invitation refreshes the pending list", () => {
+        render(<WorkspaceMembers />);
+
+        fireEvent.click(screen.getByRole("button", { name: "+ Invite" }));
+        fireEvent.click(screen.getByRole("button", { name: "stub invited" }));
+
+        expect(screen.getByText("inviting to Data Amazon")).toBeTruthy();
+        expect(mutate).toHaveBeenCalledWith("/api/workspace/invitations?tenancy=datamap%2Fproduction%2Fdata-amazon");
+    });
+
+    test("a list that cannot load says why", () => {
+        members = { error: { status: 404, detail: "tenancy_not_found" } };
+        render(<WorkspaceMembers />);
+
+        expect(screen.getByRole("alert").textContent).toBe("You are not a member of this tenancy.");
+    });
+
+    test("waits for the user's tenancies before deciding", () => {
+        pageTenancy = { tenancy: null, loading: true };
+        render(<WorkspaceMembers />);
+
+        expect(screen.getByRole("status").textContent).toBe("Loading…");
+        expect(screen.queryByText(NO_MEMBERS_PAGE)).toBeNull();
+    });
+});
+```
+
+In `contants/__tests__/TelemetryConstants.test.ts`, replace:
+
+```ts
+describe("members' access", () => {
+```
+
+with:
+
+```ts
+describe("the workspace Members page", () => {
+  it("is a page the browser may report", () => {
+    expect(pageLabel("/app/members")).toBe("/app/members");
+  });
+});
+
+describe("members' access", () => {
+```
+
+- [ ] **Step 2: Run them and watch them fail**
+
+Run: `npx jest --coverage=false components/Workspace/__tests__/WorkspaceMembers.test.tsx contants/__tests__/TelemetryConstants.test.ts`
+Expected: FAIL — `Cannot find module '../WorkspaceMembers'`; "the workspace Members page" receives `"other"`.
+
+- [ ] **Step 3: Implement**
+
+Create `components/Workspace/WorkspaceMembers.tsx`:
+
+```tsx
+import { useState } from "react";
+import { mutate } from "swr";
+import { SHARE_PERSON_DETAIL_CLASS, SHARE_PERSON_NAME_CLASS, SHARE_ROW_CLASS, SHARE_SECTION_LABEL_CLASS } from "../../contants/ShareConstants";
+import { WORKSPACE_PAGE_SIZE, tenancyErrorMessage, workspaceInvitationsKey } from "../../contants/TenancyConstants";
+import { useMembersPageTenancy, useWorkspaceMembers } from "../../hooks/UseWorkspace";
+import { GatekeeperPage, TenancySummary, WorkspaceMember } from "../../types/GatekeeperAPI";
+import { PersonInitial } from "../Share/PersonInitial";
+import { InviteMemberDialog } from "./InviteMemberDialog";
+import { WorkspaceInvitations } from "./WorkspaceInvitations";
+
+export const NO_MEMBERS_PAGE = "This tenancy has no Members page. Everyone on DataMap is in Public, and legacy tenancies are read-only.";
+
+export function WorkspaceMembers() {
+    const { tenancy, loading } = useMembersPageTenancy();
+
+    if (loading) {
+        return <p role="status" className="m-0 text-sm text-primary-500">Loading…</p>;
+    }
+    if (!tenancy) {
+        return (
+            <div className="w-full max-w-5xl mx-auto">
+                <h2 className="m-0">Members</h2>
+                <p className="mt-2 mb-0 text-[15px] leading-[23px] text-primary-600">{NO_MEMBERS_PAGE}</p>
+            </div>
+        );
+    }
+    return <MembersOf tenancy={tenancy} />;
+}
+
+function MembersOf({ tenancy }: { tenancy: TenancySummary }) {
+    const { data, error, size, setSize, isValidating } = useWorkspaceMembers(tenancy.path);
+    const [inviting, setInviting] = useState(false);
+
+    const pages: GatekeeperPage<WorkspaceMember>[] = data ?? [];
+    const members = pages.flatMap((page) => page.items);
+    const total = pages[0]?.total_count ?? 0;
+    const remaining = Math.min(WORKSPACE_PAGE_SIZE, total - members.length);
+
+    return (
+        <div className="w-full max-w-5xl mx-auto">
+            <div className="flex flex-wrap justify-between items-end gap-6">
+                <div>
+                    <h2 className="m-0">Members</h2>
+                    <p className="mt-2 mb-0 text-[15px] leading-[23px] text-primary-600">
+                        {tenancy.display_name} · <span className="font-mono text-[13px]">{tenancy.path}</span>
+                    </p>
+                </div>
+                <button type="button" className="btn-primary m-0 flex-none" onClick={() => setInviting(true)}>+ Invite</button>
+            </div>
+
+            <section aria-label={`Members of ${tenancy.display_name}`} className="mt-8">
+                <h3 className={SHARE_SECTION_LABEL_CLASS}>{`Members · ${data ? total : "…"}`}</h3>
+                {error ? (
+                    <p role="alert" className="m-0 mt-3 text-sm text-danger-700">{tenancyErrorMessage(error.detail)}</p>
+                ) : !data ? (
+                    <p role="status" className="m-0 mt-3 text-sm text-primary-500">Loading members…</p>
+                ) : (
+                    <>
+                        <ul className="m-0 mt-3 p-0 px-4 list-none rounded-lg border border-primary-200 bg-primary-0 divide-y divide-primary-100">
+                            {members.map((member) => (
+                                <li key={member.id} className={SHARE_ROW_CLASS}>
+                                    <PersonInitial name={member.name} />
+                                    <span className="flex flex-col min-w-0">
+                                        <span className={SHARE_PERSON_NAME_CLASS}>{member.name}</span>
+                                        {member.orcid && <span className={`${SHARE_PERSON_DETAIL_CLASS} font-mono`}>{member.orcid}</span>}
+                                    </span>
+                                    <span></span>
+                                </li>
+                            ))}
+                        </ul>
+                        {remaining > 0 &&
+                            <button
+                                type="button"
+                                disabled={isValidating}
+                                onClick={() => setSize(size + 1)}
+                                className="mt-3 text-[13px] font-semibold text-primary-900 hover:text-primary-600 disabled:opacity-50"
+                            >
+                                {`Show ${remaining} more`}
+                            </button>}
+                    </>
+                )}
+            </section>
+
+            <WorkspaceInvitations tenancy={tenancy} />
+            <InviteMemberDialog
+                tenancy={tenancy}
+                show={inviting}
+                onClose={() => setInviting(false)}
+                onInvited={() => mutate(workspaceInvitationsKey(tenancy.path))}
+            />
+        </div>
+    );
+}
+```
+
+Create `pages/app/members/index.tsx`:
+
+```tsx
+import LoggedLayout from "../../../components/LoggedLayout";
+import { WorkspaceMembers } from "../../../components/Workspace/WorkspaceMembers";
+
+export default function MembersPage() {
+  return (
+    <LoggedLayout>
+      <WorkspaceMembers />
+    </LoggedLayout>
+  );
+}
+
+MembersPage.auth = {
+  role: "admin",
+  loading: <div>loading...</div>,
+};
+```
+
+In `contants/InternalRoutesConstants.ts`, replace:
+
+```ts
+export const ROUTE_PAGE_TENANCY_SELECTOR = ROUTE_APP_CONTEXT + "/tenancy";
+```
+
+with:
+
+```ts
+export const ROUTE_PAGE_TENANCY_SELECTOR = ROUTE_APP_CONTEXT + "/tenancy";
+
+/**
+ * Route to the selected tenancy's Members page.
+ * @constant
+ */
+export const ROUTE_PAGE_MEMBERS = ROUTE_APP_CONTEXT + "/members";
+```
+
+In `contants/TelemetryConstants.ts`, replace:
+
+```ts
+  "/app/home",
+  "/app/notebooks",
+```
+
+with:
+
+```ts
+  "/app/home",
+  "/app/members",
+  "/app/notebooks",
+```
+
+- [ ] **Step 4: Run them and the telemetry page walk**
+
+Run: `npx jest --coverage=false components/Workspace contants/__tests__/TelemetryConstants.test.ts`
+Expected: PASS (6 new page tests, the Task 20–21 suites unchanged, `TelemetryConstants` with one more test and "include every page the app has" green with `/app/members`).
+
+- [ ] **Step 5: Commit**
+
+```bash
+pwd
+command git branch --show-current
+command git add components/Workspace/WorkspaceMembers.tsx pages/app/members contants/InternalRoutesConstants.ts contants/TelemetryConstants.ts components/Workspace/__tests__/WorkspaceMembers.test.tsx contants/__tests__/TelemetryConstants.test.ts
+command git commit -m "feat: the workspace Members page" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 23: The sidebar leads to the Members page
+
+**Files:**
+- Modify: `components/LoggedLayout.tsx`
+- Test: `components/Workspace/__tests__/LoggedLayoutMembers.test.tsx`
+
+**Interfaces:**
+- Consumes: `useMembersPageTenancy` (Task 19), `ROUTE_PAGE_MEMBERS` (Task 22), `LoggedLayout`'s own `MenuItem`.
+- Produces: a **Members** entry (icon `group`) after Notebooks, only when `useMembersPageTenancy().tenancy` is set — that is, for the selected tenancy when it is one of the user's enabled tenancies and neither Public nor legacy. Active on `/app/members` like the other entries.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `components/Workspace/__tests__/LoggedLayoutMembers.test.tsx`:
+
+```tsx
+/** @jest-environment jsdom */
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { render, screen } from '@testing-library/react';
+
+let mockMembersTenancy: unknown = null;
+let mockPathname = "/app/home";
+
+jest.mock("next/head", () => ({ __esModule: true, default: () => null }));
+jest.mock("next/router", () => ({
+    __esModule: true,
+    default: { replace: jest.fn() },
+    useRouter: () => ({ pathname: mockPathname }),
+}));
+jest.mock("../../TenancyStore", () => ({
+    useTenancyStore: (selector: (state: unknown) => unknown) => selector({
+        isTenancySelected: () => true,
+        tenancySelected: "datamap/production/data-amazon",
+    }),
+}));
+jest.mock("../../Profile/AvatarButton", () => ({ __esModule: true, default: () => null }));
+jest.mock("../../../hooks/UseWorkspace", () => ({
+    useMembersPageTenancy: () => ({ tenancy: mockMembersTenancy, loading: false }),
+}));
+
+import LoggedLayout from "../../LoggedLayout";
+
+const AMAZON = { path: "datamap/production/data-amazon", display_name: "Data Amazon", is_default: false, is_legacy: false };
+
+beforeEach(() => {
+    mockMembersTenancy = AMAZON;
+    mockPathname = "/app/home";
+});
+
+describe("the sidebar Members entry", () => {
+    test("a member of a tenancy open to members gets it", () => {
+        render(<LoggedLayout><p>page</p></LoggedLayout>);
+
+        expect(screen.getByRole("link", { name: /Members/ }).getAttribute("href")).toBe("/app/members");
+    });
+
+    test("Public, a legacy tenancy or one the user is not in has none", () => {
+        mockMembersTenancy = null;
+        render(<LoggedLayout><p>page</p></LoggedLayout>);
+
+        expect(screen.queryByRole("link", { name: /Members/ })).toBeNull();
+    });
+
+    test("is marked on the Members page", () => {
+        mockPathname = "/app/members";
+        render(<LoggedLayout><p>page</p></LoggedLayout>);
+
+        expect(screen.getByRole("link", { name: /Members/ }).className).toContain("bg-secondary-500");
+    });
+});
+```
+
+- [ ] **Step 2: Run it and watch it fail**
+
+Run: `npx jest --coverage=false components/Workspace/__tests__/LoggedLayoutMembers.test.tsx`
+Expected: FAIL — no link named "Members".
+
+- [ ] **Step 3: Implement**
+
+In `components/LoggedLayout.tsx`, replace:
+
+```tsx
+import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_HOME, ROUTE_PAGE_NOTEBOOKS, ROUTE_PAGE_PROFILE, ROUTE_PAGE_TENANCY_SELECTOR } from "../contants/InternalRoutesConstants";
+import useComponentVisible from "../hooks/UseComponentVisible";
+```
+
+with:
+
+```tsx
+import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_HOME, ROUTE_PAGE_MEMBERS, ROUTE_PAGE_NOTEBOOKS, ROUTE_PAGE_PROFILE, ROUTE_PAGE_TENANCY_SELECTOR } from "../contants/InternalRoutesConstants";
+import useComponentVisible from "../hooks/UseComponentVisible";
+import { useMembersPageTenancy } from "../hooks/UseWorkspace";
+```
+
+replace:
+
+```tsx
+  const tenancySelected = useTenancyStore((state) => state.tenancySelected)
+```
+
+with:
+
+```tsx
+  const tenancySelected = useTenancyStore((state) => state.tenancySelected)
+  const { tenancy: membersTenancy } = useMembersPageTenancy();
+```
+
+and replace:
+
+```tsx
+            <MenuItem href={ROUTE_PAGE_NOTEBOOKS} text="Notebooks" icon="code" collapsed={menuClosed} />
+          </ul>
+```
+
+with:
+
+```tsx
+            <MenuItem href={ROUTE_PAGE_NOTEBOOKS} text="Notebooks" icon="code" collapsed={menuClosed} />
+            {membersTenancy && <MenuItem href={ROUTE_PAGE_MEMBERS} text="Members" icon="group" collapsed={menuClosed} />}
+          </ul>
+```
+
+- [ ] **Step 4: Run it and every suite that renders a page frame**
+
+Run: `npx jest --coverage=false components/Workspace components/Tenancy components/Profile`
+Expected: PASS (3 new tests). No other suite renders `LoggedLayout`.
+
+- [ ] **Step 5: Commit**
+
+```bash
+pwd
+command git branch --show-current
+command git add components/LoggedLayout.tsx components/Workspace/__tests__/LoggedLayoutMembers.test.tsx
+command git commit -m "feat: the sidebar leads to the Members page of a tenancy open to members" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 24: Verify
 
 **Files:** none changed (a fix goes in its own commit, with its own failing test first).
 
 - [ ] **Step 1: Unit tests**
 
 From the worktree: `npx jest --coverage=false`
-Expected: `Test Suites: 128 passed, 128 total` and `Tests: 982 passed, 982 total`. That is the baseline 102 / 841 plus 26 new suites with 138 tests (`sessionAdminClaim` 4, `TenancyConstants` 5, `TenancyIcon` 3, `tenancies` 7, `shareTenancyInvitations` 3, `tenancyRoutes` 14, `tenancyInvitationRoutes` 9, `BFFAPI.tenancies` 8, `tenancyRequests` 10, `tenancySelection` 9, `UseTenancies` 3, `RequestAccessDialog` 5, `TenancyRequestStatus` 8, `TenancySelector` 8, `AvatarButton` 3, `TenancyInvitationsPanel` 6, `ProfileTenancies` 4, `membersAccessPublic` 4, `EmbargoChoicePublic` 3, `ShareInputTenancyInvite` 6, `AccessListTenancyInvitations` 2, `ShareDialogTenancy` 6, `tenancyRevocation` 3, `fetcher` 2, `datasetListRoute` 1, `RequireSessionRevoked` 2) and 3 tests added to existing suites (`AccessPending` 5 → 6, `rpc` +1, `requestErrorHandler` +1). A route test answering `401` means a mocked token lost `v: 2`.
+Expected: `Test Suites: 132 passed, 132 total` and `Tests: 1014 passed, 1014 total`. That is the baseline 102 / 841 plus:
+- 30 new suites with 168 tests: `sessionAdminClaim` 4, `TenancyConstants` 8, `TenancyIcon` 3, `tenancies` 7, `workspace` 5, `tenancyRoutes` 14, `workspaceRoutes` 16, `BFFAPI.tenancies` 8, `tenancyRequests` 10, `tenancySelection` 12, `UseTenancies` 3, `RequestAccessDialog` 5, `TenancyRequestStatus` 8, `TenancySelector` 8, `AvatarButton` 3, `TenancyInvitationsPanel` 6, `ProfileTenancies` 4, `membersAccessPublic` 4, `EmbargoChoicePublic` 3, `ShareDialogPublic` 1, `tenancyRevocation` 3, `fetcher` 2, `datasetListRoute` 1, `RequireSessionRevoked` 2, `datasetUpdateRoute` 2, `UseWorkspace` 4, `InviteMemberDialog` 8, `WorkspaceInvitations` 5, `WorkspaceMembers` 6, `LoggedLayoutMembers` 3;
+- 5 tests added to existing suites: `AccessPending` 5 → 6, `rpc` +1, `requestErrorHandler` +1, `DatasetColaboratorsForm` +1, `TelemetryConstants` +1.
+
+A route test answering `401` means a mocked token lost `v: 2`.
 
 Then: `npx tsc --noEmit -p .`
 Expected: no output.
@@ -5351,11 +6269,11 @@ Expected: no output.
 - [ ] **Step 2: Build**
 
 Run: `npm run build`
-Expected: exit code 0; the route list shows `/api/tenancies`, `/api/tenancy-requests`, `/api/tenancy-requests/[requestId]`, `/api/tenancy-invitations`, `/api/tenancy-invitations/[invitationId]/accept`, `/api/tenancy-invitations/[invitationId]/decline`, `/api/datasets/[datasetId]/share/lookup`, `/api/datasets/[datasetId]/tenancy-invitations` and `/api/datasets/[datasetId]/tenancy-invitations/[invitationId]`.
+Expected: exit code 0. The route list shows the page `/app/members` and the API routes `/api/tenancies`, `/api/tenancy-requests`, `/api/tenancy-requests/[requestId]`, `/api/tenancy-invitations`, `/api/tenancy-invitations/[invitationId]/accept`, `/api/tenancy-invitations/[invitationId]/decline`, `/api/workspace/members`, `/api/workspace/lookup`, `/api/workspace/invitations` and `/api/workspace/invitations/[invitationId]`. No `/api/datasets/[datasetId]/share/lookup` and no `/api/datasets/[datasetId]/tenancy-invitations`.
 
 - [ ] **Step 3: Start the gatekeeper with PR A, and Mailpit**
 
-PR A must be in the gatekeeper checkout you start: `main` once PR A is merged, otherwise PR A's branch in its worktree (`/Users/caio.maia/workspace/datamap/gatekeeper/.claude/worktrees/rfc-009-tenancies` or wherever the controller built it). Check with `command git -C <checkout> log --oneline -3`.
+PR A must be in the gatekeeper checkout you start: `main` once `ardc-brazil/gatekeeper#145` is merged, otherwise its branch `feat/rfc-009-gatekeeper` (worktree `/Users/caio.maia/workspace/datamap/gatekeeper/.claude/worktrees/rfc-009-gatekeeper`). Check with `command git -C <checkout> log --oneline -3`: the workspace routes arrive with `6cf153a` and are members-only from `1fb512a`.
 
 ```bash
 cd <gatekeeper checkout with PR A>
@@ -5407,7 +6325,7 @@ Expected: `201` for the member and both datasets; keep the two dataset ids (`D_A
 
 Use a separate browser profile (or a private window) per account.
 
-1. **One tenancy, no selector.** Sign in as Bruno → straight to `/app/home`, no selector page; the sidebar footer reads `datamap / production / public`. The avatar menu has no "Switch tenancy" and has "Request access to a tenancy". `/app/profile` lists **Public** with `datamap/production/public` and "Everyone is in public", marked **Current**, and **Request access** with no **Switch tenancy**.
+1. **One tenancy, no selector.** Sign in as Bruno → straight to `/app/home`, no selector page; the sidebar footer reads `datamap / production / public` and the sidebar has no **Members** entry. The avatar menu has no "Switch tenancy" and has "Request access to a tenancy". `/app/profile` lists **Public** with `datamap/production/public` and "Everyone is in public", marked **Current**, and **Request access** with no **Switch tenancy**.
 2. **The admin flag.** In Carla's browser, DevTools console: `await (await fetch('/api/auth/session')).json()` → `user.admin` is `true`; in Bruno's, `false`; neither carries `roles`.
 3. **Request access.** As Bruno, avatar menu → "Request access to a tenancy" → the 520 px dialog with the copy of the Global Constraints. **Send request** with both fields empty → "Name the tenancy you need." and "Say why you need access.". Type "Data Amazon" and a reason → the dialog closes; the home shows "Your request for Data Amazon is waiting for an administrator · Withdraw"; `/app/profile` shows the dashed row "Requested {today} · waiting for an administrator" in amber with **Withdraw**. Run `dispatch` → Mailpit has "Tenancy request from Bruno Lima" to `datamap-admins@fake.mail.com`.
 4. **One pending request.** Request again from the profile → "You already have a request waiting. Withdraw it to send another.". **Withdraw** → the row and the home line disappear. Send and withdraw until the fourth attempt of the day → "You have sent three requests in the last 24 hours. Try again tomorrow." Reset for the next case: `psqlgk "DELETE FROM tenancy_requests WHERE user_id = '$BRUNO';"`, then send one "Data Amazon" request.
@@ -5418,24 +6336,27 @@ Use a separate browser profile (or a private window) per account.
    asadmin -X POST $GK/admin/tenancy-requests/$REQ/approve -d '{"tenancy": "datamap/production/data-amazon"}'
    ```
 
-   Focus Bruno's home tab → "Your request for Data Amazon was approved · Switch to Data Amazon", and (no sign-out) the avatar menu now has "Switch tenancy". **Switch to Data Amazon** → home, footer `datamap / production / data-amazon`, the line gone. `dispatch` → "You now have access to Data Amazon" in Mailpit.
-6. **More than one tenancy.** As Bruno, avatar → "Switch tenancy" → `/app/tenancy`: "Welcome, Bruno", "Choose the tenancy you want to work in.", **Public** (public icon, `datamap / production / public`) and **Data Amazon** (tenancy icon), "+ Request access to another tenancy". Pick Public → home in Public.
+   Focus Bruno's home tab → "Your request for Data Amazon was approved · Switch to Data Amazon", and (no sign-out) the avatar menu now has "Switch tenancy". **Switch to Data Amazon** → home, footer `datamap / production / data-amazon`, the line gone, and the sidebar now has **Members**. `dispatch` → "You now have access to Data Amazon" in Mailpit.
+6. **More than one tenancy.** As Bruno, avatar → "Switch tenancy" → `/app/tenancy`: "Welcome, Bruno", "Choose the tenancy you want to work in.", **Public** (public icon, `datamap / production / public`) and **Data Amazon** (tenancy icon), "+ Request access to another tenancy". Pick Public → home in Public, no **Members** entry.
 7. **Decline with a message.** As Bruno request "Cerrado Flux"; as Carla:
 
    ```bash
    REQ=$(asadmin "$GK/admin/tenancy-requests?status=open" | python3 -c 'import json,sys; print(json.load(sys.stdin)["items"][0]["id"])')
-   asadmin -X POST $GK/admin/tenancy-requests/$REQ/decline -d '{"message": "Ask a member of the tenancy to invite you from a dataset'"'"'s Share dialog"}'
+   asadmin -X POST $GK/admin/tenancy-requests/$REQ/decline -d '{"message": "Ask a member of the tenancy to invite you from its Members page"}'
    ```
 
    Bruno's `/app/tenancy` and `/app/profile` show "Cerrado Flux", "Declined {today}" and the message in quotes; the home shows no line for it. `dispatch` → "Your request for Cerrado Flux" in Mailpit.
-8. **The share dialog invites an outsider.** As Ana (select Data Amazon), open `/app/datasets/$D_AMAZON` → Share. The footer reads "Owners and editors can invite to the tenancy". Type `eva@example.org` → after a moment the card: "EV" avatar, "Eva Rocha", "eva@example.org · not a member of Data Amazon", **Share this dataset only** selected ("Can read · as today"), **Invite to Data Amazon** ("Member of the tenancy · sees its {n} datasets once they accept · administrators are notified"). Choose the invitation → **Send invitation** → *Who has access* shows Eva with the dashed tenancy icon, "Invited to Data Amazon {today} · not accepted yet" and red **Withdraw**. `dispatch` → "Ana Souza invited you to Data Amazon" to Eva and "Ana Souza invited Eva Rocha to Data Amazon" to the admins. **Withdraw** → the row disappears; invite again.
-9. **What the lookup does not offer.** In the same dialog type `bruno@example.org` (already a member) → the usual "Invite bruno@example.org" panel, no card; type `nobody@example.org` → the usual panel (the lookup answered `no_account`). In DevTools → Network, each settled email made one `GET /api/datasets/.../share/lookup`.
-10. **Accept and decline from the home.** As Eva, the home shows "Ana Souza invited you to Data Amazon" / "{n} datasets · from “GoAmazon 2014/5 — Aerosol size distribution” · {today}" with **Decline** and **Accept**. **Decline** → the card goes. Have Ana invite her again, then **Accept** → the home reloads in Data Amazon (footer `datamap / production / data-amazon`) with no sign-out, and `/app/tenancy` lists both tenancies. `/app/profile` shows the same card before accepting (repeat the invite once to see it there).
-11. **Public datasets.** As Ana, switch to Public and open `/app/datasets/$D_PUBLIC` → Share: the *Members of Public* row reads "Everyone on DataMap · can read" with no **Change**; typing `eva@example.org` shows the usual panel and Network shows no `/share/lookup`. The dataset's Settings → Access shows the same row with no **Change**.
-12. **New dataset form.** As Ana in Public, `/app/datasets/new`: "Open to the workspace" reads "Visible to every DataMap account; only you and people you share with can edit"; choose **Under embargo** → "When the embargo ends, members of Public can read but not edit." with no **Change**. Switch to Data Amazon and reopen the form → "Every member of Data Amazon can read and download the files."; under embargo → "When the embargo ends, members of Data Amazon can read but not edit." with **Change**. Do not submit (the upload needs the MinIO bucket).
-13. **Zero tenancies.** `psqlgk "DELETE FROM users_tenancies WHERE user_id = '$BRUNO';"` (the gatekeeper's public lock covers its API, not SQL). Sign Bruno out and in → `/app/tenancy` shows "You're not in any tenancy", the RFC copy, **Request access** (opens the dialog), the "Shared with me" link and "I already have access — check again". Restore: `psqlgk "INSERT INTO users_tenancies (user_id, tenancy) VALUES ('$BRUNO', 'datamap/production/public'), ('$BRUNO', 'datamap/production/data-amazon');"`, then "check again" → reload, then the selector lists both.
-14. **Removed member.** As Eva, select Data Amazon and keep `/app/datasets` open. As Carla: `asadmin -X DELETE $GK/admin/tenancies/datamap/production/data-amazon/members/$EVA`. In Eva's tab, change a filter (or focus the tab) → she lands on `/app/tenancy`, which, with only Public left, opens the home in Public. Then open `/app/datasets/$D_AMAZON` directly with the Data Amazon cookie re-selected from DevTools (`document.cookie` holds `datamap.tenancy-selector-storage`; or repeat before the first redirect) → `/app/tenancy`, not the login page.
-15. **Old sessions.** A session signed in before this branch (keep a tab from the main checkout's dev server) keeps working after switching servers: no forced sign-out (`TOKEN_VERSION` is still `2`), `user.admin` reads `false` until the next `update()`.
+8. **The Members page.** As Ana (select Data Amazon), sidebar → **Members** → `/app/members`: "Members", "Data Amazon · datamap/production/data-amazon", "Members · {n}" with Ana Souza and Bruno Lima among them, by name (with an ORCID iD only for an account that has one), and no email anywhere on the page. **+ Invite** → "Invite to Data Amazon". Type `eva@example.org` → after a moment the card: "EV" avatar, "Eva Rocha", "eva@example.org", "Member of the tenancy · sees its {n} datasets once they accept · administrators are notified" (`{n}` counts `D_AMAZON` and any seeded Data Amazon dataset). **Send invitation** → the dialog closes and *Pending invitations* shows Eva with the dashed icon, "invited by Ana Souza {today} · not accepted yet" and red **Withdraw**. `dispatch` → "Ana Souza invited you to Data Amazon" to Eva and "Ana Souza invited Eva Rocha to Data Amazon" to the admins. **Withdraw** → the row disappears; invite Eva again.
+9. **What the lookup does not offer.** In the same dialog: `bruno@example.org` → "Already a member of Data Amazon." and **Send invitation** disabled; `eva@example.org` → "Already invited to Data Amazon · not accepted yet." and disabled; `nobody@example.org` → "No DataMap account has this email or ORCID iD."; "Bruno" → no lookup, and Enter → "Type the full email or ORCID iD.". In DevTools → Network, each settled email made exactly one `GET /api/workspace/lookup`. As Bruno on the Members page, Eva's pending row has no **Withdraw**.
+10. **Members only.** As Carla (admin, not a member of Data Amazon): `curl -s -H "X-Api-Key: $KEY" -H "X-Api-Secret: $SECRET" -H "X-User-Id: $CARLA" $GK/users/$CARLA/tenancies/datamap/production/data-amazon/members` → `{"detail": "tenancy_not_found"}`. As Ana, switch to Public → no **Members** entry; open `/app/members` directly → "This tenancy has no Members page. Everyone on DataMap is in Public, and legacy tenancies are read-only." and no **+ Invite**.
+11. **Accept and decline from the home.** As Eva, the home shows "Ana Souza invited you to Data Amazon" / "{n} datasets · {today}" (no dataset name) with **Decline** and **Accept**. **Decline** → the card goes. Have Ana invite her again, then **Accept** → the home reloads in Data Amazon (footer `datamap / production / data-amazon`) with no sign-out, and `/app/tenancy` lists both tenancies. `/app/profile` shows the same card before accepting (repeat the invite once to see it there).
+12. **An invitation an admin closes.** As Carla remove Eva (`asadmin -X DELETE $GK/admin/tenancies/datamap/production/data-amazon/members/$EVA`), then have Ana invite her again and keep Ana's Members page open. As Carla add her directly: `asadmin -X POST $GK/admin/tenancies/datamap/production/data-amazon/members -d "{\"user_id\": \"$EVA\"}"`. Focus Eva's home → the invitation card is gone. In Ana's still-open page, **Withdraw** on Eva's row → "This invitation is no longer open. It may have been withdrawn." and the row leaves; reload → Eva is listed among the members.
+13. **Public datasets.** As Ana, switch to Public and open `/app/datasets/$D_PUBLIC` → Share: the *Members of Public* row reads "Everyone on DataMap · can read" with no **Change**, and the dialog offers nothing about the tenancy. The dataset's Settings → Access shows the same row with no **Change**.
+14. **New dataset form.** As Ana in Public, `/app/datasets/new`: "Open to the workspace" reads "Visible to every DataMap account; only you and people you share with can edit"; choose **Under embargo** → "When the embargo ends, members of Public can read but not edit." with no **Change**. Switch to Data Amazon and reopen the form → "Every member of Data Amazon can read and download the files."; under embargo → "When the embargo ends, members of Data Amazon can read but not edit." with **Change**. Do not submit (the upload needs the MinIO bucket).
+15. **A dataset stays in its tenancy.** As Ana open `/app/datasets/$D_AMAZON` → Settings, change the name, **Save changes** → DevTools → Network: the `PUT /api/datasets/$D_AMAZON` body carries `"tenancy": "datamap/production/data-amazon"` and answers `200`. Then send another tenancy through the BFF from the console: `await fetch('/api/datasets/' + '<D_AMAZON>', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: '<D_AMAZON>', name: 'x', data: {}, tenancy: 'datamap/production/public', is_enabled: true }) }).then(r => r.json())` → `{detail: "tenancy_cannot_change"}` with status `400`, and the dataset is still in Data Amazon.
+16. **Zero tenancies.** `psqlgk "DELETE FROM users_tenancies WHERE user_id = '$BRUNO';"` (the gatekeeper's public lock covers its API, not SQL). Sign Bruno out and in → `/app/tenancy` shows "You're not in any tenancy", the RFC copy, **Request access** (opens the dialog), the "Shared with me" link and "I already have access — check again". Restore: `psqlgk "INSERT INTO users_tenancies (user_id, tenancy) VALUES ('$BRUNO', 'datamap/production/public'), ('$BRUNO', 'datamap/production/data-amazon');"`, then "check again" → reload, then the selector lists both.
+17. **Removed member.** As Eva, select Data Amazon and keep `/app/datasets` open. As Carla: `asadmin -X DELETE $GK/admin/tenancies/datamap/production/data-amazon/members/$EVA`. In Eva's tab, change a filter (or focus the tab) → she lands on `/app/tenancy`, which, with only Public left, opens the home in Public. Then open `/app/datasets/$D_AMAZON` directly with the Data Amazon cookie re-selected from DevTools (`document.cookie` holds `datamap.tenancy-selector-storage`; or repeat before the first redirect) → `/app/tenancy`, not the login page.
+18. **Old sessions.** A session signed in before this branch (keep a tab from the main checkout's dev server) keeps working after switching servers: no forced sign-out (`TOKEN_VERSION` is still `2`), `user.admin` reads `false` until the next `update()`.
 
 - [ ] **Step 5: Stop the stack**
 
@@ -5450,40 +6371,53 @@ dc down
 
 ## Self-review
 
-| RFC 009 / contract requirement | Task |
+| RFC 009 / contract / PR A requirement | Task |
 |---|---|
-| `session.user.admin` from `roles` containing `"admin"`, on sign-in and every `update()`, no `TOKEN_VERSION` bump, only the boolean in the session | 2, 20.2, 20.15 |
-| `contants/TenancyConstants.ts` with the contract's exact block, plus `tenancyErrorMessage` and B's copy | 3 |
-| `TenancySummary`, `GatekeeperPage<T>` (shared) and B's types; `ShareTenancy` / `ShareState` additions | 3 |
+| `session.user.admin` from `roles` containing `"admin"`, on sign-in and every `update()`, no `TOKEN_VERSION` bump, only the boolean in the session | 2, 24.2, 24.18 |
+| `contants/TenancyConstants.ts` with the contract's exact block, plus `tenancyErrorMessage`, `TENANCY_PATH_PATTERN` and B's copy and keys | 3, 19 |
+| `TenancySummary`, `GatekeeperPage<T>` (shared) and B's types, `TenancyInvitation` without `dataset`, `WorkspaceMember`, `WorkspaceInvitation`, `InviteeLookup`; `ShareTenancy` additions; no tenancy invitation in `ShareState` | 3 |
 | `TenancyIcon` — `public` for the default tenancy, `tenancy` otherwise, dashed when pending | 3 |
-| `lib/tenancies.ts` (seven calls, `X-User-Id` only) and the three `lib/share.ts` calls (`buildHeaders`) | 4 |
+| `lib/tenancies.ts` (seven calls) and `lib/workspace.ts` (five calls), `X-User-Id` only, the tenancy path unencoded in the gatekeeper URL; `lib/share.ts` unchanged | 4 |
 | BFF user routes on `bffRouter()` (`authOnlyChain`), user from the token, gatekeeper status and `{detail}` forwarded | 5 |
-| BFF dataset routes on the `share/candidates.ts` router; invitee from the browser only as `userId` | 6 |
-| JSON gate on every `POST`; ids validated before the gatekeeper | 5, 6 |
-| BFFAPI methods with the contract's signatures, rejecting with the Axios error; `lookupShareTarget` imperative | 7, 17 |
-| SWR keys and options (`/api/tenancies`, `/api/tenancy-requests` and `/api/tenancy-invitations` revalidated on focus) | 8 |
-| Selector: one tenancy → selected, home, no page; more → design 1i list; none → `AccessPending` | 8, 12, 20.1, 20.6, 20.13 |
-| `/app/tenancy` calls `update()` when `/api/tenancies` and the session differ | 8, 12, 20.5 |
-| `AccessPending` rewrite with **Request access**, "Shared with me" and "check again" kept | 11, 12, 20.13 |
-| Request dialog (1i, 520 px, Formik + Yup, 1–128 / 1–1000, `409 request_pending` copy, `429`) | 9, 20.3, 20.4 |
-| Pending request row with dashed icon, amber "Requested {date} · waiting for an administrator", **Withdraw** | 10, 12, 15, 20.3 |
-| Declined in the last 30 days with no newer request: "Declined {date}" and the message | 8, 10, 20.7 |
-| Approved request → `update()` and "Switch to {tenancy}" | 8, 10, 14, 20.5 |
-| Avatar menu: "Switch tenancy" only with more than one, "Request access to a tenancy" | 13, 20.1 |
-| Profile Tenancies: display names, "Everyone is in public", request state, request and switch buttons | 15, 20.1 |
-| Home panel (1j): one card per invitation, Decline / Accept, "As Reader" dropped; the request line below | 14, 20.10 |
-| Accept → `update()`, select the tenancy, `/app/home` | 14, 20.10 |
-| Invitations on the profile too | 15, 20.10 |
-| Share dialog: lookup only when `can_invite_to_tenancy` and the tenancy is production, not public, not legacy; debounced; the 1j card with the two options | 17, 18, 20.8, 20.9, 20.11 |
-| Pending tenancy invitations in *Who has access* with dashed icon, "Invited to {tenancy} {date} · not accepted yet", **Withdraw** for the inviter | 18, 20.8 |
-| Footer "Owners and editors can invite to the tenancy" | 18, 20.8 |
-| Members-access toggle hidden for public; *Members of Public* reads "Everyone on DataMap · can read" | 16, 20.11 |
-| New-dataset form: Public notice; new datasets start with `members_can_edit = false` | 16, 20.12 |
+| BFF workspace routes (`/api/workspace/members`, `lookup`, `invitations`, `invitations/[invitationId]`), tenancy as a checked query parameter, invitee from the browser only as `userId` | 6 |
+| JSON gate on every `POST`; ids and paths validated before the gatekeeper | 5, 6 |
+| BFFAPI methods with the contract's signatures, rejecting with the Axios error; `lookupInvitee` imperative and debounced | 7, 20 |
+| SWR keys and options (`/api/tenancies`; requests and invitations revalidated on focus; workspace members through `useSWRInfinite`; workspace invitations revalidated after invite and withdraw) | 8, 19, 21, 22 |
+| Selector: one tenancy → selected, home, no page; more → design 1i list; none → `AccessPending` | 8, 12, 24.1, 24.6, 24.16 |
+| `/app/tenancy` calls `update()` when `/api/tenancies` and the session differ | 8, 12, 24.5 |
+| `AccessPending` rewrite with **Request access**, "Shared with me" and "check again" kept | 11, 12, 24.16 |
+| Request dialog (1i, 520 px, Formik + Yup, 1–128 / 1–1000, `409 request_pending` copy, `429`) | 9, 24.3, 24.4 |
+| Pending request row with dashed icon, amber "Requested {date} · waiting for an administrator", **Withdraw** | 10, 12, 15, 24.3 |
+| Declined in the last 30 days with no newer request: "Declined {date}" and the message | 8, 10, 24.7 |
+| Approved request → `update()` and "Switch to {tenancy}" | 8, 10, 14, 24.5 |
+| Avatar menu: "Switch tenancy" only with more than one, "Request access to a tenancy" | 13, 24.1 |
+| Profile Tenancies: display names, "Everyone is in public", request state, request and switch buttons | 15, 24.1 |
+| Home panel (1j): one card per invitation, "{n} datasets · {date}", Decline / Accept, "As Reader" and the dataset dropped; the request line below | 14, 24.11 |
+| Accept → `update()`, select the tenancy, `/app/home` | 14, 24.11 |
+| Invitations on the profile too | 15, 24.11 |
+| An invitation withdrawn by an admin disappears from the invitee's list and the tenancy's; acting on it reads "no longer open" and revalidates | 14, 21, 24.12 |
+| Members page: members by name and ORCID iD, never email, 50 at a time; pending invitations dashed with **Withdraw** for the inviter; **+ Invite** with exact email/ORCID lookup, the card's name, typed email (or iD), `{n}` from the lookup's `datasets`; members and already-invited people cannot be invited again | 19, 20, 21, 22, 24.8, 24.9 |
+| Members page for members only: no entry and no page for Public, staging, a disabled tenancy or a tenancy the user is not in; the gatekeeper's `404`/`409` codes mapped | 19, 22, 23, 24.10 |
+| Members page reached from the sidebar, hidden for Public and staging | 23, 24.1, 24.5, 24.6 |
+| `/app/members` in `PAGES` | 22 |
+| Share dialog is RFC 003 only: no lookup, no tenancy invitation | — (nothing added to `ShareInput`, `AccessList` or `lib/share.ts`); 24.13 |
+| Members-access toggle hidden for public; *Members of Public* reads "Everyone on DataMap · can read" | 16, 24.13 |
+| New-dataset form: Public notice; new datasets start with `members_can_edit = false` | 16, 24.14 |
 | `public_members_cannot_edit` explained if it ever reaches the embargo screens | 3 |
-| A `401` whose `detail` starts with `unauthorized_tenancy` → clear the selection, `update()`, selector | 19, 20.14 |
-| Webapp Jest from the RFC: the selector's three cases, the request form, the home panel calling `update()` and selecting the tenancy, the share card's two options; `hydrateWithUserInfo` setting `admin` | 2, 9, 12, 14, 17 |
-| Manual checks against the gatekeeper with PR A and Mailpit | 20 |
+| A dataset never changes tenancy: no move control, edit forms send the current tenancy, `400 tenancy_cannot_change` reaches the browser and has its sentence | 3, 18, 24.15 |
+| A `401` whose `detail` starts with `unauthorized_tenancy` → clear the selection, `update()`, selector | 17, 24.17 |
+| `POST /users` ignores `roles` | not touched: `lib/users.ts` is outside this PR, and the `"roles": []` it sends is ignored |
+| Webapp Jest from the RFC: the selector's three cases, the request form, the home panel calling `update()` and selecting the tenancy; `hydrateWithUserInfo` setting `admin`. The RFC's "share suggestion card's two options" no longer exists; its replacement is the invite card | 2, 9, 12, 14, 20 |
+| Manual checks against the gatekeeper with PR A and Mailpit | 24 |
 
-Not in the contract, added because the flows break without them: `accountHandler` instead of `bffHandler` (Task 5; `bffHandler` replaces the `401`/`403`/`404` codes with fixed English, so `no_account`, `forbidden`, `request_not_found` and `invitation_not_found` would never reach the browser); the `401` detail in `httpErrorHandler`, the list route's `{detail}` and the fetcher's `error.detail` (Task 19; without them `unauthorized_tenancy` is lost on the way); clearing a selected tenancy the user no longer has (Task 12; otherwise the stale cookie keeps querying it); the redirect of a server-rendered dataset page to the selector (Task 19; it went to the login page).
+Not in the contract, added because the flows break or leak without them:
+- `accountHandler` instead of `bffHandler` (Tasks 5, 6). `bffHandler` replaces the `401`/`403`/`404` codes with fixed English, so `no_account`, `forbidden`, `tenancy_not_found`, `request_not_found` and `invitation_not_found` would never reach the browser.
+- `TENANCY_PATH_PATTERN` on every `tenancy` parameter (Task 6). The path goes into the gatekeeper URL unencoded, so `..` must not reach it.
+- The `401` detail in `httpErrorHandler`, the list route's `{detail}` and the fetcher's `error.detail` (Task 17). Without them `unauthorized_tenancy` is lost on the way, and the Members page could not say why it failed.
+- The dataset `PUT` route's `{detail}` (Task 18). Without it `tenancy_cannot_change` is lost on the way.
+- Clearing a selected tenancy the user no longer has (Task 12). Otherwise the stale cookie keeps querying it.
+- The redirect of a server-rendered dataset page to the selector (Task 17). It used to go to the login page.
 
-Left to PR C, which assumes this PR's files: the admin pages, `adminChain`, `adminBffRouter`, `lib/admin.ts`, `AdminConstants.ts`, the `ROUTE_PAGE_ADMIN*` constants and the `RequireSession` admin gate.
+Names this plan adds next to the contract's (the contract should follow): `ROUTE_PAGE_MEMBERS = "/app/members"` (the contract says B adds no route); `TENANCY_PATH_PATTERN` moves from PR C's `AdminConstants.ts` into the shared `TenancyConstants.ts`; `lib/routeParams.ts` (`invalidRequest`, `uuidOr404`, `tenancyOr400`, `pageOr400`, `userIdOr400`), which PR C's `lib/adminRoute.ts` re-exports; `asUser` exported from `lib/tenancies.ts` and used by `lib/workspace.ts` and PR C's `lib/admin.ts`; `WORKSPACE_PAGE_SIZE`, `WORKSPACE_LOOKUP_DEBOUNCE_MS`, `workspaceMembersKey`, `workspaceInvitationsKey`; `hooks/UseWorkspace.ts`; `components/Workspace/`. The contract's own names for the workspace (`lib/workspace.ts`, `/api/workspace/*`, `listWorkspaceMembers`, `listWorkspaceInvitations`, `inviteToWorkspace`, `withdrawWorkspaceInvitation`, `lookupInvitee`, the two SWR keys) fit the webapp's layout and are kept as they are.
+
+Left to PR C, which assumes this plan's files: the admin pages, `adminChain`, `adminBffRouter`, `lib/admin.ts`, `AdminConstants.ts`, the `ROUTE_PAGE_ADMIN*` constants and the `RequireSession` admin gate.
