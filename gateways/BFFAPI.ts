@@ -372,6 +372,11 @@ export class BFFAPI {
         await axios.put("/api/account/password", { currentPassword, newPassword });
     }
 
+    /** Marks the ORCID sign-in that follows as connecting ORCID to the signed-in account. */
+    async startOrcidConnection(): Promise<void> {
+        await axios.post("/api/account/connect-orcid", {});
+    }
+
     async requestEmailVerification(email: string): Promise<{ challengeId: string }> {
         const response = await axios.post("/api/account/email-verifications", { email });
         return response.data as { challengeId: string };

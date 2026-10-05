@@ -44,3 +44,19 @@ export const ORCID_ID_PATTERN = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/;
 export const DEV_ORCID_MOCK_PROVIDER_ID = "orcid-dev";
 
 export const DEV_ORCID_MOCK_PROVIDER_NAME = "ORCID (development mock)";
+
+export const ORCID_LINK_INTENT_COOKIE_NAME = "datamap.orcid-link-intent";
+
+export const ORCID_LINK_INTENT_MAX_AGE_SECONDS = 10 * 60;
+
+export const ORCID_LINK_OUTCOME_PARAM = "orcid";
+
+export type OrcidLinkOutcomeKind = "already_linked" | "connected" | "unavailable";
+
+export const ORCID_CONNECT_FAILED_MESSAGE = "ORCID could not be connected. Try again.";
+
+export const ORCID_LINK_OUTCOMES: Record<OrcidLinkOutcomeKind, { message: string, role: "status" | "alert" }> = {
+    already_linked: { message: "This ORCID iD is already linked to another DataMap account.", role: "alert" },
+    connected: { message: "Your ORCID iD is connected.", role: "status" },
+    unavailable: { message: ORCID_CONNECT_FAILED_MESSAGE, role: "alert" },
+};
