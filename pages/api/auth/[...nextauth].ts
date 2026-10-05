@@ -1,6 +1,7 @@
 import axios, { AxiosError } from "axios";
+import type { NextApiRequest, NextApiResponse } from "next";
 import NextAuth, { Account, AuthOptions, User } from "next-auth";
-import { JWT } from "next-auth/jwt";
+import { JWT, getToken } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import { login } from "../../../lib/account";
@@ -11,8 +12,10 @@ import { getMetrics } from "../../../lib/metrics";
 import { claimInvitations } from "../../../lib/share";
 import { STALE_SESSION_ERROR, TOKEN_VERSION } from "../../../lib/sessionToken";
 import { fetchOrcidPublicEmail, isPlaceholderEmail } from "../../../lib/orcidEmail";
-import { DEV_ORCID_MOCK_PROVIDER_ID } from "../../../contants/AccountConstants";
+import { DEV_ORCID_MOCK_PROVIDER_ID, ORCID_LINK_OUTCOME_PARAM, OrcidLinkOutcomeKind } from "../../../contants/AccountConstants";
+import { ROUTE_PAGE_PROFILE } from "../../../contants/InternalRoutesConstants";
 import { devOrcidMockProvider } from "../../../lib/devOrcidMock";
+import { takeOrcidLinkIntent } from "../../../lib/orcidLinkIntent";
 
 export { TOKEN_VERSION } from "../../../lib/sessionToken";
 
@@ -49,87 +52,148 @@ export async function authorizeCredentials(credentials?: Record<string, string>)
   }
 }
 
-export const authOptions: AuthOptions = {
-  providers: [
-    OrcidProvider({
-      clientId: process.env.OAUTH_ORCID_CLIENT_ID,
-      clientSecret: process.env.OAUTH_ORCID_CLIENT_SECRET,
-    }),
-    CredentialsProvider({
-      id: "credentials",
-      name: "Email and password",
-      credentials: {},
-      authorize: authorizeCredentials,
-    }),
-    ...developmentOnlyProviders,
-  ],
-  // debug: true,
-  callbacks: {
-    async jwt({ token, account, trigger, user }) {
-      if (!account && token.v !== TOKEN_VERSION) {
-        throw new Error(STALE_SESSION_ERROR);
-      }
+const providers = [
+  OrcidProvider({
+    clientId: process.env.OAUTH_ORCID_CLIENT_ID,
+    clientSecret: process.env.OAUTH_ORCID_CLIENT_SECRET,
+  }),
+  CredentialsProvider({
+    id: "credentials",
+    name: "Email and password",
+    credentials: {},
+    authorize: authorizeCredentials,
+  }),
+  ...developmentOnlyProviders,
+];
 
-      const orcid = trigger == "signIn" ? orcidSignIn(account, user) : null;
-      if (orcid) {
-        token = await signInWithOrcid(token, orcid);
-      } else if (trigger == "signIn") {
-        if (account?.provider == "credentials") {
-          token = await hydratePasswordSignIn(token, user.id);
-        } else {
-          const signedIn = await getUserByProviderAuthentication(account, token);
-          token = hydrateWithUserInfo(token, signedIn);
+export interface AuthRequest {
+  req: Pick<NextApiRequest, "cookies" | "headers">
+  res: NextApiResponse
+}
+
+/** Options for one request: NextAuth's callbacks never see the request, and connecting ORCID needs its cookies. */
+export function authOptionsFor(request?: AuthRequest): AuthOptions {
+  let linkEmailHint: string | undefined;
+
+  return {
+    providers,
+    // debug: true,
+    callbacks: {
+      async signIn({ account, user }) {
+        const attempt = orcidSignIn(account, user);
+        if (!request || !attempt) {
+          return true;
         }
-        await claimPendingInvitations(token.uid as string);
-      }
-
-      if (trigger == "signIn") {
-        getMetrics().recordLogin(account?.provider ?? "unknown", token.pending ? "pending" : "success");
-      }
-
-      if (trigger == "update" && token.pending) {
-        token = await refreshPendingSignIn(token);
-      } else if (trigger == "update" && token.uid) {
-        // Roles and tenancies are granted by the team after the user signs in.
-        // Without re-reading them here the session keeps the claims from login,
-        // and being granted access looks to the user like nothing happened.
-        try {
-          const user = await getUserByUID({ uid: token.uid as string, tenancy: undefined });
-          token = hydrateWithUserInfo(token, user);
-        } catch (error) {
-          // A failed refresh must not log the user out. Keep the current claims.
-          logError("failed to refresh session claims", error);
+        const uid = await orcidLinkIntentOf(request);
+        if (!uid) {
+          return true;
         }
-      }
+        const outcome = await connectOrcid(uid, attempt.orcid);
+        if (typeof outcome === "string") {
+          return orcidLinkOutcomeUrl(outcome);
+        }
+        linkEmailHint = outcome.emailHint;
+        return true;
+      },
 
-      token.v = TOKEN_VERSION;
-      return token
+      async jwt({ token, account, trigger, user }) {
+        if (!account && token.v !== TOKEN_VERSION) {
+          throw new Error(STALE_SESSION_ERROR);
+        }
+
+        const orcid = trigger == "signIn" ? orcidSignIn(account, user, linkEmailHint) : null;
+        if (orcid) {
+          token = await signInWithOrcid(token, orcid);
+        } else if (trigger == "signIn") {
+          if (account?.provider == "credentials") {
+            token = await hydratePasswordSignIn(token, user.id);
+          } else {
+            const signedIn = await getUserByProviderAuthentication(account, token);
+            token = hydrateWithUserInfo(token, signedIn);
+          }
+          await claimPendingInvitations(token.uid as string);
+        }
+
+        if (trigger == "signIn") {
+          getMetrics().recordLogin(account?.provider ?? "unknown", token.pending ? "pending" : "success");
+        }
+
+        if (trigger == "update" && token.pending) {
+          token = await refreshPendingSignIn(token);
+        } else if (trigger == "update" && token.uid) {
+          // Roles and tenancies are granted by the team after the user signs in.
+          // Without re-reading them here the session keeps the claims from login,
+          // and being granted access looks to the user like nothing happened.
+          try {
+            const user = await getUserByUID({ uid: token.uid as string, tenancy: undefined });
+            token = hydrateWithUserInfo(token, user);
+          } catch (error) {
+            // A failed refresh must not log the user out. Keep the current claims.
+            logError("failed to refresh session claims", error);
+          }
+        }
+
+        token.v = TOKEN_VERSION;
+        return token
+      },
+
+      // eslint-disable-next-line no-unused-vars
+      async session({ session, token, user }) {
+        // Send properties to the client, like an access_token from a provider.
+        if (session?.user) {
+          // Hydarte the user in session with ID and the available tenancies
+          session.user.uid = token.uid
+          session.user.tenancies = token.tenancies
+          session.user.pending = Boolean(token.pending)
+          if (token.pending?.emailHint) {
+            session.user.emailHint = token.pending.emailHint
+          }
+        }
+        return session
+      }
     },
-
-    // eslint-disable-next-line no-unused-vars
-    async session({ session, token, user }) {
-      // Send properties to the client, like an access_token from a provider.
-      if (session?.user) {
-        // Hydarte the user in session with ID and the available tenancies
-        session.user.uid = token.uid
-        session.user.tenancies = token.tenancies
-        session.user.pending = Boolean(token.pending)
-        if (token.pending?.emailHint) {
-          session.user.emailHint = token.pending.emailHint
-        }
-      }
-      return session
+    pages: {
+      signIn: '/account/login?phase=sign-in',
+      signOut: '/profile', // TODO: create a signOut page
+      error: '/account/login?phase=sign-in', // Error code passed in query string as ?error=
+      verifyRequest: '/', // (used for check email message)
+      newUser: '/profile' // New users will be directed here on first sign in (leave the property out if not of interest)
+    },
+    session: {
+      strategy: "jwt"
     }
-  },
-  pages: {
-    signIn: '/account/login?phase=sign-in',
-    signOut: '/profile', // TODO: create a signOut page
-    error: '/account/login?phase=sign-in', // Error code passed in query string as ?error=
-    verifyRequest: '/', // (used for check email message)
-    newUser: '/profile' // New users will be directed here on first sign in (leave the property out if not of interest)
-  },
-  session: {
-    strategy: "jwt"
+  };
+}
+
+export const authOptions: AuthOptions = authOptionsFor();
+
+export function orcidLinkOutcomeUrl(outcome: OrcidLinkOutcomeKind): string {
+  return `${ROUTE_PAGE_PROFILE}?${ORCID_LINK_OUTCOME_PARAM}=${outcome}`;
+}
+
+/** The user who asked to connect ORCID, if that user is still the one signed in on this browser. */
+async function orcidLinkIntentOf({ req, res }: AuthRequest): Promise<string | null> {
+  const secret = process.env.NEXTAUTH_SECRET ?? "";
+  const uid = takeOrcidLinkIntent(req, res, secret);
+  if (!uid) {
+    return null;
+  }
+  const session = await getToken({ req: req as NextApiRequest, secret });
+  return session?.uid === uid && session.v === TOKEN_VERSION ? uid : null;
+}
+
+/** A string ends the sign-in on the profile and keeps the session; otherwise the iD is new and the pending sign-in suggests this account's email. */
+export async function connectOrcid(uid: string, orcid: string): Promise<OrcidLinkOutcomeKind | { emailHint?: string }> {
+  try {
+    const owner = await findUserByOrcid(orcid);
+    if (owner) {
+      return owner.id === uid ? "connected" : "already_linked";
+    }
+    const self = await getUserByUID({ uid, tenancy: undefined });
+    return { emailHint: self.email && !isPlaceholderEmail(self.email) ? self.email : undefined };
+  } catch (error) {
+    logError("connecting an ORCID iD failed", error);
+    return "unavailable";
   }
 }
 
@@ -173,16 +237,19 @@ export interface OrcidSignIn {
   orcid: string
   name?: string
   publicEmail: () => Promise<string | undefined>
+  /** The signed-in account's email, when this sign-in is connecting ORCID to it. */
+  linkEmailHint?: string
 }
 
 /** A real ORCID sign-in, or the development mock standing in for one; null for any other provider. */
-export function orcidSignIn(account: Account | null | undefined, user?: User | null): OrcidSignIn | null {
+export function orcidSignIn(account: Account | null | undefined, user?: User | null, linkEmailHint?: string): OrcidSignIn | null {
   if (account?.provider === "orcid") {
     const orcid = account.orcid as string;
     return {
       orcid,
       name: user?.name ?? undefined,
       publicEmail: () => fetchOrcidPublicEmail(orcid, account.access_token),
+      ...(linkEmailHint ? { linkEmailHint } : {}),
     };
   }
   if (account?.provider === DEV_ORCID_MOCK_PROVIDER_ID && account.providerAccountId) {
@@ -190,6 +257,7 @@ export function orcidSignIn(account: Account | null | undefined, user?: User | n
       orcid: account.providerAccountId,
       name: user?.name ?? undefined,
       publicEmail: async () => user?.publicEmail,
+      ...(linkEmailHint ? { linkEmailHint } : {}),
     };
   }
   return null;
@@ -210,7 +278,7 @@ async function emailHintFor(user: GetUserByProviderResponse | null, attempt: Orc
   if (user && !isPlaceholderEmail(user.email)) {
     return user.email;
   }
-  return attempt.publicEmail();
+  return attempt.linkEmailHint ?? attempt.publicEmail();
 }
 
 async function finishOrcidSignIn(token: JWT, user: GetUserByProviderResponse): Promise<JWT> {
@@ -304,4 +372,6 @@ async function getUserByProviderAuthentication(account, token): Promise<GetUserB
 }
 
 
-export default NextAuth(authOptions)
+export default function auth(req: NextApiRequest, res: NextApiResponse) {
+  return NextAuth(req, res, authOptionsFor({ req, res }));
+}

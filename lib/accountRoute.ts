@@ -35,6 +35,17 @@ async function requireJsonContentType(req: NextApiRequest, res: NextApiResponse,
     await next();
 }
 
+/** For a route with no body to read: a request without a content type is refused too, since only a script can send application/json. */
+export async function requireJsonRequest(req: NextApiRequest, res: NextApiResponse, next: () => Promise<unknown>) {
+    const contentType = req.headers["content-type"];
+    const value = Array.isArray(contentType) ? contentType[0] : contentType;
+    if (typeof value !== "string" || !JSON_CONTENT_TYPE.test(value)) {
+        res.status(415).json({ detail: "invalid_request" });
+        return;
+    }
+    await next();
+}
+
 export function publicAccountRouter() {
     return createRouter<NextApiRequest, NextApiResponse>().use(publicChain).use(requireJsonContentType);
 }
