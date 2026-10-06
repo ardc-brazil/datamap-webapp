@@ -46,11 +46,11 @@ describe("tenancy constants", () => {
         }
     });
 
-    test("a namespace is 2 to 63 lower-case letters, digits or hyphens, trimmed first, and never public", () => {
+    test("a namespace is 2 to 63 lower-case letters, digits or hyphens, trimmed first, and never reserved", () => {
         for (const value of ["data-amazon", "ab", " atto ", "a".repeat(63)]) {
             expect(isValidNamespace(value)).toBe(true);
         }
-        for (const value of ["", "a", " a ", "a".repeat(64), "Data-Amazon", "data amazon", "joão", "public", " public "]) {
+        for (const value of ["", "a", " a ", "a".repeat(64), "Data-Amazon", "data amazon", "joão", "public", " public ", "members", " members "]) {
             expect(isValidNamespace(value)).toBe(false);
         }
     });

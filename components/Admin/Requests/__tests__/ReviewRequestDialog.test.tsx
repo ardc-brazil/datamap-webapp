@@ -157,7 +157,8 @@ describe("ReviewRequestDialog", () => {
         fireEvent.change(screen.getByLabelText("Namespace"), { target: { value: "public" } });
         fireEvent.click(screen.getByRole("button", { name: "Create and approve" }));
 
-        expect(await screen.findByText("Use 2 to 63 lower-case letters, digits or hyphens, and not “public”.")).toBeTruthy();
+        expect(await screen.findByText("Use 2 to 63 lower-case letters, digits or hyphens, and not “public” or “members”.")).toBeTruthy();
+        expect(screen.getByLabelText("Namespace").getAttribute("aria-describedby")).toBe("review-namespace-error");
         expect(mockApprove).not.toHaveBeenCalled();
     });
 
@@ -208,6 +209,37 @@ describe("ReviewRequestDialog", () => {
         expect(onDecline).toHaveBeenCalledWith(expect.objectContaining({ id: REQUEST_ID }));
     });
 
+    test("switching mode clears a stale server error, but a gone account stays blocked in both", async () => {
+        mockDetail = { data: newRequestDetail(true) };
+        mockApprove.mockRejectedValue({ response: { status: 409, data: { detail: "display_name_taken" } } });
+        renderDialog();
+
+        fireEvent.click(screen.getByRole("button", { name: "Create and approve" }));
+        expect(await screen.findByText("Another tenancy already has this display name.")).toBeTruthy();
+
+        await act(async () => {
+            fireEvent.click(screen.getByRole("button", { name: "Join existing" }));
+        });
+
+        expect(screen.queryByText("Another tenancy already has this display name.")).toBeNull();
+    });
+
+    test("a gone account's message survives a mode switch, because it blocks both modes", async () => {
+        mockDetail = { data: newRequestDetail(true) };
+        mockApprove.mockRejectedValue({ response: { status: 404, data: { detail: "no_account" } } });
+        renderDialog();
+
+        fireEvent.click(screen.getByRole("button", { name: "Create and approve" }));
+        expect(await screen.findByText("This account is disabled or no longer exists, so it cannot be approved. Decline the request instead.")).toBeTruthy();
+
+        await act(async () => {
+            fireEvent.click(screen.getByRole("button", { name: "Join existing" }));
+        });
+
+        expect(screen.getByText("This account is disabled or no longer exists, so it cannot be approved. Decline the request instead.")).toBeTruthy();
+        expect((screen.getByRole("button", { name: "Approve" }) as HTMLButtonElement).disabled).toBe(true);
+    });
+
     test("Decline… hands the request to the decline prompt", () => {
         const { onDecline } = renderDialog();
 
@@ -223,6 +255,8 @@ describe("ReviewRequestDialog", () => {
 
         expect(screen.getByText("This request was already declined by André Maia on Oct 1, 2026.")).toBeTruthy();
         expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+        expect(screen.getByRole("button", { name: "Close" })).toBeTruthy();
+        expect(screen.queryByRole("button", { name: "Decline…" })).toBeNull();
     });
 
     test("someone already in every tenancy has nothing to join", () => {

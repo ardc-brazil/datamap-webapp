@@ -124,6 +124,9 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
     const unverified = !detail.requester.email_verified;
     const blocked = approved || accountGone || (joining ? options.length === 0 : unverified);
     const shown = (field: "tenancy" | "displayName" | "namespace") => (formik.touched[field] || formik.submitCount > 0) && formik.errors[field];
+    const tenancyError = shown("tenancy");
+    const displayNameError = shown("displayName");
+    const namespaceError = shown("namespace");
     const title = joining
         ? `Join ${selected?.display_name ?? "an existing tenancy"}`
         : `New tenancy: ${values.displayName.trim() || detail.requested_name}`;
@@ -145,7 +148,14 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
                             key={mode}
                             type="button"
                             aria-pressed={values.mode === mode}
-                            onClick={() => formik.setFieldValue("mode", mode)}
+                            onClick={() => {
+                                if (values.mode !== mode) {
+                                    formik.setFieldValue("mode", mode);
+                                    if (!accountGone) {
+                                        setError(null);
+                                    }
+                                }
+                            }}
                             className={`h-8 rounded px-3 text-[13px] font-semibold ${values.mode === mode ? "bg-primary-900 text-primary-50" : "text-primary-700 hover:bg-primary-100"}`}
                         >
                             {mode === "join" ? "Join existing" : "New tenancy"}
@@ -162,18 +172,31 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
 
                 {joining && (
                     <div>
-                        <label htmlFor="review-tenancy" className="mb-1.5 text-[13px]">Tenancy</label>
                         {options.length > 0 ? (
-                            <select id="review-tenancy" name="tenancy" value={values.tenancy} onChange={formik.handleChange} className="bg-primary-0">
-                                <option value="">Choose a tenancy</option>
-                                {options.map((tenancy) => (
-                                    <option key={tenancy.path} value={tenancy.path}>{tenancy.display_name} · {tenancy.path}</option>
-                                ))}
-                            </select>
+                            <>
+                                <label htmlFor="review-tenancy" className="mb-1.5 text-[13px]">Tenancy</label>
+                                <select
+                                    id="review-tenancy"
+                                    name="tenancy"
+                                    value={values.tenancy}
+                                    onChange={formik.handleChange}
+                                    aria-describedby={tenancyError ? "review-tenancy-error" : undefined}
+                                    aria-invalid={tenancyError ? true : undefined}
+                                    className="bg-primary-0"
+                                >
+                                    <option value="">Choose a tenancy</option>
+                                    {options.map((tenancy) => (
+                                        <option key={tenancy.path} value={tenancy.path}>{tenancy.display_name} · {tenancy.path}</option>
+                                    ))}
+                                </select>
+                            </>
                         ) : (
-                            <p className="m-0 text-[13px] text-primary-500">{ADMIN_COPY.nothingToJoin}</p>
+                            <>
+                                <p className="mb-1.5 text-[13px]">Tenancy</p>
+                                <p className="m-0 text-[13px] text-primary-500">{ADMIN_COPY.nothingToJoin}</p>
+                            </>
                         )}
-                        {shown("tenancy") && <p role="alert" className={FIELD_ERROR}>{formik.errors.tenancy}</p>}
+                        {tenancyError && <p id="review-tenancy-error" role="alert" className={FIELD_ERROR}>{formik.errors.tenancy}</p>}
                     </div>
                 )}
 
@@ -198,13 +221,30 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label htmlFor="review-display-name" className="mb-1.5 text-[13px]">Display name</label>
-                                <input id="review-display-name" name="displayName" value={values.displayName} onChange={formik.handleChange} onBlur={formik.handleBlur} />
-                                {shown("displayName") && <p role="alert" className={FIELD_ERROR}>{formik.errors.displayName}</p>}
+                                <input
+                                    id="review-display-name"
+                                    name="displayName"
+                                    value={values.displayName}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    aria-describedby={displayNameError ? "review-display-name-error" : undefined}
+                                    aria-invalid={displayNameError ? true : undefined}
+                                />
+                                {displayNameError && <p id="review-display-name-error" role="alert" className={FIELD_ERROR}>{formik.errors.displayName}</p>}
                             </div>
                             <div>
                                 <label htmlFor="review-namespace" className="mb-1.5 text-[13px]">Namespace</label>
-                                <input id="review-namespace" name="namespace" className="font-mono" value={values.namespace} onChange={formik.handleChange} onBlur={formik.handleBlur} />
-                                {shown("namespace") && <p role="alert" className={FIELD_ERROR}>{formik.errors.namespace}</p>}
+                                <input
+                                    id="review-namespace"
+                                    name="namespace"
+                                    className="font-mono"
+                                    value={values.namespace}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    aria-describedby={namespaceError ? "review-namespace-error" : undefined}
+                                    aria-invalid={namespaceError ? true : undefined}
+                                />
+                                {namespaceError && <p id="review-namespace-error" role="alert" className={FIELD_ERROR}>{formik.errors.namespace}</p>}
                             </div>
                         </div>
                         <p className="m-0 font-mono text-xs text-primary-500">{`${PRODUCTION_PREFIX}${values.namespace.trim()} · requester becomes a member`}</p>

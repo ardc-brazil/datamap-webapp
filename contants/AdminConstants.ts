@@ -64,7 +64,7 @@ export const ADMIN_COPY = {
 
 const ADMIN_ERROR_MESSAGES: Record<string, string> = {
     invalid_request: "That was not accepted. Reload the page and try again.",
-    namespace_invalid: "Use 2 to 63 lower-case letters, digits or hyphens, and not “public”.",
+    namespace_invalid: "Use 2 to 63 lower-case letters, digits or hyphens, and not “public” or “members”.",
     display_name_invalid: "Use a display name of 1 to 64 characters.",
     message_invalid: "Keep the message to 1000 characters.",
     request_not_found: "This request no longer exists.",
