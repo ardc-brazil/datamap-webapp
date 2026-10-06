@@ -79,6 +79,21 @@ describe("TenancyMembersPanel", () => {
         expect(mockMutate).toHaveBeenCalled();
     });
 
+    test("a failed refresh keeps the loaded members and shows the alert below them", () => {
+        mockMembers = { ...mockMembers, error: { status: 500 } };
+
+        render(<TenancyMembersPanel tenancy={adminTenancy()} />);
+        const alert = screen.getByRole("alert");
+        fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+
+        expect(screen.getByText("Members · 2")).toBeTruthy();
+        expect(screen.getByText("Marcia Yamasoe")).toBeTruthy();
+        expect(screen.getByText("Rafael Souza")).toBeTruthy();
+        expect(alert.textContent).toContain("Members could not be loaded.");
+        expect(screen.getByRole("list").compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect(mockMutate).toHaveBeenCalled();
+    });
+
     test("an empty tenancy", () => {
         mockMembers = { data: membersPage([], 0) };
 

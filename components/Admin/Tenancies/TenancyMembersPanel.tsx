@@ -34,6 +34,10 @@ export function TenancyMembersPanel({ tenancy }: { tenancy: AdminTenancy }) {
 
     const rows = useRowActions(revalidate, adminErrorMessage);
 
+    const loadError = error && (
+        <div className="px-4 pb-4"><AdminLoadError message={ADMIN_COPY.membersLoadError} onRetry={() => mutate()} /></div>
+    );
+
     function changed() {
         setAdding(false);
         setRemoving(null);
@@ -57,10 +61,8 @@ export function TenancyMembersPanel({ tenancy }: { tenancy: AdminTenancy }) {
                             <button type="button" onClick={() => setAdding(true)} className="text-[13px] font-semibold text-primary-900 hover:text-primary-600">+ Add</button>
                         )}
                     </div>
-                    {error ? (
-                        <div className="px-4 pb-4"><AdminLoadError message={ADMIN_COPY.membersLoadError} onRetry={() => mutate()} /></div>
-                    ) : !data ? (
-                        <p role="status" className={STATE}>Loading members…</p>
+                    {!data ? (
+                        loadError || <p role="status" className={STATE}>Loading members…</p>
                     ) : members.length === 0 && invitations.length === 0 ? (
                         <p className={STATE}>{ADMIN_COPY.membersEmpty}</p>
                     ) : (
@@ -118,6 +120,7 @@ export function TenancyMembersPanel({ tenancy }: { tenancy: AdminTenancy }) {
                             )}
                         </>
                     )}
+                    {data && loadError && <div className="pt-3">{loadError}</div>}
                 </>
             )}
 
