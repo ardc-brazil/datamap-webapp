@@ -1,4 +1,5 @@
-import { ROUTE_PAGE_DATASETS_DETAILS, ROUTE_PAGE_DATASETS_VERSION_DETAILS, ROUTE_PAGE_LOGIN } from "../contants/InternalRoutesConstants";
+import { ROUTE_PAGE_DATASETS_DETAILS, ROUTE_PAGE_DATASETS_VERSION_DETAILS, ROUTE_PAGE_LOGIN, ROUTE_PAGE_TENANCY_SELECTOR } from "../contants/InternalRoutesConstants";
+import { isTenancyRevoked } from "./tenancyRevocation";
 
 /**
  * Utility function to handle 401 errors in dataset pages by redirecting to login
@@ -13,6 +14,10 @@ export function handleDatasetRequestErrors(error: any, req: any, datasetId: stri
 
     if (status === 404) {
         return { notFound: true as const };
+    }
+
+    if (isTenancyRevoked(status, error?.response?.data?.detail ?? error?.data?.detail)) {
+        return { redirect: { destination: ROUTE_PAGE_TENANCY_SELECTOR, permanent: false } };
     }
 
     // Only redirect to login for 401 (unauthenticated) errors

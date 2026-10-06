@@ -20,7 +20,7 @@ router
 
     } catch (error) {
       logError("listing datasets failed", error);
-      res.status(error?.response?.status).end();
+      res.status(error?.response?.status ?? 502).json({ detail: error?.response?.data?.detail });
     }
   })
   .post(async (req, res) => {
