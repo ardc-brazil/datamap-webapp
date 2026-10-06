@@ -50,6 +50,22 @@ describe("RequestAccessDialog", () => {
         expect(requestTenancyAccess).not.toHaveBeenCalled();
     });
 
+    test("each field is described by its hint and its own error", async () => {
+        render(<RequestAccessDialog show onClose={jest.fn()} />);
+        const describedBy = (element: HTMLElement) => (element.getAttribute("aria-describedby") ?? "")
+            .split(" ").filter(Boolean).map((id) => document.getElementById(id)?.textContent);
+
+        expect(describedBy(screen.getByLabelText("Why"))).toEqual([]);
+        await send("   ", "");
+
+        await screen.findByText("Name the tenancy you need.");
+        expect(describedBy(screen.getByLabelText("Tenancy"))).toEqual([
+            "The name of the group or project. If it exists, this is a request to join; if not, a request to create it. Only administrators can tell which.",
+            "Name the tenancy you need.",
+        ]);
+        expect(describedBy(screen.getByLabelText("Why"))).toEqual(["Say why you need access."]);
+    });
+
     test("a request already waiting says to withdraw it first", async () => {
         requestTenancyAccess.mockRejectedValue({ response: { status: 409, data: { detail: "request_pending" } } });
         const onClose = jest.fn();

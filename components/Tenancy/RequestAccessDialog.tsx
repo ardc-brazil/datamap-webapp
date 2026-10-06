@@ -36,6 +36,9 @@ export function RequestAccessDialog(props: Props) {
         },
     });
 
+    const tenancyNameError = formik.touched.tenancyName ? formik.errors.tenancyName : undefined;
+    const reasonError = formik.touched.reason ? formik.errors.reason : undefined;
+
     function close() {
         formik.resetForm();
         setError(null);
@@ -62,13 +65,14 @@ export function RequestAccessDialog(props: Props) {
                         type="text"
                         autoComplete="off"
                         maxLength={TENANCY_NAME_MAX_LENGTH}
+                        aria-describedby={tenancyNameError ? "request-tenancy-name-hint request-tenancy-name-error" : "request-tenancy-name-hint"}
                         className={EDIT_FORM_INPUT_CLASS}
                         {...formik.getFieldProps("tenancyName")}
                     />
-                    <p className="m-0 mt-1.5 text-xs leading-[17px] text-primary-500">
+                    <p id="request-tenancy-name-hint" className="m-0 mt-1.5 text-xs leading-[17px] text-primary-500">
                         The name of the group or project. If it exists, this is a request to join; if not, a request to create it. Only administrators can tell which.
                     </p>
-                    {formik.touched.tenancyName && formik.errors.tenancyName && <p className={EDIT_FORM_ERROR_CLASS}>{formik.errors.tenancyName}</p>}
+                    {tenancyNameError && <p id="request-tenancy-name-error" className={EDIT_FORM_ERROR_CLASS}>{tenancyNameError}</p>}
                 </div>
                 <div>
                     <label htmlFor="request-reason" className={EDIT_FORM_LABEL_CLASS}>Why</label>
@@ -76,10 +80,11 @@ export function RequestAccessDialog(props: Props) {
                         id="request-reason"
                         rows={4}
                         maxLength={REASON_MAX_LENGTH}
+                        aria-describedby={reasonError ? "request-reason-error" : undefined}
                         className="block w-full px-3 py-2 bg-primary-0 border border-primary-300 rounded-md text-sm text-primary-900 placeholder:text-primary-400"
                         {...formik.getFieldProps("reason")}
                     />
-                    {formik.touched.reason && formik.errors.reason && <p className={EDIT_FORM_ERROR_CLASS}>{formik.errors.reason}</p>}
+                    {reasonError && <p id="request-reason-error" className={EDIT_FORM_ERROR_CLASS}>{reasonError}</p>}
                 </div>
                 {error && <p role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
                 <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
