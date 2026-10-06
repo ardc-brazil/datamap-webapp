@@ -162,4 +162,53 @@ describe("RequestsView", () => {
         fireEvent.click(screen.getByRole("button", { name: "Next" }));
         expect(lastQuery()).toEqual({ status: "open", q: "", offset: 50 });
     });
+
+    test("at the last page, Next is disabled and Previous asks for the page before", () => {
+        mockRequests = { data: page(Array.from({ length: 20 }, (_, i) => adminRequest({ id: `id-${i}` })), 120, 100), mutate: mockRetry };
+
+        render(<RequestsView now={NOW} />);
+        expect(screen.getByText("101–120 of 120")).toBeTruthy();
+        expect((screen.getByRole("button", { name: "Next" }) as HTMLButtonElement).disabled).toBe(true);
+
+        fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+        expect(lastQuery()).toEqual({ status: "open", q: "", offset: 50 });
+    });
+
+    test("deciding the only request on a later page steps back to the last page with items", () => {
+        mockRequests = { data: page(Array.from({ length: 50 }, (_, i) => adminRequest({ id: `id-${i}` })), 120), mutate: mockRetry };
+        render(<RequestsView now={NOW} />);
+
+        mockRequests = { data: page([], 50, 50), mutate: mockRetry };
+        fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+        expect(lastQuery()).toEqual({ status: "open", q: "", offset: 0 });
+    });
+
+    test("the total drops under an already-open page: step back to the page that still has items", () => {
+        mockRequests = { data: page(Array.from({ length: 50 }, (_, i) => adminRequest({ id: `id-${i}` })), 101), mutate: mockRetry };
+        render(<RequestsView now={NOW} />);
+
+        mockRequests = { data: page(Array.from({ length: 50 }, (_, i) => adminRequest({ id: `id2-${i}` })), 101, 50), mutate: mockRetry };
+        fireEvent.click(screen.getByRole("button", { name: "Next" }));
+        expect(lastQuery()).toEqual({ status: "open", q: "", offset: 50 });
+
+        mockRequests = { data: page([], 100, 100), mutate: mockRetry };
+        fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+        expect(lastQuery()).toEqual({ status: "open", q: "", offset: 50 });
+    });
+
+    test("a search change does not fetch with the old offset", () => {
+        mockRequests = { data: page(Array.from({ length: 50 }, (_, i) => adminRequest({ id: `id-${i}` })), 120), mutate: mockRetry };
+        render(<RequestsView now={NOW} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Next" }));
+        expect(lastQuery()).toEqual({ status: "open", q: "", offset: 50 });
+
+        mockRequests = { data: page([adminRequest()]), mutate: mockRetry };
+        fireEvent.change(screen.getByPlaceholderText("Name, email or ORCID"), { target: { value: "tanaka" } });
+
+        expect(mockQueries).not.toContainEqual({ status: "open", q: "tanaka", offset: 50 });
+        expect(lastQuery()).toEqual({ status: "open", q: "tanaka", offset: 0 });
+    });
 });

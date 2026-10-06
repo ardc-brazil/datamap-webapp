@@ -6,10 +6,10 @@ import { RequestsTable } from "../RequestsTable";
 
 const NOW = new Date("2026-10-04T12:00:00Z");
 
-function renderTable(requests: any[], closed = false) {
+function renderTable(requests: any[]) {
     const onReview = jest.fn();
     const onDecline = jest.fn();
-    render(<RequestsTable requests={requests} closed={closed} now={NOW} onReview={onReview} onDecline={onDecline} />);
+    render(<RequestsTable requests={requests} now={NOW} onReview={onReview} onDecline={onDecline} />);
     return { onReview, onDecline };
 }
 
@@ -56,10 +56,31 @@ describe("RequestsTable", () => {
             tenancy: { path: "datamap/production/cerrado-flux", display_name: "Cerrado Flux", is_default: false, is_legacy: false },
             decided_by: { id: "c1", name: "Caio Maia" },
             decided_at: "2026-10-01T10:48:00+00:00",
-        })], true);
+        })]);
 
         expect(screen.getByText("Approved · new tenancy").className).toContain("text-success-500");
         expect(screen.getByText("decided Oct 1")).toBeTruthy();
         expect(screen.queryByRole("button", { name: "Review" })).toBeNull();
+    });
+
+    test("each row decides its own mode from its status, not a shared flag", () => {
+        renderTable([
+            adminRequest(),
+            newTenancyRequest({ id: "closed-1", status: "declined" }),
+        ]);
+
+        expect(screen.getByRole("button", { name: "Review" })).toBeTruthy();
+        expect(screen.getByText("Declined").className).toContain("text-danger-700");
+        expect(screen.queryAllByRole("button", { name: "Review" }).length).toBe(1);
+    });
+
+    test("table semantics: table, row, columnheader and cell, no visual change", () => {
+        renderTable([adminRequest()]);
+
+        expect(screen.getByRole("table")).toBeTruthy();
+        const rows = screen.getAllByRole("row");
+        expect(rows.length).toBe(2);
+        expect(screen.getAllByRole("columnheader").length).toBe(5);
+        expect(screen.getAllByRole("cell").length).toBe(5);
     });
 });

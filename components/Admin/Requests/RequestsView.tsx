@@ -30,22 +30,40 @@ export function queryFor(filter: RequestFilter, q: string, offset: number): Admi
     return { status: "open", ...(filter === "open" ? {} : { kind: filter }), q, offset };
 }
 
+function lastPageOffset(totalCount: number, limit: number): number {
+    return Math.max(0, Math.floor((totalCount - 1) / limit) * limit);
+}
+
+interface Paging {
+    filter: RequestFilter
+    q: string
+    offset: number
+}
+
 export function RequestsView({ now }: { now?: Date }) {
     const router = useRouter();
     const today = now ?? new Date();
     const [filter, setFilter] = useState<RequestFilter>("open");
     const [search, setSearch] = useState("");
-    const [offset, setOffset] = useState(0);
+    const [paging, setPaging] = useState<Paging>({ filter: "open", q: "", offset: 0 });
     const [declining, setDeclining] = useState<AdminTenancyRequest | null>(null);
     const q = useDebouncedValue(search.trim(), ADMIN_SEARCH_DEBOUNCE_MS);
+    const offset = paging.filter === filter && paging.q === q ? paging.offset : 0;
     const { data: counts } = useAdminCounts();
     const { data: page, error, mutate } = useAdminRequests(queryFor(filter, q, offset));
     const reviewing = typeof router.query.request === "string" ? router.query.request : null;
     const closed = filter === "closed";
 
+    function setOffset(value: number) {
+        setPaging({ filter, q, offset: value });
+    }
+
     useEffect(() => {
-        setOffset(0);
-    }, [q]);
+        if (page && page.offset === offset && page.items.length === 0 && page.offset > 0) {
+            setOffset(lastPageOffset(page.total_count, page.limit));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page, offset]);
 
     function setReviewing(requestId: string | null) {
         const query = { ...router.query };
@@ -55,7 +73,6 @@ export function RequestsView({ now }: { now?: Date }) {
 
     function chooseFilter(value: RequestFilter) {
         setFilter(value);
-        setOffset(0);
     }
 
     function dismissed(close: () => void) {
@@ -165,7 +182,7 @@ function RequestsBody({ page, error, closed, q, now, onRetry, onReview, onDeclin
         const text = q ? `No requests match “${q}”.` : closed ? ADMIN_COPY.closedEmpty : ADMIN_COPY.requestsEmpty;
         return <p className={STATE_BOX}>{text}</p>;
     }
-    return <RequestsTable requests={page.items} closed={closed} now={now} onReview={onReview} onDecline={onDecline} />;
+    return <RequestsTable requests={page.items} now={now} onReview={onReview} onDecline={onDecline} />;
 }
 
 function Pager({ page, onOffset }: { page: GatekeeperPage<AdminTenancyRequest>; onOffset(offset: number): void }) {
