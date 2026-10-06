@@ -70,6 +70,14 @@ describe("TenanciesView", () => {
         expect(screen.getByText("panel datamap/production/public")).toBeTruthy();
     });
 
+    test("an unknown ?tenancy= falls back to the default selection", () => {
+        mockRouter.query = { tenancy: "datamap/production/nowhere" };
+
+        render(<TenanciesView />);
+
+        expect(screen.getByText("panel datamap/production/atto")).toBeTruthy();
+    });
+
     test("a click puts the tenancy in the URL", () => {
         render(<TenanciesView />);
 

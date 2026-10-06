@@ -29,10 +29,14 @@ jest.mock("../AddMemberDialog", () => {
 });
 jest.mock("../RemoveMemberDialog", () => {
     const React = require("react");
-    return { RemoveMemberDialog: (props: any) => React.createElement("div", null, `removing ${props.member.name}`) };
+    return {
+        RemoveMemberDialog: (props: any) => React.createElement("div", null,
+            `removing ${props.member.name}`,
+            React.createElement("button", { onClick: props.onCancel }, "stub cancel remove")),
+    };
 });
 
-import { ADMIN_TENANCIES, adminTenancy, tenancyInvitation, tenancyMember } from "../../../../fake-data/adminFixtures";
+import { ADMIN_TENANCIES, DISABLED_TENANCY, adminTenancy, tenancyInvitation, tenancyMember } from "../../../../fake-data/adminFixtures";
 import { TenancyMembersPanel } from "../TenancyMembersPanel";
 
 function membersPage(items: unknown[], total = items.length, invitations: unknown[] = []) {
@@ -143,6 +147,35 @@ describe("TenancyMembersPanel", () => {
 
         await waitFor(() => expect(mockMutate).toHaveBeenCalled());
         expect(mockWithdraw).toHaveBeenCalledWith("2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e6f");
+    });
+
+    test("Withdraw also refreshes the tenancy list", async () => {
+        mockWithdraw.mockResolvedValue(undefined);
+
+        render(<TenancyMembersPanel tenancy={adminTenancy()} />);
+        fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
+
+        await waitFor(() => expect(mockRevalidateTenancies).toHaveBeenCalled());
+    });
+
+    test("a disabled tenancy is read-only, but its invitations can still be withdrawn", () => {
+        render(<TenancyMembersPanel tenancy={DISABLED_TENANCY} />);
+
+        expect(screen.getByText("Luciana Rizzo")).toBeTruthy();
+        expect(screen.queryByText("+ Add")).toBeNull();
+        expect(screen.queryByRole("button", { name: /^Remove/ })).toBeNull();
+        expect(screen.getByRole("button", { name: "Withdraw" })).toBeTruthy();
+    });
+
+    test("closing the remove dialog changes nothing", () => {
+        render(<TenancyMembersPanel tenancy={adminTenancy()} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Remove Luciana Rizzo" }));
+        fireEvent.click(screen.getByRole("button", { name: "stub cancel remove" }));
+
+        expect(screen.queryByText("removing Luciana Rizzo")).toBeNull();
+        expect(mockMutate).not.toHaveBeenCalled();
+        expect(mockRevalidateTenancies).not.toHaveBeenCalled();
     });
 
     test("an invitation answered or closed meanwhile says so and leaves the list", async () => {

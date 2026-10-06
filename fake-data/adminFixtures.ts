@@ -58,6 +58,8 @@ export const ADMIN_TENANCIES: AdminTenancy[] = [
     adminTenancy({ path: "datamap/staging/data-amazon", display_name: "Data Amazon", is_legacy: true, members: 4, datasets: 12 }),
 ];
 
+export const DISABLED_TENANCY: AdminTenancy = adminTenancy({ path: "datamap/production/lba", display_name: "LBA", is_enabled: false, members: 3, datasets: 5 });
+
 export function tenancyMember(overrides: Partial<TenancyMember> = {}): TenancyMember {
     return {
         id: "1b2c3d4e-5f60-4a7b-8c9d-0e1f2a3b4c5d",

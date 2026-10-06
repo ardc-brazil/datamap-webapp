@@ -75,6 +75,18 @@ describe("RemoveMemberDialog", () => {
         expect((screen.getByRole("button", { name: "Remove" }) as HTMLButtonElement).disabled).toBe(false);
     });
 
+    test("Cancel and the close button close it without removing anyone", () => {
+        mockImpact = { data: IMPACT };
+        const { onCancel, onRemoved } = renderDialog();
+
+        fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+        fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+
+        expect(onCancel).toHaveBeenCalledTimes(2);
+        expect(mockRemove).not.toHaveBeenCalled();
+        expect(onRemoved).not.toHaveBeenCalled();
+    });
+
     test("removes the member", async () => {
         mockImpact = { data: IMPACT };
         mockRemove.mockResolvedValue(undefined);
