@@ -481,6 +481,8 @@ export interface TenancyRequestCounts {
 
 export type TenancyRequestKind = "join" | "new";
 
+export type AdminRequestsQuery = { status: "open" | "closed"; kind?: TenancyRequestKind; q?: string; limit?: number; offset?: number };
+
 /** @interface */
 export interface AdminRequester {
     id: string

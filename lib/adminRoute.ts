@@ -1,11 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ADMIN_PAGE_SIZE, ADMIN_USER_SEARCH_MIN_LENGTH } from "../contants/AdminConstants";
 import { TENANCY_PATH_PATTERN } from "../contants/TenancyConstants";
-import { TenancyDecision } from "../types/GatekeeperAPI";
-import { TenancyRequestsQuery } from "./admin";
+import { AdminRequestsQuery, TenancyDecision, TenancyRequestKind } from "../types/GatekeeperAPI";
 import { invalidRequest, pageOr400 } from "./routeParams";
 
-export function requestsQueryOr400(req: NextApiRequest, res: NextApiResponse): TenancyRequestsQuery | undefined {
+export function requestsQueryOr400(req: NextApiRequest, res: NextApiResponse): AdminRequestsQuery | undefined {
     const status = req.query.status ?? "open";
     const kind = req.query.kind;
     const q = req.query.q;
@@ -21,7 +20,7 @@ export function requestsQueryOr400(req: NextApiRequest, res: NextApiResponse): T
     const search = typeof q === "string" ? q.trim() : "";
     return {
         status: status as "open" | "closed",
-        ...(status === "open" && kind ? { kind: kind as "join" | "new" } : {}),
+        ...(status === "open" && kind ? { kind: kind as TenancyRequestKind } : {}),
         ...(search ? { q: search } : {}),
         ...page,
     };

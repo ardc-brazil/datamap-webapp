@@ -1,10 +1,9 @@
 import { ADMIN_PAGE_SIZE, ADMIN_USER_SEARCH_MIN_LENGTH, RECENTLY_CLOSED_LIMIT } from "../contants/AdminConstants";
+import { AdminRequestsQuery } from "../types/GatekeeperAPI";
 
 export const ADMIN_REQUESTS_PREFIX = "/api/admin/tenancy-requests";
 export const ADMIN_COUNTS_KEY = ADMIN_REQUESTS_PREFIX + "/counts";
 export const ADMIN_TENANCIES_KEY = "/api/admin/tenancies";
-
-export type AdminRequestsQuery = { status: "open" | "closed"; kind?: "join" | "new"; q?: string; limit?: number; offset?: number };
 
 export function adminRequestsKey(query: AdminRequestsQuery): string {
     const params = new URLSearchParams();

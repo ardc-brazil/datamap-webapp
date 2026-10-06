@@ -4,7 +4,6 @@ import { ADMIN_COUNTS_REFRESH_MS, ADMIN_PAGE_SIZE } from "../contants/AdminConst
 import {
     ADMIN_COUNTS_KEY,
     ADMIN_TENANCIES_KEY,
-    AdminRequestsQuery,
     RECENTLY_CLOSED_KEY,
     adminMembersKey,
     adminRemovalImpactKey,
@@ -17,6 +16,7 @@ import {
 import { fetcher } from "../lib/fetcher";
 import { isLastPage } from "../lib/paging";
 import {
+    AdminRequestsQuery,
     AdminTenancy,
     AdminTenancyRequest,
     AdminTenancyRequestDetail,

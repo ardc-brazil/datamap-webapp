@@ -1,4 +1,5 @@
 import {
+    AdminRequestsQuery,
     AdminTenancy,
     AdminTenancyRequest,
     AdminTenancyRequestDetail,
@@ -13,14 +14,12 @@ import {
 import axiosInstance from "./rpc";
 import { asUser } from "./tenancies";
 
-export type TenancyRequestsQuery = { status: "open" | "closed"; kind?: "join" | "new"; q?: string; limit?: number; offset?: number };
-
 export async function getTenancyRequestCounts(uid: string): Promise<TenancyRequestCounts> {
     const response = await axiosInstance.get("/admin/tenancy-requests/counts", asUser(uid));
     return response.data as TenancyRequestCounts;
 }
 
-export async function listTenancyRequests(uid: string, query: TenancyRequestsQuery): Promise<GatekeeperPage<AdminTenancyRequest>> {
+export async function listTenancyRequests(uid: string, query: AdminRequestsQuery): Promise<GatekeeperPage<AdminTenancyRequest>> {
     const response = await axiosInstance.get("/admin/tenancy-requests", { ...asUser(uid), params: query });
     return response.data as GatekeeperPage<AdminTenancyRequest>;
 }
