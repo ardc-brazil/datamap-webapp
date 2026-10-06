@@ -1,6 +1,6 @@
 import { useSession } from "next-auth/react";
 import Router, { useRouter } from "next/router";
-import { ReactNode, useRef } from "react";
+import { ReactNode, useMemo, useRef } from "react";
 import { SWRConfig } from "swr";
 import { ROUTE_PAGE_TENANCY_SELECTOR } from "../../contants/InternalRoutesConstants";
 import { loginUrlFor } from "../../lib/authRoutes";
@@ -32,32 +32,38 @@ export function RequireSession({ loading, children }: Props) {
     });
     const tenancies = session?.user?.tenancies;
 
-    async function leaveRevokedTenancy() {
-        if (leaving.current) {
-            return;
+    const swrConfig = useMemo(() => {
+        async function leaveRevokedTenancy() {
+            if (leaving.current) {
+                return;
+            }
+            leaving.current = true;
+            revokedFrom.current = tenanciesKey(tenancies);
+            try {
+                setTenancySelected("");
+                await update();
+                await Router.replace(ROUTE_PAGE_TENANCY_SELECTOR);
+            } finally {
+                leaving.current = false;
+            }
         }
-        leaving.current = true;
-        revokedFrom.current = tenanciesKey(tenancies);
-        try {
-            setTenancySelected("");
-            await update();
-            await Router.replace(ROUTE_PAGE_TENANCY_SELECTOR);
-        } finally {
-            leaving.current = false;
-        }
-    }
+        return { onError: (error: { status?: unknown; detail?: unknown } | undefined) => { if (isTenancyRevoked(error?.status, error?.detail)) leaveRevokedTenancy(); } };
+    }, [tenancies, update, setTenancySelected]);
 
     if (status === "loading" && !session) {
         return <>{loading}</>;
     }
 
+    if (revokedFrom.current !== null && tenanciesKey(tenancies) !== revokedFrom.current) {
+        revokedFrom.current = null;
+    }
     // A session still listing the tenancy the user was just removed from must not select it again.
-    if (!isTenancySelected() && tenancies?.length == 1 && tenanciesKey(tenancies) !== revokedFrom.current) {
+    if (!isTenancySelected() && tenancies?.length == 1 && revokedFrom.current === null) {
         setTenancySelected(tenancies[0]);
     }
 
     return (
-        <SWRConfig value={{ onError: (error) => { if (isTenancyRevoked(error?.status, error?.detail)) leaveRevokedTenancy(); } }}>
+        <SWRConfig value={swrConfig}>
             {children}
         </SWRConfig>
     );

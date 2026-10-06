@@ -27,8 +27,11 @@ jest.mock("../../TenancyStore", () => ({
 
 import { RequireSession } from "../RequireSession";
 
+const seenOnError: unknown[] = [];
+
 function Probe(props: { error: unknown }) {
     const { onError } = useSWRConfig();
+    seenOnError.push(onError);
     return <button type="button" onClick={() => onError(props.error as any, "/api/datasets", {} as any)}>fail</button>;
 }
 
@@ -48,6 +51,7 @@ beforeEach(() => {
     update.mockReset();
     replace.mockReset();
     setTenancySelected.mockReset();
+    seenOnError.length = 0;
     mockSessionData = sessionWith(["datamap/production/public", "datamap/production/data-amazon"]);
     mockSelected = true;
 });
@@ -92,5 +96,30 @@ describe("RequireSession and a revoked tenancy", () => {
         rerender(gate(revoked));
 
         expect(setTenancySelected).toHaveBeenLastCalledWith("datamap/production/atto");
+    });
+
+    test("a tenancy the user is invited back into is selected again once the session has moved on", async () => {
+        const revoked = { status: 401, detail: "unauthorized_tenancy: user is not a member" };
+        mockSessionData = sessionWith(["datamap/production/data-amazon"]);
+        setTenancySelected.mockImplementation((path: string) => { mockSelected = path !== ""; });
+        const { rerender } = renderWith(revoked);
+
+        fireEvent.click(screen.getByRole("button", { name: "fail" }));
+        await waitFor(() => expect(replace).toHaveBeenCalledWith("/app/tenancy"));
+        mockSessionData = sessionWith(["datamap/production/public", "datamap/production/atto"]);
+        rerender(gate(revoked));
+        mockSessionData = sessionWith(["datamap/production/data-amazon"]);
+        rerender(gate(revoked));
+
+        expect(setTenancySelected).toHaveBeenLastCalledWith("datamap/production/data-amazon");
+    });
+
+    test("a render that changes nothing keeps the same error handler", () => {
+        const { rerender } = renderWith({ status: 500 });
+
+        rerender(gate({ status: 500 }));
+
+        expect(seenOnError).toHaveLength(2);
+        expect(seenOnError[1]).toBe(seenOnError[0]);
     });
 });
