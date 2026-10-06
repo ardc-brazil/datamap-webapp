@@ -5,19 +5,19 @@ import { OrcidAccountSwitchNotice } from "../../../components/Account/OrcidAccou
 import { OrcidLinkOutcome } from "../../../components/Account/OrcidLinkOutcome";
 import { PasswordSignInMethod } from "../../../components/Account/PasswordSignInMethod";
 import LoggedLayout from "../../../components/LoggedLayout";
+import { ProfileTenancies } from "../../../components/Tenancy/ProfileTenancies";
+import { TenancyInvitationsPanel } from "../../../components/Tenancy/TenancyInvitationsPanel";
 
 import { SIGN_OUT_CALLBACK_URL } from "../../../lib/authRoutes";
 import { signOut, useSession } from "next-auth/react";
 import { MaterialSymbol } from "react-material-symbols";
-import { useTenancyStore } from "../../../components/TenancyStore";
 import { ORCID_LINK_OUTCOME_PARAM } from "../../../contants/AccountConstants";
-import { ROUTE_PAGE_ERROR, ROUTE_PAGE_TENANCY_SELECTOR } from "../../../contants/InternalRoutesConstants";
+import { ROUTE_PAGE_ERROR } from "../../../contants/InternalRoutesConstants";
 import { AppLocalContext, NewContext } from "../../../lib/appLocalContext";
 import { getUserByUID, hasSignInProvider } from "../../../lib/users";
 
 export default function ProfilePage(props) {
   const { data: session, status } = useSession();
-  const tenancySelected = useTenancyStore((state) => state.tenancySelected)
   const { query } = useRouter();
 
   function clickSignOut() {
@@ -31,7 +31,6 @@ export default function ProfilePage(props) {
 
   if (status === "authenticated") {
     const user = props?.data;
-    const tenancies: string[] = user?.tenancies ?? [];
 
     return (
       <LoggedLayout noPadding={false}>
@@ -54,33 +53,12 @@ export default function ProfilePage(props) {
             </button>
           </div>
 
+          <TenancyInvitationsPanel className="mt-8" />
+
           <div className="mt-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-10 items-start">
             <div className="flex flex-col gap-10 min-w-0">
-              <ProfileSection title="Tenancies" description="The namespaces you can work in. Datasets and notebooks belong to the selected one.">
-                {tenancies.length > 0 ? (
-                  <ul className="divide-y divide-primary-100">
-                    {tenancies.map((tenancy) => {
-                      const current = tenancy === tenancySelected;
-                      return (
-                        <li key={tenancy} className="flex items-center justify-between gap-4 px-4 h-12">
-                          <span className="flex items-center gap-3 min-w-0">
-                            <MaterialSymbol icon="tenancy" size={20} weight={400} grade={-25} className="flex-none text-primary-500" />
-                            <span className="truncate font-mono text-[13px] text-primary-900">{tenancy}</span>
-                          </span>
-                          {current && <span className="flex-none px-2.5 py-[3px] rounded-full bg-secondary-500 text-xs font-semibold text-primary-900">Current</span>}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : (
-                  <p className="m-0 px-4 py-3 text-sm italic text-primary-500">No tenancy set for this user yet.</p>
-                )}
-                <div className="flex justify-end border-t border-primary-100 px-4 py-3">
-                  <button className="btn-primary-outline btn-small m-0 flex items-center gap-2" onClick={() => Router.push(ROUTE_PAGE_TENANCY_SELECTOR)}>
-                    <MaterialSymbol icon="swap_horiz" size={18} weight={400} grade={-25} />
-                    Switch tenancy
-                  </button>
-                </div>
+              <ProfileSection title="Tenancies" description="The tenancies you can work in. Datasets and notebooks belong to the selected one.">
+                <ProfileTenancies />
               </ProfileSection>
 
               <ProfileSection title="Sign-in methods">
