@@ -1,3 +1,4 @@
+import { ConsequenceList } from "../base/ConsequenceList";
 import Modal from "../base/PopupModal";
 import { ManualDoiGate } from "../../lib/embargoState";
 
@@ -10,16 +11,6 @@ interface Props {
     onConfirm(): void
     onCancel(): void
     onSetEmbargo?(): void
-}
-
-function Consequences(props: { items: string[] }) {
-    return (
-        <ul className="m-0 p-0 list-none flex flex-col gap-2.5 text-sm leading-[21px] text-primary-700">
-            {props.items.map((item) => (
-                <li key={item} className="flex gap-2.5"><span className="text-primary-400">—</span><span>{item}</span></li>
-            ))}
-        </ul>
-    );
 }
 
 export function ManualDoiConfirmation(props: Props) {
@@ -50,7 +41,7 @@ export function ManualDoiConfirmation(props: Props) {
             >
                 <div className="flex flex-col gap-4">
                     <p className="m-0 font-mono text-[13px] text-primary-500">{props.identifier} · minted outside DataMap</p>
-                    <Consequences items={[
+                    <ConsequenceList items={[
                         "Embargo ends · can't be undone",
                         `Files open to ${props.tenancyName} members now`,
                         "Public page published, with authors",

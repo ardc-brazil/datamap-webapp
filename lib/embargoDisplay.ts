@@ -26,6 +26,10 @@ export function daysFromToday(dateInput: string, now: Date): number {
     return Math.round((new Date(`${dateInput}T00:00:00Z`).getTime() - today) / DAY_MS);
 }
 
+export function calendarDaysFromToday(iso: string, now: Date): number {
+    return daysFromToday(new Date(iso).toISOString().slice(0, 10), now);
+}
+
 export function tenancyDisplayName(path?: string | null): string {
     if (!path) {
         return "the workspace";
@@ -45,7 +49,7 @@ export function initialsOf(name: string): string {
 }
 
 function relativeDay(iso: string, now: Date): string {
-    const days = daysFromToday(new Date(iso).toISOString().slice(0, 10), now);
+    const days = calendarDaysFromToday(iso, now);
     if (days === 0) {
         return "today";
     }

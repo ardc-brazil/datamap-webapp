@@ -1,14 +1,16 @@
 import { useFormik } from "formik";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import * as Yup from "yup";
 import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_INPUT_CLASS, EDIT_FORM_LABEL_CLASS } from "../../contants/EditFormConstants";
 import { SHARE_PERSON_DETAIL_CLASS, SHARE_PERSON_NAME_CLASS } from "../../contants/ShareConstants";
 import { WORKSPACE_LOOKUP_DEBOUNCE_MS, tenancyErrorMessage } from "../../contants/TenancyConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { useDebouncedValue } from "../../hooks/UseDebouncedValue";
+import { useSubmitOnce } from "../../hooks/UseSubmitOnce";
 import { classifyShareInput } from "../../lib/shareTarget";
 import { InviteeLookup, TenancySummary } from "../../types/GatekeeperAPI";
 import Modal from "../base/PopupModal";
+import { DialogError } from "../base/DialogError";
 import { PersonInitial } from "../Share/PersonInitial";
 
 type Lookup = { value: string, found: InviteeLookup | null, error: string | null };
@@ -46,6 +48,7 @@ export function InviteMemberDialog(props: Props) {
     const [bffGateway] = useState(() => new BFFAPI());
     const [lookup, setLookup] = useState<Lookup | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const { submit, reset, busy } = useSubmitOnce();
     const formik = useFormik({
         initialValues: { value: "" },
         validationSchema: schema,
@@ -55,22 +58,24 @@ export function InviteMemberDialog(props: Props) {
             }
             setError(null);
             try {
-                await bffGateway.inviteToWorkspace(props.tenancy.path, invitee.user.id);
-                props.onInvited();
-                close();
+                await submit(async () => {
+                    await bffGateway.inviteToWorkspace(props.tenancy.path, invitee.user.id);
+                    props.onInvited();
+                    close();
+                });
             } catch (e) {
                 setError(tenancyErrorMessage(e?.response?.data?.detail));
             }
         },
     });
     const settled = useDebouncedValue(formik.values.value, WORKSPACE_LOOKUP_DEBOUNCE_MS);
-    const submitting = useRef(false);
 
     useEffect(() => {
         if (props.show) {
             setError(null);
+            reset();
         }
-    }, [props.show]);
+    }, [props.show, reset]);
 
     useEffect(() => {
         const value = exactValue(settled);
@@ -100,18 +105,6 @@ export function InviteMemberDialog(props: Props) {
         props.onClose();
     }
 
-    async function submitOnce() {
-        if (submitting.current) {
-            return;
-        }
-        submitting.current = true;
-        try {
-            await formik.submitForm();
-        } finally {
-            submitting.current = false;
-        }
-    }
-
     return (
         <Modal
             title={`Invite to ${props.tenancy.display_name}`}
@@ -119,12 +112,12 @@ export function InviteMemberDialog(props: Props) {
             confimButtonText="Send invitation"
             cancelButtonText="Cancel"
             cancel={close}
-            confim={() => { void submitOnce(); }}
-            confirmDisabled={!invitee || formik.isSubmitting}
-            cancelDisabled={formik.isSubmitting}
+            confim={() => { void formik.submitForm(); }}
+            confirmDisabled={!invitee || busy}
+            cancelDisabled={busy}
             maxWidthClassName="max-w-[520px]"
         >
-            <form noValidate onSubmit={(e) => { e.preventDefault(); void submitOnce(); }} className="flex flex-col gap-4">
+            <form noValidate onSubmit={(e) => { e.preventDefault(); void formik.submitForm(); }} className="flex flex-col gap-4">
                 <p id="invite-value-hint" className="m-0 text-sm leading-5 text-primary-600">
                     Type the exact email or ORCID iD of someone with a DataMap account. They accept the invitation in the app.
                 </p>
@@ -136,7 +129,7 @@ export function InviteMemberDialog(props: Props) {
                         autoComplete="off"
                         aria-describedby={fieldError ? "invite-value-hint invite-value-error" : "invite-value-hint"}
                         aria-invalid={fieldError ? true : undefined}
-                        disabled={formik.isSubmitting}
+                        disabled={busy}
                         className={EDIT_FORM_INPUT_CLASS}
                         {...formik.getFieldProps("value")}
                         onChange={(e) => { setError(null); formik.handleChange(e); }}
@@ -156,7 +149,7 @@ export function InviteMemberDialog(props: Props) {
                     }
                     {current?.error && <p className="m-0 text-sm text-primary-600">{current.error}</p>}
                 </div>
-                {error && <p role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
+                <DialogError message={error} />
                 <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
             </form>
         </Modal>

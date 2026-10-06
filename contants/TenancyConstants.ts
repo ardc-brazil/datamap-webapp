@@ -14,6 +14,16 @@ export const isDefaultTenancy = (path: string) => path === DEFAULT_TENANCY;
 export const isLegacyTenancy = (path: string) => path.startsWith(LEGACY_PREFIX);
 export const tenancyNamespace = (path: string) => path.split("/").pop() ?? path;
 
+export const RESERVED_NAMESPACES = ["public", "members"];
+
+export function isValidNamespace(value: string): boolean {
+    const namespace = value.trim();
+    return namespace.length >= NAMESPACE_MIN_LENGTH
+        && namespace.length <= NAMESPACE_MAX_LENGTH
+        && NAMESPACE_PATTERN.test(namespace)
+        && !RESERVED_NAMESPACES.includes(namespace);
+}
+
 /** Slash-separated segments only: no `..`, no empty segment, nothing a URL would read as more than a path. */
 export const TENANCY_PATH_PATTERN = /^[A-Za-z0-9_-]+(\/[A-Za-z0-9_-]+)+$/;
 
@@ -57,9 +67,10 @@ export const TENANCY_ERROR_MESSAGES: Record<string, string> = {
     tenancy_cannot_change: "A dataset stays in the tenancy it was created in.",
 };
 
+export function messageFor(messages: Record<string, string>, detail: string | undefined, fallback: string): string {
+    return typeof detail === "string" && Object.prototype.hasOwnProperty.call(messages, detail) ? messages[detail] : fallback;
+}
+
 export function tenancyErrorMessage(detail?: string): string {
-    if (typeof detail === "string" && Object.prototype.hasOwnProperty.call(TENANCY_ERROR_MESSAGES, detail)) {
-        return TENANCY_ERROR_MESSAGES[detail];
-    }
-    return TENANCY_GENERIC_ERROR_MESSAGE;
+    return messageFor(TENANCY_ERROR_MESSAGES, detail, TENANCY_GENERIC_ERROR_MESSAGE);
 }

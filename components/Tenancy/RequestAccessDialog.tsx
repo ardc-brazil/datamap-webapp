@@ -6,6 +6,7 @@ import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_INPUT_CLASS, EDIT_FORM_LABEL_CLASS } f
 import { REASON_MAX_LENGTH, TENANCY_NAME_MAX_LENGTH, TENANCY_REQUESTS_KEY, tenancyErrorMessage } from "../../contants/TenancyConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import Modal from "../base/PopupModal";
+import { DialogError } from "../base/DialogError";
 
 const schema = Yup.object({
     tenancyName: Yup.string().trim().required("Name the tenancy you need.").max(TENANCY_NAME_MAX_LENGTH, `At most ${TENANCY_NAME_MAX_LENGTH} characters.`),
@@ -86,7 +87,7 @@ export function RequestAccessDialog(props: Props) {
                     />
                     {reasonError && <p id="request-reason-error" className={EDIT_FORM_ERROR_CLASS}>{reasonError}</p>}
                 </div>
-                {error && <p role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
+                <DialogError message={error} />
                 <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
             </form>
         </Modal>

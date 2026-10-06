@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Modal from "../base/PopupModal";
+import { DialogError } from "../base/DialogError";
 
 interface Props {
     show: boolean
@@ -54,7 +55,7 @@ export function MembersAccessDialog(props: Props) {
                     })}
                 </fieldset>
                 {props.embargoActive && <p className="m-0 text-[13px] text-primary-500">Members have no access while the embargo lasts. This decides what they get when it ends.</p>}
-                {props.error && <p role="alert" className="m-0 text-sm text-danger-700">{props.error}</p>}
+                <DialogError message={props.error} />
             </div>
         </Modal>
     );

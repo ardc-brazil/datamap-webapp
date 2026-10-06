@@ -21,6 +21,7 @@ jest.mock("../../Profile/AvatarButton", () => ({ __esModule: true, default: () =
 jest.mock("../../../hooks/UseWorkspace", () => ({
     useMembersPageTenancy: () => ({ tenancy: mockMembersTenancy, loading: false }),
 }));
+jest.mock("next-auth/react", () => ({ useSession: () => ({ data: { user: { name: "Ada", admin: false } } }) }));
 
 import LoggedLayout from "../../LoggedLayout";
 

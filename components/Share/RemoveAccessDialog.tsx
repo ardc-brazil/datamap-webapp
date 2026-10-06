@@ -1,3 +1,4 @@
+import { ConsequenceList } from "../base/ConsequenceList";
 import Modal from "../base/PopupModal";
 import { SharePermission } from "../../types/GatekeeperAPI";
 
@@ -27,12 +28,10 @@ export function RemoveAccessDialog(props: Props) {
             {permission &&
                 <div className="flex flex-col gap-3">
                     <p className="m-0 text-[13px] text-primary-500">{permission.user.name} · {permission.user.email}</p>
-                    <ul className="m-0 p-0 list-none flex flex-col gap-2.5 text-sm leading-[21px] text-primary-700">
-                        <li className="flex gap-2.5"><span className="text-primary-400">—</span>
-                            <span>{props.embargoActive ? "Existing download links expire within 1 hour" : "Download links already given out stay valid for up to 7 days"}</span>
-                        </li>
-                        <li className="flex gap-2.5"><span className="text-primary-400">—</span><span>No notification is sent</span></li>
-                    </ul>
+                    <ConsequenceList items={[
+                        props.embargoActive ? "Existing download links expire within 1 hour" : "Download links already given out stay valid for up to 7 days",
+                        "No notification is sent",
+                    ]} />
                 </div>
             }
         </Modal>

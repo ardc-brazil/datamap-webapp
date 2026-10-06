@@ -9,22 +9,13 @@ import { formatShortDate, tenancyDisplayName } from "../../lib/embargoDisplay";
 import { fetcher } from "../../lib/fetcher";
 import { GetDatasetDetailsResponse } from "../../types/BffAPI";
 import { ShareState } from "../../types/GatekeeperAPI";
+import { ConsequenceList } from "../base/ConsequenceList";
 import Modal from "../base/PopupModal";
 
 interface DialogProps {
     dataset: GetDatasetDetailsResponse
     show: boolean
     onClose(): void
-}
-
-function Consequences(props: { items: string[] }) {
-    return (
-        <ul className="m-0 p-0 list-none flex flex-col gap-2.5 text-sm leading-[21px] text-primary-700">
-            {props.items.map((item) => (
-                <li key={item} className="flex gap-2.5"><span className="text-primary-400">—</span><span>{item}</span></li>
-            ))}
-        </ul>
-    );
 }
 
 function useAction(onClose: () => void) {
@@ -129,7 +120,7 @@ export function EndEmbargoDialog(props: DialogProps) {
         >
             <div className="flex flex-col gap-4">
                 <p className="m-0 text-[13px] text-primary-500">Set to end {formatShortDate(props.dataset.embargo?.until ?? "")} · can&apos;t be undone</p>
-                <Consequences items={[
+                <ConsequenceList items={[
                     `Files open to ${tenancy} members now`,
                     "Nothing becomes public until the DOI is promoted",
                     "Anonymous links keep showing the redacted page until you publish",
@@ -162,7 +153,7 @@ export function EmbargoModeDialog(props: DialogProps) {
                 <p className="m-0 text-[13px] text-primary-500">
                     {visible ? "Currently listed with an \"Embargoed\" badge" : `Currently hidden from members of ${tenancy}`}
                 </p>
-                <Consequences items={visible
+                <ConsequenceList items={visible
                     ? ["Removed from listings and search for everyone without access", "Administrators included", "File access unchanged"]
                     : [`Listed for members of ${tenancy} with an "Embargoed" badge`, "Title, description and authors readable; file names and downloads withheld", "File access unchanged"]} />
                 {error && <p role="alert" className={EDIT_FORM_ERROR_CLASS}>{error}</p>}

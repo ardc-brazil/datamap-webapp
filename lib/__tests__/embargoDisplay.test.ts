@@ -1,5 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 import {
+    calendarDaysFromToday,
     daysFromToday,
     daysLeft,
     describeAccessEvent,
@@ -33,6 +34,12 @@ describe("dates and counts", () => {
 
     test("days from today to a chosen date", () => {
         expect(daysFromToday("2026-12-15", NOW)).toBe(75);
+    });
+
+    test("calendar days from today to a moment count by UTC date, not by elapsed hours", () => {
+        expect(calendarDaysFromToday("2026-09-30T23:59:00Z", NOW)).toBe(-1);
+        expect(calendarDaysFromToday("2026-10-01T00:01:00Z", NOW)).toBe(0);
+        expect(calendarDaysFromToday("2026-10-02T00:01:00Z", NOW)).toBe(1);
     });
 });
 

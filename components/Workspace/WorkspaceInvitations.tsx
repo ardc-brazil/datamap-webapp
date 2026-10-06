@@ -9,14 +9,9 @@ import {
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { useRowActions } from "../../hooks/UseRowActions";
 import { useWorkspaceInvitations } from "../../hooks/UseWorkspace";
-import { formatShortDate } from "../../lib/embargoDisplay";
+import { invitedLine } from "../../lib/tenancySelection";
 import { TenancySummary, WorkspaceInvitation } from "../../types/GatekeeperAPI";
 import { PersonInitial } from "../Share/PersonInitial";
-
-function invitedLine(invitation: WorkspaceInvitation): string {
-    const by = invitation.invited_by ? `invited by ${invitation.invited_by.name}` : "invited";
-    return `${by} ${formatShortDate(invitation.created_at, false)} · not accepted yet`;
-}
 
 export function WorkspaceInvitations({ tenancy }: { tenancy: TenancySummary }) {
     const { data: invitations, mutate } = useWorkspaceInvitations(tenancy.path);

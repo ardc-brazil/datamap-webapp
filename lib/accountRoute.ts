@@ -2,10 +2,12 @@ import axios from "axios";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import { maskPathTokens } from "./externalCalls";
+import { gatekeeperDetail } from "./gatekeeperDetail";
 import { logError } from "./logging";
 import { pendingOnlyChain, publicChain } from "./middlewareChain";
 import { uuidOr404 } from "./routeParams";
 
+export { gatekeeperDetail } from "./gatekeeperDetail";
 export { isUuid } from "./routeParams";
 
 /** Every public challenge route takes the same id from the same place; a non-UUID never reaches the gatekeeper. */
@@ -15,6 +17,7 @@ export function challengeIdOr404(req: NextApiRequest, res: NextApiResponse): str
 
 const JSON_CONTENT_TYPE = /^application\/json\b/i;
 const METHODS_WITH_A_BODY = new Set(["POST", "PUT", "PATCH"]);
+const CHANGES = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 // A browser form can only send application/x-www-form-urlencoded, multipart/form-data or text/plain, so requiring JSON keeps a cross-site form out.
 async function requireJsonContentType(req: NextApiRequest, res: NextApiResponse, next: () => Promise<unknown>) {
@@ -38,6 +41,14 @@ export async function requireJsonRequest(req: NextApiRequest, res: NextApiRespon
     await next();
 }
 
+export async function requireJsonOnChanges(req: NextApiRequest, res: NextApiResponse, next: () => Promise<unknown>) {
+    if (CHANGES.has((req.method ?? "").toUpperCase())) {
+        await requireJsonRequest(req, res, next);
+        return;
+    }
+    await next();
+}
+
 export function publicAccountRouter() {
     return createRouter<NextApiRequest, NextApiResponse>().use(publicChain).use(requireJsonContentType);
 }
@@ -45,12 +56,6 @@ export function publicAccountRouter() {
 /** Email verification of an ORCID sign-in that has no account, or no confirmed email, yet. */
 export function pendingAccountRouter() {
     return createRouter<NextApiRequest, NextApiResponse>().use(pendingOnlyChain).use(requireJsonContentType);
-}
-
-/** A gatekeeper `detail` that is not a string code (a FastAPI 422 list, for one) never reaches the browser. */
-export function gatekeeperDetail(body: unknown): string | undefined {
-    const detail = (body as { detail?: unknown } | undefined)?.detail;
-    return typeof detail === "string" ? detail : undefined;
 }
 
 /** The account screens map the gatekeeper's `detail` codes to their own copy, so both reach the browser as they were. */

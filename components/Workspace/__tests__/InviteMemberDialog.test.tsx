@@ -194,6 +194,26 @@ describe("InviteMemberDialog", () => {
         expect(onInvited).toHaveBeenCalledTimes(1);
     });
 
+    test("after one invitation, reopening the dialog can send another", async () => {
+        inviteToWorkspace.mockResolvedValue({ id: "ti1", can_withdraw: true });
+        const { onInvited, setShow } = renderDialog();
+
+        type("fernanda.lima@inpe.br");
+        await settle();
+        fireEvent.click(sendButton());
+        await waitFor(() => expect(onInvited).toHaveBeenCalledTimes(1));
+
+        setShow(false);
+        setShow(true);
+        await settle();
+        type("fernanda.lima@inpe.br");
+        await settle();
+        fireEvent.click(sendButton());
+
+        await waitFor(() => expect(onInvited).toHaveBeenCalledTimes(2));
+        expect(inviteToWorkspace).toHaveBeenCalledTimes(2);
+    });
+
     test("a refusal says why and keeps the dialog open", async () => {
         inviteToWorkspace.mockRejectedValue({ response: { status: 409, data: { detail: "invitation_pending" } } });
         const { onClose } = renderDialog();
