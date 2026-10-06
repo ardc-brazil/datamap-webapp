@@ -37,14 +37,16 @@ describe("the admin shell parts", () => {
         expect(onRetry).toHaveBeenCalled();
     });
 
-    test("a count badge shows a positive count and nothing otherwise", () => {
-        const { rerender } = render(<CountBadge count={4} label="open requests" />);
-        expect(screen.getByLabelText("4 open requests").textContent).toBe("4");
+    test("a count badge shows a positive count, names it in visually hidden text, and shows nothing otherwise", () => {
+        const { container, rerender } = render(<CountBadge count={4} label="open requests" />);
+        expect(container.querySelector("[aria-label]")).toBeNull();
+        expect(screen.getByText("4 open requests").className).toBe("sr-only");
+        expect(screen.getByText("4").getAttribute("aria-hidden")).toBe("true");
 
         rerender(<CountBadge count={0} label="open requests" />);
-        expect(screen.queryByLabelText(/open requests/)).toBeNull();
+        expect(screen.queryByText(/open requests/)).toBeNull();
 
         rerender(<CountBadge label="open requests" />);
-        expect(screen.queryByLabelText(/open requests/)).toBeNull();
+        expect(screen.queryByText(/open requests/)).toBeNull();
     });
 });

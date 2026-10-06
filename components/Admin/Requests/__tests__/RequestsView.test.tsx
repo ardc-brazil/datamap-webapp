@@ -153,7 +153,7 @@ describe("RequestsView", () => {
         render(<RequestsView now={NOW} />);
 
         fireEvent.click(screen.getByRole("button", { name: "More actions for Fernanda Lima" }));
-        fireEvent.click(screen.getByRole("menuitem", { name: "Decline…" }));
+        fireEvent.click(screen.getByRole("button", { name: "Decline…" }));
 
         expect(screen.getByRole("dialog", { name: "Decline request?" })).toBeTruthy();
 

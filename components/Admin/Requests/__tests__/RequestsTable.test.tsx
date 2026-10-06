@@ -40,11 +40,16 @@ describe("RequestsTable", () => {
         expect(screen.getByText("unverified")).toBeTruthy();
     });
 
-    test("the row menu holds Decline…", () => {
+    test("the row menu is a plain disclosure that holds Decline…", () => {
         const { onDecline } = renderTable([adminRequest()]);
+        const toggle = screen.getByRole("button", { name: "More actions for Fernanda Lima" });
+        expect(toggle.getAttribute("aria-expanded")).toBe("false");
 
-        fireEvent.click(screen.getByRole("button", { name: "More actions for Fernanda Lima" }));
-        fireEvent.click(screen.getByRole("menuitem", { name: "Decline…" }));
+        fireEvent.click(toggle);
+        expect(toggle.getAttribute("aria-expanded")).toBe("true");
+        expect(screen.queryByRole("menu")).toBeNull();
+        expect(screen.queryByRole("menuitem")).toBeNull();
+        fireEvent.click(screen.getByRole("button", { name: "Decline…" }));
 
         expect(onDecline).toHaveBeenCalledWith(expect.objectContaining({ id: "7a9b5d5e-fa6d-4c18-9a51-2b1e2c3d4e5f" }));
     });

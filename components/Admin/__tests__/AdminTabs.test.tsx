@@ -14,8 +14,8 @@ test("Requests, Users, Tenancies and Activity, with the open count on Requests",
 
     const links = screen.getAllByRole("link");
     expect(links.map((link) => link.getAttribute("href"))).toEqual(["/app/admin/requests", "/app/admin/users", "/app/admin/tenancies", "/app/admin/activity"]);
-    expect(links[0].textContent).toBe("Requests4");
-    expect(screen.getByLabelText("4 open requests")).toBeTruthy();
+    expect(links[0].textContent).toBe("Requests44 open requests");
+    expect(screen.getByText("4 open requests")).toBeTruthy();
 });
 
 test("the tab of the current page is the active one", () => {
@@ -42,5 +42,5 @@ test("no badge when nothing is open", () => {
 
     render(<AdminTabs />);
 
-    expect(screen.queryByLabelText(/open requests/)).toBeNull();
+    expect(screen.queryByText(/open requests/)).toBeNull();
 });

@@ -100,6 +100,7 @@ export function TenancyMembersPanel({ tenancy }: { tenancy: AdminTenancy }) {
                                         </div>
                                         <button
                                             type="button"
+                                            aria-label={`Withdraw the invitation of ${invitation.user.name}`}
                                             disabled={rows.busy(invitation.id)}
                                             onClick={() => rows.run(invitation.id, () => new BFFAPI().withdrawTenancyInvitationAsAdmin(invitation.id))}
                                             className="flex-none text-[13px] font-semibold text-danger-700 hover:text-danger-800 disabled:opacity-50"

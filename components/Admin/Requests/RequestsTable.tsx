@@ -123,10 +123,9 @@ function RowMenu({ name, onDecline }: { name: string; onDecline(): void }) {
                 <MaterialSymbol icon="more_horiz" size={18} weight={400} grade={-25} />
             </button>
             {isComponentVisible && (
-                <div role="menu" className="absolute right-0 z-10 mt-1 w-40 rounded-md border border-primary-200 bg-primary-0 py-1 shadow-lg">
+                <div className="absolute right-0 z-10 mt-1 w-40 rounded-md border border-primary-200 bg-primary-0 py-1 shadow-lg">
                     <button
                         type="button"
-                        role="menuitem"
                         onClick={() => {
                             setIsComponentVisible(false);
                             onDecline();

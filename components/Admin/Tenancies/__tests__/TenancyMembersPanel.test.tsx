@@ -143,17 +143,24 @@ describe("TenancyMembersPanel", () => {
         mockWithdraw.mockResolvedValue(undefined);
 
         render(<TenancyMembersPanel tenancy={adminTenancy()} />);
-        fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
+        fireEvent.click(screen.getByRole("button", { name: "Withdraw the invitation of Rafael Souza" }));
 
         await waitFor(() => expect(mockMutate).toHaveBeenCalled());
         expect(mockWithdraw).toHaveBeenCalledWith("2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e6f");
+    });
+
+    test("each Withdraw names whose invitation it takes back", () => {
+        render(<TenancyMembersPanel tenancy={adminTenancy()} />);
+
+        expect(screen.getAllByRole("button", { name: /^Withdraw/ }).map((button) => button.getAttribute("aria-label"))).toEqual(["Withdraw the invitation of Rafael Souza"]);
+        expect(screen.getByRole("button", { name: "Withdraw the invitation of Rafael Souza" }).textContent).toBe("Withdraw");
     });
 
     test("Withdraw also refreshes the tenancy list", async () => {
         mockWithdraw.mockResolvedValue(undefined);
 
         render(<TenancyMembersPanel tenancy={adminTenancy()} />);
-        fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
+        fireEvent.click(screen.getByRole("button", { name: "Withdraw the invitation of Rafael Souza" }));
 
         await waitFor(() => expect(mockRevalidateTenancies).toHaveBeenCalled());
     });
@@ -164,7 +171,7 @@ describe("TenancyMembersPanel", () => {
         expect(screen.getByText("Luciana Rizzo")).toBeTruthy();
         expect(screen.queryByText("+ Add")).toBeNull();
         expect(screen.queryByRole("button", { name: /^Remove/ })).toBeNull();
-        expect(screen.getByRole("button", { name: "Withdraw" })).toBeTruthy();
+        expect(screen.getByRole("button", { name: "Withdraw the invitation of Rafael Souza" })).toBeTruthy();
     });
 
     test("closing the remove dialog changes nothing", () => {
@@ -183,7 +190,7 @@ describe("TenancyMembersPanel", () => {
         mockWithdraw.mockRejectedValue({ response: { status: 404, data: { detail: "invitation_not_found" } } });
 
         render(<TenancyMembersPanel tenancy={adminTenancy()} />);
-        fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
+        fireEvent.click(screen.getByRole("button", { name: "Withdraw the invitation of Rafael Souza" }));
 
         expect(await screen.findByText("This invitation was already answered or withdrawn.")).toBeTruthy();
         expect(mockMutate).toHaveBeenCalled();

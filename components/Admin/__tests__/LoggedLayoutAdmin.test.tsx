@@ -33,5 +33,5 @@ test("any other page keeps the selected tenancy, and an admin sees the Admin ent
 
     expect(screen.getByText("datamap / production / public")).toBeTruthy();
     expect(screen.getByRole("link", { name: /Admin/ })).toBeTruthy();
-    expect(screen.getByLabelText("4 open requests")).toBeTruthy();
+    expect(screen.getByText("4 open requests")).toBeTruthy();
 });

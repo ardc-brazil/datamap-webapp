@@ -40,7 +40,7 @@ test("an admin gets the entry, opening the requests, with the open count", () =>
 
     const link = screen.getByRole("link", { name: /Admin/ });
     expect(link.getAttribute("href")).toBe("/app/admin/requests");
-    expect(screen.getByLabelText("4 open requests")).toBeTruthy();
+    expect(screen.getByText("4 open requests")).toBeTruthy();
     expect(mockCountsEnabled).toEqual([true]);
 });
 
@@ -49,7 +49,7 @@ test("the badge is hidden when nothing is open", () => {
 
     render(<AdminNavItem collapsed={false} />);
 
-    expect(screen.queryByLabelText(/open requests/)).toBeNull();
+    expect(screen.queryByText(/open requests/)).toBeNull();
 });
 
 test("is active on every admin page and only there", () => {
@@ -69,5 +69,5 @@ test("a collapsed sidebar shows the icon with its title, no label or badge", () 
 
     expect(screen.getByTitle("Admin")).toBeTruthy();
     expect(screen.queryByText("Admin")).toBeNull();
-    expect(screen.queryByLabelText(/open requests/)).toBeNull();
+    expect(screen.queryByText(/open requests/)).toBeNull();
 });
