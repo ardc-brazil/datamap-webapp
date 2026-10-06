@@ -1,4 +1,5 @@
-import { TenancySummary } from "../types/GatekeeperAPI";
+import { TenancySummary, UserRef } from "../types/GatekeeperAPI";
+import { formatShortDate } from "./embargoDisplay";
 
 export type TenancySelection = { kind: "none" } | { kind: "only", path: string } | { kind: "choose" };
 
@@ -29,4 +30,9 @@ export function tenancyPathLabel(path: string): string {
 export function membersPageTenancy(tenancies: TenancySummary[] | undefined | null, selected: string | undefined | null): TenancySummary | null {
     const tenancy = (tenancies ?? []).find((candidate) => candidate.path === selected);
     return tenancy && !tenancy.is_default && !tenancy.is_legacy ? tenancy : null;
+}
+
+export function invitedLine(invitation: { invited_by: UserRef | null; created_at: string }): string {
+    const by = invitation.invited_by ? `invited by ${invitation.invited_by.name}` : "invited";
+    return `${by} ${formatShortDate(invitation.created_at, false)} · not accepted yet`;
 }

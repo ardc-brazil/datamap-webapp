@@ -65,6 +65,14 @@ describe("useRowActions", () => {
         expect(revalidate).toHaveBeenCalledTimes(1);
     });
 
+    test("a caller can word the errors itself", async () => {
+        const { result } = renderHook(() => useRowActions(jest.fn(async () => undefined), (detail) => `custom ${detail}`));
+
+        await act(async () => { await result.current.run("a", async () => { throw failure(409, "request_not_pending"); }); });
+
+        expect(result.current.error("a")).toBe("custom request_not_pending");
+    });
+
     test.each(["invitation_not_found", "request_not_found"])("%s revalidates the list", async (detail) => {
         const revalidate = jest.fn(async () => undefined);
         const { result } = renderHook(() => useRowActions(revalidate));

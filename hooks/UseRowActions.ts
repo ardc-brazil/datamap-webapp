@@ -8,7 +8,7 @@ function withoutKey<T>(record: Record<string, T>, key: string): Record<string, T
     return rest;
 }
 
-export function useRowActions(revalidate: () => Promise<unknown>) {
+export function useRowActions(revalidate: () => Promise<unknown>, messageOf: (detail?: string) => string = tenancyErrorMessage) {
     const runningRef = useRef<Set<string>>(new Set());
     const [busyIds, setBusyIds] = useState<Record<string, boolean>>({});
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -33,7 +33,7 @@ export function useRowActions(revalidate: () => Promise<unknown>) {
             await revalidateQuietly();
         } catch (e: any) {
             const detail = e?.response?.data?.detail;
-            setErrors((previous) => ({ ...previous, [id]: tenancyErrorMessage(detail) }));
+            setErrors((previous) => ({ ...previous, [id]: messageOf(detail) }));
             if (GONE_DETAILS.has(detail)) {
                 await revalidateQuietly();
             }
