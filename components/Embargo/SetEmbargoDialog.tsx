@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useRef, useState } from "react";
 import { EDIT_FORM_ERROR_CLASS } from "../../contants/EditFormConstants";
 import { messageForApiError } from "../../contants/EmbargoConstants";
+import { isDefaultTenancy } from "../../contants/TenancyConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { embargoRequestFrom, validateEmbargoDate } from "../../lib/embargoDates";
 import { tenancyDisplayName } from "../../lib/embargoDisplay";
@@ -52,7 +53,7 @@ export function SetEmbargoDialog(props: { dataset: GetDatasetDetailsResponse, sh
             <FormikProvider value={formik}>
                 <div className="flex flex-col gap-3">
                     <p className="m-0 text-[13px] text-primary-500">Only you and the people you share it with reach the files until the date you choose.</p>
-                    <EmbargoFields tenancyName={tenancyDisplayName(props.dataset.tenancy)} />
+                    <EmbargoFields tenancyName={tenancyDisplayName(props.dataset.tenancy)} membersEditable={!isDefaultTenancy(props.dataset.tenancy ?? "")} />
                     {error && <p role="alert" className={EDIT_FORM_ERROR_CLASS}>{error}</p>}
                 </div>
             </FormikProvider>

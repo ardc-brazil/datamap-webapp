@@ -13,6 +13,7 @@ import UppyUploader from "../../../components/base/UppyUploader";
 import { EDIT_FORM_ERROR_CLASS } from "../../../contants/EditFormConstants";
 import { messageForApiError } from "../../../contants/EmbargoConstants";
 import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
+import { isDefaultTenancy } from "../../../contants/TenancyConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { EmbargoStepError, embargoLockFor, finishDatasetCreation } from "../../../lib/datasetCreation";
 import { embargoRequestFrom, toEmbargoUntil, validateEmbargoDate } from "../../../lib/embargoDates";
@@ -41,7 +42,7 @@ export default function NewPage() {
   const [uppyReference, setUppyReference] = useState(null as Uppy);
   const [embargoError, setEmbargoError] = useState(null as string | null);
   const [embargoSetUntil, setEmbargoSetUntil] = useState(null as string | null);
-  const membersCanEditSent = useRef(true);
+  const membersCanEditSent = useRef(false);
 
   function datasetCreated(datasetResponse: any): void {
     setShowModal(true);
@@ -61,7 +62,7 @@ export default function NewPage() {
     embargoMode: 'none',
     embargoUntil: '',
     embargoNote: '',
-    membersCanEdit: true
+    membersCanEdit: false
   };
 
   function onAlertClose(): void {
@@ -252,6 +253,7 @@ export default function NewPage() {
                 <div className="flex flex-col gap-2">
                   <EmbargoChoice
                     tenancyName={tenancyDisplayName(tenancySelected)}
+                    isPublic={isDefaultTenancy(tenancySelected ?? "")}
                     disabled={embargoLock.locked}
                     statusLine={embargoLock.statusLine}
                   />

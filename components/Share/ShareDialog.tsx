@@ -8,6 +8,7 @@ import { useMembersAccess } from "../../hooks/UseMembersAccess";
 import { tenancyDisplayName } from "../../lib/embargoDisplay";
 import { canChangeMembersAccess, membersAccessDetail, membersCanEditOf } from "../../lib/membersAccess";
 import { fetcher } from "../../lib/fetcher";
+import { isDefaultTenancy } from "../../contants/TenancyConstants";
 import { GetDatasetDetailsResponse } from "../../types/BffAPI";
 import { GrantRequest, PermissionLevel, SharePermission, ShareState } from "../../types/GatekeeperAPI";
 import { AccessList } from "./AccessList";
@@ -50,7 +51,7 @@ export function ShareDialog(props: Props) {
         ? {
             tenancyName,
             canChange: canChangeMembersAccess(props.dataset),
-            detail: membersAccessDetail({ membersCanEdit, embargoActive, members: state?.tenancy?.members ?? null }),
+            detail: membersAccessDetail({ membersCanEdit, embargoActive, members: state?.tenancy?.members ?? null, everyone: isDefaultTenancy(props.dataset.tenancy ?? "") }),
         }
         : null;
 
