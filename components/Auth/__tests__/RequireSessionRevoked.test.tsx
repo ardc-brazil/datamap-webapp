@@ -114,6 +114,21 @@ describe("RequireSession and a revoked tenancy", () => {
         expect(setTenancySelected).toHaveBeenLastCalledWith("datamap/production/data-amazon");
     });
 
+    test("two revoked errors before update() resolves cause one update and one redirect", async () => {
+        let resolveUpdate: () => void;
+        update.mockImplementation(() => new Promise<void>((resolve) => { resolveUpdate = resolve; }));
+        renderWith({ status: 401, detail: "unauthorized_tenancy: user is not a member" });
+
+        fireEvent.click(screen.getByRole("button", { name: "fail" }));
+        fireEvent.click(screen.getByRole("button", { name: "fail" }));
+
+        expect(update).toHaveBeenCalledTimes(1);
+
+        await act(async () => { resolveUpdate(); });
+        await waitFor(() => expect(replace).toHaveBeenCalledTimes(1));
+        expect(update).toHaveBeenCalledTimes(1);
+    });
+
     test("a render that changes nothing keeps the same error handler", () => {
         const { rerender } = renderWith({ status: 500 });
 
