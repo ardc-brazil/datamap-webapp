@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { MaterialSymbol, SymbolCodepoints } from "react-material-symbols";
 import { ROUTE_PAGE_MEMBERS, ROUTE_PAGE_PROFILE, ROUTE_PAGE_TENANCY_SELECTOR } from "../../contants/InternalRoutesConstants";
 import useComponentVisible from "../../hooks/UseComponentVisible";
+import { useMyTenancies } from "../../hooks/UseTenancies";
 import { useMembersPageTenancy } from "../../hooks/UseWorkspace";
 import { RequestAccessDialog } from "../Tenancy/RequestAccessDialog";
 import { useTenancyStore } from "../TenancyStore";
@@ -19,7 +20,8 @@ export default function AvatarButton(props) {
   const { tenancy: membersTenancy } = useMembersPageTenancy();
   const { ref, isComponentVisible, setIsComponentVisible } = useComponentVisible(false);
   const [requesting, setRequesting] = useState(false);
-  const canSwitch = (session?.user?.tenancies?.length ?? 0) > 1;
+  const { data: tenancies } = useMyTenancies();
+  const canSwitch = (tenancies?.length ?? 0) > 1;
 
   function requestAccess() {
     setIsComponentVisible(false);
