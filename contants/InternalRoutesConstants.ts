@@ -37,6 +37,12 @@ export const ROUTE_PAGE_NOTEBOOKS_NEW = ROUTE_PAGE_NOTEBOOKS + "/new";
 export const ROUTE_PAGE_TENANCY_SELECTOR = ROUTE_APP_CONTEXT + "/tenancy";
 
 /**
+ * Route to the selected tenancy's Members page.
+ * @constant
+ */
+export const ROUTE_PAGE_MEMBERS = ROUTE_APP_CONTEXT + "/members";
+
+/**
  * Route to the datasets internal page.
  * @constant
  */

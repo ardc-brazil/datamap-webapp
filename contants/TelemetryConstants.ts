@@ -18,6 +18,7 @@ export const PAGES: readonly string[] = [
   "/app/datasets/shared",
   "/app/error",
   "/app/home",
+  "/app/members",
   "/app/notebooks",
   "/app/profile",
   "/app/tenancy",
