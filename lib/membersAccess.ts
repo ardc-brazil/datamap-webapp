@@ -20,6 +20,10 @@ export function canChangeMembersAccess(dataset: GetDatasetDetailsResponse): bool
     return dataset?.access?.level === "owner" && !isDefaultTenancy(dataset?.tenancy ?? "");
 }
 
+export function membersCanEditToSend(isPublicSelected: boolean, membersCanEdit: boolean): boolean {
+    return !isPublicSelected && membersCanEdit !== false;
+}
+
 export function membersAccessDetail(options: { membersCanEdit: boolean, embargoActive: boolean, members?: number | null, everyone?: boolean }): string {
     if (options.embargoActive) {
         return `No access during the embargo · afterwards: ${options.membersCanEdit ? "read and edit" : "read only"}`;

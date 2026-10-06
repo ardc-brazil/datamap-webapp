@@ -15,9 +15,11 @@ import { messageForApiError } from "../../../contants/EmbargoConstants";
 import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
 import { isDefaultTenancy } from "../../../contants/TenancyConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
+import { useResetMembersCanEditOnPublic } from "../../../hooks/UseResetMembersCanEditOnPublic";
 import { EmbargoStepError, embargoLockFor, finishDatasetCreation } from "../../../lib/datasetCreation";
 import { embargoRequestFrom, toEmbargoUntil, validateEmbargoDate } from "../../../lib/embargoDates";
 import { formatShortDate, tenancyDisplayName } from "../../../lib/embargoDisplay";
+import { membersCanEditToSend } from "../../../lib/membersAccess";
 import {
   CreateDatasetResponseV2,
   FileUploadAuthTokenRequest,
@@ -46,12 +48,7 @@ export default function NewPage() {
   const membersCanEditSent = useRef(false);
   const formikRef = useRef<FormikProps<FormValues>>(null);
 
-  // Keeps a stale true from an earlier tenancy from surviving a switch to Public.
-  useEffect(() => {
-    if (isPublicSelected) {
-      formikRef.current?.setFieldValue("membersCanEdit", false);
-    }
-  }, [isPublicSelected]);
+  useResetMembersCanEditOnPublic(isPublicSelected, formikRef);
 
   function datasetCreated(datasetResponse: any): void {
     setShowModal(true);
@@ -129,7 +126,7 @@ export default function NewPage() {
     finishDatasetCreation({
       setEmbargo: embargoRequest
         ? async () => {
-          const membersCanEdit = !isPublicSelected && values.membersCanEdit !== false;
+          const membersCanEdit = membersCanEditToSend(isPublicSelected, values.membersCanEdit);
           if (membersCanEdit !== membersCanEditSent.current) {
             await bffGateway.setMembersAccess(datasetId, { members_can_edit: membersCanEdit });
             membersCanEditSent.current = membersCanEdit;

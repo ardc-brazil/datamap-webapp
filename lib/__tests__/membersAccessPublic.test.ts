@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 import { DEFAULT_TENANCY } from "../../contants/TenancyConstants";
-import { canChangeMembersAccess, inPublic, membersAccessDetail, membersCanEditOf } from "../membersAccess";
+import { canChangeMembersAccess, inPublic, membersAccessDetail, membersCanEditOf, membersCanEditToSend } from "../membersAccess";
 
 describe("members of Public", () => {
     test("never edit a public dataset, whatever the column or the share state says", () => {
@@ -26,5 +26,12 @@ describe("members of Public", () => {
     test("the row reads Everyone on DataMap, and an embargo still says what comes after", () => {
         expect(membersAccessDetail({ membersCanEdit: false, embargoActive: false, members: 47, everyone: true })).toBe("Everyone on DataMap · can read");
         expect(membersAccessDetail({ membersCanEdit: false, embargoActive: true, everyone: true })).toBe("No access during the embargo · afterwards: read only");
+    });
+
+    test("the value sent in Public is never true", () => {
+        expect(membersCanEditToSend(true, true)).toBe(false);
+        expect(membersCanEditToSend(true, false)).toBe(false);
+        expect(membersCanEditToSend(false, true)).toBe(true);
+        expect(membersCanEditToSend(false, false)).toBe(false);
     });
 });
