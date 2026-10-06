@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */
 import { describe, expect, jest, test } from '@jest/globals';
 import { act, renderHook, waitFor } from '@testing-library/react';
+import { tenancyErrorMessage } from "../../contants/TenancyConstants";
 import { useRowActions } from "../UseRowActions";
 
 function deferred() {
@@ -61,7 +62,7 @@ describe("useRowActions", () => {
         expect(result.current.error("a")).toBe("Only the member who sent an invitation can withdraw it.");
         expect(result.current.error("b")).toBeUndefined();
         expect(result.current.busy("a")).toBe(false);
-        expect(revalidate).not.toHaveBeenCalled();
+        expect(revalidate).toHaveBeenCalledTimes(1);
     });
 
     test.each(["invitation_not_found", "request_not_found"])("%s revalidates the list", async (detail) => {
@@ -86,5 +87,39 @@ describe("useRowActions", () => {
         expect(result.current.error("a")).toBeUndefined();
         await act(async () => { action.resolve(); });
         await waitFor(() => expect(result.current.busy("a")).toBe(false));
+    });
+
+    test("a successful action revalidates the list once", async () => {
+        const revalidate = jest.fn(async () => undefined);
+        const { result } = renderHook(() => useRowActions(revalidate));
+
+        await act(async () => { await result.current.run("a", async () => undefined); });
+
+        expect(revalidate).toHaveBeenCalledTimes(1);
+    });
+
+    test("a revalidation that fails after a successful action shows no error and does not reject", async () => {
+        const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
+        const { result } = renderHook(() => useRowActions(jest.fn(async () => { throw new Error("offline"); })));
+
+        await act(async () => {
+            await expect(result.current.run("a", async () => undefined)).resolves.toBeUndefined();
+        });
+
+        expect(result.current.error("a")).toBeUndefined();
+        expect(result.current.busy("a")).toBe(false);
+        consoleError.mockRestore();
+    });
+
+    test("a revalidation that fails after a gone row keeps the gone message and does not reject", async () => {
+        const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
+        const { result } = renderHook(() => useRowActions(jest.fn(async () => { throw new Error("offline"); })));
+
+        await act(async () => {
+            await expect(result.current.run("a", async () => { throw failure(404, "invitation_not_found"); })).resolves.toBeUndefined();
+        });
+
+        expect(result.current.error("a")).toBe(tenancyErrorMessage("invitation_not_found"));
+        consoleError.mockRestore();
     });
 });

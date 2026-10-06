@@ -13,6 +13,14 @@ export function useRowActions(revalidate: () => Promise<unknown>) {
     const [busyIds, setBusyIds] = useState<Record<string, boolean>>({});
     const [errors, setErrors] = useState<Record<string, string>>({});
 
+    async function revalidateQuietly() {
+        try {
+            await revalidate();
+        } catch (e) {
+            console.error("Refreshing the list failed", e);
+        }
+    }
+
     async function run(id: string, action: () => Promise<void>): Promise<void> {
         if (runningRef.current.has(id)) {
             return;
@@ -22,11 +30,12 @@ export function useRowActions(revalidate: () => Promise<unknown>) {
         setErrors((previous) => withoutKey(previous, id));
         try {
             await action();
+            await revalidateQuietly();
         } catch (e: any) {
             const detail = e?.response?.data?.detail;
             setErrors((previous) => ({ ...previous, [id]: tenancyErrorMessage(detail) }));
             if (GONE_DETAILS.has(detail)) {
-                await revalidate();
+                await revalidateQuietly();
             }
         } finally {
             runningRef.current.delete(id);

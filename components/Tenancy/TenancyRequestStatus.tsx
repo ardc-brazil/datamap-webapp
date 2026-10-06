@@ -21,7 +21,6 @@ function useRequestActions() {
     function withdraw(requestId: string) {
         return actions.run(requestId, async () => {
             await bffGateway.withdrawTenancyRequest(requestId);
-            await mutate();
         });
     }
 

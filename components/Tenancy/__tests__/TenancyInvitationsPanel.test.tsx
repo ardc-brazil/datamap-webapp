@@ -62,28 +62,33 @@ describe("TenancyInvitationsPanel", () => {
         expect(acceptTenancyInvitation).toHaveBeenCalledWith("ti1");
         expect(setTenancySelected).toHaveBeenCalledWith(AMAZON.path);
         expect(calls).toEqual(["accept", "update", "select", "push"]);
-        expect(mutate).toHaveBeenCalled();
+        await waitFor(() => expect(mutate).toHaveBeenCalled());
     });
 
     test("an accepted invitation leaves the list even if the session refresh fails", async () => {
         update.mockReset().mockImplementation(async () => { calls.push("update"); throw new Error("session refresh failed"); });
+        const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
         render(<TenancyInvitationsPanel />);
 
         fireEvent.click(screen.getByRole("button", { name: "Accept" }));
 
         await waitFor(() => expect(push).toHaveBeenCalledWith("/app/home"));
         expect(setTenancySelected).toHaveBeenCalledWith(AMAZON.path);
-        expect(mutate).toHaveBeenCalled();
+        await waitFor(() => expect(mutate).toHaveBeenCalled());
         expect(screen.queryByRole("alert")).toBeNull();
+        consoleError.mockRestore();
     });
 
     test("an accepted invitation still opens the home if refreshing the list fails", async () => {
         mutate.mockReset().mockRejectedValue(new Error("revalidation failed"));
+        const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
         render(<TenancyInvitationsPanel />);
 
         fireEvent.click(screen.getByRole("button", { name: "Accept" }));
 
         await waitFor(() => expect(push).toHaveBeenCalledWith("/app/home"));
+        await waitFor(() => expect(mutate).toHaveBeenCalled());
+        consoleError.mockRestore();
         expect(setTenancySelected).toHaveBeenCalledWith(AMAZON.path);
         expect(acceptTenancyInvitation).toHaveBeenCalledTimes(1);
         expect(screen.queryByRole("alert")).toBeNull();
@@ -98,6 +103,20 @@ describe("TenancyInvitationsPanel", () => {
         await waitFor(() => expect(mutate).toHaveBeenCalled());
         expect(declineTenancyInvitation).toHaveBeenCalledWith("ti1");
         expect(update).not.toHaveBeenCalled();
+    });
+
+    test("a declined invitation whose list fails to refresh shows no error", async () => {
+        declineTenancyInvitation.mockResolvedValue(undefined);
+        mutate.mockReset().mockRejectedValue(new Error("revalidation failed"));
+        const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
+        render(<TenancyInvitationsPanel />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Decline" }));
+
+        await waitFor(() => expect(mutate).toHaveBeenCalled());
+        await waitFor(() => expect((screen.getByRole("button", { name: "Decline" }) as HTMLButtonElement).disabled).toBe(false));
+        expect(screen.queryByRole("alert")).toBeNull();
+        consoleError.mockRestore();
     });
 
     test("an invitation closed meanwhile says so and leaves the list", async () => {

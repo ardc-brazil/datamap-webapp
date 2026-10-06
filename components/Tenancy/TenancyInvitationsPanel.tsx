@@ -45,18 +45,12 @@ export function TenancyInvitationsPanel(props: { className?: string }) {
             console.error("Joined the tenancy, but refreshing the session failed", e);
         }
         setTenancySelected(tenancy.path);
-        try {
-            await mutate();
-        } catch (e) {
-            console.error("Joined the tenancy, but refreshing the invitations failed", e);
-        }
         Router.push(ROUTE_PAGE_HOME);
     }
 
     function decline(invitation: TenancyInvitation) {
         return cards.run(invitation.id, async () => {
             await bffGateway.declineTenancyInvitation(invitation.id);
-            await mutate();
         });
     }
 

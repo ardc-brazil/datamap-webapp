@@ -30,7 +30,6 @@ export function WorkspaceInvitations({ tenancy }: { tenancy: TenancySummary }) {
     function withdraw(invitation: WorkspaceInvitation) {
         return rows.run(invitation.id, async () => {
             await bffGateway.withdrawWorkspaceInvitation(tenancy.path, invitation.id);
-            await mutate();
         });
     }
 
