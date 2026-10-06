@@ -47,7 +47,7 @@ export function DeclineRequestDialog({ request, onCancel, onDeclined }: Props) {
             subtitle={declineSubtitle(request)}
             widthClassName="max-w-[440px]"
             onClose={onCancel}
-            primary={{ label: "Decline", destructive: true, disabled: formik.isSubmitting, onClick: () => { formik.submitForm(); } }}
+            primary={{ label: "Decline", destructive: true, disabled: formik.isSubmitting, onClick: () => { if (!formik.isSubmitting) formik.submitForm(); } }}
         >
             <form onSubmit={formik.handleSubmit} className="flex flex-col gap-4" noValidate>
                 <div>
@@ -62,8 +62,9 @@ export function DeclineRequestDialog({ request, onCancel, onDeclined }: Props) {
                         value={formik.values.message}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
+                        aria-describedby={formik.errors.message ? "decline-message-error" : undefined}
                     />
-                    {formik.errors.message && <p role="alert" className="m-0 mt-1.5 text-[13px] text-danger-700">{formik.errors.message}</p>}
+                    {formik.errors.message && <p id="decline-message-error" role="alert" className="m-0 mt-1.5 text-[13px] text-danger-700">{formik.errors.message}</p>}
                 </div>
                 <ul className="m-0 flex list-none flex-col gap-2.5 p-0 text-sm leading-[21px] text-primary-700">
                     <li className="flex gap-2.5"><span className="text-primary-400">—</span><span>{ADMIN_COPY.declineBullet}</span></li>

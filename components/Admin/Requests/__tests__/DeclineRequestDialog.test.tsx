@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 import { describe, expect, jest, test } from "@jest/globals";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 const mockDecline = jest.fn() as any;
 
@@ -73,8 +73,28 @@ describe("DeclineRequestDialog", () => {
         fireEvent.change(screen.getByLabelText(/Message to Fernanda/), { target: { value: "x".repeat(1001) } });
         fireEvent.click(screen.getByRole("button", { name: "Decline" }));
 
-        expect(await screen.findByText("Keep the message to 1000 characters.")).toBeTruthy();
+        const error = await screen.findByText("Keep the message to 1000 characters.");
+        expect(screen.getByLabelText(/Message to Fernanda/).getAttribute("aria-describedby")).toBe(error.id);
         expect(mockDecline).not.toHaveBeenCalled();
+    });
+
+    test("a double click declines once", async () => {
+        let resolveDecline: (value: unknown) => void;
+        mockDecline.mockImplementation(() => new Promise((resolve) => { resolveDecline = resolve; }));
+        const { onDeclined } = renderDialog();
+
+        await act(async () => {
+            fireEvent.click(screen.getByRole("button", { name: "Decline" }));
+        });
+        await act(async () => {
+            fireEvent.click(screen.getByRole("button", { name: "Decline" }));
+        });
+        await act(async () => {
+            resolveDecline({});
+        });
+
+        expect(mockDecline).toHaveBeenCalledTimes(1);
+        expect(onDeclined).toHaveBeenCalledTimes(1);
     });
 
     test("Cancel declines nothing", () => {
