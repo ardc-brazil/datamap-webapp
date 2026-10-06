@@ -1,7 +1,7 @@
-jest.mock("../../../../lib/share", () => ({ claimInvitations: jest.fn() }));
+jest.mock("../share", () => ({ claimInvitations: jest.fn() }));
 
 import { describe, expect, test } from '@jest/globals';
-import { hydrateWithUserInfo } from "../[...nextauth]";
+import { hydrateWithUserInfo } from "../../pages/api/auth/[...nextauth]";
 
 describe('Hydrate token with user info', () => {
     test('default', () => {
@@ -73,8 +73,8 @@ describe('Hydrate token with user info', () => {
     });
 })
 
-import { claimPendingInvitations } from "../[...nextauth]";
-import { claimInvitations } from "../../../../lib/share";
+import { claimPendingInvitations } from "../../pages/api/auth/[...nextauth]";
+import { claimInvitations } from "../share";
 
 describe('claiming pending invitations at sign-in', () => {
     test('claims for the user who signed in', async () => {
