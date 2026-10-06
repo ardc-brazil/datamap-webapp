@@ -24,7 +24,7 @@ export function RequestsTable(props: Props) {
                 <span role="columnheader">Email</span>
                 <span role="columnheader" className="sr-only">Actions</span>
             </div>
-            <ul className="m-0 list-none p-0">
+            <ul role="rowgroup" className="m-0 list-none p-0">
                 {props.requests.map((request) => (
                     <RequestRow key={request.id} request={request} {...props} />
                 ))}

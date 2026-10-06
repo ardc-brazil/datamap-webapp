@@ -83,4 +83,12 @@ describe("RequestsTable", () => {
         expect(screen.getAllByRole("columnheader").length).toBe(5);
         expect(screen.getAllByRole("cell").length).toBe(5);
     });
+
+    test("the request rows sit in a rowgroup, not a bare list", () => {
+        renderTable([adminRequest(), newTenancyRequest()]);
+
+        const group = screen.getByRole("rowgroup");
+        expect(group.querySelectorAll('[role="row"]').length).toBe(2);
+        expect(screen.queryByRole("list")).toBeNull();
+    });
 });
