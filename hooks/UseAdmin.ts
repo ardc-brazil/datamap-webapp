@@ -77,6 +77,7 @@ export function revalidateAdminRequests() {
     return mutate(isAdminRequestsKey);
 }
 
+// SWR's filter mutate skips useSWRInfinite keys, so a caller that changes members also calls the members panel's own mutate.
 export function revalidateAdminTenancies() {
     return mutate(isAdminTenanciesKey);
 }
