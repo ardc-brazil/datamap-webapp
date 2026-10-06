@@ -4,21 +4,13 @@ import { createRouter } from "next-connect";
 import { maskPathTokens } from "./externalCalls";
 import { logError } from "./logging";
 import { pendingOnlyChain, publicChain } from "./middlewareChain";
+import { uuidOr404 } from "./routeParams";
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export function isUuid(value: unknown): value is string {
-    return typeof value === "string" && UUID.test(value);
-}
+export { isUuid } from "./routeParams";
 
 /** Every public challenge route takes the same id from the same place; a non-UUID never reaches the gatekeeper. */
 export function challengeIdOr404(req: NextApiRequest, res: NextApiResponse): string | undefined {
-    const challengeId = req.query.challengeId as string;
-    if (isUuid(challengeId)) {
-        return challengeId;
-    }
-    res.status(404).json({ detail: "challenge_not_found" });
-    return undefined;
+    return uuidOr404(req, res, "challengeId", "challenge_not_found");
 }
 
 const JSON_CONTENT_TYPE = /^application\/json\b/i;

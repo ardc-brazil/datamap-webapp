@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { MAX_PAGE_SIZE, TENANCY_PATH_PATTERN } from "../contants/TenancyConstants";
-import { isUuid } from "./accountRoute";
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const WHOLE_NUMBER = /^\d+$/;
 
 function wholeNumber(value: string | string[] | undefined, fallback: number): number | null {
@@ -9,6 +9,10 @@ function wholeNumber(value: string | string[] | undefined, fallback: number): nu
         return fallback;
     }
     return typeof value === "string" && WHOLE_NUMBER.test(value) ? Number(value) : null;
+}
+
+export function isUuid(value: unknown): value is string {
+    return typeof value === "string" && UUID.test(value);
 }
 
 export function invalidRequest(res: NextApiResponse): undefined {
