@@ -5,6 +5,7 @@ import * as Yup from "yup";
 import { ADMIN_COPY, ADMIN_SEARCH_DEBOUNCE_MS, ADMIN_USER_SEARCH_MIN_LENGTH, adminErrorFrom } from "../../../contants/AdminConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { useAdminUserSearch } from "../../../hooks/UseAdmin";
+import { useSubmitOnce } from "../../../hooks/UseSubmitOnce";
 import { useDebouncedValue } from "../../../hooks/UseDebouncedValue";
 import { firstNameOf } from "../../../lib/tenancySelection";
 import { AdminTenancy, AdminUserHit } from "../../../types/GatekeeperAPI";
@@ -24,7 +25,7 @@ export function AddMemberDialog({ tenancy, onCancel, onAdded }: Props) {
     const [search, setSearch] = useState("");
     const [picked, setPicked] = useState<AdminUserHit | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [added, setAdded] = useState(false);
+    const { submit, busy, done } = useSubmitOnce();
     const q = useDebouncedValue(search.trim(), ADMIN_SEARCH_DEBOUNCE_MS);
     const { data: hits, error: searchError } = useAdminUserSearch(q);
     const formik = useFormik({
@@ -34,20 +35,15 @@ export function AddMemberDialog({ tenancy, onCancel, onAdded }: Props) {
         onSubmit: async ({ userId }) => {
             setError(null);
             try {
-                await new BFFAPI().addTenancyMember(tenancy.path, userId);
-                setAdded(true);
-                onAdded();
+                await submit(async () => {
+                    await new BFFAPI().addTenancyMember(tenancy.path, userId);
+                    onAdded();
+                });
             } catch (e) {
                 setError(adminErrorFrom(e));
             }
         },
     });
-
-    function submit() {
-        if (picked && !added && !formik.isSubmitting) {
-            formik.submitForm();
-        }
-    }
 
     function pick(hit: AdminUserHit | null) {
         setError(null);
@@ -60,7 +56,7 @@ export function AddMemberDialog({ tenancy, onCancel, onAdded }: Props) {
             title={`Add to ${tenancy.display_name}`}
             widthClassName="max-w-[440px]"
             onClose={onCancel}
-            primary={{ label: "Add", disabled: !picked || added || formik.isSubmitting, onClick: submit }}
+            primary={{ label: "Add", disabled: !picked || busy || done, onClick: () => { void formik.submitForm(); } }}
         >
             <form onSubmit={(event) => event.preventDefault()} className="flex flex-col gap-4" noValidate>
                 <div className="relative">

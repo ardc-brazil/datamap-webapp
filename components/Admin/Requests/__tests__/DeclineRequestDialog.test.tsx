@@ -97,6 +97,22 @@ describe("DeclineRequestDialog", () => {
         expect(onDeclined).toHaveBeenCalledTimes(1);
     });
 
+    test("a click after the decline went through declines nothing more", async () => {
+        mockDecline.mockReset().mockResolvedValue({});
+        const { onDeclined } = renderDialog();
+        const decline = screen.getByRole("button", { name: "Decline" }) as HTMLButtonElement;
+
+        fireEvent.click(decline);
+        await waitFor(() => expect(onDeclined).toHaveBeenCalledTimes(1));
+        await act(async () => {
+            fireEvent.click(decline);
+        });
+
+        expect(decline.disabled).toBe(true);
+        expect(mockDecline).toHaveBeenCalledTimes(1);
+        expect(onDeclined).toHaveBeenCalledTimes(1);
+    });
+
     test("Cancel declines nothing", () => {
         const { onCancel } = renderDialog();
 

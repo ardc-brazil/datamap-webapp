@@ -6,6 +6,7 @@ import { ADMIN_COPY, adminErrorMessage, slugifyNamespace } from "../../../contan
 import { DISPLAY_NAME_MAX_LENGTH, PRODUCTION_PREFIX } from "../../../contants/TenancyConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { useAdminRequest, useAdminTenancies } from "../../../hooks/UseAdmin";
+import { useSubmitOnce } from "../../../hooks/UseSubmitOnce";
 import { plural, requestedAgo } from "../../../lib/adminDisplay";
 import { formatShortDate } from "../../../lib/embargoDisplay";
 import { errorDetail } from "../../../lib/gatekeeperDetail";
@@ -85,7 +86,7 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
     const suggested = options.find((tenancy) => tenancy.path === detail.suggested_tenancy?.path);
     const [failure, setFailure] = useState<NewTenancyFailure | null>(null);
     const [accountGone, setAccountGone] = useState(false);
-    const [approved, setApproved] = useState(false);
+    const { submit, busy, done } = useSubmitOnce();
     const formik = useFormik({
         initialValues: {
             mode: (detail.kind === "join" ? "join" : "new") as Mode,
@@ -100,9 +101,10 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
                 ? { tenancy: values.tenancy }
                 : { newTenancy: { displayName: values.displayName.trim(), namespace: values.namespace.trim() } };
             try {
-                await new BFFAPI().approveTenancyRequest(detail.id, decision);
-                setApproved(true);
-                onApproved();
+                await submit(async () => {
+                    await new BFFAPI().approveTenancyRequest(detail.id, decision);
+                    onApproved();
+                });
             } catch (e) {
                 const gone = errorDetail(e) === "no_account";
                 setAccountGone(gone);
@@ -115,7 +117,7 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
     const joining = values.mode === "join";
     const selected = options.find((tenancy) => tenancy.path === values.tenancy);
     const unverified = !detail.requester.email_verified;
-    const blocked = approved || accountGone || (joining ? options.length === 0 : unverified);
+    const blocked = done || accountGone || (joining ? options.length === 0 : unverified);
     const tenancyError = (formik.touched.tenancy || formik.submitCount > 0) && formik.errors.tenancy;
     const generalError = failure && (!failure.field || joining) ? failure.message : null;
     const title = joining
@@ -130,7 +132,7 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
             widthClassName={WIDTH}
             onClose={onClose}
             secondaryLink={{ label: "Decline…", onClick: () => onDecline(detail) }}
-            primary={{ label: joining ? "Approve" : "Create and approve", disabled: blocked || formik.isSubmitting, onClick: () => { formik.submitForm(); } }}
+            primary={{ label: joining ? "Approve" : "Create and approve", disabled: blocked || busy, onClick: () => { void formik.submitForm(); } }}
         >
             <form onSubmit={formik.handleSubmit} className="flex flex-col gap-4" noValidate>
                 <div role="group" aria-label="Decision" className="inline-flex self-start rounded-md border border-primary-300 p-0.5">

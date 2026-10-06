@@ -4,6 +4,7 @@ import * as Yup from "yup";
 import { ADMIN_COPY, adminErrorFrom, adminErrorMessage } from "../../../contants/AdminConstants";
 import { MESSAGE_MAX_LENGTH } from "../../../contants/TenancyConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
+import { useSubmitOnce } from "../../../hooks/UseSubmitOnce";
 import { firstNameOf } from "../../../lib/tenancySelection";
 import { AdminTenancyRequest } from "../../../types/GatekeeperAPI";
 import { AdminDialog } from "../AdminDialog";
@@ -26,6 +27,7 @@ export function declineSubtitle(request: AdminTenancyRequest): string {
 
 export function DeclineRequestDialog({ request, onCancel, onDeclined }: Props) {
     const [error, setError] = useState<string | null>(null);
+    const { submit, busy, done } = useSubmitOnce();
     const formik = useFormik({
         initialValues: { message: "" },
         validationSchema: schema,
@@ -33,8 +35,10 @@ export function DeclineRequestDialog({ request, onCancel, onDeclined }: Props) {
             setError(null);
             const message = values.message.trim();
             try {
-                await new BFFAPI().declineTenancyRequest(request.id, message || undefined);
-                onDeclined();
+                await submit(async () => {
+                    await new BFFAPI().declineTenancyRequest(request.id, message || undefined);
+                    onDeclined();
+                });
             } catch (e) {
                 setError(adminErrorFrom(e));
             }
@@ -47,7 +51,7 @@ export function DeclineRequestDialog({ request, onCancel, onDeclined }: Props) {
             subtitle={declineSubtitle(request)}
             widthClassName="max-w-[440px]"
             onClose={onCancel}
-            primary={{ label: "Decline", destructive: true, disabled: formik.isSubmitting, onClick: () => { if (!formik.isSubmitting) formik.submitForm(); } }}
+            primary={{ label: "Decline", destructive: true, disabled: busy || done, onClick: () => { void formik.submitForm(); } }}
         >
             <form onSubmit={formik.handleSubmit} className="flex flex-col gap-4" noValidate>
                 <div>

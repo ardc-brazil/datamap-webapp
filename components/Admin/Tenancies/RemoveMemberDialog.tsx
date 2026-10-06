@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ADMIN_COPY, adminErrorFrom } from "../../../contants/AdminConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { useRemovalImpact } from "../../../hooks/UseAdmin";
+import { useSubmitOnce } from "../../../hooks/UseSubmitOnce";
 import { plural } from "../../../lib/adminDisplay";
 import { formatShortDate } from "../../../lib/embargoDisplay";
 import { AdminTenancy, RemovalImpact, TenancyMember } from "../../../types/GatekeeperAPI";
@@ -27,21 +28,17 @@ export function removalBullets(impact: RemovalImpact): string[] {
 export function RemoveMemberDialog({ tenancy, member, onCancel, onRemoved }: Props) {
     const { data: impact, error: impactError } = useRemovalImpact(tenancy.path, member.id);
     const [error, setError] = useState<string | null>(null);
-    const [state, setState] = useState<"idle" | "busy" | "removed">("idle");
+    const { submit, busy, done } = useSubmitOnce();
 
     async function remove() {
-        if (state !== "idle") {
-            return;
-        }
-        setState("busy");
         setError(null);
         try {
-            await new BFFAPI().removeTenancyMember(tenancy.path, member.id);
-            setState("removed");
-            onRemoved();
+            await submit(async () => {
+                await new BFFAPI().removeTenancyMember(tenancy.path, member.id);
+                onRemoved();
+            });
         } catch (e) {
             setError(adminErrorFrom(e));
-            setState("idle");
         }
     }
 
@@ -51,7 +48,7 @@ export function RemoveMemberDialog({ tenancy, member, onCancel, onRemoved }: Pro
             subtitle={`${member.name} · member since ${formatShortDate(impact?.member_since ?? member.since)}`}
             widthClassName="max-w-[440px]"
             onClose={onCancel}
-            primary={{ label: "Remove", destructive: true, disabled: state !== "idle" || (!impact && !impactError), onClick: () => { void remove(); } }}
+            primary={{ label: "Remove", destructive: true, disabled: busy || done || (!impact && !impactError), onClick: () => { void remove(); } }}
         >
             {impactError ? (
                 <p className="m-0 text-[13px] text-primary-500">{ADMIN_COPY.impactLoadError}</p>
