@@ -94,9 +94,9 @@ export function adminErrorFrom(error: unknown): string {
 export function slugifyNamespace(name: string): string {
     return name
         .normalize("NFD")
-        .replace(/[̀-ͯ]/g, "")
+        .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .slice(0, NAMESPACE_MAX_LENGTH);
+        .slice(0, NAMESPACE_MAX_LENGTH)
+        .replace(/^-+|-+$/g, "");
 }

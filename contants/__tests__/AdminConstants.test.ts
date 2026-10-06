@@ -39,6 +39,7 @@ describe("slugifyNamespace", () => {
         expect(slugifyNamespace("João Ciência")).toBe("joao-ciencia");
         expect(slugifyNamespace("---")).toBe("");
         expect(slugifyNamespace("a".repeat(100))).toHaveLength(63);
+        expect(slugifyNamespace("a".repeat(62) + " bcd")).toBe("a".repeat(62));
     });
 });
 
