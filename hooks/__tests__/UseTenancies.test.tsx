@@ -53,4 +53,16 @@ describe("useLatestTenancyRequest", () => {
         expect(result.current.state?.kind).toBe("pending");
         expect(update).not.toHaveBeenCalled();
     });
+
+    test("a session that changes after the refresh does not trigger a second update()", () => {
+        requests = [approved()];
+
+        const { rerender } = renderHook(() => useLatestTenancyRequest());
+        expect(update).toHaveBeenCalledTimes(1);
+
+        sessionTenancies = [...sessionTenancies];
+        rerender();
+
+        expect(update).toHaveBeenCalledTimes(1);
+    });
 });

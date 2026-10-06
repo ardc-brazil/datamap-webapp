@@ -28,6 +28,12 @@ describe("the request outcome to show", () => {
         expect(latestRequestState([declined], NOW)).toEqual({ kind: "declined", request: declined });
     });
 
+    test("a decline decided exactly 30 days ago is still shown", () => {
+        const declined = request({ status: "declined", decided_at: "2026-09-05T12:00:00+00:00" });
+
+        expect(latestRequestState([declined], NOW)).toEqual({ kind: "declined", request: declined });
+    });
+
     test("an older decline is not", () => {
         expect(latestRequestState([request({ status: "declined", decided_at: "2026-08-20T12:00:00+00:00" })], NOW)).toBeNull();
     });

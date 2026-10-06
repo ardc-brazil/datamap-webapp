@@ -40,6 +40,10 @@ describe("which tenancy to work in", () => {
         expect(firstNameOf(null)).toBe("");
     });
 
+    test("a name of only whitespace also gives an empty first name", () => {
+        expect(firstNameOf("   ")).toBe("");
+    });
+
     test("a path reads with spaced separators", () => {
         expect(tenancyPathLabel("datamap/production/public")).toBe("datamap / production / public");
     });
