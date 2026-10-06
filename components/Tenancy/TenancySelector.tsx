@@ -3,8 +3,8 @@ import Router from "next/router";
 import { useEffect, useState } from "react";
 import { MaterialSymbol } from "react-material-symbols";
 import { ROUTE_PAGE_HOME } from "../../contants/InternalRoutesConstants";
+import { useSwitchTenancy } from "../../hooks/UseSwitchTenancy";
 import { useMyTenancies } from "../../hooks/UseTenancies";
-import { trackUiEvent } from "../../lib/telemetryClient";
 import { firstNameOf, sessionTenanciesDiffer, tenancyPathLabel, tenancySelectionFor } from "../../lib/tenancySelection";
 import { useTenancyStore } from "../TenancyStore";
 import { AccessPending } from "./AccessPending";
@@ -19,6 +19,7 @@ export function TenancySelector() {
     const setTenancySelected = useTenancyStore((state) => state.setTenancySelected);
     const { data: tenancies, error, isValidating } = useMyTenancies();
     const [requesting, setRequesting] = useState(false);
+    const choose = useSwitchTenancy();
     const selection = tenancies ? tenancySelectionFor(tenancies) : null;
 
     useEffect(() => {
@@ -37,12 +38,6 @@ export function TenancySelector() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tenancies, isValidating]);
-
-    function choose(path: string) {
-        trackUiEvent("tenancy_switched");
-        setTenancySelected(path);
-        Router.push(ROUTE_PAGE_HOME);
-    }
 
     const welcome = <h2 className="m-0">Welcome, {firstNameOf(session?.user?.name)}</h2>;
 

@@ -1,12 +1,10 @@
-import Router from "next/router";
 import { useState } from "react";
-import { ROUTE_PAGE_HOME } from "../../contants/InternalRoutesConstants";
 import { SHARE_DANGER_ACTION_CLASS } from "../../contants/ShareConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { useRowActions } from "../../hooks/UseRowActions";
+import { useSwitchTenancy } from "../../hooks/UseSwitchTenancy";
 import { useLatestTenancyRequest } from "../../hooks/UseTenancies";
 import { formatShortDate } from "../../lib/embargoDisplay";
-import { trackUiEvent } from "../../lib/telemetryClient";
 import { LatestRequestState } from "../../lib/tenancyRequests";
 import { useTenancyStore } from "../TenancyStore";
 import { TenancyIcon } from "./TenancyIcon";
@@ -14,7 +12,7 @@ import { TenancyIcon } from "./TenancyIcon";
 function useRequestActions() {
     const { state, mutate } = useLatestTenancyRequest();
     const tenancySelected = useTenancyStore((store) => store.tenancySelected);
-    const setTenancySelected = useTenancyStore((store) => store.setTenancySelected);
+    const switchTo = useSwitchTenancy();
     const [bffGateway] = useState(() => new BFFAPI());
     const actions = useRowActions(mutate);
 
@@ -22,12 +20,6 @@ function useRequestActions() {
         return actions.run(requestId, async () => {
             await bffGateway.withdrawTenancyRequest(requestId);
         });
-    }
-
-    function switchTo(path: string) {
-        trackUiEvent("tenancy_switched");
-        setTenancySelected(path);
-        Router.push(ROUTE_PAGE_HOME);
     }
 
     const visible: LatestRequestState = state?.kind === "approved" && state.request.tenancy?.path === tenancySelected ? null : state;
