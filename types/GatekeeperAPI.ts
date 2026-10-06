@@ -470,3 +470,97 @@ export interface InviteeLookup {
     can_invite: boolean
     datasets: number
 }
+
+/** @interface */
+export interface TenancyRequestCounts {
+    open: number
+    join: number
+    new: number
+    closed: number
+}
+
+export type TenancyRequestKind = "join" | "new";
+
+/** @interface */
+export interface AdminRequester {
+    id: string
+    name: string
+    email: string | null
+    email_verified: boolean
+    orcid: string | null
+}
+
+/** @interface */
+export interface AdminTenancyRequest {
+    id: string
+    requester: AdminRequester
+    requested_name: string
+    reason: string
+    status: "pending" | "approved" | "declined"
+    kind: TenancyRequestKind
+    suggested_tenancy: TenancySummary | null
+    created_at: string
+    tenancy: TenancySummary | null
+    created_tenancy: boolean
+    decision_message: string | null
+    decided_by: UserRef | null
+    decided_at: string | null
+}
+
+/** @interface */
+export interface AdminTenancyRequestDetail extends AdminTenancyRequest {
+    requester_tenancies: TenancySummary[]
+    suggested_tenancy_members: number | null
+}
+
+/** @interface */
+export interface AdminTenancy {
+    path: string
+    display_name: string
+    members: number
+    datasets: number
+    is_default: boolean
+    is_legacy: boolean
+    is_enabled: boolean
+}
+
+/** @interface */
+export interface TenancyMember {
+    id: string
+    name: string
+    email: string | null
+    since: string
+    invited_by: UserRef | null
+}
+
+/** @interface */
+export interface AdminTenancyInvitation {
+    id: string
+    user: UserBrief
+    invited_by: UserRef | null
+    created_at: string
+}
+
+/** @interface */
+export interface TenancyMembers {
+    members: GatekeeperPage<TenancyMember>
+    invitations: AdminTenancyInvitation[]
+}
+
+/** @interface */
+export interface RemovalImpact {
+    member_since: string
+    datasets_in_tenancy: number
+    shared_with_user: number
+    owned_by_user: number
+}
+
+/** @interface */
+export interface AdminUserHit {
+    id: string
+    name: string
+    email: string | null
+}
+
+/** What the admin decided, as the browser sends it; `lib/admin.ts` renames it for the gatekeeper. */
+export type TenancyDecision = { tenancy: string } | { newTenancy: { displayName: string, namespace: string } };
