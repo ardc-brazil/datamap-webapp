@@ -17,6 +17,7 @@ export function challengeIdOr404(req: NextApiRequest, res: NextApiResponse): str
 
 const JSON_CONTENT_TYPE = /^application\/json\b/i;
 const METHODS_WITH_A_BODY = new Set(["POST", "PUT", "PATCH"]);
+const CHANGES = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 // A browser form can only send application/x-www-form-urlencoded, multipart/form-data or text/plain, so requiring JSON keeps a cross-site form out.
 async function requireJsonContentType(req: NextApiRequest, res: NextApiResponse, next: () => Promise<unknown>) {
@@ -35,6 +36,14 @@ export async function requireJsonRequest(req: NextApiRequest, res: NextApiRespon
     const value = Array.isArray(contentType) ? contentType[0] : contentType;
     if (typeof value !== "string" || !JSON_CONTENT_TYPE.test(value)) {
         res.status(415).json({ detail: "invalid_request" });
+        return;
+    }
+    await next();
+}
+
+export async function requireJsonOnChanges(req: NextApiRequest, res: NextApiResponse, next: () => Promise<unknown>) {
+    if (CHANGES.has((req.method ?? "").toUpperCase())) {
+        await requireJsonRequest(req, res, next);
         return;
     }
     await next();

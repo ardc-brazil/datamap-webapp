@@ -3,22 +3,12 @@ import { createRouter } from "next-connect";
 import { ResponseError } from "../types/ResponseError";
 import { maskPathTokens } from "./externalCalls";
 import { logError } from "./logging";
-import { requireJsonRequest } from "./accountRoute";
+import { requireJsonOnChanges } from "./accountRoute";
 import { adminChain, authOnlyChain } from "./middlewareChain";
 import { httpErrorHandler } from "./rpc";
 
 export function bffRouter() {
     return createRouter<NextApiRequest, NextApiResponse>().use(authOnlyChain);
-}
-
-const CHANGES = new Set(["POST", "PUT", "PATCH", "DELETE"]);
-
-async function requireJsonOnChanges(req: NextApiRequest, res: NextApiResponse, next: () => Promise<unknown>) {
-    if (CHANGES.has((req.method ?? "").toUpperCase())) {
-        await requireJsonRequest(req, res, next);
-        return;
-    }
-    await next();
 }
 
 /** Admin routes answer through `accountHandler`, which keeps the gatekeeper's `detail` on every status. */
