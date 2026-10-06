@@ -5,6 +5,8 @@ import { UserDetailsResponse } from "../lib/users";
 import { CreateDatasetRequestV2, CreateDatasetResponseV2, CreateDOIRequest, CreateDOIResponse, CreateDraftDatasetVersionRequest, CreateDraftDatasetVersionResponse, DeleteDOIRequest, FileDownloadLinkRequest, FileDownloadLinkResponse, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, NavigateDOIStatusRequest, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
 import {
     AcceptInvitationResponse,
+    AdminTenancy,
+    AdminTenancyRequest,
     CreatedAnonymousLink,
     DatasetEmbargo,
     EmbargoModeRequest,
@@ -19,6 +21,8 @@ import {
     SharePermission,
     ShareUser,
     InviteeLookup,
+    TenancyDecision,
+    TenancyMember,
     TenancyRequest,
     TenancySummary,
     WorkspaceInvitation,
@@ -410,5 +414,33 @@ export class BFFAPI {
 
     async withdrawWorkspaceInvitation(tenancy: string, invitationId: string): Promise<void> {
         await axios.delete(`/api/workspace/invitations/${encodeURIComponent(invitationId)}?tenancy=${encodeURIComponent(tenancy)}`);
+    }
+
+    async approveTenancyRequest(requestId: string, decision: TenancyDecision): Promise<AdminTenancyRequest> {
+        const response = await axios.post(`/api/admin/tenancy-requests/${encodeURIComponent(requestId)}/approve`, decision);
+        return response.data as AdminTenancyRequest;
+    }
+
+    async declineTenancyRequest(requestId: string, message?: string): Promise<AdminTenancyRequest> {
+        const response = await axios.post(`/api/admin/tenancy-requests/${encodeURIComponent(requestId)}/decline`, { message: message ?? null });
+        return response.data as AdminTenancyRequest;
+    }
+
+    async createTenancy(input: { displayName: string; namespace: string }): Promise<AdminTenancy> {
+        const response = await axios.post("/api/admin/tenancies", input);
+        return response.data as AdminTenancy;
+    }
+
+    async addTenancyMember(tenancy: string, userId: string): Promise<TenancyMember> {
+        const response = await axios.post(`/api/admin/tenancies/members?tenancy=${encodeURIComponent(tenancy)}`, { userId });
+        return response.data as TenancyMember;
+    }
+
+    async removeTenancyMember(tenancy: string, userId: string): Promise<void> {
+        await axios.delete(`/api/admin/tenancies/members/${encodeURIComponent(userId)}?tenancy=${encodeURIComponent(tenancy)}`, { data: {} });
+    }
+
+    async withdrawTenancyInvitationAsAdmin(invitationId: string): Promise<void> {
+        await axios.delete(`/api/admin/tenancy-invitations/${encodeURIComponent(invitationId)}`, { data: {} });
     }
 }
