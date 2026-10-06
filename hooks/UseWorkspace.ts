@@ -3,6 +3,7 @@ import useSWRInfinite from "swr/infinite";
 import { useTenancyStore } from "../components/TenancyStore";
 import { WORKSPACE_PAGE_SIZE, workspaceInvitationsKey, workspaceMembersKey } from "../contants/TenancyConstants";
 import { fetcher } from "../lib/fetcher";
+import { isLastPage } from "../lib/paging";
 import { membersPageTenancy } from "../lib/tenancySelection";
 import { GatekeeperPage, TenancySummary, WorkspaceInvitation, WorkspaceMember } from "../types/GatekeeperAPI";
 import { useMyTenancies } from "./UseTenancies";
@@ -19,7 +20,7 @@ export function useWorkspaceMembers(tenancy: string | null) {
             if (!tenancy) {
                 return null;
             }
-            if (previous && previous.offset + previous.items.length >= previous.total_count) {
+            if (previous && isLastPage(previous)) {
                 return null;
             }
             return workspaceMembersKey(tenancy, index * WORKSPACE_PAGE_SIZE);

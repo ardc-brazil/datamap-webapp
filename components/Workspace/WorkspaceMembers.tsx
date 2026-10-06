@@ -3,6 +3,7 @@ import { mutate } from "swr";
 import { SHARE_PERSON_DETAIL_CLASS, SHARE_PERSON_NAME_CLASS, SHARE_ROW_CLASS, SHARE_SECTION_LABEL_CLASS } from "../../contants/ShareConstants";
 import { WORKSPACE_PAGE_SIZE, tenancyErrorMessage, workspaceInvitationsKey } from "../../contants/TenancyConstants";
 import { useMembersPageTenancy, useWorkspaceMembers } from "../../hooks/UseWorkspace";
+import { nextPageCount } from "../../lib/paging";
 import { GatekeeperPage, TenancySummary, WorkspaceMember } from "../../types/GatekeeperAPI";
 import { PersonInitial } from "../Share/PersonInitial";
 import { InviteMemberDialog } from "./InviteMemberDialog";
@@ -40,7 +41,7 @@ function MembersOf({ tenancy }: { tenancy: TenancySummary }) {
     const pages: GatekeeperPage<WorkspaceMember>[] = data ?? [];
     const members = pages.flatMap((page) => page.items);
     const total = pages[0]?.total_count ?? 0;
-    const remaining = Math.min(WORKSPACE_PAGE_SIZE, total - members.length);
+    const remaining = nextPageCount(total, members.length, WORKSPACE_PAGE_SIZE);
 
     return (
         <div className="w-full max-w-5xl mx-auto">
