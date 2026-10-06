@@ -56,6 +56,7 @@ export function AddMemberDialog({ tenancy, onCancel, onAdded }: Props) {
             title={`Add to ${tenancy.display_name}`}
             widthClassName="max-w-[440px]"
             onClose={onCancel}
+            cancelDisabled={busy}
             primary={{ label: "Add", disabled: !picked || busy || done, onClick: () => { void formik.submitForm(); } }}
         >
             <form onSubmit={(event) => event.preventDefault()} className="flex flex-col gap-4" noValidate>
@@ -67,8 +68,11 @@ export function AddMemberDialog({ tenancy, onCancel, onAdded }: Props) {
                         placeholder={ADMIN_COPY.searchPlaceholder}
                         value={search}
                         onChange={(event) => {
-                            setSearch(event.target.value);
-                            pick(null);
+                            const next = event.target.value;
+                            if (next.trim() !== search.trim()) {
+                                pick(null);
+                            }
+                            setSearch(next);
                         }}
                         className="h-9 py-0 pl-9"
                     />
@@ -107,7 +111,7 @@ export function AddMemberDialog({ tenancy, onCancel, onAdded }: Props) {
                         })}
                     </fieldset>
                 )}
-                {picked && (
+                {picked?.email && (
                     <p className="m-0 flex items-center gap-2 rounded-md bg-primary-100 px-3 py-2.5 text-[13px] text-primary-700">
                         <MaterialSymbol icon="mail" size={18} weight={400} grade={-25} />
                         <span>{`${firstNameOf(picked.name)} is emailed.`}</span>

@@ -131,6 +131,7 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
             subtitle={subtitle}
             widthClassName={WIDTH}
             onClose={onClose}
+            cancelDisabled={busy}
             secondaryLink={{ label: "Decline…", onClick: () => onDecline(detail) }}
             primary={{ label: joining ? "Approve" : "Create and approve", disabled: blocked || busy, onClick: () => { void formik.submitForm(); } }}
         >

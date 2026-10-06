@@ -97,7 +97,7 @@ describe("ReviewRequestDialog", () => {
         expect(mockApprove).toHaveBeenCalledWith(REQUEST_ID, { tenancy: ATTO.path });
     });
 
-    test("a double click approves only once, during the call and after it", async () => {
+    test("a double click approves only once, during the call and after it, and the dialog cannot be closed meanwhile", async () => {
         let resolve: (value: unknown) => void = () => undefined;
         mockApprove.mockImplementation(() => new Promise((r) => { resolve = r; }));
         const { onApproved } = renderDialog();
@@ -106,6 +106,8 @@ describe("ReviewRequestDialog", () => {
         fireEvent.click(approve);
         fireEvent.click(approve);
         await waitFor(() => expect(mockApprove).toHaveBeenCalled());
+        expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(true);
+        expect((screen.getByRole("button", { name: "Close dialog" }) as HTMLButtonElement).disabled).toBe(true);
         await act(async () => { resolve({}); });
         await waitFor(() => expect(onApproved).toHaveBeenCalledTimes(1));
         fireEvent.click(approve);

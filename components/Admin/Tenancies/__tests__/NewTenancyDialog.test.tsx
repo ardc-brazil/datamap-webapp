@@ -139,7 +139,7 @@ describe("NewTenancyDialog", () => {
         expect(onCreated).not.toHaveBeenCalled();
     });
 
-    test("a double click creates only once, during the call and after it", async () => {
+    test("a double click creates only once, during the call and after it, and the dialog cannot be closed meanwhile", async () => {
         let resolve: (value: unknown) => void = () => undefined;
         mockCreate.mockImplementation(() => new Promise((r) => { resolve = r; }));
         const { onCreated } = renderDialog();
@@ -150,6 +150,8 @@ describe("NewTenancyDialog", () => {
         fireEvent.click(create);
         fireEvent.click(create);
         await waitFor(() => expect(mockCreate).toHaveBeenCalled());
+        expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(true);
+        expect((screen.getByRole("button", { name: "Close dialog" }) as HTMLButtonElement).disabled).toBe(true);
         await act(async () => { resolve({ path: "datamap/production/atto" }); });
         await waitFor(() => expect(onCreated).toHaveBeenCalledTimes(1));
         fireEvent.click(create);

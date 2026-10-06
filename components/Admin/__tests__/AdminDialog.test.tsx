@@ -25,6 +25,18 @@ describe("AdminDialog", () => {
         expect(onClose).toHaveBeenCalledTimes(2);
     });
 
+    test("Cancel and the ✕ can be disabled", () => {
+        const onClose = jest.fn();
+        render(<AdminDialog title="Join ATTO" widthClassName="max-w-[560px]" onClose={onClose} cancelDisabled primary={{ label: "Approve", onClick: jest.fn() }} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+        fireEvent.click(screen.getByRole("button", { name: "Close dialog" }));
+
+        expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(true);
+        expect((screen.getByRole("button", { name: "Close dialog" }) as HTMLButtonElement).disabled).toBe(true);
+        expect(onClose).not.toHaveBeenCalled();
+    });
+
     test("a disabled primary action cannot be pressed and looks grey", () => {
         const onCreate = jest.fn();
         render(<AdminDialog title="New tenancy: Cerrado Flux" widthClassName="max-w-[560px]" onClose={jest.fn()} primary={{ label: "Create and approve", onClick: onCreate, disabled: true }} />);

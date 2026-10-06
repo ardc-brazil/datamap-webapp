@@ -17,6 +17,7 @@ interface Props {
     primary?: AdminDialogAction
     secondaryLink?: { label: string; onClick(): void }
     closeLabel?: string
+    cancelDisabled?: boolean
 }
 
 export function AdminDialog(props: Props) {
@@ -31,6 +32,7 @@ export function AdminDialog(props: Props) {
             closeAriaLabel="Close dialog"
             cancel={props.onClose}
             cancelButtonText={props.closeLabel ?? (primary ? "Cancel" : "Close")}
+            cancelDisabled={props.cancelDisabled}
             footerLink={props.secondaryLink}
             confim={primary?.onClick}
             confimButtonText={primary?.label}

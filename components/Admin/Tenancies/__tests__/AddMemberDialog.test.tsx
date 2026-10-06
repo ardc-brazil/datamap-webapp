@@ -96,6 +96,28 @@ describe("AddMemberDialog", () => {
         expect((screen.getByRole("button", { name: "Add" }) as HTMLButtonElement).disabled).toBe(true);
     });
 
+    test("spaces around the search keep the pick", () => {
+        mockHits = { data: [FERNANDA] };
+        renderDialog();
+
+        pickFernanda();
+        search("fer ");
+
+        expect((screen.getByRole("radio", { name: /Fernanda Lima/ }) as HTMLInputElement).checked).toBe(true);
+        expect((screen.getByRole("button", { name: "Add" }) as HTMLButtonElement).disabled).toBe(false);
+    });
+
+    test("nobody is said to be emailed when the account has no email", () => {
+        mockHits = { data: [FELIPE] };
+        renderDialog();
+
+        search("fel");
+        fireEvent.click(screen.getByRole("radio", { name: /Felipe Nogueira/ }));
+
+        expect(screen.queryByText(/is emailed/)).toBeNull();
+        expect((screen.getByRole("button", { name: "Add" }) as HTMLButtonElement).disabled).toBe(false);
+    });
+
     test("says when nobody matches", () => {
         mockHits = { data: [] };
         renderDialog();
@@ -142,7 +164,7 @@ describe("AddMemberDialog", () => {
         expect(await screen.findByText("Everyone is in Public; its members can't be changed.")).toBeTruthy();
     });
 
-    test("a double click adds only once, during the call and after it", async () => {
+    test("a double click adds only once, during the call and after it, and the dialog cannot be closed meanwhile", async () => {
         mockHits = { data: [FERNANDA] };
         let resolve: (value: unknown) => void = () => undefined;
         mockAdd.mockImplementation(() => new Promise((r) => { resolve = r; }));
@@ -153,6 +175,8 @@ describe("AddMemberDialog", () => {
         fireEvent.click(add);
         fireEvent.click(add);
         await waitFor(() => expect(mockAdd).toHaveBeenCalled());
+        expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(true);
+        expect((screen.getByRole("button", { name: "Close dialog" }) as HTMLButtonElement).disabled).toBe(true);
         await act(async () => { resolve({ id: FERNANDA.id }); });
         await waitFor(() => expect(onAdded).toHaveBeenCalledTimes(1));
         fireEvent.click(add);

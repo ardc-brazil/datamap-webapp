@@ -37,9 +37,10 @@ export function NewTenancyDialog({ onCancel, onCreated }: Props) {
             title="New tenancy"
             widthClassName="max-w-[440px]"
             onClose={onCancel}
+            cancelDisabled={busy}
             primary={{ label: "Create", disabled: busy || done, onClick: () => { void formik.submitForm(); } }}
         >
-            <form onSubmit={(event) => { event.preventDefault(); void formik.submitForm(); }} className="flex flex-col gap-4" noValidate>
+            <form onSubmit={(event) => event.preventDefault()} className="flex flex-col gap-4" noValidate>
                 <NewTenancyFields formik={formik} idPrefix="new-tenancy" failure={failure} onEdit={() => setFailure(null)} className="flex flex-col gap-4" />
                 {failure && !failure.field && <p role="alert" className="m-0 text-sm text-danger-700">{failure.message}</p>}
             </form>

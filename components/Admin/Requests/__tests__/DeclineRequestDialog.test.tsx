@@ -78,7 +78,7 @@ describe("DeclineRequestDialog", () => {
         expect(mockDecline).not.toHaveBeenCalled();
     });
 
-    test("a double click declines once", async () => {
+    test("a double click declines once, and the dialog cannot be closed meanwhile", async () => {
         let resolveDecline: (value: unknown) => void;
         mockDecline.mockImplementation(() => new Promise((resolve) => { resolveDecline = resolve; }));
         const { onDeclined } = renderDialog();
@@ -89,6 +89,8 @@ describe("DeclineRequestDialog", () => {
         await act(async () => {
             fireEvent.click(screen.getByRole("button", { name: "Decline" }));
         });
+        expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(true);
+        expect((screen.getByRole("button", { name: "Close dialog" }) as HTMLButtonElement).disabled).toBe(true);
         await act(async () => {
             resolveDecline({});
         });

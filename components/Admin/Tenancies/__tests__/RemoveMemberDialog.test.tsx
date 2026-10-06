@@ -71,7 +71,7 @@ describe("RemoveMemberDialog", () => {
 
         renderDialog();
 
-        expect(screen.getByText("What changes could not be checked. Removing still works.")).toBeTruthy();
+        expect(screen.getByRole("alert").textContent).toBe("What changes could not be checked. Removing still works.");
         expect((screen.getByRole("button", { name: "Remove" }) as HTMLButtonElement).disabled).toBe(false);
     });
 
@@ -109,7 +109,7 @@ describe("RemoveMemberDialog", () => {
         expect(await screen.findByText("Everyone is in Public; its members can't be changed.")).toBeTruthy();
     });
 
-    test("a double click removes only once, during the call and after it", async () => {
+    test("a double click removes only once, during the call and after it, and the dialog cannot be closed meanwhile", async () => {
         mockImpact = { data: IMPACT };
         let resolve: (value: unknown) => void = () => undefined;
         mockRemove.mockImplementation(() => new Promise((r) => { resolve = r; }));
@@ -118,6 +118,8 @@ describe("RemoveMemberDialog", () => {
         const remove = screen.getByRole("button", { name: "Remove" });
         fireEvent.click(remove);
         fireEvent.click(remove);
+        expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(true);
+        expect((screen.getByRole("button", { name: "Close dialog" }) as HTMLButtonElement).disabled).toBe(true);
         await act(async () => { resolve(undefined); });
         await waitFor(() => expect(onRemoved).toHaveBeenCalledTimes(1));
         fireEvent.click(remove);

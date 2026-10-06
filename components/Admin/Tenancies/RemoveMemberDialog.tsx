@@ -48,10 +48,11 @@ export function RemoveMemberDialog({ tenancy, member, onCancel, onRemoved }: Pro
             subtitle={`${member.name} · member since ${formatShortDate(impact?.member_since ?? member.since)}`}
             widthClassName="max-w-[440px]"
             onClose={onCancel}
+            cancelDisabled={busy}
             primary={{ label: "Remove", destructive: true, disabled: busy || done || (!impact && !impactError), onClick: () => { void remove(); } }}
         >
             {impactError ? (
-                <p className="m-0 text-[13px] text-primary-500">{ADMIN_COPY.impactLoadError}</p>
+                <p role="alert" className="m-0 text-[13px] text-primary-500">{ADMIN_COPY.impactLoadError}</p>
             ) : !impact ? (
                 <p role="status" className="m-0 text-[13px] text-primary-500">Checking what changes…</p>
             ) : (

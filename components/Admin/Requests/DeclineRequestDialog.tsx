@@ -51,6 +51,7 @@ export function DeclineRequestDialog({ request, onCancel, onDeclined }: Props) {
             subtitle={declineSubtitle(request)}
             widthClassName="max-w-[440px]"
             onClose={onCancel}
+            cancelDisabled={busy}
             primary={{ label: "Decline", destructive: true, disabled: busy || done, onClick: () => { void formik.submitForm(); } }}
         >
             <form onSubmit={formik.handleSubmit} className="flex flex-col gap-4" noValidate>
