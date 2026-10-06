@@ -1,5 +1,5 @@
 import Uppy from "@uppy/core";
-import { ErrorMessage, Field, Form, Formik, FormikHelpers } from "formik";
+import { ErrorMessage, Field, Form, Formik, FormikHelpers, FormikProps } from "formik";
 import { useSession } from "next-auth/react";
 import Router from "next/router";
 import { useEffect, useRef, useState } from "react";
@@ -35,6 +35,7 @@ export default function NewPage() {
   const bffGateway = new BFFAPI();
   const { data: session } = useSession();
   const tenancySelected = useTenancyStore((state) => state.tenancySelected);
+  const isPublicSelected = isDefaultTenancy(tenancySelected ?? "");
   const [showModal, setShowModal] = useState(false);
   const [datasetCreateResponse, setDatasetCreateResponse] = useState(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
@@ -43,6 +44,14 @@ export default function NewPage() {
   const [embargoError, setEmbargoError] = useState(null as string | null);
   const [embargoSetUntil, setEmbargoSetUntil] = useState(null as string | null);
   const membersCanEditSent = useRef(false);
+  const formikRef = useRef<FormikProps<FormValues>>(null);
+
+  // Keeps a stale true from an earlier tenancy from surviving a switch to Public.
+  useEffect(() => {
+    if (isPublicSelected) {
+      formikRef.current?.setFieldValue("membersCanEdit", false);
+    }
+  }, [isPublicSelected]);
 
   function datasetCreated(datasetResponse: any): void {
     setShowModal(true);
@@ -120,7 +129,7 @@ export default function NewPage() {
     finishDatasetCreation({
       setEmbargo: embargoRequest
         ? async () => {
-          const membersCanEdit = values.membersCanEdit !== false;
+          const membersCanEdit = !isPublicSelected && values.membersCanEdit !== false;
           if (membersCanEdit !== membersCanEditSent.current) {
             await bffGateway.setMembersAccess(datasetId, { members_can_edit: membersCanEdit });
             membersCanEditSent.current = membersCanEdit;
@@ -186,6 +195,7 @@ export default function NewPage() {
   return (
     <LoggedLayout noPadding={false}>
       <Formik
+        innerRef={formikRef}
         initialValues={initialValues}
         validate={handleValidateForm}
         onSubmit={handleSubmitForm}
@@ -253,7 +263,7 @@ export default function NewPage() {
                 <div className="flex flex-col gap-2">
                   <EmbargoChoice
                     tenancyName={tenancyDisplayName(tenancySelected)}
-                    isPublic={isDefaultTenancy(tenancySelected ?? "")}
+                    isPublic={isPublicSelected}
                     disabled={embargoLock.locked}
                     statusLine={embargoLock.statusLine}
                   />

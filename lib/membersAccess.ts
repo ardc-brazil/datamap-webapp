@@ -2,7 +2,7 @@ import { PUBLIC_MEMBERS_DETAIL, isDefaultTenancy } from "../contants/TenancyCons
 import { GetDatasetDetailsResponse } from "../types/BffAPI";
 import { ShareState } from "../types/GatekeeperAPI";
 
-function inPublic(dataset: GetDatasetDetailsResponse, state?: ShareState | null): boolean {
+export function inPublic(dataset: GetDatasetDetailsResponse, state?: ShareState | null): boolean {
     return isDefaultTenancy(dataset?.tenancy ?? "") || state?.tenancy?.is_default === true;
 }
 

@@ -7,6 +7,7 @@ import { isDefaultTenancy } from "../../contants/TenancyConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { embargoRequestFrom, validateEmbargoDate } from "../../lib/embargoDates";
 import { tenancyDisplayName } from "../../lib/embargoDisplay";
+import { membersCanEditOf } from "../../lib/membersAccess";
 import { GetDatasetDetailsResponse } from "../../types/BffAPI";
 import Modal from "../base/PopupModal";
 import { EmbargoFields } from "./EmbargoFields";
@@ -15,7 +16,7 @@ export function SetEmbargoDialog(props: { dataset: GetDatasetDetailsResponse, sh
     const [bffGateway] = useState(() => new BFFAPI());
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
-    const membersCanEditSent = useRef(props.dataset.members_can_edit !== false);
+    const membersCanEditSent = useRef(membersCanEditOf(props.dataset));
     const formik = useFormik({
         initialValues: { embargoMode: "hidden", embargoUntil: "", embargoNote: "", membersCanEdit: membersCanEditSent.current },
         validate: (values) => {

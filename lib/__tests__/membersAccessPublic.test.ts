@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 import { DEFAULT_TENANCY } from "../../contants/TenancyConstants";
-import { canChangeMembersAccess, membersAccessDetail, membersCanEditOf } from "../membersAccess";
+import { canChangeMembersAccess, inPublic, membersAccessDetail, membersCanEditOf } from "../membersAccess";
 
 describe("members of Public", () => {
     test("never edit a public dataset, whatever the column or the share state says", () => {
@@ -15,6 +15,12 @@ describe("members of Public", () => {
     test("the owner of a public dataset has nothing to change; elsewhere the owner still does", () => {
         expect(canChangeMembersAccess({ tenancy: DEFAULT_TENANCY, access: { level: "owner" } } as any)).toBe(false);
         expect(canChangeMembersAccess({ tenancy: "datamap/production/data-amazon", access: { level: "owner" } } as any)).toBe(true);
+    });
+
+    test("inPublic is exported so components share the one check membersCanEditOf uses", () => {
+        expect(inPublic({ tenancy: DEFAULT_TENANCY } as any)).toBe(true);
+        expect(inPublic({} as any, { tenancy: { is_default: true } } as any)).toBe(true);
+        expect(inPublic({ tenancy: "datamap/production/data-amazon" } as any)).toBe(false);
     });
 
     test("the row reads Everyone on DataMap, and an embargo still says what comes after", () => {
