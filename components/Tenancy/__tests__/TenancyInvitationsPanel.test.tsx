@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 const acceptTenancyInvitation = jest.fn() as any;
 const declineTenancyInvitation = jest.fn() as any;
@@ -110,6 +110,42 @@ describe("TenancyInvitationsPanel", () => {
         expect(mutate).toHaveBeenCalled();
         expect(update).not.toHaveBeenCalled();
         expect(push).not.toHaveBeenCalled();
+    });
+
+    test("a failure stays on its own card and leaves the other card usable", async () => {
+        const second = { ...invitation, id: "ti2", tenancy: { ...AMAZON, path: "datamap/production/atto", display_name: "ATTO" } };
+        invitations = [invitation, second];
+        let answerFirst: (value: unknown) => void;
+        declineTenancyInvitation.mockImplementation((id: string) => id === "ti1"
+            ? new Promise((_resolve, reject) => { answerFirst = reject; })
+            : Promise.resolve(undefined));
+        render(<TenancyInvitationsPanel />);
+
+        fireEvent.click(screen.getAllByRole("button", { name: "Decline" })[0]);
+
+        const secondCard = screen.getByText("Luciana Rizzo invited you to ATTO").closest("div") as HTMLElement;
+        expect((within(secondCard).getByRole("button", { name: "Accept" }) as HTMLButtonElement).disabled).toBe(false);
+        expect((screen.getAllByRole("button", { name: "Accept" })[0] as HTMLButtonElement).disabled).toBe(true);
+
+        answerFirst!({ response: { status: 409, data: { detail: "tenancy_disabled" } } });
+
+        const firstCard = screen.getByText("Luciana Rizzo invited you to Data Amazon").closest("div") as HTMLElement;
+        await waitFor(() => expect(within(firstCard).getByRole("alert").textContent).toBe("This tenancy is disabled, so nobody can join it now."));
+        expect(within(secondCard).queryByRole("alert")).toBeNull();
+    });
+
+    test("a double click accepts only once", async () => {
+        let answer: (value: unknown) => void;
+        acceptTenancyInvitation.mockReset().mockReturnValue(new Promise((resolve) => { answer = resolve; }));
+        render(<TenancyInvitationsPanel />);
+
+        const button = screen.getByRole("button", { name: "Accept" });
+        fireEvent.click(button);
+        fireEvent.click(button);
+
+        expect(acceptTenancyInvitation).toHaveBeenCalledTimes(1);
+        answer!({ tenancy: AMAZON });
+        await waitFor(() => expect(push).toHaveBeenCalled());
     });
 
     test("without invitations nothing is shown", () => {

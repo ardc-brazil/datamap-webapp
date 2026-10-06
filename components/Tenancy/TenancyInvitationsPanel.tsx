@@ -2,8 +2,8 @@ import { useSession } from "next-auth/react";
 import Router from "next/router";
 import { useState } from "react";
 import { ROUTE_PAGE_HOME } from "../../contants/InternalRoutesConstants";
-import { tenancyErrorMessage } from "../../contants/TenancyConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
+import { useRowActions } from "../../hooks/UseRowActions";
 import { useTenancyInvitations } from "../../hooks/UseTenancies";
 import { formatShortDate } from "../../lib/embargoDisplay";
 import { TenancyInvitation, TenancySummary } from "../../types/GatekeeperAPI";
@@ -25,32 +25,20 @@ export function TenancyInvitationsPanel(props: { className?: string }) {
     const { update } = useSession();
     const setTenancySelected = useTenancyStore((state) => state.setTenancySelected);
     const [bffGateway] = useState(() => new BFFAPI());
-    const [busy, setBusy] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const cards = useRowActions(mutate);
 
     if (!invitations || invitations.length === 0) {
         return null;
     }
 
-    async function failed(e: any) {
-        const detail = e?.response?.data?.detail;
-        setError(tenancyErrorMessage(detail));
-        if (detail === "invitation_not_found") {
-            await mutate();
-        }
+    function accept(invitation: TenancyInvitation) {
+        return cards.run(invitation.id, async () => {
+            const { tenancy } = await bffGateway.acceptTenancyInvitation(invitation.id);
+            await joined(tenancy);
+        });
     }
 
-    async function accept(invitation: TenancyInvitation) {
-        setBusy(true);
-        setError(null);
-        let tenancy: TenancySummary;
-        try {
-            ({ tenancy } = await bffGateway.acceptTenancyInvitation(invitation.id));
-        } catch (e) {
-            await failed(e);
-            setBusy(false);
-            return;
-        }
+    async function joined(tenancy: TenancySummary) {
         try {
             await update();
         } catch (e) {
@@ -62,21 +50,14 @@ export function TenancyInvitationsPanel(props: { className?: string }) {
         } catch (e) {
             console.error("Joined the tenancy, but refreshing the invitations failed", e);
         }
-        setBusy(false);
         Router.push(ROUTE_PAGE_HOME);
     }
 
-    async function decline(invitation: TenancyInvitation) {
-        setBusy(true);
-        setError(null);
-        try {
+    function decline(invitation: TenancyInvitation) {
+        return cards.run(invitation.id, async () => {
             await bffGateway.declineTenancyInvitation(invitation.id);
             await mutate();
-        } catch (e) {
-            await failed(e);
-        } finally {
-            setBusy(false);
-        }
+        });
     }
 
     return (
@@ -89,12 +70,13 @@ export function TenancyInvitationsPanel(props: { className?: string }) {
                         <span className="text-[13px] text-primary-500">{invitationDetail(invitation)}</span>
                     </span>
                     <span className="flex flex-none gap-2">
-                        <button type="button" className="btn-primary-outline btn-small m-0" disabled={busy} onClick={() => decline(invitation)}>Decline</button>
-                        <button type="button" className="btn-primary btn-small m-0" disabled={busy} onClick={() => accept(invitation)}>Accept</button>
+                        <button type="button" className="btn-primary-outline btn-small m-0" disabled={cards.busy(invitation.id)} onClick={() => decline(invitation)}>Decline</button>
+                        <button type="button" className="btn-primary btn-small m-0" disabled={cards.busy(invitation.id)} onClick={() => accept(invitation)}>Accept</button>
                     </span>
+                    {cards.error(invitation.id) &&
+                        <p role="alert" className="m-0 w-full text-sm text-danger-700">{cards.error(invitation.id)}</p>}
                 </div>
             ))}
-            {error && <p role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
         </section>
     );
 }
