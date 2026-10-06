@@ -144,6 +144,7 @@ describe("the admin request routes", () => {
         for (const body of bodies) {
             const res = await send(approveHandler, "POST", { requestId: REQUEST_ID }, body, JSON_BODY);
             expect(res.statusCode).toBe(400);
+            expect(res.json).toHaveBeenCalledWith({ detail: "invalid_request" });
         }
         expect(approveTenancyRequest).not.toHaveBeenCalled();
     });

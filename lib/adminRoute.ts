@@ -1,16 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { ADMIN_PAGE_SIZE, ADMIN_USER_SEARCH_MIN_LENGTH } from "../contants/AdminConstants";
-import { NAMESPACE_MAX_LENGTH, NAMESPACE_MIN_LENGTH, NAMESPACE_PATTERN, TENANCY_PATH_PATTERN } from "../contants/TenancyConstants";
+import { TENANCY_PATH_PATTERN } from "../contants/TenancyConstants";
 import { TenancyDecision } from "../types/GatekeeperAPI";
 import { TenancyRequestsQuery } from "./admin";
 import { invalidRequest, pageOr400 } from "./routeParams";
-
-function isValidNamespace(namespace: string): boolean {
-    return namespace.length >= NAMESPACE_MIN_LENGTH
-        && namespace.length <= NAMESPACE_MAX_LENGTH
-        && NAMESPACE_PATTERN.test(namespace)
-        && namespace !== "public";
-}
 
 export function requestsQueryOr400(req: NextApiRequest, res: NextApiResponse): TenancyRequestsQuery | undefined {
     const status = req.query.status ?? "open";
@@ -42,7 +35,7 @@ export function decisionOr400(req: NextApiRequest, res: NextApiResponse): Tenanc
         return { tenancy: body.tenancy };
     }
     const fresh = body.newTenancy;
-    if (hasNew && !hasTenancy && typeof fresh?.displayName === "string" && typeof fresh?.namespace === "string" && isValidNamespace(fresh.namespace)) {
+    if (hasNew && !hasTenancy && typeof fresh?.displayName === "string" && typeof fresh?.namespace === "string") {
         return { newTenancy: { displayName: fresh.displayName, namespace: fresh.namespace } };
     }
     return invalidRequest(res);
@@ -58,7 +51,7 @@ export function declineMessageOr400(req: NextApiRequest, res: NextApiResponse): 
 
 export function newTenancyOr400(req: NextApiRequest, res: NextApiResponse): { displayName: string; namespace: string } | undefined {
     const { displayName, namespace } = req.body ?? {};
-    return typeof displayName === "string" && typeof namespace === "string" && isValidNamespace(namespace)
+    return typeof displayName === "string" && typeof namespace === "string"
         ? { displayName, namespace }
         : invalidRequest(res);
 }
