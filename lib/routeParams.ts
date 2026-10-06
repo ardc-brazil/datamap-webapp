@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { TENANCY_PATH_PATTERN } from "../contants/TenancyConstants";
+import { MAX_PAGE_SIZE, TENANCY_PATH_PATTERN } from "../contants/TenancyConstants";
 import { isUuid } from "./accountRoute";
 
 const WHOLE_NUMBER = /^\d+$/;
@@ -33,7 +33,10 @@ export function tenancyOr400(req: NextApiRequest, res: NextApiResponse): string 
 export function pageOr400(req: NextApiRequest, res: NextApiResponse, defaultLimit: number): { limit: number; offset: number } | undefined {
     const limit = wholeNumber(req.query.limit, defaultLimit);
     const offset = wholeNumber(req.query.offset, 0);
-    return limit === null || offset === null ? invalidRequest(res) : { limit, offset };
+    if (limit === null || offset === null || limit < 1 || limit > MAX_PAGE_SIZE) {
+        return invalidRequest(res);
+    }
+    return { limit, offset };
 }
 
 export function userIdOr400(req: NextApiRequest, res: NextApiResponse): string | undefined {

@@ -22,6 +22,7 @@ export const TENANCY_REQUESTS_KEY = "/api/tenancy-requests";
 export const TENANCY_INVITATIONS_KEY = "/api/tenancy-invitations";
 
 export const WORKSPACE_PAGE_SIZE = 50;
+export const MAX_PAGE_SIZE = 100;
 export const WORKSPACE_LOOKUP_DEBOUNCE_MS = 300;
 export const REQUEST_OUTCOME_VISIBLE_DAYS = 30;
 

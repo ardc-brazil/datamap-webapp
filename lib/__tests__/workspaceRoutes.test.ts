@@ -89,6 +89,25 @@ describe("the workspace BFF routes", () => {
         expect(listWorkspaceMembers).not.toHaveBeenCalled();
     });
 
+    test("a page of no members or of more than 100 is refused", async () => {
+        for (const limit of ["0", "101", "99999999999999999999"]) {
+            const res = await send(membersHandler, "GET", { tenancy: AMAZON, limit });
+            expect(res.statusCode).toBe(400);
+            expect(res.json).toHaveBeenCalledWith({ detail: "invalid_request" });
+        }
+        expect(listWorkspaceMembers).not.toHaveBeenCalled();
+    });
+
+    test("a page of 1 or of 100 members is asked for as it is", async () => {
+        jest.mocked(listWorkspaceMembers).mockResolvedValue({ items: [], total_count: 0, limit: 100, offset: 0 });
+
+        await send(membersHandler, "GET", { tenancy: AMAZON, limit: "1" });
+        await send(membersHandler, "GET", { tenancy: AMAZON, limit: "100" });
+
+        expect(listWorkspaceMembers).toHaveBeenCalledWith("u1", AMAZON, { limit: 1, offset: 0 });
+        expect(listWorkspaceMembers).toHaveBeenCalledWith("u1", AMAZON, { limit: 100, offset: 0 });
+    });
+
     test("someone who is not a member keeps the gatekeeper's 404 code", async () => {
         jest.mocked(listWorkspaceMembers).mockRejectedValue(gatekeeperError(404, { detail: "tenancy_not_found" }));
 
