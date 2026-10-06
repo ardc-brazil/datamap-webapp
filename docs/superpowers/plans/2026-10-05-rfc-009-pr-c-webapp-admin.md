@@ -74,6 +74,8 @@ The existing `PopupModal` paints destructive buttons `error-600` (`#FF3A3A`); th
 
 Taken from PR B's plan (`docs/superpowers/plans/2026-10-05-rfc-009-pr-b-webapp-user.md`, as revised in the commit "docs: RFC 009 webapp plans follow what the gatekeeper ships") and checked in Task 1, Step 3. If a check fails, stop and ask the owner; do not recreate B's code here.
 
+Checked against PR B as shipped (#113, `c0a16fa`): every assumption below holds. What B shipped beyond its plan, and the reuse it asks of this plan, is in the amendments (`.superpowers/sdd/amendments.md`), which win over the tasks below.
+
 - **Session flag (B's Task 2).** `hydrateWithUserInfo` sets `token.admin = true` for an account whose `roles` include `"admin"` and deletes it otherwise, on sign-in and on every `update()`; the session callback sets `session.user.admin = token.admin === true`; `types/next-auth.d.ts` declares `Session.user.admin: boolean` and `JWT.admin?: boolean`. The contract assigned this to C; the owner moved it to B. This plan consumes it.
 - **Constants (B's Task 3).** `contants/TenancyConstants.ts` with the contract's exact block (this plan imports `PRODUCTION_PREFIX`, `NAMESPACE_PATTERN`, `NAMESPACE_MIN_LENGTH`, `NAMESPACE_MAX_LENGTH`, `DISPLAY_NAME_MAX_LENGTH`, `MESSAGE_MAX_LENGTH`) plus `TENANCY_PATH_PATTERN = /^[A-Za-z0-9_-]+(\/[A-Za-z0-9_-]+)+$/` and B's keys, copy and `tenancyErrorMessage`.
 - **Route parameters (B's Tasks 5–6).** `lib/routeParams.ts` exports `invalidRequest(res): undefined` (`400 {detail: "invalid_request"}`), `uuidOr404(req, res, name, detail)`, `tenancyOr400(req, res)` (checks `TENANCY_PATH_PATTERN`), `pageOr400(req, res, defaultLimit)` and `userIdOr400(req, res)` (a UUID `userId` in the body); each answers the error itself and returns `undefined`.
@@ -1063,7 +1065,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 **Interfaces:** Consumes `NAMESPACE_MAX_LENGTH` (B's `TenancyConstants`), `formatShortDate` from `lib/embargoDisplay.ts`, Task 4's types. Produces:
 - `ROUTE_PAGE_ADMIN`, `ROUTE_PAGE_ADMIN_REQUESTS`, `ROUTE_PAGE_ADMIN_USERS`, `ROUTE_PAGE_ADMIN_TENANCIES`, `ROUTE_PAGE_ADMIN_ACTIVITY`;
 - `ADMIN_PAGE_SIZE = 50`, `RECENTLY_CLOSED_LIMIT = 5`, `ADMIN_COUNTS_REFRESH_MS = 60_000`, `ADMIN_SEARCH_DEBOUNCE_MS = 300`, `ADMIN_USER_SEARCH_MIN_LENGTH = 2`, `WAITING_STALE_DAYS = 3`, `type RequestFilter`, `interface AdminTab`, `ADMIN_TABS`, `ADMIN_COPY`, `adminErrorMessage(detail?: string): string`, `adminErrorFrom(error: unknown): string`, `slugifyNamespace(name: string): string`;
-- `daysSince(iso, now): number`, `waitingLabel(createdAt, now): { text: string; stale: boolean }`, `requestedAgo(createdAt, now): string`, `firstName(name): string`, `requestTarget(request): string`, `closedOutcome(request): { text: string; tone: "approved" | "declined" }`, `closedTenancyName(request): string`, `plural(n, one, many): string`;
+- `daysSince(iso, now): number`, `waitingLabel(createdAt, now): { text: string; stale: boolean }`, `requestedAgo(createdAt, now): string`, `requestTarget(request): string`, `closedOutcome(request): { text: string; tone: "approved" | "declined" }`, `closedTenancyName(request): string`, `plural(n, one, many): string`;
 - fixtures `PUBLIC_TENANCY`, `DATA_AMAZON`, `ATTO`, `adminRequest()`, `newTenancyRequest()`, `adminRequestDetail()`, `adminTenancy()`, `ADMIN_TENANCIES`, `tenancyMember()`, `tenancyInvitation()`.
 
 - [ ] **Step 1: Write the failing tests**
@@ -1127,7 +1129,7 @@ Create `lib/__tests__/adminDisplay.test.ts`:
 
 ```ts
 import { adminRequest, DATA_AMAZON } from "../../fake-data/adminFixtures";
-import { closedOutcome, closedTenancyName, firstName, plural, requestTarget, requestedAgo, waitingLabel } from "../adminDisplay";
+import { closedOutcome, closedTenancyName, plural, requestTarget, requestedAgo, waitingLabel } from "../adminDisplay";
 
 const NOW = new Date("2026-10-04T12:00:00Z");
 
@@ -1148,12 +1150,6 @@ describe("how long a request has waited", () => {
 });
 
 describe("names", () => {
-    test("the first name is the first word", () => {
-        expect(firstName("Fernanda Lima")).toBe("Fernanda");
-        expect(firstName("  Kenji  ")).toBe("Kenji");
-        expect(firstName("")).toBe("");
-    });
-
     test("a request names the suggested tenancy, else what the user typed", () => {
         expect(requestTarget(adminRequest())).toBe("Data Amazon");
         expect(requestTarget(adminRequest({ suggested_tenancy: null, requested_name: "Cerrado Flux" }))).toBe("Cerrado Flux");
@@ -1348,10 +1344,6 @@ export function requestedAgo(createdAt: string, now: Date): string {
     return days === 0 ? "today" : days === 1 ? "yesterday" : `${days} days ago`;
 }
 
-export function firstName(name: string): string {
-    return name.trim().split(/\s+/)[0] ?? "";
-}
-
 export function requestTarget(request: AdminTenancyRequest): string {
     return request.suggested_tenancy?.display_name ?? request.requested_name;
 }
@@ -1460,7 +1452,7 @@ export function tenancyInvitation(overrides: Partial<AdminTenancyInvitation> = {
 - [ ] **Step 7: Run them**
 
 Run: `npx jest --coverage=false contants lib/__tests__/adminDisplay.test.ts`
-Expected: PASS — 5 + 6 new tests, and every other suite under `contants/` unchanged (`TENANCY_PATH_PATTERN` is PR B's and tested in `TenancyConstants.test.ts`).
+Expected: PASS — 5 + 5 new tests, and every other suite under `contants/` unchanged (`TENANCY_PATH_PATTERN` is PR B's and tested in `TenancyConstants.test.ts`).
 
 - [ ] **Step 8: Commit**
 
@@ -3647,7 +3639,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Create: `components/Admin/Requests/DeclineRequestDialog.tsx`
 - Test: `components/Admin/Requests/__tests__/DeclineRequestDialog.test.tsx`
 
-**Interfaces:** Consumes `AdminDialog`, `BFFAPI.declineTenancyRequest`, `adminErrorFrom`, `firstName`, `MESSAGE_MAX_LENGTH`. Produces `DeclineRequestDialog({ request, onCancel, onDeclined }: { request: AdminTenancyRequest; onCancel(): void; onDeclined(): void })` and `declineSubtitle(request): string`.
+**Interfaces:** Consumes `AdminDialog`, `BFFAPI.declineTenancyRequest`, `adminErrorFrom`, PR B's `firstNameOf` (`lib/tenancySelection.ts`), `MESSAGE_MAX_LENGTH`. Produces `DeclineRequestDialog({ request, onCancel, onDeclined }: { request: AdminTenancyRequest; onCancel(): void; onDeclined(): void })` and `declineSubtitle(request): string`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -3758,7 +3750,7 @@ import * as Yup from "yup";
 import { ADMIN_COPY, adminErrorFrom, adminErrorMessage } from "../../../contants/AdminConstants";
 import { MESSAGE_MAX_LENGTH } from "../../../contants/TenancyConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
-import { firstName } from "../../../lib/adminDisplay";
+import { firstNameOf } from "../../../lib/tenancySelection";
 import { AdminTenancyRequest } from "../../../types/GatekeeperAPI";
 import { AdminDialog } from "../AdminDialog";
 
@@ -3806,7 +3798,7 @@ export function DeclineRequestDialog({ request, onCancel, onDeclined }: Props) {
             <form onSubmit={formik.handleSubmit} className="flex flex-col gap-4" noValidate>
                 <div>
                     <label htmlFor="decline-message" className="mb-1.5 text-[13px]">
-                        Message to {firstName(request.requester.name)} <span className="font-normal text-primary-400">optional</span>
+                        Message to {firstNameOf(request.requester.name)} <span className="font-normal text-primary-400">optional</span>
                     </label>
                     <textarea
                         id="decline-message"
@@ -3853,7 +3845,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Create: `components/Admin/Requests/ReviewRequestDialog.tsx`
 - Test: `components/Admin/Requests/__tests__/ReviewRequestDialog.test.tsx`
 
-**Interfaces:** Consumes `useAdminRequest`, `useAdminTenancies` (Task 9), `AdminDialog`, `BFFAPI.approveTenancyRequest`, `slugifyNamespace`, `adminErrorFrom`, `adminErrorMessage`, `requestedAgo`, `firstName`, `plural`, `formatShortDate`, B's `PRODUCTION_PREFIX`, `NAMESPACE_*`, `DISPLAY_NAME_MAX_LENGTH`. Produces `ReviewRequestDialog({ requestId, now?, onClose, onApproved, onDecline }: { requestId: string; now?: Date; onClose(): void; onApproved(): void; onDecline(request: AdminTenancyRequest): void })`.
+**Interfaces:** Consumes `useAdminRequest`, `useAdminTenancies` (Task 9), `AdminDialog`, `BFFAPI.approveTenancyRequest`, `slugifyNamespace`, `adminErrorFrom`, `adminErrorMessage`, `requestedAgo`, B's `firstNameOf` (`lib/tenancySelection.ts`), `plural`, `formatShortDate`, B's `PRODUCTION_PREFIX`, `NAMESPACE_*`, `DISPLAY_NAME_MAX_LENGTH`. Produces `ReviewRequestDialog({ requestId, now?, onClose, onApproved, onDecline }: { requestId: string; now?: Date; onClose(): void; onApproved(): void; onDecline(request: AdminTenancyRequest): void })`.
 
 Behaviour (RFC 009 §Review dialog): loading and error states; a request already decided shows who decided it and offers only Close; a pending one opens on the suggestion's side of **Join existing** / **New tenancy**. Join: a picker of production, enabled, non-public tenancies the requester is not in, prefilled with the suggestion; info rows Tenancy / Reason / Currently in. New: Display name (the requested name) and Namespace (its slug), both editable, preview `datamap/production/{namespace} · requester becomes a member`; an unverified requester gets the amber banner and a disabled **Create and approve**. No role cards. An approval answered `404 no_account` (the requester's account is disabled or gone; PR A checks it first and leaves the request pending) shows "This account is disabled or no longer exists, so it cannot be approved. Decline the request instead.", disables the primary button and keeps **Decline…**.
 
@@ -4061,8 +4053,9 @@ import {
 } from "../../../contants/TenancyConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { useAdminRequest, useAdminTenancies } from "../../../hooks/UseAdmin";
-import { firstName, plural, requestedAgo } from "../../../lib/adminDisplay";
+import { plural, requestedAgo } from "../../../lib/adminDisplay";
 import { formatShortDate } from "../../../lib/embargoDisplay";
+import { firstNameOf } from "../../../lib/tenancySelection";
 import { AdminTenancy, AdminTenancyRequest, AdminTenancyRequestDetail, TenancyDecision } from "../../../types/GatekeeperAPI";
 import { AdminDialog } from "../AdminDialog";
 
@@ -4269,7 +4262,7 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
 
                 <p className="m-0 flex items-center gap-2 rounded-md bg-primary-100 px-3 py-2.5 text-[13px] text-primary-700">
                     <MaterialSymbol icon="mail" size={18} weight={400} grade={-25} />
-                    <span>{`${firstName(detail.requester.name)} is emailed either way.`}</span>
+                    <span>{`${firstNameOf(detail.requester.name)} is emailed either way.`}</span>
                 </p>
                 {error && <p role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
             </form>
@@ -5035,7 +5028,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Create: `components/Admin/Tenancies/NewTenancyDialog.tsx`, `components/Admin/Tenancies/AddMemberDialog.tsx`, `components/Admin/Tenancies/RemoveMemberDialog.tsx`
 - Test: `components/Admin/Tenancies/__tests__/NewTenancyDialog.test.tsx`, `components/Admin/Tenancies/__tests__/AddMemberDialog.test.tsx`, `components/Admin/Tenancies/__tests__/RemoveMemberDialog.test.tsx`
 
-**Interfaces:** Consumes `AdminDialog`, `BFFAPI.createTenancy`, `BFFAPI.addTenancyMember`, `BFFAPI.removeTenancyMember`, `useAdminUserSearch`, `useRemovalImpact`, `useDebouncedValue`, `PersonInitial`, `slugifyNamespace`, `adminErrorFrom`, `adminErrorMessage`, `firstName`, `plural`, `formatShortDate`, B's `PRODUCTION_PREFIX`, `NAMESPACE_*`, `DISPLAY_NAME_MAX_LENGTH`. Produces:
+**Interfaces:** Consumes `AdminDialog`, `BFFAPI.createTenancy`, `BFFAPI.addTenancyMember`, `BFFAPI.removeTenancyMember`, `useAdminUserSearch`, `useRemovalImpact`, `useDebouncedValue`, `PersonInitial`, `slugifyNamespace`, `adminErrorFrom`, `adminErrorMessage`, B's `firstNameOf` (`lib/tenancySelection.ts`), `plural`, `formatShortDate`, B's `PRODUCTION_PREFIX`, `NAMESPACE_*`, `DISPLAY_NAME_MAX_LENGTH`. Produces:
 - `NewTenancyDialog({ onCancel, onCreated }: { onCancel(): void; onCreated(tenancy: AdminTenancy): void })` — Display name, Namespace (follows the display name until edited), preview `datamap/production/{namespace}`, **Cancel** / **Create**; no Environment field;
 - `AddMemberDialog({ tenancy, onCancel, onAdded }: { tenancy: AdminTenancy; onCancel(): void; onAdded(): void })` — "Add to {tenancy}", search "Name, email or ORCID", pick one, "{first name} is emailed.", **Cancel** / **Add**; no role;
 - `RemoveMemberDialog({ tenancy, member, onCancel, onRemoved }: { tenancy: AdminTenancy; member: TenancyMember; onCancel(): void; onRemoved(): void })` and `removalBullets(impact: RemovalImpact): string[]`.
@@ -5430,7 +5423,7 @@ import { ADMIN_COPY, ADMIN_SEARCH_DEBOUNCE_MS, ADMIN_USER_SEARCH_MIN_LENGTH, adm
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { useAdminUserSearch } from "../../../hooks/UseAdmin";
 import { useDebouncedValue } from "../../../hooks/UseDebouncedValue";
-import { firstName } from "../../../lib/adminDisplay";
+import { firstNameOf } from "../../../lib/tenancySelection";
 import { AdminTenancy, AdminUserHit } from "../../../types/GatekeeperAPI";
 import { PersonInitial } from "../../Share/PersonInitial";
 import { AdminDialog } from "../AdminDialog";
@@ -5513,7 +5506,7 @@ export function AddMemberDialog({ tenancy, onCancel, onAdded }: Props) {
                 {picked && (
                     <p className="m-0 flex items-center gap-2 rounded-md bg-primary-100 px-3 py-2.5 text-[13px] text-primary-700">
                         <MaterialSymbol icon="mail" size={18} weight={400} grade={-25} />
-                        <span>{`${firstName(picked.name)} is emailed.`}</span>
+                        <span>{`${firstNameOf(picked.name)} is emailed.`}</span>
                     </p>
                 )}
                 {error && <p role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
@@ -6265,7 +6258,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - [ ] **Step 1: Unit tests and types**
 
 From the worktree: `npx jest --coverage=false 2>&1 | grep -E "^(Test Suites|Tests):"`
-Expected: `Test Suites: {BASE_SUITES + 26} passed` and `Tests: {BASE_TESTS + 181} passed` (with PR B landed as its plan says, 132 / 1014 → **158 / 1195**). The 26 new suites and their tests: `RequireSessionAdmin` 5, `adminChain` 8, `admin` 15, `AdminConstants` 5, `adminDisplay` 6, `adminRequestRoutes` 14, `adminTenancyRoutes` 11, `BFFAPI.admin` 8, `adminKeys` 8, `UseAdmin` 8, `AdminDialog` 6, `AdminParts` 4, `AdminNavItem` 5, `LoggedLayoutAdmin` 2, `AdminTabs` 3, `DeclineRequestDialog` 7, `ReviewRequestDialog` 13, `RequestsTable` 4, `RecentlyClosed` 4, `RequestsView` 10, `NewTenancyDialog` 5, `AddMemberDialog` 5, `RemoveMemberDialog` 5, `TenancyList` 3, `TenancyMembersPanel` 10, `TenanciesView` 6 (= 180), plus 1 in `TelemetryConstants`. A route test answering `401` means a mocked token lost `v: TOKEN_VERSION`; one answering `404` means it lost `admin: true`.
+Expected: `Test Suites: {BASE_SUITES + 26} passed` and `Tests: {BASE_TESTS + 181} passed` (PR B as shipped in #113: 139 / 1118 → **165 / 1299**). The 26 new suites and their tests: `RequireSessionAdmin` 5, `adminChain` 8, `admin` 15, `AdminConstants` 5, `adminDisplay` 5, `adminRequestRoutes` 14, `adminTenancyRoutes` 11, `BFFAPI.admin` 8, `adminKeys` 8, `UseAdmin` 8, `AdminDialog` 6, `AdminParts` 4, `AdminNavItem` 5, `LoggedLayoutAdmin` 2, `AdminTabs` 3, `DeclineRequestDialog` 7, `ReviewRequestDialog` 13, `RequestsTable` 4, `RecentlyClosed` 4, `RequestsView` 10, `NewTenancyDialog` 5, `AddMemberDialog` 5, `RemoveMemberDialog` 5, `TenancyList` 3, `TenancyMembersPanel` 10, `TenanciesView` 6 (= 179), plus 1 in `TelemetryConstants` and 1 in `UseRowActions` (amendment C7). A route test answering `401` means a mocked token lost `v: TOKEN_VERSION`; one answering `404` means it lost `admin: true`.
 
 Then: `npx tsc --noEmit -p .`
 Expected: no output.
@@ -6277,7 +6270,7 @@ Expected: exit code 0; the route list shows the pages `/app/admin`, `/app/admin/
 
 - [ ] **Step 3: Start the gatekeeper with PR A, and Mailpit**
 
-PR A (`ardc-brazil/gatekeeper#145`) must be in the gatekeeper checkout: `main` once it is merged, otherwise its branch `feat/rfc-009-gatekeeper` (worktree `/Users/caio.maia/workspace/datamap/gatekeeper/.claude/worktrees/rfc-009-gatekeeper`). Check with `command git -C <checkout> log --oneline -3`. The commands are the ones PR B's Task 24 uses:
+PR A (`ardc-brazil/gatekeeper#145`) is merged: use a gatekeeper checkout of `main` at or after `32af272` (the worktree `/Users/caio.maia/workspace/datamap/gatekeeper/.claude/worktrees/rfc-009-e2e` is one). Check with `/opt/homebrew/bin/git -C <checkout> log --oneline -3`. The commands are the ones PR B's Task 24 uses:
 
 ```bash
 cd <gatekeeper checkout with PR A>
