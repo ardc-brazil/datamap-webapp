@@ -157,6 +157,16 @@ describe("the admin tenancy routes", () => {
         expect(unknown.json).toHaveBeenCalledWith({ detail: "invitation_not_found" });
     });
 
+    test("a DELETE with no content type is refused before the gatekeeper", async () => {
+        const member = await send(memberHandler, "DELETE", { tenancy: ATTO, userId: USER_ID });
+        const invitation = await send(invitationHandler, "DELETE", { invitationId: INVITATION_ID });
+
+        expect(member.statusCode).toBe(415);
+        expect(invitation.statusCode).toBe(415);
+        expect(removeTenancyMember).not.toHaveBeenCalled();
+        expect(withdrawTenancyInvitationAsAdmin).not.toHaveBeenCalled();
+    });
+
     test("user search trims the query and needs two characters", async () => {
         jest.mocked(searchAdminUsers).mockResolvedValue([]);
 

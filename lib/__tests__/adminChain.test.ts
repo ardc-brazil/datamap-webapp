@@ -45,6 +45,8 @@ function adminRoute() {
     return adminBffRouter()
         .get((req, res) => { res.status(200).end("ok"); })
         .post((req, res) => { res.status(201).end("created"); })
+        .put((req, res) => { res.status(200).end("put"); })
+        .patch((req, res) => { res.status(200).end("patched"); })
         .delete((req, res) => { res.status(204).end(); })
         .handler();
 }
@@ -69,6 +71,12 @@ describe("the admin chain", () => {
 
     test("answers 401 to a visitor who is not signed in", async () => {
         mockGetToken.mockResolvedValue(null);
+
+        expect((await call(chainOnly())).statusCode).toBe(401);
+    });
+
+    test("answers 401 to a pending ORCID sign-in, even one carrying an admin claim", async () => {
+        mockGetToken.mockResolvedValue({ pending: { orcid: "0000-0001-2345-6789", name: "Ada Lovelace" }, v: TOKEN_VERSION, admin: true } as any);
 
         expect((await call(chainOnly())).statusCode).toBe(401);
     });
@@ -101,6 +109,17 @@ describe("the admin BFF router", () => {
     test("a change with a JSON content type goes through", async () => {
         expect((await call(adminRoute(), "POST", JSON_BODY)).statusCode).toBe(201);
         expect((await call(adminRoute(), "DELETE", JSON_BODY)).statusCode).toBe(204);
+    });
+
+    test("a DELETE with no content type at all is refused", async () => {
+        expect((await call(adminRoute(), "DELETE")).statusCode).toBe(415);
+    });
+
+    test("PUT and PATCH go through the same gate", async () => {
+        expect((await call(adminRoute(), "PUT")).statusCode).toBe(415);
+        expect((await call(adminRoute(), "PATCH", { "content-type": "text/plain" })).statusCode).toBe(415);
+        expect((await call(adminRoute(), "PUT", JSON_BODY)).statusCode).toBe(200);
+        expect((await call(adminRoute(), "PATCH", JSON_BODY)).statusCode).toBe(200);
     });
 
     test("a non-admin gets the 404 before the content type is looked at", async () => {
