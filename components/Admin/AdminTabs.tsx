@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { ADMIN_TABS } from "../../contants/AdminConstants";
 import { useAdminCounts } from "../../hooks/UseAdmin";
+import { isWithinRoute } from "../../lib/routeMatch";
 import { CountBadge } from "./CountBadge";
 
 export function AdminTabs() {
@@ -11,7 +12,7 @@ export function AdminTabs() {
     return (
         <nav aria-label="Admin" className="flex h-16 items-stretch gap-6">
             {ADMIN_TABS.map((tab) => {
-                const active = router.pathname === tab.href;
+                const active = isWithinRoute(router.pathname, tab.href);
                 return (
                     <Link
                         key={tab.href}

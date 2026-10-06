@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { ReactNode } from "react";
 import { MaterialSymbol, SymbolCodepoints } from "react-material-symbols";
+import { isWithinRoute } from "../lib/routeMatch";
 
 interface Props {
     href: string
@@ -14,8 +15,7 @@ interface Props {
 
 export function SidebarMenuItem({ href, text, icon, collapsed, activePrefix, trailing }: Props) {
     const router = useRouter();
-    const base = activePrefix ?? href;
-    const isActive = router.pathname === base || router.pathname.startsWith(base + "/");
+    const isActive = isWithinRoute(router.pathname, activePrefix ?? href);
 
     return (
         <li>

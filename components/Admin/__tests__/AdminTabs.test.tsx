@@ -28,6 +28,15 @@ test("the tab of the current page is the active one", () => {
     expect(screen.getByRole("link", { name: "Users" }).getAttribute("aria-current")).toBeNull();
 });
 
+test("a page below a tab keeps that tab active, but a tab that only shares a prefix does not", () => {
+    mockPathname = "/app/admin/users/[userId]";
+
+    render(<AdminTabs />);
+
+    expect(screen.getByRole("link", { name: "Users" }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getAllByRole("link").filter((link) => link.getAttribute("aria-current") === "page")).toHaveLength(1);
+});
+
 test("no badge when nothing is open", () => {
     mockCounts = { open: 0, join: 0, new: 0, closed: 31 };
 
