@@ -5,7 +5,7 @@ import { ADMIN_COPY, ADMIN_SEARCH_DEBOUNCE_MS, RequestFilter } from "../../../co
 import { revalidateAdminRequests, revalidateAdminTenancies, useAdminCounts, useAdminRequests } from "../../../hooks/UseAdmin";
 import { useDebouncedValue } from "../../../hooks/UseDebouncedValue";
 import { AdminRequestsQuery } from "../../../lib/adminKeys";
-import { isLastPage } from "../../../lib/paging";
+import { isLastPage, lastPageOffset } from "../../../lib/paging";
 import { AdminTenancyRequest, GatekeeperPage, TenancyRequestCounts } from "../../../types/GatekeeperAPI";
 import { AdminLoadError } from "../AdminLoadError";
 import { AdminPageHeader } from "../AdminPageHeader";
@@ -28,10 +28,6 @@ export function queryFor(filter: RequestFilter, q: string, offset: number): Admi
         return { status: "closed", q, offset };
     }
     return { status: "open", ...(filter === "open" ? {} : { kind: filter }), q, offset };
-}
-
-function lastPageOffset(totalCount: number, limit: number): number {
-    return Math.max(0, Math.floor((totalCount - 1) / limit) * limit);
 }
 
 interface Paging {

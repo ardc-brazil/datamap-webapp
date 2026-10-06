@@ -7,3 +7,7 @@ export function isLastPage(page: GatekeeperPage<unknown>): boolean {
 export function nextPageCount(total: number, loaded: number, pageSize: number): number {
     return Math.min(pageSize, total - loaded);
 }
+
+export function lastPageOffset(totalCount: number, limit: number): number {
+    return Math.max(0, Math.floor((totalCount - 1) / limit) * limit);
+}
