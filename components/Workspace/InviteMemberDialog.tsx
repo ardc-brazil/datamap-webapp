@@ -10,6 +10,7 @@ import { useSubmitOnce } from "../../hooks/UseSubmitOnce";
 import { classifyShareInput } from "../../lib/shareTarget";
 import { InviteeLookup, TenancySummary } from "../../types/GatekeeperAPI";
 import Modal from "../base/PopupModal";
+import { DialogError } from "../base/DialogError";
 import { PersonInitial } from "../Share/PersonInitial";
 
 type Lookup = { value: string, found: InviteeLookup | null, error: string | null };
@@ -148,7 +149,7 @@ export function InviteMemberDialog(props: Props) {
                     }
                     {current?.error && <p className="m-0 text-sm text-primary-600">{current.error}</p>}
                 </div>
-                {error && <p role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
+                <DialogError message={error} />
                 <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
             </form>
         </Modal>
