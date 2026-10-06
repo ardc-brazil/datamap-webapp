@@ -1,7 +1,7 @@
 import { FormikErrors, FormikTouched } from "formik";
 import { FocusEvent } from "react";
 import * as Yup from "yup";
-import { adminErrorFrom, adminErrorMessage, slugifyNamespace } from "../../contants/AdminConstants";
+import { ADMIN_FIELD_ERROR_CLASS, adminErrorFrom, adminErrorMessage, slugifyNamespace } from "../../contants/AdminConstants";
 import { DISPLAY_NAME_MAX_LENGTH, PRODUCTION_PREFIX, isValidNamespace } from "../../contants/TenancyConstants";
 import { errorDetail } from "../../lib/gatekeeperDetail";
 
@@ -19,7 +19,6 @@ export interface NewTenancyFailure {
 
 const DISPLAY_NAME_ERROR = adminErrorMessage("display_name_invalid");
 const NAMESPACE_ERROR = adminErrorMessage("namespace_invalid");
-const FIELD_ERROR = "m-0 mt-1.5 text-[13px] text-danger-700";
 
 export const NEW_TENANCY_SCHEMA = {
     displayName: Yup.string().trim().required(DISPLAY_NAME_ERROR).max(DISPLAY_NAME_MAX_LENGTH, DISPLAY_NAME_ERROR),
@@ -82,7 +81,7 @@ export function NewTenancyFields<V extends NewTenancyValues>({ formik, idPrefix,
                     aria-describedby={error ? errorId : undefined}
                     aria-invalid={error ? true : undefined}
                 />
-                {error && <p id={errorId} role="alert" className={FIELD_ERROR}>{error}</p>}
+                {error && <p id={errorId} role="alert" className={ADMIN_FIELD_ERROR_CLASS}>{error}</p>}
             </div>
         );
     }

@@ -13,6 +13,7 @@ export const ADMIN_COUNTS_REFRESH_MS = 60_000;
 export const ADMIN_SEARCH_DEBOUNCE_MS = 300;
 export const ADMIN_USER_SEARCH_MIN_LENGTH = 2;
 export const WAITING_STALE_DAYS = 3;
+export const ADMIN_FIELD_ERROR_CLASS = "m-0 mt-1.5 text-[13px] text-danger-700";
 
 export type RequestFilter = "open" | "join" | "new" | "closed";
 

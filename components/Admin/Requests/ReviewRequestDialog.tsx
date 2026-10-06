@@ -2,7 +2,7 @@ import { useFormik } from "formik";
 import { useState } from "react";
 import { MaterialSymbol } from "react-material-symbols";
 import * as Yup from "yup";
-import { ADMIN_COPY, adminErrorMessage, slugifyNamespace } from "../../../contants/AdminConstants";
+import { ADMIN_COPY, ADMIN_FIELD_ERROR_CLASS, adminErrorMessage, slugifyNamespace } from "../../../contants/AdminConstants";
 import { DISPLAY_NAME_MAX_LENGTH, PRODUCTION_PREFIX } from "../../../contants/TenancyConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { useAdminRequest, useAdminTenancies } from "../../../hooks/UseAdmin";
@@ -26,7 +26,6 @@ interface Props {
 }
 
 const WIDTH = "max-w-[560px]";
-const FIELD_ERROR = "m-0 mt-1.5 text-[13px] text-danger-700";
 
 const schema = Yup.object({
     mode: Yup.string().oneOf(["join", "new"]).required(),
@@ -191,7 +190,7 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
                                 <p className="m-0 text-[13px] text-primary-500">{ADMIN_COPY.nothingToJoin}</p>
                             </>
                         )}
-                        {tenancyError && <p id="review-tenancy-error" role="alert" className={FIELD_ERROR}>{formik.errors.tenancy}</p>}
+                        {tenancyError && <p id="review-tenancy-error" role="alert" className={ADMIN_FIELD_ERROR_CLASS}>{formik.errors.tenancy}</p>}
                     </div>
                 )}
 

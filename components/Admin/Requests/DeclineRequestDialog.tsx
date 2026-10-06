@@ -1,7 +1,7 @@
 import { useFormik } from "formik";
 import { useState } from "react";
 import * as Yup from "yup";
-import { ADMIN_COPY, adminErrorFrom, adminErrorMessage } from "../../../contants/AdminConstants";
+import { ADMIN_COPY, ADMIN_FIELD_ERROR_CLASS, adminErrorFrom, adminErrorMessage } from "../../../contants/AdminConstants";
 import { MESSAGE_MAX_LENGTH } from "../../../contants/TenancyConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { useSubmitOnce } from "../../../hooks/UseSubmitOnce";
@@ -69,7 +69,7 @@ export function DeclineRequestDialog({ request, onCancel, onDeclined }: Props) {
                         onBlur={formik.handleBlur}
                         aria-describedby={formik.errors.message ? "decline-message-error" : undefined}
                     />
-                    {formik.errors.message && <p id="decline-message-error" role="alert" className="m-0 mt-1.5 text-[13px] text-danger-700">{formik.errors.message}</p>}
+                    {formik.errors.message && <p id="decline-message-error" role="alert" className={ADMIN_FIELD_ERROR_CLASS}>{formik.errors.message}</p>}
                 </div>
                 <ul className="m-0 flex list-none flex-col gap-2.5 p-0 text-sm leading-[21px] text-primary-700">
                     <li className="flex gap-2.5"><span className="text-primary-400">—</span><span>{ADMIN_COPY.declineBullet}</span></li>
