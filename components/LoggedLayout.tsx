@@ -1,13 +1,15 @@
 import Link from "next/link";
-import Router, { useRouter } from "next/router";
+import Router from "next/router";
 import { useState } from "react";
 import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_HOME, ROUTE_PAGE_MEMBERS, ROUTE_PAGE_NOTEBOOKS, ROUTE_PAGE_PROFILE, ROUTE_PAGE_TENANCY_SELECTOR } from "../contants/InternalRoutesConstants";
 import useComponentVisible from "../hooks/UseComponentVisible";
 import { useMembersPageTenancy } from "../hooks/UseWorkspace";
 import Head from "../node_modules/next/head";
 import { MaterialSymbol } from "react-material-symbols";
+import { AdminNavItem } from "./Admin/AdminNavItem";
 import { Logo } from "./Brand/Logo";
 import AvatarButton from "./Profile/AvatarButton";
+import { SidebarMenuItem } from "./SidebarMenuItem";
 import { useTenancyStore } from "./TenancyStore";
 
 interface Props {
@@ -17,6 +19,8 @@ interface Props {
   hideFooter?: boolean;
   className?: string;
   tenancyOptional?: boolean;
+  headerContent?: React.ReactNode;
+  scopeLabel?: string;
 }
 
 export default function LoggedLayour(props: Props) {
@@ -109,18 +113,19 @@ export default function LoggedLayour(props: Props) {
           </div>
 
           <ul className="flex flex-col gap-0.5 px-2 py-4">
-            <MenuItem href={ROUTE_PAGE_HOME} text="Home" icon="home" collapsed={menuClosed} />
-            <MenuItem href={ROUTE_PAGE_DATASETS} text="Datasets" icon="database" collapsed={menuClosed} />
-            <MenuItem href={ROUTE_PAGE_NOTEBOOKS} text="Notebooks" icon="code" collapsed={menuClosed} />
-            {membersTenancy && <MenuItem href={ROUTE_PAGE_MEMBERS} text="Members" icon="group" collapsed={menuClosed} />}
+            <SidebarMenuItem href={ROUTE_PAGE_HOME} text="Home" icon="home" collapsed={menuClosed} />
+            <SidebarMenuItem href={ROUTE_PAGE_DATASETS} text="Datasets" icon="database" collapsed={menuClosed} />
+            <SidebarMenuItem href={ROUTE_PAGE_NOTEBOOKS} text="Notebooks" icon="code" collapsed={menuClosed} />
+            {membersTenancy && <SidebarMenuItem href={ROUTE_PAGE_MEMBERS} text="Members" icon="group" collapsed={menuClosed} />}
           </ul>
           <hr className="mx-2 border-primary-200" />
           <ul className="p-2">
-            <MenuItem href={ROUTE_PAGE_PROFILE} text="Profile" icon="person" collapsed={menuClosed} />
+            <SidebarMenuItem href={ROUTE_PAGE_PROFILE} text="Profile" icon="person" collapsed={menuClosed} />
           </ul>
-          {!menuClosed && tenancySelected && (
+          <AdminNavItem collapsed={menuClosed} />
+          {!menuClosed && (props.scopeLabel || tenancySelected) && (
             <div className="mt-auto px-5 py-4 text-[11px] leading-4 tracking-[0.02em] text-primary-400">
-              {tenancySelected.split("/").join(" / ")}
+              {props.scopeLabel ?? tenancySelected.split("/").join(" / ")}
             </div>
           )}
         </aside>
@@ -131,9 +136,9 @@ export default function LoggedLayour(props: Props) {
             }`}
         >
           <div
-            className="flex justify-end items-center w-full h-16 pr-6 border-b border-b-primary-200 sticky top-0
-          backdrop-blur-md bg-primary-50/90 z-40"
+            className={`flex ${props.headerContent ? "justify-between pl-8" : "justify-end"} items-center w-full h-16 pr-6 border-b border-b-primary-200 sticky top-0 backdrop-blur-md bg-primary-50/90 z-40`}
           >
+            {props.headerContent}
             <AvatarButton />
           </div>
           <div
@@ -153,30 +158,4 @@ function CreateMenuItem(props) {
     <MaterialSymbol icon={props.icon} size={20} weight={400} grade={-25} className="text-primary-500" />
     {props.text}
   </Link>;
-}
-
-function MenuItem(props) {
-  const router = useRouter();
-
-  function active(href: string) {
-    return router.pathname === href || router.pathname.startsWith(href + "/");
-  }
-
-  const isActive = active(props.href);
-
-  return (
-    <li>
-      <Link
-        href={props.href}
-        title={props.collapsed ? props.text : undefined}
-        className={`flex items-center gap-3 h-10 rounded-md text-sm ${props.collapsed ? "justify-center" : "px-3"} ${isActive
-          ? "bg-secondary-500 font-semibold text-primary-900"
-          : "font-medium text-primary-700 hover:bg-primary-100"
-          }`}
-      >
-        <MaterialSymbol icon={props.icon} size={20} weight={400} grade={-25} fill={isActive} className={isActive ? "text-primary-900" : "text-primary-500"} />
-        {!props.collapsed && <span>{props.text}</span>}
-      </Link>
-    </li>
-  );
 }
