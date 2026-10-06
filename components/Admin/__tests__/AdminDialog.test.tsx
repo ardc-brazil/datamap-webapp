@@ -64,6 +64,16 @@ describe("AdminDialog", () => {
         expect(onDecline).toHaveBeenCalled();
     });
 
+    test("the footer link can be disabled", () => {
+        const onDecline = jest.fn();
+        render(<AdminDialog title="Join ATTO" widthClassName="max-w-[560px]" onClose={jest.fn()} secondaryLink={{ label: "Decline…", onClick: onDecline, disabled: true }} primary={{ label: "Approve", onClick: jest.fn() }} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Decline…" }));
+
+        expect((screen.getByRole("button", { name: "Decline…" }) as HTMLButtonElement).disabled).toBe(true);
+        expect(onDecline).not.toHaveBeenCalled();
+    });
+
     test("without a primary action the footer only closes", () => {
         render(<AdminDialog title="Review request" widthClassName="max-w-[560px]" onClose={jest.fn()} />);
 

@@ -1,6 +1,12 @@
 import { ReactNode, useId } from "react";
 import { MaterialSymbol } from "react-material-symbols";
 
+export interface FooterLink {
+  label: string
+  onClick(): void
+  disabled?: boolean
+}
+
 interface ModalProps {
   confimButtonText?: string;
   cancelButtonText?: string;
@@ -18,7 +24,7 @@ interface ModalProps {
   confirmDisabled?: boolean
   cancelDisabled?: boolean
   closeAriaLabel?: string
-  footerLink?: { label: string; onClick(): void }
+  footerLink?: FooterLink
   variant?: "default" | "xl"
 }
 
@@ -92,8 +98,9 @@ export default function Modal(props: ModalProps) {
             {props.footerLink &&
               <button
                 type="button"
+                disabled={props.footerLink.disabled}
                 onClick={() => props.footerLink.onClick()}
-                className="mr-auto text-[13px] font-semibold text-danger-700 hover:text-danger-800"
+                className="mr-auto text-[13px] font-semibold text-danger-700 hover:text-danger-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {props.footerLink.label}
               </button>

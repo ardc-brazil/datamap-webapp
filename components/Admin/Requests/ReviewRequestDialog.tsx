@@ -133,7 +133,7 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
             widthClassName={WIDTH}
             onClose={onClose}
             cancelDisabled={busy}
-            secondaryLink={{ label: "Decline…", onClick: () => onDecline(detail) }}
+            secondaryLink={{ label: "Decline…", onClick: () => onDecline(detail), disabled: busy }}
             primary={{ label: joining ? "Approve" : "Create and approve", disabled: blocked || busy, onClick: () => { void formik.submitForm(); } }}
         >
             <form onSubmit={formik.handleSubmit} className="flex flex-col gap-4" noValidate>

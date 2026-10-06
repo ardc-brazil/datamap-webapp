@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import PopupModal from "../base/PopupModal";
+import PopupModal, { FooterLink } from "../base/PopupModal";
 
 export interface AdminDialogAction {
     label: string
@@ -15,7 +15,7 @@ interface Props {
     children?: ReactNode
     onClose(): void
     primary?: AdminDialogAction
-    secondaryLink?: { label: string; onClick(): void }
+    secondaryLink?: FooterLink
     closeLabel?: string
     cancelDisabled?: boolean
 }

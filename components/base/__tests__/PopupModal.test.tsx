@@ -60,6 +60,17 @@ describe("PopupModal", () => {
         expect(onDecline).toHaveBeenCalledTimes(1);
     });
 
+    test("a disabled footer link cannot be pressed", () => {
+        const onDecline = jest.fn();
+        render(<PopupModal show title="Join ATTO" footerLink={{ label: "Decline…", onClick: onDecline, disabled: true }} cancel={jest.fn()}>body</PopupModal>);
+        const link = screen.getByRole("button", { name: "Decline…" }) as HTMLButtonElement;
+
+        fireEvent.click(link);
+
+        expect(link.disabled).toBe(true);
+        expect(onDecline).not.toHaveBeenCalled();
+    });
+
     test("the ✕ can carry its own label", () => {
         const cancel = jest.fn();
         render(<PopupModal show title="Join ATTO" closeAriaLabel="Close dialog" cancel={cancel}>body</PopupModal>);

@@ -117,6 +117,21 @@ describe("ReviewRequestDialog", () => {
         expect(onApproved).toHaveBeenCalledTimes(1);
     });
 
+    test("Decline… cannot be pressed while an approval is in flight", async () => {
+        let resolve: (value: unknown) => void = () => undefined;
+        mockApprove.mockImplementation(() => new Promise((r) => { resolve = r; }));
+        const { onDecline } = renderDialog();
+
+        fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+        await waitFor(() => expect(mockApprove).toHaveBeenCalled());
+        const decline = screen.getByRole("button", { name: "Decline…" }) as HTMLButtonElement;
+        fireEvent.click(decline);
+
+        expect(decline.disabled).toBe(true);
+        expect(onDecline).not.toHaveBeenCalled();
+        await act(async () => { resolve({}); });
+    });
+
     test("a new-tenancy request opens on New tenancy, prefilled, and creates it", async () => {
         mockDetail = { data: newRequestDetail(true) };
         mockApprove.mockResolvedValue({});
