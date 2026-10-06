@@ -149,6 +149,16 @@ describe("RequestsView", () => {
         expect(screen.queryByText(`reviewing ${REQUEST_ID}`)).toBeNull();
     });
 
+    test("reviewing the same request again after an approval opens it, even before the route change lands", () => {
+        mockRouter.query = { request: REQUEST_ID };
+
+        render(<RequestsView now={NOW} />);
+        fireEvent.click(screen.getByRole("button", { name: "stub approve" }));
+        fireEvent.click(screen.getByRole("button", { name: "Review" }));
+
+        expect(screen.getByText(`reviewing ${REQUEST_ID}`)).toBeTruthy();
+    });
+
     test("Decline… from the row menu opens the decline prompt", () => {
         render(<RequestsView now={NOW} />);
 

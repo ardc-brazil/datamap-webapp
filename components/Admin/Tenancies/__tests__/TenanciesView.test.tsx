@@ -5,6 +5,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 const mockReplace = jest.fn();
 const mockRetry = jest.fn();
 const mockRevalidateTenancies = jest.fn();
+const mockRevalidateRequests = jest.fn();
 let mockRouter: { pathname: string, query: Record<string, string>, replace: typeof mockReplace };
 let mockTenancies: { data?: unknown, error?: unknown, mutate: typeof mockRetry };
 
@@ -12,6 +13,7 @@ jest.mock("next/router", () => ({ useRouter: () => mockRouter }));
 jest.mock("../../../../hooks/UseAdmin", () => ({
     useAdminTenancies: () => mockTenancies,
     revalidateAdminTenancies: () => mockRevalidateTenancies(),
+    revalidateAdminRequests: () => mockRevalidateRequests(),
 }));
 jest.mock("../TenancyMembersPanel", () => {
     const React = require("react");
@@ -90,7 +92,7 @@ describe("TenanciesView", () => {
         );
     });
 
-    test("a new tenancy goes into the list at once, the list is refetched, and it is selected", () => {
+    test("a new tenancy goes into the list at once, the list and the requests are refetched, and it is selected", () => {
         render(<TenanciesView />);
 
         fireEvent.click(screen.getByRole("button", { name: "+ New tenancy" }));
@@ -101,6 +103,7 @@ describe("TenanciesView", () => {
         expect(options).toEqual({ revalidate: true });
         expect(update(ADMIN_TENANCIES)).toEqual([...ADMIN_TENANCIES, { path: "datamap/production/cerrado-flux" }]);
         expect(mockRevalidateTenancies).not.toHaveBeenCalled();
+        expect(mockRevalidateRequests).toHaveBeenCalledTimes(1);
         expect(mockReplace).toHaveBeenCalledWith(
             { pathname: "/app/admin/tenancies", query: { tenancy: "datamap/production/cerrado-flux" } },
             undefined,

@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { ADMIN_COPY, ADMIN_STATE_BOX_CLASS } from "../../../contants/AdminConstants";
-import { useAdminTenancies } from "../../../hooks/UseAdmin";
+import { revalidateAdminRequests, useAdminTenancies } from "../../../hooks/UseAdmin";
 import { AdminTenancy } from "../../../types/GatekeeperAPI";
 import { AdminLoadError } from "../AdminLoadError";
 import { AdminPageHeader } from "../AdminPageHeader";
@@ -27,6 +27,7 @@ export function TenanciesView() {
     function created(tenancy: AdminTenancy) {
         setCreating(false);
         mutate((list) => [...(list ?? []).filter((item) => item.path !== tenancy.path), tenancy], { revalidate: true });
+        revalidateAdminRequests();
         select(tenancy.path);
     }
 

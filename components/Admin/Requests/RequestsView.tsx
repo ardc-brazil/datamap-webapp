@@ -138,7 +138,7 @@ export function RequestsView({ now }: { now?: Date }) {
                 q={q}
                 now={today}
                 onRetry={() => mutate()}
-                onReview={(request) => setReviewing(request.id)}
+                onReview={(request) => { setApprovedId(null); setReviewing(request.id); }}
                 onDecline={startDecline}
             />
             {page && page.total_count > page.limit && <Pager page={page} onOffset={setOffset} />}
