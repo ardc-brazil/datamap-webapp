@@ -31,6 +31,18 @@ describe("the admin claim", () => {
         expect(token.admin).toBe(true);
     });
 
+    test("a forged update({ admin: true }) is ignored: the claim still comes from the gatekeeper", async () => {
+        jest.mocked(getUserByUID).mockResolvedValue({ id: "u1", roles: [], tenancies: ["datamap/production/public"] } as any);
+
+        const token = await authOptions.callbacks.jwt({
+            token: { uid: "u1", v: TOKEN_VERSION },
+            trigger: "update",
+            session: { admin: true },
+        } as any);
+
+        expect(token.admin).toBeUndefined();
+    });
+
     test("the session exposes only the boolean", async () => {
         const admin: any = await authOptions.callbacks.session({ session: { user: {} }, token: { uid: "u1", admin: true } } as any);
         const member: any = await authOptions.callbacks.session({ session: { user: {} }, token: { uid: "u2" } } as any);
