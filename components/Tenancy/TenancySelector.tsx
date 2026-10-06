@@ -16,12 +16,12 @@ export function TenancySelector() {
     const { data: session, update } = useSession();
     const tenancySelected = useTenancyStore((state) => state.tenancySelected);
     const setTenancySelected = useTenancyStore((state) => state.setTenancySelected);
-    const { data: tenancies, error } = useMyTenancies();
+    const { data: tenancies, error, isValidating } = useMyTenancies();
     const [requesting, setRequesting] = useState(false);
     const selection = tenancies ? tenancySelectionFor(tenancies) : null;
 
     useEffect(() => {
-        if (!tenancies) {
+        if (!tenancies || isValidating) {
             return;
         }
         if (sessionTenanciesDiffer(session?.user?.tenancies, tenancies)) {
@@ -35,7 +35,7 @@ export function TenancySelector() {
             setTenancySelected("");
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tenancies]);
+    }, [tenancies, isValidating]);
 
     function choose(path: string) {
         trackUiEvent("tenancy_switched");

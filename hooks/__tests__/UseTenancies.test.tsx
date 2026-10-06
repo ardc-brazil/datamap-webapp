@@ -1,16 +1,18 @@
 /** @jest-environment jsdom */
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 
 const update = jest.fn() as any;
+const mutate = jest.fn() as any;
 let requests: any;
 let sessionTenancies: string[];
 
-jest.mock("swr", () => ({ __esModule: true, default: () => ({ data: requests, mutate: jest.fn() }) }));
+jest.mock("swr", () => ({ __esModule: true, default: () => ({ data: requests, mutate: jest.fn() }), mutate: (...args: unknown[]) => mutate(...args) }));
 jest.mock("next-auth/react", () => ({ useSession: () => ({ data: { user: { tenancies: sessionTenancies } }, update }) }));
 jest.mock("../../lib/fetcher", () => ({ fetcher: jest.fn() }));
 
-import { useLatestTenancyRequest } from "../UseTenancies";
+import { TENANCIES_KEY } from "../../contants/TenancyConstants";
+import { revalidateMyTenancies, useLatestTenancyRequest } from "../UseTenancies";
 
 const AMAZON = { path: "datamap/production/data-amazon", display_name: "Data Amazon", is_default: false, is_legacy: false };
 
@@ -23,6 +25,7 @@ function approved(): any {
 
 beforeEach(() => {
     update.mockReset();
+    mutate.mockReset();
     sessionTenancies = ["datamap/production/public"];
 });
 
@@ -36,6 +39,16 @@ describe("useLatestTenancyRequest", () => {
         expect(update).toHaveBeenCalledTimes(1);
     });
 
+    test("an approval the session lacks revalidates the user's tenancies once", async () => {
+        requests = [approved()];
+
+        const { rerender } = renderHook(() => useLatestTenancyRequest());
+        rerender();
+
+        await waitFor(() => expect(mutate).toHaveBeenCalledTimes(1));
+        expect(mutate).toHaveBeenCalledWith(TENANCIES_KEY);
+    });
+
     test("an approval the session already has does not", () => {
         requests = [approved()];
         sessionTenancies = ["datamap/production/public", AMAZON.path];
@@ -43,6 +56,7 @@ describe("useLatestTenancyRequest", () => {
         renderHook(() => useLatestTenancyRequest());
 
         expect(update).not.toHaveBeenCalled();
+        expect(mutate).not.toHaveBeenCalled();
     });
 
     test("a pending request is reported and refreshes nothing", () => {
@@ -64,5 +78,23 @@ describe("useLatestTenancyRequest", () => {
         rerender();
 
         expect(update).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("revalidateMyTenancies", () => {
+    test("revalidates the user's tenancies", async () => {
+        await revalidateMyTenancies();
+
+        expect(mutate).toHaveBeenCalledWith(TENANCIES_KEY);
+    });
+
+    test("a failed revalidation is logged, never thrown", async () => {
+        mutate.mockRejectedValue(new Error("offline"));
+        const consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
+
+        await expect(revalidateMyTenancies()).resolves.toBeUndefined();
+
+        expect(consoleError).toHaveBeenCalled();
+        consoleError.mockRestore();
     });
 });

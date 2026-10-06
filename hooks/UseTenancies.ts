@@ -1,6 +1,6 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useRef } from "react";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import { TENANCIES_KEY, TENANCY_INVITATIONS_KEY, TENANCY_REQUESTS_KEY } from "../contants/TenancyConstants";
 import { fetcher } from "../lib/fetcher";
 import { approvedTenancyMissingFromSession, latestRequestState } from "../lib/tenancyRequests";
@@ -8,6 +8,14 @@ import { TenancyInvitation, TenancyRequest, TenancySummary } from "../types/Gate
 
 export function useMyTenancies() {
     return useSWR<TenancySummary[]>(TENANCIES_KEY, fetcher);
+}
+
+export async function revalidateMyTenancies(): Promise<void> {
+    try {
+        await mutate(TENANCIES_KEY);
+    } catch (e) {
+        console.error("Refreshing your tenancies failed", e);
+    }
 }
 
 export function useTenancyRequests() {
@@ -30,6 +38,7 @@ export function useLatestTenancyRequest() {
         if (missing && requestId && refreshedFor.current !== requestId) {
             refreshedFor.current = requestId;
             update();
+            revalidateMyTenancies();
         }
     }, [missing, requestId, update]);
 

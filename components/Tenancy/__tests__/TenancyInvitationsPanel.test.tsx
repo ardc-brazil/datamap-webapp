@@ -8,6 +8,7 @@ const update = jest.fn() as any;
 const mutate = jest.fn() as any;
 const push = jest.fn() as any;
 const setTenancySelected = jest.fn() as any;
+const revalidateMyTenancies = jest.fn() as any;
 let invitations: any;
 let calls: string[];
 
@@ -16,6 +17,7 @@ jest.mock("../../../gateways/BFFAPI", () => ({
 }));
 jest.mock("../../../hooks/UseTenancies", () => ({
     useTenancyInvitations: () => ({ data: invitations, mutate }),
+    revalidateMyTenancies: () => revalidateMyTenancies(),
 }));
 jest.mock("next-auth/react", () => ({ useSession: () => ({ data: { user: {} }, update }) }));
 jest.mock("../../TenancyStore", () => ({
@@ -43,6 +45,7 @@ beforeEach(() => {
     setTenancySelected.mockReset().mockImplementation(() => { calls.push("select"); });
     push.mockReset().mockImplementation(() => { calls.push("push"); });
     mutate.mockReset();
+    revalidateMyTenancies.mockReset().mockImplementation(async () => { calls.push("tenancies"); });
 });
 
 describe("TenancyInvitationsPanel", () => {
@@ -53,7 +56,7 @@ describe("TenancyInvitationsPanel", () => {
         expect(screen.getByText("108 datasets · Oct 4")).toBeTruthy();
     });
 
-    test("Accept joins, refreshes the session, selects the tenancy and opens the home, in that order", async () => {
+    test("Accept joins, refreshes the session and the tenancies, selects the tenancy and opens the home, in that order", async () => {
         render(<TenancyInvitationsPanel />);
 
         fireEvent.click(screen.getByRole("button", { name: "Accept" }));
@@ -61,7 +64,7 @@ describe("TenancyInvitationsPanel", () => {
         await waitFor(() => expect(push).toHaveBeenCalledWith("/app/home"));
         expect(acceptTenancyInvitation).toHaveBeenCalledWith("ti1");
         expect(setTenancySelected).toHaveBeenCalledWith(AMAZON.path);
-        expect(calls).toEqual(["accept", "update", "select", "push"]);
+        expect(calls).toEqual(["accept", "update", "tenancies", "select", "push"]);
         await waitFor(() => expect(mutate).toHaveBeenCalled());
     });
 
@@ -128,6 +131,7 @@ describe("TenancyInvitationsPanel", () => {
         await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("This invitation is no longer open. It may have been withdrawn."));
         expect(mutate).toHaveBeenCalled();
         expect(update).not.toHaveBeenCalled();
+        expect(revalidateMyTenancies).not.toHaveBeenCalled();
         expect(push).not.toHaveBeenCalled();
     });
 

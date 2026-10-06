@@ -3,6 +3,7 @@ import Router, { useRouter } from "next/router";
 import { ReactNode, useMemo, useRef } from "react";
 import { SWRConfig } from "swr";
 import { ROUTE_PAGE_TENANCY_SELECTOR } from "../../contants/InternalRoutesConstants";
+import { revalidateMyTenancies } from "../../hooks/UseTenancies";
 import { loginUrlFor } from "../../lib/authRoutes";
 import { isTenancyRevoked } from "../../lib/tenancyRevocation";
 import { useTenancyStore } from "../TenancyStore";
@@ -42,6 +43,7 @@ export function RequireSession({ loading, children }: Props) {
             try {
                 setTenancySelected("");
                 await update();
+                await revalidateMyTenancies();
                 await Router.replace(ROUTE_PAGE_TENANCY_SELECTOR);
             } finally {
                 leaving.current = false;

@@ -6,6 +6,7 @@ import { useSWRConfig } from "swr";
 const update = jest.fn() as any;
 const replace = jest.fn() as any;
 const setTenancySelected = jest.fn() as any;
+const mockRevalidateMyTenancies = jest.fn() as any;
 let mockSessionData: unknown;
 let mockSelected: boolean;
 
@@ -24,6 +25,8 @@ jest.mock("next/router", () => ({
 jest.mock("../../TenancyStore", () => ({
     useTenancyStore: (selector: (state: unknown) => unknown) => selector({ setTenancySelected, isTenancySelected: () => mockSelected }),
 }));
+
+jest.mock("../../../hooks/UseTenancies", () => ({ revalidateMyTenancies: () => mockRevalidateMyTenancies() }));
 
 import { RequireSession } from "../RequireSession";
 
@@ -51,6 +54,7 @@ beforeEach(() => {
     update.mockReset();
     replace.mockReset();
     setTenancySelected.mockReset();
+    mockRevalidateMyTenancies.mockReset().mockResolvedValue(undefined);
     seenOnError.length = 0;
     mockSessionData = sessionWith(["datamap/production/public", "datamap/production/data-amazon"]);
     mockSelected = true;
@@ -65,6 +69,19 @@ describe("RequireSession and a revoked tenancy", () => {
         await waitFor(() => expect(replace).toHaveBeenCalledWith("/app/tenancy"));
         expect(setTenancySelected).toHaveBeenCalledWith("");
         expect(update).toHaveBeenCalledTimes(1);
+    });
+
+    test("the user's tenancies are revalidated before the selector opens", async () => {
+        const calls: string[] = [];
+        update.mockImplementation(async () => { calls.push("update"); });
+        mockRevalidateMyTenancies.mockImplementation(async () => { calls.push("tenancies"); });
+        replace.mockImplementation(async () => { calls.push("replace"); });
+        renderWith({ status: 401, detail: "unauthorized_tenancy: user is not a member" });
+
+        fireEvent.click(screen.getByRole("button", { name: "fail" }));
+
+        await waitFor(() => expect(replace).toHaveBeenCalledWith("/app/tenancy"));
+        expect(calls).toEqual(["update", "tenancies", "replace"]);
     });
 
     test("any other error is left to the page", async () => {

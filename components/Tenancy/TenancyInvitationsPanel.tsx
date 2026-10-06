@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ROUTE_PAGE_HOME } from "../../contants/InternalRoutesConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { useRowActions } from "../../hooks/UseRowActions";
-import { useTenancyInvitations } from "../../hooks/UseTenancies";
+import { revalidateMyTenancies, useTenancyInvitations } from "../../hooks/UseTenancies";
 import { formatShortDate } from "../../lib/embargoDisplay";
 import { TenancyInvitation, TenancySummary } from "../../types/GatekeeperAPI";
 import { useTenancyStore } from "../TenancyStore";
@@ -44,6 +44,7 @@ export function TenancyInvitationsPanel(props: { className?: string }) {
         } catch (e) {
             console.error("Joined the tenancy, but refreshing the session failed", e);
         }
+        await revalidateMyTenancies();
         setTenancySelected(tenancy.path);
         Router.push(ROUTE_PAGE_HOME);
     }
