@@ -39,11 +39,15 @@ function membersPage(items: unknown[], total = items.length) {
     return [{ items, total_count: total, limit: 50, offset: 0 }];
 }
 
+function someMembers(count: number, from = 0) {
+    return Array.from({ length: count }, (_, i) => ({ id: `m${from + i}`, name: `Member ${from + i}`, orcid: null }));
+}
+
 beforeEach(() => {
     setSize.mockReset();
     mutate.mockReset();
     membersCalls.length = 0;
-    pageTenancy = { tenancy: AMAZON, loading: false };
+    pageTenancy = { tenancy: AMAZON, loading: false, error: undefined };
     members = {
         data: membersPage([
             { id: "m1", name: "Luciana Rizzo", orcid: "0000-0002-1825-0097" },
@@ -76,8 +80,49 @@ describe("WorkspaceMembers", () => {
         expect(setSize).toHaveBeenCalledWith(2);
     });
 
+    test("every member loaded leaves nothing more to show", () => {
+        members = { data: membersPage(someMembers(50), 50) };
+        render(<WorkspaceMembers />);
+
+        expect(screen.queryByRole("button", { name: /^Show \d+ more$/ })).toBeNull();
+    });
+
+    test("the last page offers only the members left", () => {
+        members = { data: [...membersPage(someMembers(50), 120), { items: someMembers(50, 50), total_count: 120, limit: 50, offset: 50 }] };
+        render(<WorkspaceMembers />);
+
+        expect(screen.getByRole("button", { name: "Show 20 more" })).toBeTruthy();
+    });
+
+    test("a later page that cannot load keeps the members already loaded and says why below them", () => {
+        members = { data: membersPage(someMembers(50), 120), error: { status: 500, detail: "unavailable" } };
+        render(<WorkspaceMembers />);
+
+        expect(screen.getByText("Member 0")).toBeTruthy();
+        expect(screen.getByText("Member 49")).toBeTruthy();
+        const alert = screen.getByRole("alert");
+        expect(alert.textContent).toBe("Something went wrong. Please try again.");
+        expect(screen.getByRole("list").compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    test("a members list refused with a 409 says why", () => {
+        members = { error: { status: 409, detail: "public_tenancy_locked" } };
+        render(<WorkspaceMembers />);
+
+        expect(screen.getByRole("alert").textContent).toBe("Everyone on DataMap is in Public, so it has no Members page.");
+    });
+
+    test("tenancies that cannot load say so, rather than that the tenancy has no Members page", () => {
+        pageTenancy = { tenancy: null, loading: false, error: { status: 500, detail: "unavailable" } };
+        render(<WorkspaceMembers />);
+
+        expect(screen.getByRole("alert").textContent).toBe("Something went wrong. Please try again.");
+        expect(screen.queryByText(NO_MEMBERS_PAGE)).toBeNull();
+        expect(screen.queryByRole("button", { name: "+ Invite" })).toBeNull();
+    });
+
     test("Public, a legacy tenancy or a tenancy the user is not in has no Members page and nothing to invite to", () => {
-        pageTenancy = { tenancy: null, loading: false };
+        pageTenancy = { tenancy: null, loading: false, error: undefined };
         render(<WorkspaceMembers />);
 
         expect(screen.getByText(NO_MEMBERS_PAGE)).toBeTruthy();
@@ -103,7 +148,7 @@ describe("WorkspaceMembers", () => {
     });
 
     test("waits for the user's tenancies before deciding", () => {
-        pageTenancy = { tenancy: null, loading: true };
+        pageTenancy = { tenancy: null, loading: true, error: undefined };
         render(<WorkspaceMembers />);
 
         expect(screen.getByRole("status").textContent).toBe("Loading…");

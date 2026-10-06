@@ -7,10 +7,10 @@ import { membersPageTenancy } from "../lib/tenancySelection";
 import { GatekeeperPage, TenancySummary, WorkspaceInvitation, WorkspaceMember } from "../types/GatekeeperAPI";
 import { useMyTenancies } from "./UseTenancies";
 
-export function useMembersPageTenancy(): { tenancy: TenancySummary | null; loading: boolean } {
+export function useMembersPageTenancy(): { tenancy: TenancySummary | null; loading: boolean; error?: { status?: number; detail?: string } } {
     const { data, error } = useMyTenancies();
     const selected = useTenancyStore((state) => state.tenancySelected);
-    return { tenancy: membersPageTenancy(data, selected), loading: !data && !error };
+    return { tenancy: membersPageTenancy(data, selected), loading: !data && !error, error: data ? undefined : error };
 }
 
 export function useWorkspaceMembers(tenancy: string | null) {

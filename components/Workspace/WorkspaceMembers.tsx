@@ -10,8 +10,12 @@ import { WorkspaceInvitations } from "./WorkspaceInvitations";
 
 export const NO_MEMBERS_PAGE = "This tenancy has no Members page. Everyone on DataMap is in Public, and legacy tenancies are read-only.";
 
+function LoadError({ detail }: { detail?: string }) {
+    return <p role="alert" className="m-0 mt-3 text-sm text-danger-700">{tenancyErrorMessage(detail)}</p>;
+}
+
 export function WorkspaceMembers() {
-    const { tenancy, loading } = useMembersPageTenancy();
+    const { tenancy, loading, error } = useMembersPageTenancy();
 
     if (loading) {
         return <p role="status" className="m-0 text-sm text-primary-500">Loading…</p>;
@@ -20,7 +24,9 @@ export function WorkspaceMembers() {
         return (
             <div className="w-full max-w-5xl mx-auto">
                 <h2 className="m-0">Members</h2>
-                <p className="mt-2 mb-0 text-[15px] leading-[23px] text-primary-600">{NO_MEMBERS_PAGE}</p>
+                {error
+                    ? <LoadError detail={error.detail} />
+                    : <p className="mt-2 mb-0 text-[15px] leading-[23px] text-primary-600">{NO_MEMBERS_PAGE}</p>}
             </div>
         );
     }
@@ -50,10 +56,10 @@ function MembersOf({ tenancy }: { tenancy: TenancySummary }) {
 
             <section aria-label={`Members of ${tenancy.display_name}`} className="mt-8">
                 <h3 className={SHARE_SECTION_LABEL_CLASS}>{`Members · ${data ? total : "…"}`}</h3>
-                {error ? (
-                    <p role="alert" className="m-0 mt-3 text-sm text-danger-700">{tenancyErrorMessage(error.detail)}</p>
-                ) : !data ? (
-                    <p role="status" className="m-0 mt-3 text-sm text-primary-500">Loading members…</p>
+                {!data ? (
+                    error
+                        ? <LoadError detail={error.detail} />
+                        : <p role="status" className="m-0 mt-3 text-sm text-primary-500">Loading members…</p>
                 ) : (
                     <>
                         <ul className="m-0 mt-3 p-0 px-4 list-none rounded-lg border border-primary-200 bg-primary-0 divide-y divide-primary-100">
@@ -68,6 +74,7 @@ function MembersOf({ tenancy }: { tenancy: TenancySummary }) {
                                 </li>
                             ))}
                         </ul>
+                        {error && <LoadError detail={error.detail} />}
                         {remaining > 0 &&
                             <button
                                 type="button"

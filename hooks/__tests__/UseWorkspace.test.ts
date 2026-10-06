@@ -1,6 +1,7 @@
 const mockUseSWR = jest.fn((..._args: unknown[]) => ({ data: undefined }));
 const mockUseSWRInfinite = jest.fn((..._args: unknown[]) => ({ data: undefined }));
 let mockTenancies: unknown;
+let mockTenanciesError: unknown;
 
 jest.mock("swr", () => ({ __esModule: true, default: (...args: unknown[]) => mockUseSWR(...args) }));
 jest.mock("swr/infinite", () => ({ __esModule: true, default: (...args: unknown[]) => mockUseSWRInfinite(...args) }));
@@ -8,7 +9,7 @@ jest.mock("../../lib/fetcher", () => ({ fetcher: jest.fn() }));
 jest.mock("../../components/TenancyStore", () => ({
     useTenancyStore: (selector: (state: unknown) => unknown) => selector({ tenancySelected: "datamap/production/data-amazon" }),
 }));
-jest.mock("../UseTenancies", () => ({ useMyTenancies: () => ({ data: mockTenancies, error: undefined }) }));
+jest.mock("../UseTenancies", () => ({ useMyTenancies: () => ({ data: mockTenancies, error: mockTenanciesError }) }));
 
 import { fetcher } from "../../lib/fetcher";
 import { useMembersPageTenancy, useWorkspaceInvitations, useWorkspaceMembers } from "../UseWorkspace";
@@ -29,10 +30,22 @@ function page(offset: number, count: number, total: number) {
 describe("the workspace hooks", () => {
     test("the Members page is for the selected tenancy, once the user's tenancies are known", () => {
         mockTenancies = undefined;
-        expect(useMembersPageTenancy()).toEqual({ tenancy: null, loading: true });
+        mockTenanciesError = undefined;
+        expect(useMembersPageTenancy()).toEqual({ tenancy: null, loading: true, error: undefined });
 
         mockTenancies = [PUBLIC, AMAZON];
-        expect(useMembersPageTenancy()).toEqual({ tenancy: AMAZON, loading: false });
+        expect(useMembersPageTenancy()).toEqual({ tenancy: AMAZON, loading: false, error: undefined });
+    });
+
+    test("the user's tenancies that cannot load are an error, not a tenancy without a Members page", () => {
+        const failure = { status: 500, detail: "unavailable" };
+        mockTenancies = undefined;
+        mockTenanciesError = failure;
+        expect(useMembersPageTenancy()).toEqual({ tenancy: null, loading: false, error: failure });
+
+        mockTenancies = [PUBLIC, AMAZON];
+        expect(useMembersPageTenancy()).toEqual({ tenancy: AMAZON, loading: false, error: undefined });
+        mockTenanciesError = undefined;
     });
 
     test("members load 50 at a time and stop after the last page", () => {
