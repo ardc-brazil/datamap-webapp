@@ -39,10 +39,27 @@ describe("PopupModal", () => {
         expect(screen.getByRole("button", { name: "Create" }).className).toContain("disabled:bg-primary-200");
     });
 
-    test("danger makes the confirm red", () => {
-        render(<PopupModal show danger title="Remove?" confimButtonText="Remove" confim={jest.fn()} cancel={jest.fn()}>body</PopupModal>);
+    test("a destructive confirm in the xl variant is danger red", () => {
+        render(<PopupModal show variant="xl" destructive title="Remove?" confimButtonText="Remove" confim={jest.fn()} cancel={jest.fn()}>body</PopupModal>);
 
-        expect(screen.getByRole("button", { name: "Remove" }).className).toContain("bg-danger-700");
+        const confirm = screen.getByRole("button", { name: "Remove" });
+        expect(confirm.className).toContain("bg-danger-700");
+        expect(confirm.className).not.toContain("bg-error-600");
+    });
+
+    test("noPaddingContent drops the xl body padding but keeps its gap", () => {
+        render(<PopupModal show variant="xl" noPaddingContent title="Flush" cancel={jest.fn()}><p>body</p></PopupModal>);
+
+        const body = screen.getByText("body").parentElement;
+        expect(body.className).toContain("gap-4");
+        expect(body.className).not.toContain("px-6");
+    });
+
+    test("a confirm action must carry its label", () => {
+        // @ts-expect-error confimButtonText is required with confim
+        render(<PopupModal show title="Unlabelled" confim={jest.fn()} cancel={jest.fn()}>body</PopupModal>);
+
+        expect(screen.getByRole("dialog", { name: "Unlabelled" })).toBeTruthy();
     });
 
     test("a subtitle sits under the title", () => {

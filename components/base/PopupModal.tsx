@@ -7,10 +7,12 @@ export interface FooterLink {
   disabled?: boolean
 }
 
-interface ModalProps {
-  confimButtonText?: string;
+type ConfirmProps =
+  | { confim(): void; confimButtonText: string }
+  | { confim?: undefined; confimButtonText?: string };
+
+type ModalProps = ConfirmProps & {
   cancelButtonText?: string;
-  confim?(): void;
   cancel?(): void;
   children?: any;
   title: string;
@@ -18,7 +20,6 @@ interface ModalProps {
   show?: Boolean
   noPaddingContent?: boolean
   destructive?: boolean
-  danger?: boolean
   maxWidthClassName?: string
   hideCancel?: boolean
   confirmDisabled?: boolean
@@ -26,33 +27,31 @@ interface ModalProps {
   closeAriaLabel?: string
   footerLink?: FooterLink
   variant?: "default" | "xl"
-}
+};
 
 const FRAMES = {
   default: {
     card: "rounded-lg shadow-xl shadow-primary-900/10",
     header: "items-center pl-5 pr-3 py-3.5 border-b border-primary-200",
-    body: "px-5 py-4",
+    layout: "",
+    padding: "px-5 py-4",
     footer: "px-5 py-3",
     disabled: "disabled:opacity-50",
+    destructive: "bg-error-600 hover:bg-error-700 text-primary-0",
   },
   xl: {
     card: "rounded-xl shadow-2xl shadow-primary-900/20",
     header: "items-start px-6 pt-5 pb-4",
-    body: "flex flex-col gap-4 px-6 pb-5",
+    layout: "flex flex-col gap-4",
+    padding: "px-6 pb-5",
     footer: "px-6 py-4",
     disabled: "disabled:bg-primary-200 disabled:text-primary-400",
+    destructive: "bg-danger-700 hover:bg-danger-800 text-primary-0",
   },
 };
 
-function confirmColorsOf(props: ModalProps): string {
-  if (props.danger) {
-    return "bg-danger-700 hover:bg-danger-800 text-primary-0";
-  }
-  if (props.destructive) {
-    return "bg-error-600 hover:bg-error-700 text-primary-0";
-  }
-  return "bg-primary-900 hover:bg-primary-800 text-primary-50";
+function confirmColorsOf(props: ModalProps, frame: typeof FRAMES.default): string {
+  return props.destructive ? frame.destructive : "bg-primary-900 hover:bg-primary-800 text-primary-50";
 }
 
 export default function Modal(props: ModalProps) {
@@ -91,7 +90,7 @@ export default function Modal(props: ModalProps) {
               <MaterialSymbol icon="close" size={20} grade={-25} weight={400} />
             </button>
           </div>
-          <div className={`relative flex-auto min-h-0 overflow-y-auto text-sm leading-5 text-primary-700 ${props.noPaddingContent ? "" : frame.body}`}>
+          <div className={`relative flex-auto min-h-0 overflow-y-auto text-sm leading-5 text-primary-700 ${frame.layout} ${props.noPaddingContent ? "" : frame.padding}`}>
             {props.children}
           </div>
           <div className={`flex flex-none items-center justify-end gap-2 border-t border-primary-200 ${frame.footer}`}>
@@ -117,7 +116,7 @@ export default function Modal(props: ModalProps) {
             }
             {props.confim &&
               <button
-                className={`h-9 px-3.5 rounded-md text-[13px] font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed ${frame.disabled} ${confirmColorsOf(props)}`}
+                className={`h-9 px-3.5 rounded-md text-[13px] font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed ${frame.disabled} ${confirmColorsOf(props, frame)}`}
                 type="button"
                 disabled={props.confirmDisabled}
                 onClick={() => props.confim()}

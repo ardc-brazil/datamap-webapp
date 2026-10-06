@@ -37,7 +37,7 @@ export function AdminDialog(props: Props) {
             confim={primary?.onClick}
             confimButtonText={primary?.label}
             confirmDisabled={primary?.disabled}
-            danger={primary?.destructive}
+            destructive={primary?.destructive}
         >
             {props.children}
         </PopupModal>
