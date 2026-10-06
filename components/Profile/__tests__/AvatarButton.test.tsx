@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 
 const push = jest.fn() as any;
 let session: any;
+let mockMembersTenancy: unknown = null;
 
 jest.mock("next-auth/react", () => ({
     useSession: () => ({ data: session, status: "authenticated" }),
@@ -12,6 +13,9 @@ jest.mock("next-auth/react", () => ({
 jest.mock("next/router", () => ({ __esModule: true, default: { push: (...args: unknown[]) => push(...args) } }));
 jest.mock("../../TenancyStore", () => ({
     useTenancyStore: (selector: (state: unknown) => unknown) => selector({ tenancySelected: "datamap/production/public" }),
+}));
+jest.mock("../../../hooks/UseWorkspace", () => ({
+    useMembersPageTenancy: () => ({ tenancy: mockMembersTenancy, loading: false }),
 }));
 jest.mock("../../../gateways/BFFAPI", () => ({ BFFAPI: jest.fn().mockImplementation(() => ({})) }));
 jest.mock("swr", () => ({ __esModule: true, default: jest.fn(), mutate: jest.fn() }));
@@ -25,6 +29,7 @@ function openMenu() {
 beforeEach(() => {
     push.mockReset();
     session = { user: { name: "Fernanda Lima", email: "fernanda@inpe.br", image: null, tenancies: ["datamap/production/public"] } };
+    mockMembersTenancy = null;
 });
 
 describe("AvatarButton", () => {
@@ -53,5 +58,30 @@ describe("AvatarButton", () => {
         fireEvent.click(screen.getByRole("menuitem", { name: /Request access to a tenancy/ }));
 
         expect(screen.getByRole("dialog", { name: "Request access" })).toBeTruthy();
+    });
+
+    test("a tenancy open to members gets a Members item", () => {
+        mockMembersTenancy = { path: "datamap/production/data-amazon", display_name: "Data Amazon", is_default: false, is_legacy: false };
+        render(<AvatarButton />);
+        openMenu();
+
+        expect(screen.getByRole("menuitem", { name: /Members/ })).toBeTruthy();
+    });
+
+    test("Public, legacy, or no tenancy at all has no Members item", () => {
+        render(<AvatarButton />);
+        openMenu();
+
+        expect(screen.queryByRole("menuitem", { name: /Members/ })).toBeNull();
+    });
+
+    test("Members pushes the Members page", () => {
+        mockMembersTenancy = { path: "datamap/production/data-amazon", display_name: "Data Amazon", is_default: false, is_legacy: false };
+        render(<AvatarButton />);
+        openMenu();
+
+        fireEvent.click(screen.getByRole("menuitem", { name: /Members/ }));
+
+        expect(push).toHaveBeenCalledWith("/app/members");
     });
 });
