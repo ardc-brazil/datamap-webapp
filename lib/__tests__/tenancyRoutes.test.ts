@@ -185,4 +185,86 @@ describe("the user's tenancy BFF routes", () => {
 
         expect(res.statusCode).toBe(405);
     });
+
+    test("GET on decline is 405", async () => {
+        const res = await send(declineHandler, "GET", { invitationId: INVITATION_ID });
+
+        expect(res.statusCode).toBe(405);
+    });
+
+    test("accepting or declining with a non-UUID id never reaches the gatekeeper", async () => {
+        jest.mocked(acceptTenancyInvitation).mockClear();
+        jest.mocked(declineTenancyInvitation).mockClear();
+
+        const accepted = await send(acceptHandler, "POST", { invitationId: "../../admin" }, {}, JSON_HEADERS);
+        const declined = await send(declineHandler, "POST", { invitationId: "../../admin" }, {}, JSON_HEADERS);
+
+        expect(accepted.statusCode).toBe(404);
+        expect(accepted.json).toHaveBeenCalledWith({ detail: "invitation_not_found" });
+        expect(declined.statusCode).toBe(404);
+        expect(declined.json).toHaveBeenCalledWith({ detail: "invitation_not_found" });
+        expect(acceptTenancyInvitation).not.toHaveBeenCalled();
+        expect(declineTenancyInvitation).not.toHaveBeenCalled();
+    });
+
+    test("accepting or declining without JSON is refused before the gatekeeper", async () => {
+        jest.mocked(acceptTenancyInvitation).mockClear();
+        jest.mocked(declineTenancyInvitation).mockClear();
+
+        const accepted = await send(acceptHandler, "POST", { invitationId: INVITATION_ID }, "x=1", { "content-type": "application/x-www-form-urlencoded" });
+        const declined = await send(declineHandler, "POST", { invitationId: INVITATION_ID }, "x=1", { "content-type": "application/x-www-form-urlencoded" });
+
+        expect(accepted.statusCode).toBe(415);
+        expect(declined.statusCode).toBe(415);
+        expect(acceptTenancyInvitation).not.toHaveBeenCalled();
+        expect(declineTenancyInvitation).not.toHaveBeenCalled();
+    });
+
+    test("a pending ORCID sign-in is refused on these routes", async () => {
+        jest.mocked(getToken).mockResolvedValueOnce({ pending: { orcid: "0000-0001-2345-6789" }, v: 2 } as any);
+        jest.mocked(acceptTenancyInvitation).mockClear();
+
+        const res = await send(acceptHandler, "POST", { invitationId: INVITATION_ID }, {}, JSON_HEADERS);
+
+        expect(res.statusCode).toBe(401);
+        expect(acceptTenancyInvitation).not.toHaveBeenCalled();
+    });
+
+    test("a token from before the version is refused", async () => {
+        jest.mocked(getToken).mockResolvedValueOnce({ uid: "u1", v: 1 } as any);
+        jest.mocked(acceptTenancyInvitation).mockClear();
+
+        const res = await send(acceptHandler, "POST", { invitationId: INVITATION_ID }, {}, JSON_HEADERS);
+
+        expect(res.statusCode).toBe(401);
+        expect(acceptTenancyInvitation).not.toHaveBeenCalled();
+    });
+
+    test("fields beyond tenancyName and reason are dropped before the gatekeeper sees them", async () => {
+        jest.mocked(createTenancyRequest).mockClear();
+        jest.mocked(createTenancyRequest).mockResolvedValue({ id: "r1", status: "pending" } as any);
+
+        await send(requestsHandler, "POST", {}, { tenancyName: "Data Amazon", reason: "SMPS data", roles: ["admin"], userId: "u2" }, JSON_HEADERS);
+
+        expect(createTenancyRequest).toHaveBeenCalledWith("u1", { tenancyName: "Data Amazon", reason: "SMPS data" });
+    });
+
+    test("a missing reason is invalid_request", async () => {
+        jest.mocked(createTenancyRequest).mockClear();
+
+        const res = await send(requestsHandler, "POST", {}, { tenancyName: "Data Amazon" }, JSON_HEADERS);
+
+        expect(res.statusCode).toBe(400);
+        expect(res.json).toHaveBeenCalledWith({ detail: "invalid_request" });
+        expect(createTenancyRequest).not.toHaveBeenCalled();
+    });
+
+    test("a non-Axios error answers 500 unavailable, not the raw error", async () => {
+        jest.mocked(createTenancyRequest).mockRejectedValue(new Error("boom"));
+
+        const res = await send(requestsHandler, "POST", {}, { tenancyName: "Data Amazon", reason: "SMPS data" }, JSON_HEADERS);
+
+        expect(res.statusCode).toBe(500);
+        expect(res.json).toHaveBeenCalledWith({ detail: "unavailable" });
+    });
 });

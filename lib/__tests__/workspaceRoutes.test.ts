@@ -81,10 +81,27 @@ describe("the workspace BFF routes", () => {
         expect(listWorkspaceMembers).not.toHaveBeenCalled();
     });
 
-    test("paging that is not a whole number is refused", async () => {
+    test("more shapes a tenancy path must never take", async () => {
+        for (const query of [
+            { tenancy: "datamap/production/data%20amazon" },
+            { tenancy: "datamap/production/data?amazon" },
+            { tenancy: "datamap/production/data#amazon" },
+            { tenancy: "datamap/production/data amazon" },
+            { tenancy: "datamap/production/data.amazon" },
+            { tenancy: [AMAZON, "datamap/production/atto"] as any },
+        ]) {
+            const res = await send(membersHandler, "GET", query as any);
+            expect(res.statusCode).toBe(400);
+            expect(res.json).toHaveBeenCalledWith({ detail: "invalid_request" });
+        }
+        expect(listWorkspaceMembers).not.toHaveBeenCalled();
+    });
+
+    test("paging that is not a whole number is refused, with the invalid_request body", async () => {
         for (const query of [{ tenancy: AMAZON, offset: "-1" }, { tenancy: AMAZON, limit: "ten" }]) {
             const res = await send(membersHandler, "GET", query);
             expect(res.statusCode).toBe(400);
+            expect(res.json).toHaveBeenCalledWith({ detail: "invalid_request" });
         }
         expect(listWorkspaceMembers).not.toHaveBeenCalled();
     });
