@@ -23,8 +23,10 @@ const outsider = {
 function renderDialog() {
     const onClose = jest.fn();
     const onInvited = jest.fn();
-    render(<InviteMemberDialog tenancy={AMAZON} show onClose={onClose} onInvited={onInvited} />);
-    return { onClose, onInvited };
+    const view = render(<InviteMemberDialog tenancy={AMAZON} show onClose={onClose} onInvited={onInvited} />);
+    const setShow = (show: boolean) =>
+        view.rerender(<InviteMemberDialog tenancy={AMAZON} show={show} onClose={onClose} onInvited={onInvited} />);
+    return { onClose, onInvited, setShow };
 }
 
 function type(text: string) {
@@ -34,6 +36,12 @@ function type(text: string) {
 async function settle() {
     await act(async () => { jest.advanceTimersByTime(300); });
     await act(async () => { await Promise.resolve(); });
+}
+
+async function flushMicrotasks() {
+    for (let i = 0; i < 10; i++) {
+        await Promise.resolve();
+    }
 }
 
 function sendButton() {
@@ -147,5 +155,95 @@ describe("InviteMemberDialog", () => {
 
         await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("This person already has an invitation to the tenancy waiting."));
         expect(onClose).not.toHaveBeenCalled();
+    });
+
+    test("submitting twice while the invitation is in flight sends only one invitation", async () => {
+        let resolveInvite: (value: unknown) => void = () => {};
+        inviteToWorkspace.mockImplementation(() => new Promise((resolve) => { resolveInvite = resolve; }));
+        const { onClose, onInvited } = renderDialog();
+
+        type("fernanda.lima@inpe.br");
+        await settle();
+
+        const form = screen.getByLabelText("Email or ORCID iD").closest("form") as HTMLFormElement;
+        await act(async () => {
+            fireEvent.submit(form);
+            fireEvent.submit(form);
+        });
+
+        expect(inviteToWorkspace).toHaveBeenCalledTimes(1);
+
+        await act(async () => {
+            resolveInvite({ id: "ti1", can_withdraw: true });
+            await flushMicrotasks();
+        });
+
+        expect(onClose).toHaveBeenCalledTimes(1);
+        expect(onInvited).toHaveBeenCalledTimes(1);
+    });
+
+    test("Cancel, the close button and the input are disabled while the invitation is sending", async () => {
+        let resolveInvite: (value: unknown) => void = () => {};
+        inviteToWorkspace.mockImplementation(() => new Promise((resolve) => { resolveInvite = resolve; }));
+        renderDialog();
+
+        type("fernanda.lima@inpe.br");
+        await settle();
+        fireEvent.click(sendButton());
+
+        await waitFor(() => expect(inviteToWorkspace).toHaveBeenCalledTimes(1));
+        expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(true);
+        expect((screen.getByRole("button", { name: "Close" }) as HTMLButtonElement).disabled).toBe(true);
+        expect((screen.getByLabelText("Email or ORCID iD") as HTMLInputElement).disabled).toBe(true);
+
+        await act(async () => {
+            resolveInvite({ id: "ti1", can_withdraw: true });
+            await flushMicrotasks();
+        });
+
+        expect((screen.getByLabelText("Email or ORCID iD") as HTMLInputElement).disabled).toBe(false);
+    });
+
+    test("closing after a refusal and reopening the dialog shows no stale error", async () => {
+        inviteToWorkspace.mockRejectedValue({ response: { status: 409, data: { detail: "invitation_pending" } } });
+        const { setShow } = renderDialog();
+
+        type("fernanda.lima@inpe.br");
+        await settle();
+        fireEvent.click(sendButton());
+
+        await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
+
+        setShow(false);
+        setShow(true);
+
+        expect(screen.queryByRole("alert")).toBeNull();
+    });
+
+    test("typing again clears a previous refusal", async () => {
+        inviteToWorkspace.mockRejectedValue({ response: { status: 409, data: { detail: "invitation_pending" } } });
+        renderDialog();
+
+        type("fernanda.lima@inpe.br");
+        await settle();
+        fireEvent.click(sendButton());
+
+        await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
+        await waitFor(() => expect((screen.getByRole("button", { name: "Cancel" }) as HTMLButtonElement).disabled).toBe(false));
+
+        type("fernanda.lima2@inpe.br");
+        await act(async () => { await flushMicrotasks(); });
+
+        expect(screen.queryByRole("alert")).toBeNull();
+    });
+
+    test("an ORCID lookup never shows an email, even if the server's response wrongly includes one", async () => {
+        renderDialog();
+
+        type("https://orcid.org/0000-0002-1825-0097");
+        await settle();
+
+        expect(screen.getByText("ORCID iD 0000-0002-1825-0097")).toBeTruthy();
+        expect(screen.queryByText(/@/)).toBeNull();
     });
 });

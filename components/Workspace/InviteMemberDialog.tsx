@@ -1,5 +1,5 @@
 import { useFormik } from "formik";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Yup from "yup";
 import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_INPUT_CLASS, EDIT_FORM_LABEL_CLASS } from "../../contants/EditFormConstants";
 import { SHARE_PERSON_DETAIL_CLASS, SHARE_PERSON_NAME_CLASS } from "../../contants/ShareConstants";
@@ -64,6 +64,13 @@ export function InviteMemberDialog(props: Props) {
         },
     });
     const settled = useDebouncedValue(formik.values.value, WORKSPACE_LOOKUP_DEBOUNCE_MS);
+    const submitting = useRef(false);
+
+    useEffect(() => {
+        if (props.show) {
+            setError(null);
+        }
+    }, [props.show]);
 
     useEffect(() => {
         const value = exactValue(settled);
@@ -90,6 +97,18 @@ export function InviteMemberDialog(props: Props) {
         props.onClose();
     }
 
+    async function submitOnce() {
+        if (submitting.current) {
+            return;
+        }
+        submitting.current = true;
+        try {
+            await formik.submitForm();
+        } finally {
+            submitting.current = false;
+        }
+    }
+
     return (
         <Modal
             title={`Invite to ${props.tenancy.display_name}`}
@@ -97,17 +116,26 @@ export function InviteMemberDialog(props: Props) {
             confimButtonText="Send invitation"
             cancelButtonText="Cancel"
             cancel={close}
-            confim={() => { if (!formik.isSubmitting) formik.submitForm(); }}
+            confim={() => { void submitOnce(); }}
             confirmDisabled={!invitee || formik.isSubmitting}
+            cancelDisabled={formik.isSubmitting}
             maxWidthClassName="max-w-[520px]"
         >
-            <form noValidate onSubmit={formik.handleSubmit} className="flex flex-col gap-4">
+            <form noValidate onSubmit={(e) => { e.preventDefault(); void submitOnce(); }} className="flex flex-col gap-4">
                 <p className="m-0 text-sm leading-5 text-primary-600">
                     Type the exact email or ORCID iD of someone with a DataMap account. They accept the invitation in the app.
                 </p>
                 <div>
                     <label htmlFor="invite-value" className={EDIT_FORM_LABEL_CLASS}>Email or ORCID iD</label>
-                    <input id="invite-value" type="text" autoComplete="off" className={EDIT_FORM_INPUT_CLASS} {...formik.getFieldProps("value")} />
+                    <input
+                        id="invite-value"
+                        type="text"
+                        autoComplete="off"
+                        disabled={formik.isSubmitting}
+                        className={EDIT_FORM_INPUT_CLASS}
+                        {...formik.getFieldProps("value")}
+                        onChange={(e) => { setError(null); formik.handleChange(e); }}
+                    />
                     {typed.kind === "invalid_orcid"
                         ? <p className={EDIT_FORM_ERROR_CLASS}>This ORCID iD is not valid. Check the last digit.</p>
                         : formik.touched.value && formik.errors.value && <p className={EDIT_FORM_ERROR_CLASS}>{formik.errors.value}</p>}
@@ -117,7 +145,7 @@ export function InviteMemberDialog(props: Props) {
                         <PersonInitial name={found.user.name} />
                         <span className="flex flex-col min-w-0">
                             <span className={SHARE_PERSON_NAME_CLASS}>{found.user.name}</span>
-                            <span className={SHARE_PERSON_DETAIL_CLASS}>{found.user.email ?? `ORCID iD ${current.value}`}</span>
+                            <span className={SHARE_PERSON_DETAIL_CLASS}>{typed.kind === "orcid" ? `ORCID iD ${current.value}` : found.user.email ?? `ORCID iD ${current.value}`}</span>
                             <span className="mt-1 text-xs leading-[17px] text-primary-600">{inviteeStatus(found, props.tenancy.display_name)}</span>
                         </span>
                     </div>
