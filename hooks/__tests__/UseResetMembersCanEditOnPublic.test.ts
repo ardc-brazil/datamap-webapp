@@ -19,6 +19,15 @@ describe("useResetMembersCanEditOnPublic", () => {
         expect(setFieldValue).toHaveBeenCalledWith("membersCanEdit", false);
     });
 
+    test("mounting with Public already selected sets the field too", () => {
+        const setFieldValue = jest.fn();
+        const formikRef = { current: { setFieldValue } };
+
+        renderHook(() => useResetMembersCanEditOnPublic(true, formikRef));
+
+        expect(setFieldValue).toHaveBeenCalledWith("membersCanEdit", false);
+    });
+
     test("staying outside Public never touches the field", () => {
         const setFieldValue = jest.fn();
         const formikRef = { current: { setFieldValue } };
