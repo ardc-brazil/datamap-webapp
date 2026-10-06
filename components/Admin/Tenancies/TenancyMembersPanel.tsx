@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { MaterialSymbol } from "react-material-symbols";
 import { ADMIN_COPY, ADMIN_PAGE_SIZE, adminErrorMessage } from "../../../contants/AdminConstants";
+import { SHARE_PERSON_DETAIL_CLASS, SHARE_PERSON_NAME_CLASS } from "../../../contants/ShareConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { revalidateAdminTenancies, useTenancyMembers } from "../../../hooks/UseAdmin";
 import { useRowActions } from "../../../hooks/UseRowActions";
@@ -72,9 +73,9 @@ export function TenancyMembersPanel({ tenancy }: { tenancy: AdminTenancy }) {
                                     <li key={member.id} className={ROW}>
                                         <PersonInitial name={member.name} />
                                         <div className="min-w-0 flex-1">
-                                            <p className="m-0 truncate text-[13px] font-semibold text-primary-900">{member.name}</p>
-                                            <p className="m-0 truncate text-xs text-primary-500">{member.email ?? "No email"}</p>
-                                            {member.invited_by && <p className="m-0 truncate text-xs text-primary-500">{`invited by ${member.invited_by.name}`}</p>}
+                                            <p className={`m-0 ${SHARE_PERSON_NAME_CLASS}`}>{member.name}</p>
+                                            <p className={`m-0 ${SHARE_PERSON_DETAIL_CLASS}`}>{member.email ?? "No email"}</p>
+                                            {member.invited_by && <p className={`m-0 ${SHARE_PERSON_DETAIL_CLASS}`}>{`invited by ${member.invited_by.name}`}</p>}
                                         </div>
                                         {manageable && (
                                             <button
@@ -92,9 +93,9 @@ export function TenancyMembersPanel({ tenancy }: { tenancy: AdminTenancy }) {
                                     <li key={invitation.id} className={ROW}>
                                         <PersonInitial pendingIcon="mail" />
                                         <div className="min-w-0 flex-1">
-                                            <p className="m-0 truncate text-[13px] font-semibold text-primary-900">{invitation.user.name}</p>
-                                            {invitation.user.email && <p className="m-0 truncate text-xs text-primary-500">{invitation.user.email}</p>}
-                                            <p className="m-0 truncate text-xs text-primary-500">{invitedLine(invitation)}</p>
+                                            <p className={`m-0 ${SHARE_PERSON_NAME_CLASS}`}>{invitation.user.name}</p>
+                                            {invitation.user.email && <p className={`m-0 ${SHARE_PERSON_DETAIL_CLASS}`}>{invitation.user.email}</p>}
+                                            <p className={`m-0 ${SHARE_PERSON_DETAIL_CLASS}`}>{invitedLine(invitation)}</p>
                                             {rows.error(invitation.id) && <p role="alert" className="m-0 text-xs text-danger-700">{rows.error(invitation.id)}</p>}
                                         </div>
                                         <button
