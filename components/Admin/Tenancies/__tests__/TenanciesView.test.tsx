@@ -90,13 +90,17 @@ describe("TenanciesView", () => {
         );
     });
 
-    test("a new tenancy refreshes the list and is selected", () => {
+    test("a new tenancy goes into the list at once, the list is refetched, and it is selected", () => {
         render(<TenanciesView />);
 
         fireEvent.click(screen.getByRole("button", { name: "+ New tenancy" }));
         fireEvent.click(screen.getByRole("button", { name: "stub create" }));
 
-        expect(mockRevalidateTenancies).toHaveBeenCalled();
+        expect(mockRetry).toHaveBeenCalledTimes(1);
+        const [update, options] = mockRetry.mock.calls[0] as [(list: unknown[]) => unknown[], unknown];
+        expect(options).toEqual({ revalidate: true });
+        expect(update(ADMIN_TENANCIES)).toEqual([...ADMIN_TENANCIES, { path: "datamap/production/cerrado-flux" }]);
+        expect(mockRevalidateTenancies).not.toHaveBeenCalled();
         expect(mockReplace).toHaveBeenCalledWith(
             { pathname: "/app/admin/tenancies", query: { tenancy: "datamap/production/cerrado-flux" } },
             undefined,
