@@ -77,6 +77,33 @@ describe("RequestAccessDialog", () => {
         expect(onClose).not.toHaveBeenCalled();
     });
 
+    test("an invalid tenancy name says so", async () => {
+        requestTenancyAccess.mockRejectedValue({ response: { status: 400, data: { detail: "tenancy_name_invalid" } } });
+        render(<RequestAccessDialog show onClose={jest.fn()} />);
+
+        await send("Data Amazon", "SMPS data");
+
+        await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("Name the tenancy in 1 to 128 characters."));
+    });
+
+    test("a double click sends the request once", async () => {
+        let resolveRequest: (value: unknown) => void;
+        requestTenancyAccess.mockImplementation(() => new Promise((resolve) => { resolveRequest = resolve; }));
+        render(<RequestAccessDialog show onClose={jest.fn()} />);
+
+        fireEvent.change(screen.getByLabelText("Tenancy"), { target: { value: "Data Amazon" } });
+        fireEvent.change(screen.getByLabelText("Why"), { target: { value: "SMPS data" } });
+        await act(async () => {
+            fireEvent.click(screen.getByRole("button", { name: "Send request" }));
+        });
+        await act(async () => {
+            fireEvent.click(screen.getByRole("button", { name: "Send request" }));
+        });
+
+        expect(requestTenancyAccess).toHaveBeenCalledTimes(1);
+        await act(async () => { resolveRequest({ id: "r1", status: "pending" }); });
+    });
+
     test("the daily limit says when to try again", async () => {
         requestTenancyAccess.mockRejectedValue({ response: { status: 429, data: { detail: "too_many_requests" } } });
         render(<RequestAccessDialog show onClose={jest.fn()} />);
