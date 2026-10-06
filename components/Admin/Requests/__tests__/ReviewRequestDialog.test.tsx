@@ -196,6 +196,61 @@ describe("ReviewRequestDialog", () => {
         expect((screen.getByRole("button", { name: "Create and approve" }) as HTMLButtonElement).disabled).toBe(false);
     });
 
+    test("a display name already taken is reported on the display name", async () => {
+        mockDetail = { data: newRequestDetail(true) };
+        mockApprove.mockRejectedValue({ response: { status: 409, data: { detail: "display_name_taken" } } });
+        renderDialog();
+
+        fireEvent.click(screen.getByRole("button", { name: "Create and approve" }));
+
+        const error = await screen.findByText("Another tenancy already has this display name.");
+        expect(screen.getByLabelText("Display name").getAttribute("aria-describedby")).toBe(error.id);
+        expect(screen.getByLabelText("Display name").getAttribute("aria-invalid")).toBe("true");
+        expect(screen.getByLabelText("Namespace").getAttribute("aria-invalid")).toBeNull();
+    });
+
+    test.each([
+        ["tenancy_exists", "A tenancy with this namespace already exists."],
+        ["namespace_invalid", "Use 2 to 63 lower-case letters, digits or hyphens, and not “public” or “members”."],
+    ])("%s from the server is reported on the namespace", async (detail, message) => {
+        mockDetail = { data: newRequestDetail(true) };
+        mockApprove.mockRejectedValue({ response: { status: 409, data: { detail } } });
+        renderDialog();
+
+        fireEvent.click(screen.getByRole("button", { name: "Create and approve" }));
+
+        const error = await screen.findByText(message);
+        expect(screen.getByLabelText("Namespace").getAttribute("aria-describedby")).toBe(error.id);
+        expect(screen.getByLabelText("Namespace").getAttribute("aria-invalid")).toBe("true");
+    });
+
+    test("editing a field clears the server's error on it", async () => {
+        mockDetail = { data: newRequestDetail(true) };
+        mockApprove.mockRejectedValue({ response: { status: 409, data: { detail: "tenancy_exists" } } });
+        renderDialog();
+
+        fireEvent.click(screen.getByRole("button", { name: "Create and approve" }));
+        expect(await screen.findByText("A tenancy with this namespace already exists.")).toBeTruthy();
+        fireEvent.change(screen.getByLabelText("Namespace"), { target: { value: "cerrado-flux-2" } });
+
+        await waitFor(() => expect(screen.queryByText("A tenancy with this namespace already exists.")).toBeNull());
+    });
+
+    test("the namespace follows the display name until it is edited", async () => {
+        mockDetail = { data: newRequestDetail(true) };
+        renderDialog();
+
+        fireEvent.change(screen.getByLabelText("Display name"), { target: { value: "Cerrado Fluxes" } });
+        await waitFor(() => expect((screen.getByLabelText("Namespace") as HTMLInputElement).value).toBe("cerrado-fluxes"));
+        expect(screen.getByText("datamap/production/cerrado-fluxes · requester becomes a member")).toBeTruthy();
+
+        fireEvent.change(screen.getByLabelText("Namespace"), { target: { value: "cflux" } });
+        fireEvent.change(screen.getByLabelText("Display name"), { target: { value: "Cerrado" } });
+
+        await waitFor(() => expect((screen.getByLabelText("Display name") as HTMLInputElement).value).toBe("Cerrado"));
+        expect((screen.getByLabelText("Namespace") as HTMLInputElement).value).toBe("cflux");
+    });
+
     test("an account that is gone cannot be approved, and Decline… stays", async () => {
         mockApprove.mockRejectedValue({ response: { status: 404, data: { detail: "no_account" } } });
         const { onApproved, onDecline } = renderDialog();

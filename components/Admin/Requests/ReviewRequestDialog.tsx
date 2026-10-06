@@ -2,8 +2,8 @@ import { useFormik } from "formik";
 import { useState } from "react";
 import { MaterialSymbol } from "react-material-symbols";
 import * as Yup from "yup";
-import { ADMIN_COPY, adminErrorFrom, adminErrorMessage, slugifyNamespace } from "../../../contants/AdminConstants";
-import { DISPLAY_NAME_MAX_LENGTH, PRODUCTION_PREFIX, isValidNamespace } from "../../../contants/TenancyConstants";
+import { ADMIN_COPY, adminErrorMessage, slugifyNamespace } from "../../../contants/AdminConstants";
+import { DISPLAY_NAME_MAX_LENGTH, PRODUCTION_PREFIX } from "../../../contants/TenancyConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { useAdminRequest, useAdminTenancies } from "../../../hooks/UseAdmin";
 import { plural, requestedAgo } from "../../../lib/adminDisplay";
@@ -12,6 +12,7 @@ import { errorDetail } from "../../../lib/gatekeeperDetail";
 import { firstNameOf } from "../../../lib/tenancySelection";
 import { AdminTenancy, AdminTenancyRequest, AdminTenancyRequestDetail, TenancyDecision } from "../../../types/GatekeeperAPI";
 import { AdminDialog } from "../AdminDialog";
+import { NEW_TENANCY_SCHEMA, NewTenancyFailure, NewTenancyFields, newTenancyFailure } from "../NewTenancyFields";
 
 type Mode = "join" | "new";
 
@@ -25,8 +26,6 @@ interface Props {
 
 const WIDTH = "max-w-[560px]";
 const FIELD_ERROR = "m-0 mt-1.5 text-[13px] text-danger-700";
-const NAMESPACE_ERROR = adminErrorMessage("namespace_invalid");
-const DISPLAY_NAME_ERROR = adminErrorMessage("display_name_invalid");
 
 const schema = Yup.object({
     mode: Yup.string().oneOf(["join", "new"]).required(),
@@ -34,14 +33,8 @@ const schema = Yup.object({
         is: "join",
         then: (s) => s.required("Choose the tenancy to join."),
     }),
-    displayName: Yup.string().when("mode", {
-        is: "new",
-        then: (s) => s.trim().required(DISPLAY_NAME_ERROR).max(DISPLAY_NAME_MAX_LENGTH, DISPLAY_NAME_ERROR),
-    }),
-    namespace: Yup.string().when("mode", {
-        is: "new",
-        then: (s) => s.test("namespace", NAMESPACE_ERROR, (value) => isValidNamespace(value ?? "")),
-    }),
+    displayName: Yup.string().when("mode", { is: "new", then: () => NEW_TENANCY_SCHEMA.displayName }),
+    namespace: Yup.string().when("mode", { is: "new", then: () => NEW_TENANCY_SCHEMA.namespace }),
 });
 
 function joinable(tenancies: AdminTenancy[], detail: AdminTenancyRequestDetail): AdminTenancy[] {
@@ -90,7 +83,7 @@ export function ReviewRequestDialog(props: Props) {
 function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: Props & { detail: AdminTenancyRequestDetail; tenancies: AdminTenancy[] }) {
     const options = joinable(tenancies, detail);
     const suggested = options.find((tenancy) => tenancy.path === detail.suggested_tenancy?.path);
-    const [error, setError] = useState<string | null>(null);
+    const [failure, setFailure] = useState<NewTenancyFailure | null>(null);
     const [accountGone, setAccountGone] = useState(false);
     const [approved, setApproved] = useState(false);
     const formik = useFormik({
@@ -102,7 +95,7 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
         },
         validationSchema: schema,
         onSubmit: async (values) => {
-            setError(null);
+            setFailure(null);
             const decision: TenancyDecision = values.mode === "join"
                 ? { tenancy: values.tenancy }
                 : { newTenancy: { displayName: values.displayName.trim(), namespace: values.namespace.trim() } };
@@ -113,7 +106,7 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
             } catch (e) {
                 const gone = errorDetail(e) === "no_account";
                 setAccountGone(gone);
-                setError(gone ? ADMIN_COPY.approveNoAccount : adminErrorFrom(e));
+                setFailure(gone ? { field: null, message: ADMIN_COPY.approveNoAccount } : newTenancyFailure(e));
             }
         },
     });
@@ -123,10 +116,8 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
     const selected = options.find((tenancy) => tenancy.path === values.tenancy);
     const unverified = !detail.requester.email_verified;
     const blocked = approved || accountGone || (joining ? options.length === 0 : unverified);
-    const shown = (field: "tenancy" | "displayName" | "namespace") => (formik.touched[field] || formik.submitCount > 0) && formik.errors[field];
-    const tenancyError = shown("tenancy");
-    const displayNameError = shown("displayName");
-    const namespaceError = shown("namespace");
+    const tenancyError = (formik.touched.tenancy || formik.submitCount > 0) && formik.errors.tenancy;
+    const generalError = failure && (!failure.field || joining) ? failure.message : null;
     const title = joining
         ? `Join ${selected?.display_name ?? "an existing tenancy"}`
         : `New tenancy: ${values.displayName.trim() || detail.requested_name}`;
@@ -152,7 +143,7 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
                                 if (values.mode !== mode) {
                                     formik.setFieldValue("mode", mode);
                                     if (!accountGone) {
-                                        setError(null);
+                                        setFailure(null);
                                     }
                                 }
                             }}
@@ -217,45 +208,21 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
                 </dl>
 
                 {!joining && (
-                    <>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label htmlFor="review-display-name" className="mb-1.5 text-[13px]">Display name</label>
-                                <input
-                                    id="review-display-name"
-                                    name="displayName"
-                                    value={values.displayName}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    aria-describedby={displayNameError ? "review-display-name-error" : undefined}
-                                    aria-invalid={displayNameError ? true : undefined}
-                                />
-                                {displayNameError && <p id="review-display-name-error" role="alert" className={FIELD_ERROR}>{formik.errors.displayName}</p>}
-                            </div>
-                            <div>
-                                <label htmlFor="review-namespace" className="mb-1.5 text-[13px]">Namespace</label>
-                                <input
-                                    id="review-namespace"
-                                    name="namespace"
-                                    className="font-mono"
-                                    value={values.namespace}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    aria-describedby={namespaceError ? "review-namespace-error" : undefined}
-                                    aria-invalid={namespaceError ? true : undefined}
-                                />
-                                {namespaceError && <p id="review-namespace-error" role="alert" className={FIELD_ERROR}>{formik.errors.namespace}</p>}
-                            </div>
-                        </div>
-                        <p className="m-0 font-mono text-xs text-primary-500">{`${PRODUCTION_PREFIX}${values.namespace.trim()} · requester becomes a member`}</p>
-                    </>
+                    <NewTenancyFields
+                        formik={formik}
+                        idPrefix="review"
+                        failure={failure}
+                        onEdit={() => { if (!accountGone) setFailure(null); }}
+                        className="grid grid-cols-2 gap-3"
+                        previewSuffix=" · requester becomes a member"
+                    />
                 )}
 
                 <p className="m-0 flex items-center gap-2 rounded-md bg-primary-100 px-3 py-2.5 text-[13px] text-primary-700">
                     <MaterialSymbol icon="mail" size={18} weight={400} grade={-25} />
                     <span>{`${firstNameOf(detail.requester.name)} is emailed either way.`}</span>
                 </p>
-                {error && <p role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
+                {generalError && <p role="alert" className="m-0 text-sm text-danger-700">{generalError}</p>}
             </form>
         </AdminDialog>
     );
