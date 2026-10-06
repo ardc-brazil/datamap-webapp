@@ -11,7 +11,7 @@ import { useTenancyStore } from "../../../components/TenancyStore";
 import Alert from "../../../components/base/Alert";
 import Modal from "../../../components/base/PopupModal";
 import UppyUploader from "../../../components/base/UppyUploader";
-import { EDIT_FORM_ERROR_CLASS } from "../../../contants/EditFormConstants";
+import { DATASET_CREATE_ERROR_MESSAGE } from "../../../contants/EditFormConstants";
 import { messageForApiError } from "../../../contants/EmbargoConstants";
 import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
 import { isDefaultTenancy } from "../../../contants/TenancyConstants";
@@ -161,7 +161,7 @@ export default function NewPage() {
           return;
         }
         console.log("Erro when finish the dataset creation:", error);
-        setCreateError(datasetSaveErrorMessage(error));
+        setCreateError(datasetSaveErrorMessage(error, DATASET_CREATE_ERROR_MESSAGE));
       })
       .finally(() => actions.setSubmitting(false));
   }
@@ -268,7 +268,7 @@ export default function NewPage() {
                     disabled={embargoLock.locked}
                     statusLine={embargoLock.statusLine}
                   />
-                  {embargoError && <p role="alert" className={EDIT_FORM_ERROR_CLASS}>{embargoError}</p>}
+                  <EditFormError error={embargoError} />
                 </div>
                 <EditFormError error={createError} />
               </div>

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { messageForApiError } from "../contants/EmbargoConstants";
+import { GENERIC_ERROR_MESSAGE, messageForApiError } from "../contants/EmbargoConstants";
 import { BFFAPI } from "../gateways/BFFAPI";
 import { httpErrorHandler } from "../lib/rpc";
+import { APIError } from "../types/APIError";
 import { GetDatasetDetailsResponse, UpdateDatasetRequest } from "../types/BffAPI";
 import { DatasetInfo } from "../types/GatekeeperAPI";
 
@@ -10,8 +11,8 @@ export interface DatasetChanges {
     data?: Partial<DatasetInfo>
 }
 
-export function datasetSaveErrorMessage(error: unknown): string {
-    return messageForApiError(httpErrorHandler(error));
+export function datasetSaveErrorMessage(error: unknown, fallback: string = GENERIC_ERROR_MESSAGE): string {
+    return messageForApiError(error instanceof APIError ? error : httpErrorHandler(error), fallback);
 }
 
 export function useDatasetSave(dataset: GetDatasetDetailsResponse) {

@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { act, renderHook } from '@testing-library/react';
 import { AxiosError, AxiosHeaders } from "axios";
+import { DATASET_CREATE_ERROR_MESSAGE } from "../../contants/EditFormConstants";
 import { GENERIC_ERROR_MESSAGE } from "../../contants/EmbargoConstants";
 import { tenancyErrorMessage } from "../../contants/TenancyConstants";
 
@@ -10,7 +11,8 @@ jest.mock("../../gateways/BFFAPI", () => ({
     BFFAPI: jest.fn().mockImplementation(() => ({ updateDataset })),
 }));
 
-import { useDatasetSave } from "../UseDatasetSave";
+import { httpErrorHandler } from "../../lib/rpc";
+import { datasetSaveErrorMessage, useDatasetSave } from "../UseDatasetSave";
 
 function dataset(): any {
     return { id: "d1", name: "Ozone", tenancy: "datamap/production/atto", is_enabled: true, data: { license: "cc-by", institution: "USP" } };
@@ -92,5 +94,22 @@ describe("useDatasetSave", () => {
         act(() => result.current.clearError());
 
         expect(result.current.error).toBeNull();
+    });
+});
+
+describe("datasetSaveErrorMessage", () => {
+    test("an error the gateway already mapped keeps its reason", () => {
+        expect(datasetSaveErrorMessage(httpErrorHandler(gatekeeperRefusal(403, "forbidden"))))
+            .toBe("You are not allowed to do this on this dataset.");
+        expect(datasetSaveErrorMessage(httpErrorHandler(gatekeeperRefusal(400, "tenancy_cannot_change"))))
+            .toBe(tenancyErrorMessage("tenancy_cannot_change"));
+    });
+
+    test("a caller can name its own generic sentence, and a known reason still wins", () => {
+        const offline = new AxiosError("Network Error", "ERR_NETWORK", undefined, {});
+
+        expect(datasetSaveErrorMessage(offline, DATASET_CREATE_ERROR_MESSAGE)).toBe("The dataset could not be created. Please try again.");
+        expect(datasetSaveErrorMessage(httpErrorHandler(gatekeeperRefusal(404, "dataset_not_found")), DATASET_CREATE_ERROR_MESSAGE))
+            .toBe("This dataset no longer exists, or you no longer have access to it.");
     });
 });
