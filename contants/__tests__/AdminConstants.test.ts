@@ -41,6 +41,11 @@ describe("slugifyNamespace", () => {
         expect(slugifyNamespace("a".repeat(100))).toHaveLength(63);
         expect(slugifyNamespace("a".repeat(62) + " bcd")).toBe("a".repeat(62));
     });
+
+    test("letters with no combining accent, like ß and Ø, are not transliterated but become separators", () => {
+        expect(slugifyNamespace("Straße")).toBe("stra-e");
+        expect(slugifyNamespace("Søren Ørsted")).toBe("s-ren-rsted");
+    });
 });
 
 describe("the admin tabs", () => {
