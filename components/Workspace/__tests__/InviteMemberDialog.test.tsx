@@ -119,6 +119,55 @@ describe("InviteMemberDialog", () => {
         expect(sendButton().disabled).toBe(true);
     });
 
+    test("the lookup result is announced through a polite live region", async () => {
+        renderDialog();
+        const region = screen.getByRole("status");
+        expect(region.getAttribute("aria-live")).toBe("polite");
+
+        type("fernanda.lima@inpe.br");
+        await settle();
+
+        expect(region.textContent).toContain("Fernanda Lima");
+    });
+
+    test("no account behind the value is announced through the same live region", async () => {
+        lookupInvitee.mockRejectedValue({ response: { status: 404, data: { detail: "no_account" } } });
+        renderDialog();
+
+        type("nobody@inpe.br");
+        await settle();
+
+        expect(screen.getByRole("status").textContent).toBe("No DataMap account has this email or ORCID iD.");
+    });
+
+    test("the field is described by the hint, and by its error once there is one", async () => {
+        renderDialog();
+        const input = screen.getByLabelText("Email or ORCID iD");
+        const describedBy = () => (input.getAttribute("aria-describedby") ?? "").split(" ").map((id) => document.getElementById(id)?.textContent);
+
+        expect(describedBy()).toEqual(["Type the exact email or ORCID iD of someone with a DataMap account. They accept the invitation in the app."]);
+        expect(input.getAttribute("aria-invalid")).toBeNull();
+
+        type("Fernanda");
+        await act(async () => {
+            fireEvent.submit(input.closest("form") as HTMLFormElement);
+        });
+
+        expect(describedBy()).toContain("Type the full email or ORCID iD.");
+        expect(input.getAttribute("aria-invalid")).toBe("true");
+    });
+
+    test("an ORCID iD with a wrong check digit describes the field with its error", async () => {
+        renderDialog();
+        const input = screen.getByLabelText("Email or ORCID iD");
+
+        await act(async () => { type("0000-0002-1825-0098"); });
+
+        const ids = (input.getAttribute("aria-describedby") ?? "").split(" ");
+        expect(ids.map((id) => document.getElementById(id)?.textContent)).toContain("This ORCID iD is not valid. Check the last digit.");
+        expect(input.getAttribute("aria-invalid")).toBe("true");
+    });
+
     test("a name is not looked up, and the form asks for the full email or ORCID iD", async () => {
         renderDialog();
 

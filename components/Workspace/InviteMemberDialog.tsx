@@ -86,6 +86,9 @@ export function InviteMemberDialog(props: Props) {
     }, [settled, props.tenancy.path, bffGateway]);
 
     const typed = classifyShareInput(formik.values.value);
+    const fieldError = typed.kind === "invalid_orcid"
+        ? "This ORCID iD is not valid. Check the last digit."
+        : formik.touched.value && formik.errors.value ? formik.errors.value : null;
     const current = lookup && lookup.value === exactValue(formik.values.value) ? lookup : null;
     const found = current?.found ?? null;
     const invitee = found?.can_invite ? found : null;
@@ -122,7 +125,7 @@ export function InviteMemberDialog(props: Props) {
             maxWidthClassName="max-w-[520px]"
         >
             <form noValidate onSubmit={(e) => { e.preventDefault(); void submitOnce(); }} className="flex flex-col gap-4">
-                <p className="m-0 text-sm leading-5 text-primary-600">
+                <p id="invite-value-hint" className="m-0 text-sm leading-5 text-primary-600">
                     Type the exact email or ORCID iD of someone with a DataMap account. They accept the invitation in the app.
                 </p>
                 <div>
@@ -131,26 +134,28 @@ export function InviteMemberDialog(props: Props) {
                         id="invite-value"
                         type="text"
                         autoComplete="off"
+                        aria-describedby={fieldError ? "invite-value-hint invite-value-error" : "invite-value-hint"}
+                        aria-invalid={fieldError ? true : undefined}
                         disabled={formik.isSubmitting}
                         className={EDIT_FORM_INPUT_CLASS}
                         {...formik.getFieldProps("value")}
                         onChange={(e) => { setError(null); formik.handleChange(e); }}
                     />
-                    {typed.kind === "invalid_orcid"
-                        ? <p className={EDIT_FORM_ERROR_CLASS}>This ORCID iD is not valid. Check the last digit.</p>
-                        : formik.touched.value && formik.errors.value && <p className={EDIT_FORM_ERROR_CLASS}>{formik.errors.value}</p>}
+                    {fieldError && <p id="invite-value-error" className={EDIT_FORM_ERROR_CLASS}>{fieldError}</p>}
                 </div>
-                {found &&
-                    <div className="grid grid-cols-[32px_minmax(0,1fr)] gap-3 items-center rounded-lg border border-primary-200 bg-primary-0 px-3.5 py-3">
-                        <PersonInitial name={found.user.name} />
-                        <span className="flex flex-col min-w-0">
-                            <span className={SHARE_PERSON_NAME_CLASS}>{found.user.name}</span>
-                            <span className={SHARE_PERSON_DETAIL_CLASS}>{typed.kind === "orcid" ? `ORCID iD ${current.value}` : found.user.email ?? `ORCID iD ${current.value}`}</span>
-                            <span className="mt-1 text-xs leading-[17px] text-primary-600">{inviteeStatus(found, props.tenancy.display_name)}</span>
-                        </span>
-                    </div>
-                }
-                {current?.error && <p className="m-0 text-sm text-primary-600">{current.error}</p>}
+                <div role="status" aria-live="polite" className="empty:hidden">
+                    {found &&
+                        <div className="grid grid-cols-[32px_minmax(0,1fr)] gap-3 items-center rounded-lg border border-primary-200 bg-primary-0 px-3.5 py-3">
+                            <PersonInitial name={found.user.name} />
+                            <span className="flex flex-col min-w-0">
+                                <span className={SHARE_PERSON_NAME_CLASS}>{found.user.name}</span>
+                                <span className={SHARE_PERSON_DETAIL_CLASS}>{typed.kind === "orcid" ? `ORCID iD ${current.value}` : found.user.email ?? `ORCID iD ${current.value}`}</span>
+                                <span className="mt-1 text-xs leading-[17px] text-primary-600">{inviteeStatus(found, props.tenancy.display_name)}</span>
+                            </span>
+                        </div>
+                    }
+                    {current?.error && <p className="m-0 text-sm text-primary-600">{current.error}</p>}
+                </div>
                 {error && <p role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
                 <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
             </form>
