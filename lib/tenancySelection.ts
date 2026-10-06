@@ -25,3 +25,8 @@ export function firstNameOf(name?: string | null): string {
 export function tenancyPathLabel(path: string): string {
     return path.split("/").join(" / ");
 }
+
+export function membersPageTenancy(tenancies: TenancySummary[] | undefined | null, selected: string | undefined | null): TenancySummary | null {
+    const tenancy = (tenancies ?? []).find((candidate) => candidate.path === selected);
+    return tenancy && !tenancy.is_default && !tenancy.is_legacy ? tenancy : null;
+}

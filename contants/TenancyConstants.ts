@@ -22,7 +22,13 @@ export const TENANCY_REQUESTS_KEY = "/api/tenancy-requests";
 export const TENANCY_INVITATIONS_KEY = "/api/tenancy-invitations";
 
 export const WORKSPACE_PAGE_SIZE = 50;
+export const WORKSPACE_LOOKUP_DEBOUNCE_MS = 300;
 export const REQUEST_OUTCOME_VISIBLE_DAYS = 30;
+
+export const workspaceMembersKey = (tenancy: string, offset: number) =>
+    `/api/workspace/members?tenancy=${encodeURIComponent(tenancy)}&limit=${WORKSPACE_PAGE_SIZE}&offset=${offset}`;
+export const workspaceInvitationsKey = (tenancy: string) =>
+    `/api/workspace/invitations?tenancy=${encodeURIComponent(tenancy)}`;
 
 export const PUBLIC_TENANCY_NOTE = "Everyone is in public";
 export const PUBLIC_MEMBERS_DETAIL = "Everyone on DataMap · can read";

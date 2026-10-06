@@ -11,6 +11,8 @@ import {
     TENANCY_NAME_MAX_LENGTH,
     TENANCY_PATH_PATTERN,
     isDefaultTenancy,
+    workspaceInvitationsKey,
+    workspaceMembersKey,
     isLegacyTenancy,
     tenancyErrorMessage,
     tenancyNamespace,
@@ -67,5 +69,10 @@ describe("tenancy constants", () => {
 
         expect(messageForApiError(error)).toBe("A dataset stays in the tenancy it was created in.");
         expect(tenancyErrorMessage("tenancy_cannot_change")).toBe("A dataset stays in the tenancy it was created in.");
+    });
+
+    test("the workspace keys carry the tenancy encoded in the query, members 50 at a time", () => {
+        expect(workspaceMembersKey("datamap/production/data-amazon", 50)).toBe("/api/workspace/members?tenancy=datamap%2Fproduction%2Fdata-amazon&limit=50&offset=50");
+        expect(workspaceInvitationsKey("datamap/production/data-amazon")).toBe("/api/workspace/invitations?tenancy=datamap%2Fproduction%2Fdata-amazon");
     });
 });

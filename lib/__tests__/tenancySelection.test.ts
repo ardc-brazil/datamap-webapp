@@ -1,5 +1,5 @@
 import { describe, expect, test } from '@jest/globals';
-import { firstNameOf, sessionTenanciesDiffer, tenancyPathLabel, tenancySelectionFor } from "../tenancySelection";
+import { firstNameOf, membersPageTenancy, sessionTenanciesDiffer, tenancyPathLabel, tenancySelectionFor } from "../tenancySelection";
 
 const PUBLIC = { path: "datamap/production/public", display_name: "Public", is_default: true, is_legacy: false };
 const AMAZON = { path: "datamap/production/data-amazon", display_name: "Data Amazon", is_default: false, is_legacy: false };
@@ -42,5 +42,24 @@ describe("which tenancy to work in", () => {
 
     test("a path reads with spaced separators", () => {
         expect(tenancyPathLabel("datamap/production/public")).toBe("datamap / production / public");
+    });
+});
+
+describe("which tenancy has a Members page", () => {
+    const LEGACY = { path: "datamap/staging/data-amazon", display_name: "Data Amazon", is_default: false, is_legacy: true };
+
+    test("the selected production tenancy the user belongs to", () => {
+        expect(membersPageTenancy([PUBLIC, AMAZON], AMAZON.path)).toEqual(AMAZON);
+    });
+
+    test("not Public, where everyone is, and not a legacy tenancy, which is read-only", () => {
+        expect(membersPageTenancy([PUBLIC, AMAZON, LEGACY], PUBLIC.path)).toBeNull();
+        expect(membersPageTenancy([PUBLIC, AMAZON, LEGACY], LEGACY.path)).toBeNull();
+    });
+
+    test("not a tenancy the user no longer has or that is disabled, nor before the list has loaded", () => {
+        expect(membersPageTenancy([PUBLIC], AMAZON.path)).toBeNull();
+        expect(membersPageTenancy(undefined, AMAZON.path)).toBeNull();
+        expect(membersPageTenancy([PUBLIC, AMAZON], "")).toBeNull();
     });
 });
