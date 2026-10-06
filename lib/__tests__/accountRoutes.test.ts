@@ -158,6 +158,15 @@ describe("the public account routes", () => {
         expect(confirmPasswordReset).toHaveBeenCalledWith("tok", "a new long password");
     });
 
+    test("a gatekeeper detail that is not a string never reaches the browser", async () => {
+        jest.mocked(confirmPasswordReset).mockRejectedValue(gatekeeperError(422, { detail: [{ loc: ["body", "token"], msg: "field required", input: { token: "secret" } }] }));
+
+        const res = await send(resetConfirmHandler, "POST", {}, { password: "a new long password" });
+
+        expect(res.statusCode).toBe(422);
+        expect(res.json).toHaveBeenCalledWith({ detail: "unavailable" });
+    });
+
     test("a gatekeeper that does not answer is a 500 with a code", async () => {
         jest.mocked(requestPasswordReset).mockRejectedValue(new Error("ECONNREFUSED"));
 

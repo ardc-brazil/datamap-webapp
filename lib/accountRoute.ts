@@ -64,7 +64,8 @@ export function accountHandler(router: ReturnType<typeof createRouter<NextApiReq
             if (status >= 500) {
                 logError("account route failed", err, { method: req.method, path: maskPathTokens((req.url ?? "").split("?")[0]) });
             }
-            res.status(status).json({ detail: response?.data?.detail ?? "unavailable" });
+            const detail = response?.data?.detail;
+            res.status(status).json({ detail: typeof detail === "string" ? detail : "unavailable" });
         },
         onNoMatch: (req, res) => {
             res.status(405).end(`Method ${req.method} not allowed`);
