@@ -1,3 +1,4 @@
+jest.mock("../tenancies", () => ({ listMyTenancies: jest.fn(async () => []) }));
 jest.mock("../share", () => ({ claimInvitations: jest.fn() }));
 jest.mock("../users", () => ({
     ...jest.requireActual("../users"),
@@ -10,14 +11,14 @@ import { authOptions, hydrateWithUserInfo, TOKEN_VERSION } from "../../pages/api
 import { getUserByUID } from "../users";
 
 describe("the admin claim", () => {
-    test("an account with the admin role carries it", () => {
-        const token = hydrateWithUserInfo({}, { id: "u1", roles: ["datasets_write", "admin"], tenancies: ["datamap/production/public"] });
+    test("an account with the admin role carries it", async () => {
+        const token = await hydrateWithUserInfo({}, { id: "u1", roles: ["datasets_write", "admin"], tenancies: ["datamap/production/public"] });
 
         expect(token.admin).toBe(true);
     });
 
-    test("an account without it carries none, and a claim from before is dropped", () => {
-        const token = hydrateWithUserInfo({ uid: "u1", admin: true }, { id: "u1", roles: ["datasets_write"], tenancies: ["datamap/production/public"] });
+    test("an account without it carries none, and a claim from before is dropped", async () => {
+        const token = await hydrateWithUserInfo({ uid: "u1", admin: true }, { id: "u1", roles: ["datasets_write"], tenancies: ["datamap/production/public"] });
 
         expect(token).not.toHaveProperty("admin");
     });

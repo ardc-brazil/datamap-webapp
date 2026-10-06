@@ -1,3 +1,4 @@
+jest.mock("../tenancies", () => ({ listMyTenancies: jest.fn(async () => [{ path: "datamap/production/data-amazon" }]) }));
 jest.mock("../share", () => ({ claimInvitations: jest.fn() }));
 jest.mock("../users", () => ({
     ...jest.requireActual("../users"),
