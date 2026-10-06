@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 const withdrawWorkspaceInvitation = jest.fn() as any;
 const mutate = jest.fn() as any;
@@ -86,6 +86,23 @@ describe("WorkspaceInvitations", () => {
         expect(withdrawWorkspaceInvitation).toHaveBeenCalledTimes(1);
         resolveCall!();
         await waitFor(() => expect(mutate).toHaveBeenCalled());
+    });
+
+    test("two rows failing at once keep their own messages", async () => {
+        invitations = invitations.map((row: any) => ({ ...row, can_withdraw: true }));
+        withdrawWorkspaceInvitation.mockImplementation(async (_tenancy: string, id: string) => {
+            throw { response: { status: id === "ti1" ? 403 : 404, data: { detail: id === "ti1" ? "forbidden" : "invitation_not_found" } } };
+        });
+        render(<WorkspaceInvitations tenancy={AMAZON} />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Withdraw the invitation of Rafael Souza" }));
+        fireEvent.click(screen.getByRole("button", { name: "Withdraw the invitation of Marta Silva" }));
+
+        await waitFor(() => expect(screen.getAllByRole("alert")).toHaveLength(2));
+        const rafael = screen.getByText("Rafael Souza").closest("li") as HTMLElement;
+        const marta = screen.getByText("Marta Silva").closest("li") as HTMLElement;
+        expect(within(rafael).getByRole("alert").textContent).toBe("Only the member who sent an invitation can withdraw it.");
+        expect(within(marta).getByRole("alert").textContent).toBe("This invitation is no longer open. It may have been withdrawn.");
     });
 
     test("nothing pending, nothing shown", () => {

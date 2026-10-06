@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
     SHARE_DANGER_ACTION_CLASS,
     SHARE_PERSON_DETAIL_CLASS,
@@ -6,8 +6,8 @@ import {
     SHARE_ROW_CLASS,
     SHARE_SECTION_LABEL_CLASS,
 } from "../../contants/ShareConstants";
-import { tenancyErrorMessage } from "../../contants/TenancyConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
+import { useRowActions } from "../../hooks/UseRowActions";
 import { useWorkspaceInvitations } from "../../hooks/UseWorkspace";
 import { formatShortDate } from "../../lib/embargoDisplay";
 import { TenancySummary, WorkspaceInvitation } from "../../types/GatekeeperAPI";
@@ -18,42 +18,20 @@ function invitedLine(invitation: WorkspaceInvitation): string {
     return `${by} ${formatShortDate(invitation.created_at, false)} · not accepted yet`;
 }
 
-function withoutKey<T>(record: Record<string, T>, key: string): Record<string, T> {
-    const { [key]: _removed, ...rest } = record;
-    return rest;
-}
-
 export function WorkspaceInvitations({ tenancy }: { tenancy: TenancySummary }) {
     const { data: invitations, mutate } = useWorkspaceInvitations(tenancy.path);
     const [bffGateway] = useState(() => new BFFAPI());
-    const withdrawingRef = useRef<Set<string>>(new Set());
-    const [pendingIds, setPendingIds] = useState<Record<string, boolean>>({});
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    const rows = useRowActions(mutate);
 
     if (!invitations || invitations.length === 0) {
         return null;
     }
 
-    async function withdraw(invitation: WorkspaceInvitation) {
-        if (withdrawingRef.current.has(invitation.id)) {
-            return;
-        }
-        withdrawingRef.current.add(invitation.id);
-        setPendingIds((previous) => ({ ...previous, [invitation.id]: true }));
-        setErrors((previous) => withoutKey(previous, invitation.id));
-        try {
+    function withdraw(invitation: WorkspaceInvitation) {
+        return rows.run(invitation.id, async () => {
             await bffGateway.withdrawWorkspaceInvitation(tenancy.path, invitation.id);
             await mutate();
-        } catch (e: any) {
-            const detail = e?.response?.data?.detail;
-            setErrors((previous) => ({ ...previous, [invitation.id]: tenancyErrorMessage(detail) }));
-            if (detail === "invitation_not_found") {
-                await mutate();
-            }
-        } finally {
-            withdrawingRef.current.delete(invitation.id);
-            setPendingIds((previous) => withoutKey(previous, invitation.id));
-        }
+        });
     }
 
     return (
@@ -66,15 +44,15 @@ export function WorkspaceInvitations({ tenancy }: { tenancy: TenancySummary }) {
                         <span className="flex flex-col min-w-0">
                             <span className={SHARE_PERSON_NAME_CLASS}>{invitation.user.name}</span>
                             <span className={SHARE_PERSON_DETAIL_CLASS}>{invitedLine(invitation)}</span>
-                            {errors[invitation.id] &&
-                                <span role="alert" className="text-xs text-danger-700">{errors[invitation.id]}</span>}
+                            {rows.error(invitation.id) &&
+                                <span role="alert" className="text-xs text-danger-700">{rows.error(invitation.id)}</span>}
                         </span>
                         {invitation.can_withdraw
                             ? <button
                                 type="button"
                                 aria-label={`Withdraw the invitation of ${invitation.user.name}`}
                                 className={SHARE_DANGER_ACTION_CLASS}
-                                disabled={!!pendingIds[invitation.id]}
+                                disabled={rows.busy(invitation.id)}
                                 onClick={() => withdraw(invitation)}
                             >
                                 Withdraw
