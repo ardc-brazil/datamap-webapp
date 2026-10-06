@@ -14,6 +14,14 @@ export const isDefaultTenancy = (path: string) => path === DEFAULT_TENANCY;
 export const isLegacyTenancy = (path: string) => path.startsWith(LEGACY_PREFIX);
 export const tenancyNamespace = (path: string) => path.split("/").pop() ?? path;
 
+export function isValidNamespace(value: string): boolean {
+    const namespace = value.trim();
+    return namespace.length >= NAMESPACE_MIN_LENGTH
+        && namespace.length <= NAMESPACE_MAX_LENGTH
+        && NAMESPACE_PATTERN.test(namespace)
+        && namespace !== tenancyNamespace(DEFAULT_TENANCY);
+}
+
 /** Slash-separated segments only: no `..`, no empty segment, nothing a URL would read as more than a path. */
 export const TENANCY_PATH_PATTERN = /^[A-Za-z0-9_-]+(\/[A-Za-z0-9_-]+)+$/;
 

@@ -14,6 +14,7 @@ import {
     workspaceInvitationsKey,
     workspaceMembersKey,
     isLegacyTenancy,
+    isValidNamespace,
     tenancyErrorMessage,
     tenancyNamespace,
 } from "../TenancyConstants";
@@ -42,6 +43,15 @@ describe("tenancy constants", () => {
         expect(TENANCY_PATH_PATTERN.test("datamap/staging/data-amazon")).toBe(true);
         for (const value of ["atto", "datamap/../users", "datamap//atto", "datamap/production/atto?x=1", "/datamap/production/atto", "datamap/production/atto/", "../../admin/tenancies"]) {
             expect(TENANCY_PATH_PATTERN.test(value)).toBe(false);
+        }
+    });
+
+    test("a namespace is 2 to 63 lower-case letters, digits or hyphens, trimmed first, and never public", () => {
+        for (const value of ["data-amazon", "ab", " atto ", "a".repeat(63)]) {
+            expect(isValidNamespace(value)).toBe(true);
+        }
+        for (const value of ["", "a", " a ", "a".repeat(64), "Data-Amazon", "data amazon", "joão", "public", " public "]) {
+            expect(isValidNamespace(value)).toBe(false);
         }
     });
 
