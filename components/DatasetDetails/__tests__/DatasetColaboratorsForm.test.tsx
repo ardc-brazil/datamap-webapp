@@ -46,4 +46,14 @@ describe("DatasetColaboratorsForm", () => {
             { name: "Bruno" },
         ]);
     });
+
+    test("an edit keeps the dataset in the tenancy it was created in", async () => {
+        updateDataset.mockClear();
+        render(<DatasetColaboratorsForm dataset={dataset([{ name: "Ana" }])} user={{} as any} alwaysEdition />);
+
+        fireEvent.submit(screen.getAllByLabelText("Name")[0].closest("form") as HTMLFormElement);
+
+        await waitFor(() => expect(updateDataset).toHaveBeenCalledTimes(1));
+        expect(updateDataset.mock.calls[0][0].tenancy).toBe("t");
+    });
 });
