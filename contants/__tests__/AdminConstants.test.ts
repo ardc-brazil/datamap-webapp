@@ -16,6 +16,12 @@ describe("admin error messages", () => {
         expect(adminErrorMessage("requester_email_unverified")).toBe(ADMIN_COPY.unverifiedBanner);
     });
 
+    test("a role Casbin dropped while the token still says admin reads as a lost admin role, like the BFF's own refusal", () => {
+        const lostRole = "Your account no longer has the admin role. Reload the page.";
+        expect(adminErrorFrom({ response: { status: 401, data: { detail: "not_authorized" } } })).toBe(lostRole);
+        expect(adminErrorMessage("not_found")).toBe(lostRole);
+    });
+
     test("an unknown code, or none, reads as a generic failure", () => {
         expect(adminErrorMessage("made_up")).toBe(GENERIC);
         expect(adminErrorMessage(undefined)).toBe(GENERIC);

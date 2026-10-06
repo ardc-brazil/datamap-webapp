@@ -61,6 +61,7 @@ export const ADMIN_COPY = {
     usersEmpty: "Coming soon. Until then, add and remove people from Tenancies.",
     activityTitle: "Activity",
     activityEmpty: "Coming soon: every admin action, who and when.",
+    lostAdminRole: "Your account no longer has the admin role. Reload the page.",
 } as const;
 
 const ADMIN_ERROR_MESSAGES: Record<string, string> = {
@@ -81,7 +82,8 @@ const ADMIN_ERROR_MESSAGES: Record<string, string> = {
     public_tenancy_locked: "Everyone is in Public; its members can't be changed.",
     legacy_tenancy_read_only: "Legacy staging tenancies are read-only.",
     tenancy_disabled: "This tenancy is disabled.",
-    not_found: "Your account no longer has the admin role. Reload the page.",
+    not_found: ADMIN_COPY.lostAdminRole,
+    not_authorized: ADMIN_COPY.lostAdminRole,
 };
 
 export function adminErrorMessage(detail?: string): string {
