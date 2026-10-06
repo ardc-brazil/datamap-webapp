@@ -253,6 +253,29 @@ describe("ReviewRequestDialog", () => {
         expect((screen.getByLabelText("Namespace") as HTMLInputElement).value).toBe("cflux");
     });
 
+    test("an edited namespace survives switching to Join existing and back", async () => {
+        mockDetail = { data: newRequestDetail(true) };
+        renderDialog();
+
+        fireEvent.change(screen.getByLabelText("Namespace"), { target: { value: "cflux" } });
+        fireEvent.click(screen.getByRole("button", { name: "Join existing" }));
+        await waitFor(() => expect(screen.queryByLabelText("Namespace")).toBeNull());
+        fireEvent.click(screen.getByRole("button", { name: "New tenancy" }));
+        fireEvent.change(await screen.findByLabelText("Display name"), { target: { value: "Cerrado" } });
+
+        await waitFor(() => expect((screen.getByLabelText("Display name") as HTMLInputElement).value).toBe("Cerrado"));
+        expect((screen.getByLabelText("Namespace") as HTMLInputElement).value).toBe("cflux");
+    });
+
+    test("the namespace follows from the start when the requested name is cut to the display name limit", async () => {
+        mockDetail = { data: newRequestDetail(true, `a${"!".repeat(70)}b`) };
+        renderDialog();
+
+        fireEvent.change(screen.getByLabelText("Display name"), { target: { value: "Cerrado" } });
+
+        await waitFor(() => expect((screen.getByLabelText("Namespace") as HTMLInputElement).value).toBe("cerrado"));
+    });
+
     test("an account that is gone cannot be approved, and Decline… stays", async () => {
         mockApprove.mockRejectedValue({ response: { status: 404, data: { detail: "no_account" } } });
         const { onApproved, onDecline } = renderDialog();

@@ -1,5 +1,5 @@
 import { FormikErrors, FormikTouched } from "formik";
-import { FocusEvent, useState } from "react";
+import { FocusEvent } from "react";
 import * as Yup from "yup";
 import { adminErrorFrom, adminErrorMessage, slugifyNamespace } from "../../contants/AdminConstants";
 import { DISPLAY_NAME_MAX_LENGTH, PRODUCTION_PREFIX, isValidNamespace } from "../../contants/TenancyConstants";
@@ -56,8 +56,6 @@ interface Props<V extends NewTenancyValues> {
 }
 
 export function NewTenancyFields<V extends NewTenancyValues>({ formik, idPrefix, failure, onEdit, className, previewSuffix }: Props<V>) {
-    const [namespaceEdited, setNamespaceEdited] = useState(false);
-
     function change(values: Partial<NewTenancyValues>) {
         onEdit();
         formik.setValues((current) => ({ ...current, ...values }));
@@ -95,12 +93,10 @@ export function NewTenancyFields<V extends NewTenancyValues>({ formik, idPrefix,
         <>
             <div className={className}>
                 {field("displayName", "Display name", `${idPrefix}-display-name`, (displayName) => {
-                    change(namespaceEdited ? { displayName } : { displayName, namespace: slugifyNamespace(displayName) });
+                    const following = formik.values.namespace === slugifyNamespace(formik.values.displayName);
+                    change(following ? { displayName, namespace: slugifyNamespace(displayName) } : { displayName });
                 })}
-                {field("namespace", "Namespace", `${idPrefix}-namespace`, (namespace) => {
-                    setNamespaceEdited(true);
-                    change({ namespace });
-                }, "font-mono")}
+                {field("namespace", "Namespace", `${idPrefix}-namespace`, (namespace) => change({ namespace }), "font-mono")}
             </div>
             <p className="m-0 font-mono text-xs text-primary-500">{preview}</p>
         </>

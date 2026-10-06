@@ -87,12 +87,13 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
     const [failure, setFailure] = useState<NewTenancyFailure | null>(null);
     const [accountGone, setAccountGone] = useState(false);
     const { submit, busy, done } = useSubmitOnce();
+    const displayName = detail.requested_name.trim().slice(0, DISPLAY_NAME_MAX_LENGTH);
     const formik = useFormik({
         initialValues: {
             mode: (detail.kind === "join" ? "join" : "new") as Mode,
             tenancy: suggested?.path ?? "",
-            displayName: detail.requested_name.trim().slice(0, DISPLAY_NAME_MAX_LENGTH),
-            namespace: slugifyNamespace(detail.requested_name),
+            displayName,
+            namespace: slugifyNamespace(displayName),
         },
         validationSchema: schema,
         onSubmit: async (values) => {
