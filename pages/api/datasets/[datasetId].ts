@@ -6,6 +6,7 @@ import { deleteDataset, getDatasetCategoryFilters, updateDataset } from "../../.
 import { authOnlyChain } from "../../../lib/middlewareChain";
 import { ResponseError } from "../../../types/ResponseError";
 import { logError } from "../../../lib/logging";
+import { gatekeeperDetail } from "../../../lib/accountRoute";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
@@ -17,7 +18,7 @@ router
       const result = await updateDataset(context, req.body);
       res.json(result);
     } catch (error) {
-      res.status(error?.response?.status ?? 502).json({ detail: error?.response?.data?.detail });
+      res.status(error?.response?.status ?? 502).json({ detail: gatekeeperDetail(error?.response?.data) });
     }
   })
   .get(async (req, res) => {

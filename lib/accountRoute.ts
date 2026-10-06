@@ -47,6 +47,12 @@ export function pendingAccountRouter() {
     return createRouter<NextApiRequest, NextApiResponse>().use(pendingOnlyChain).use(requireJsonContentType);
 }
 
+/** A gatekeeper `detail` that is not a string code (a FastAPI 422 list, for one) never reaches the browser. */
+export function gatekeeperDetail(body: unknown): string | undefined {
+    const detail = (body as { detail?: unknown } | undefined)?.detail;
+    return typeof detail === "string" ? detail : undefined;
+}
+
 /** The account screens map the gatekeeper's `detail` codes to their own copy, so both reach the browser as they were. */
 export function accountHandler(router: ReturnType<typeof createRouter<NextApiRequest, NextApiResponse>>) {
     return router.handler({
@@ -56,8 +62,7 @@ export function accountHandler(router: ReturnType<typeof createRouter<NextApiReq
             if (status >= 500) {
                 logError("account route failed", err, { method: req.method, path: maskPathTokens((req.url ?? "").split("?")[0]) });
             }
-            const detail = response?.data?.detail;
-            res.status(status).json({ detail: typeof detail === "string" ? detail : "unavailable" });
+            res.status(status).json({ detail: gatekeeperDetail(response?.data) ?? "unavailable" });
         },
         onNoMatch: (req, res) => {
             res.status(405).end(`Method ${req.method} not allowed`);

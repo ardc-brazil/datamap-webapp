@@ -57,4 +57,15 @@ describe("PUT /api/datasets/[datasetId]", () => {
         expect(res.statusCode).toBe(400);
         expect(res.json).toHaveBeenCalledWith({ detail: "tenancy_cannot_change" });
     });
+
+    test("a detail that is not a string code never reaches the browser", async () => {
+        jest.mocked(updateDataset).mockRejectedValue(new AxiosError("gatekeeper", "ERR", undefined, {}, {
+            status: 422, data: { detail: [{ loc: ["body", "name"], msg: "field required" }] }, statusText: "", headers: {}, config: { headers: new AxiosHeaders() },
+        } as any));
+
+        const res = await put();
+
+        expect(res.statusCode).toBe(422);
+        expect(res.json).toHaveBeenCalledWith({ detail: undefined });
+    });
 });

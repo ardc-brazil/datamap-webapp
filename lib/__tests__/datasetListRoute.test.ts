@@ -18,10 +18,7 @@ function fakeRes() {
     return res;
 }
 
-test("a tenancy the user was removed from reaches the browser with its code", async () => {
-    jest.mocked(getAllDataset).mockRejectedValue(new AxiosError("gatekeeper", "ERR", undefined, {}, {
-        status: 401, data: { detail: "unauthorized_tenancy: user is not a member" }, statusText: "", headers: {}, config: { headers: new AxiosHeaders() },
-    } as any));
+async function list() {
     const res = fakeRes();
     const original = process.stdout.write;
     // @ts-ignore
@@ -34,7 +31,26 @@ test("a tenancy the user was removed from reaches the browser with its code", as
     } finally {
         process.stdout.write = original;
     }
+    return res;
+}
+
+test("a tenancy the user was removed from reaches the browser with its code", async () => {
+    jest.mocked(getAllDataset).mockRejectedValue(new AxiosError("gatekeeper", "ERR", undefined, {}, {
+        status: 401, data: { detail: "unauthorized_tenancy: user is not a member" }, statusText: "", headers: {}, config: { headers: new AxiosHeaders() },
+    } as any));
+    const res = await list();
 
     expect(res.statusCode).toBe(401);
     expect(res.json).toHaveBeenCalledWith({ detail: "unauthorized_tenancy: user is not a member" });
+});
+
+test("a detail that is not a string code never reaches the browser", async () => {
+    jest.mocked(getAllDataset).mockRejectedValue(new AxiosError("gatekeeper", "ERR", undefined, {}, {
+        status: 422, data: { detail: [{ loc: ["query", "page"], msg: "not an integer" }] }, statusText: "", headers: {}, config: { headers: new AxiosHeaders() },
+    } as any));
+
+    const res = await list();
+
+    expect(res.statusCode).toBe(422);
+    expect(res.json).toHaveBeenCalledWith({ detail: undefined });
 });
