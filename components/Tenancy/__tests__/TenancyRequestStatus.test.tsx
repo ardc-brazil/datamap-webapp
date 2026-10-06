@@ -34,6 +34,7 @@ const approved: any = { ...pending, status: "approved", tenancy: AMAZON, decided
 beforeEach(() => {
     selected = "datamap/production/public";
     withdrawTenancyRequest.mockReset();
+    mutate.mockReset().mockResolvedValue(undefined);
 });
 
 describe("TenancyRequestRow", () => {
@@ -55,6 +56,45 @@ describe("TenancyRequestRow", () => {
 
         await waitFor(() => expect(mutate).toHaveBeenCalled());
         expect(withdrawTenancyRequest).toHaveBeenCalledWith("r1");
+    });
+
+    test("a request already gone says so and resyncs the row", async () => {
+        requestState = { kind: "pending", request: pending };
+        withdrawTenancyRequest.mockRejectedValue({ response: { status: 404, data: { detail: "request_not_found" } } });
+        render(<ul><TenancyRequestRow /></ul>);
+
+        fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
+
+        await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("This request is no longer waiting. It may have been answered or withdrawn."));
+        expect(mutate).toHaveBeenCalled();
+    });
+
+    test("a failed withdraw keeps the row with its message", async () => {
+        requestState = { kind: "pending", request: pending };
+        withdrawTenancyRequest.mockRejectedValue({ response: { status: 500, data: { detail: "unavailable" } } });
+        render(<ul><TenancyRequestRow /></ul>);
+
+        fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
+
+        await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("Something went wrong. Please try again."));
+        expect(screen.getByText("Data Amazon")).toBeTruthy();
+        expect((screen.getByRole("button", { name: "Withdraw" }) as HTMLButtonElement).disabled).toBe(false);
+        expect(mutate).not.toHaveBeenCalled();
+    });
+
+    test("standalone, the row comes in its own list", () => {
+        requestState = { kind: "pending", request: pending };
+        const { container } = render(<TenancyRequestRow standalone />);
+
+        expect(container.querySelector("ul > li")).toBeTruthy();
+    });
+
+    test("an approval shows the tenancy's own icon, not a pending one", () => {
+        requestState = { kind: "approved", request: { ...approved, tenancy: { ...AMAZON, is_default: true } } };
+        const { container } = render(<ul><TenancyRequestRow /></ul>);
+
+        expect(container.querySelector('[data-icon="public"]')).toBeTruthy();
+        expect(container.querySelector('[data-pending="true"]')).toBeNull();
     });
 
     test("a recent decline shows its date and the administrator's message", () => {
@@ -98,6 +138,24 @@ describe("TenancyRequestNotice", () => {
 
         expect(screen.getByText("Your request for Data Amazon is waiting for an administrator")).toBeTruthy();
         expect(screen.getByRole("button", { name: "Withdraw" })).toBeTruthy();
+    });
+
+    test("an approval on the home shows the same icon as the row", () => {
+        requestState = { kind: "approved", request: { ...approved, tenancy: { ...AMAZON, is_default: true } } };
+        const { container } = render(<TenancyRequestNotice />);
+
+        expect(container.querySelector('[data-icon="public"]')).toBeTruthy();
+        expect(container.querySelector('[data-pending="true"]')).toBeNull();
+    });
+
+    test("a request gone meanwhile resyncs the home line too", async () => {
+        requestState = { kind: "pending", request: pending };
+        withdrawTenancyRequest.mockRejectedValue({ response: { status: 404, data: { detail: "request_not_found" } } });
+        render(<TenancyRequestNotice />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Withdraw" }));
+
+        await waitFor(() => expect(mutate).toHaveBeenCalled());
     });
 
     test("a decline is not repeated on the home", () => {

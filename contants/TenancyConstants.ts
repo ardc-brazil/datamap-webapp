@@ -42,7 +42,7 @@ export const TENANCY_ERROR_MESSAGES: Record<string, string> = {
     reason_invalid: "Say why in 1 to 1000 characters.",
     request_pending: REQUEST_PENDING_MESSAGE,
     too_many_requests: "You have sent three requests in the last 24 hours. Try again tomorrow.",
-    request_not_found: "This request is no longer waiting. Reload the page to see where it stands.",
+    request_not_found: "This request is no longer waiting. It may have been answered or withdrawn.",
     invitation_not_found: "This invitation is no longer open. It may have been withdrawn.",
     tenancy_not_found: "You are not a member of this tenancy.",
     tenancy_disabled: "This tenancy is disabled, so nobody can join it now.",

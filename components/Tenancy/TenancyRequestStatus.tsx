@@ -2,8 +2,8 @@ import Router from "next/router";
 import { useState } from "react";
 import { ROUTE_PAGE_HOME } from "../../contants/InternalRoutesConstants";
 import { SHARE_DANGER_ACTION_CLASS } from "../../contants/ShareConstants";
-import { tenancyErrorMessage } from "../../contants/TenancyConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
+import { useRowActions } from "../../hooks/UseRowActions";
 import { useLatestTenancyRequest } from "../../hooks/UseTenancies";
 import { formatShortDate } from "../../lib/embargoDisplay";
 import { trackUiEvent } from "../../lib/telemetryClient";
@@ -16,20 +16,13 @@ function useRequestActions() {
     const tenancySelected = useTenancyStore((store) => store.tenancySelected);
     const setTenancySelected = useTenancyStore((store) => store.setTenancySelected);
     const [bffGateway] = useState(() => new BFFAPI());
-    const [busy, setBusy] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const actions = useRowActions(mutate);
 
-    async function withdraw(requestId: string) {
-        setBusy(true);
-        setError(null);
-        try {
+    function withdraw(requestId: string) {
+        return actions.run(requestId, async () => {
             await bffGateway.withdrawTenancyRequest(requestId);
             await mutate();
-        } catch (e) {
-            setError(tenancyErrorMessage(e?.response?.data?.detail));
-        } finally {
-            setBusy(false);
-        }
+        });
     }
 
     function switchTo(path: string) {
@@ -40,7 +33,14 @@ function useRequestActions() {
 
     const visible: LatestRequestState = state?.kind === "approved" && state.request.tenancy?.path === tenancySelected ? null : state;
 
-    return { state: visible, busy, error, withdraw, switchTo };
+    const requestId = visible?.request.id ?? "";
+    return { state: visible, busy: actions.busy(requestId), error: actions.error(requestId), withdraw, switchTo };
+}
+
+function RequestIcon({ state }: { state: NonNullable<LatestRequestState> }) {
+    return state.kind === "approved"
+        ? <TenancyIcon tenancy={state.request.tenancy} />
+        : <TenancyIcon pending />;
 }
 
 export function TenancyRequestRow(props: { standalone?: boolean }) {
@@ -53,7 +53,7 @@ export function TenancyRequestRow(props: { standalone?: boolean }) {
     const { request } = state;
     const row = (
         <li className="flex items-center gap-4 px-4 py-4">
-            <TenancyIcon pending={state.kind !== "approved"} />
+            <RequestIcon state={state} />
             <span className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-[15px] font-semibold text-primary-900">
                     {state.kind === "approved" ? request.tenancy.display_name : request.requested_name}
@@ -88,7 +88,7 @@ export function TenancyRequestNotice(props: { className?: string }) {
     const { request } = state;
     return (
         <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-primary-200 bg-primary-0 px-4 py-3 text-sm text-primary-700 ${props.className ?? ""}`}>
-            <TenancyIcon pending={state.kind === "pending"} />
+            <RequestIcon state={state} />
             {state.kind === "pending" ? (
                 <>
                     <span>{`Your request for ${request.requested_name} is waiting for an administrator`}</span>
