@@ -18,6 +18,10 @@ import {
     SetEmbargoRequest,
     SharePermission,
     ShareUser,
+    InviteeLookup,
+    TenancyRequest,
+    TenancySummary,
+    WorkspaceInvitation,
 } from "../types/GatekeeperAPI";
 
 
@@ -53,21 +57,8 @@ export class BFFAPI {
      * @returns Dataset updated response
      */
     async updateDataset(dataset: UpdateDatasetRequest): Promise<UpdateDatasetResponse> {
-        try {
-            const response = await axios.put("/api/datasets/" + dataset.id, dataset)
-
-            if (response.status == 200) {
-                // TODO: Review the response because is returning {} (object empty)
-                return response.data as UpdateDatasetResponse;
-            }
-
-            console.log(response);
-
-        } catch (error) {
-            console.log(error);
-        }
-
-        return Promise.reject("Error to updateDataset");
+        const response = await axios.put("/api/datasets/" + dataset.id, dataset);
+        return response.data as UpdateDatasetResponse;
     }
 
     /**
@@ -384,5 +375,40 @@ export class BFFAPI {
 
     async confirmEmailVerification(challengeId: string, code: string): Promise<void> {
         await axios.post(`/api/account/email-verifications/${encodeURIComponent(challengeId)}/confirm`, { code });
+    }
+
+    async requestTenancyAccess(input: { tenancyName: string; reason: string }): Promise<TenancyRequest> {
+        const response = await axios.post("/api/tenancy-requests", input);
+        trackUiEvent("tenancy_access_requested");
+        return response.data as TenancyRequest;
+    }
+
+    async withdrawTenancyRequest(requestId: string): Promise<void> {
+        await axios.delete(`/api/tenancy-requests/${encodeURIComponent(requestId)}`);
+    }
+
+    async acceptTenancyInvitation(invitationId: string): Promise<{ tenancy: TenancySummary }> {
+        const response = await axios.post(`/api/tenancy-invitations/${encodeURIComponent(invitationId)}/accept`, {});
+        trackUiEvent("tenancy_invitation_accepted");
+        return response.data as { tenancy: TenancySummary };
+    }
+
+    async declineTenancyInvitation(invitationId: string): Promise<void> {
+        await axios.post(`/api/tenancy-invitations/${encodeURIComponent(invitationId)}/decline`, {});
+    }
+
+    async lookupInvitee(tenancy: string, value: string): Promise<InviteeLookup> {
+        const response = await axios.get(`/api/workspace/lookup?tenancy=${encodeURIComponent(tenancy)}&value=${encodeURIComponent(value)}`);
+        return response.data as InviteeLookup;
+    }
+
+    async inviteToWorkspace(tenancy: string, userId: string): Promise<WorkspaceInvitation> {
+        const response = await axios.post(`/api/workspace/invitations?tenancy=${encodeURIComponent(tenancy)}`, { userId });
+        trackUiEvent("tenancy_invitation_sent");
+        return response.data as WorkspaceInvitation;
+    }
+
+    async withdrawWorkspaceInvitation(tenancy: string, invitationId: string): Promise<void> {
+        await axios.delete(`/api/workspace/invitations/${encodeURIComponent(invitationId)}?tenancy=${encodeURIComponent(tenancy)}`);
     }
 }

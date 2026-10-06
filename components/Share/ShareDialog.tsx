@@ -6,7 +6,7 @@ import { messageForApiError } from "../../contants/EmbargoConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { useMembersAccess } from "../../hooks/UseMembersAccess";
 import { tenancyDisplayName } from "../../lib/embargoDisplay";
-import { canChangeMembersAccess, membersAccessDetail, membersCanEditOf } from "../../lib/membersAccess";
+import { canChangeMembersAccess, inPublic, membersAccessDetail, membersCanEditOf } from "../../lib/membersAccess";
 import { fetcher } from "../../lib/fetcher";
 import { GetDatasetDetailsResponse } from "../../types/BffAPI";
 import { GrantRequest, PermissionLevel, SharePermission, ShareState } from "../../types/GatekeeperAPI";
@@ -50,7 +50,7 @@ export function ShareDialog(props: Props) {
         ? {
             tenancyName,
             canChange: canChangeMembersAccess(props.dataset),
-            detail: membersAccessDetail({ membersCanEdit, embargoActive, members: state?.tenancy?.members ?? null }),
+            detail: membersAccessDetail({ membersCanEdit, embargoActive, members: state?.tenancy?.members ?? null, everyone: inPublic(props.dataset, state) }),
         }
         : null;
 

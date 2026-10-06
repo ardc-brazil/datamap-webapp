@@ -9,3 +9,5 @@ export const EDIT_FORM_HINT_CLASS = "m-0 text-sm leading-5 text-primary-500 ital
 export const EDIT_FORM_ERROR_CLASS = "mt-1 text-xs text-error-600";
 
 export const EMPTY_VALUE_CLASS = "m-0 text-sm leading-5 text-primary-500 italic";
+
+export const DATASET_CREATE_ERROR_MESSAGE = "The dataset could not be created. Please try again.";

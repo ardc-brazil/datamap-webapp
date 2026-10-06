@@ -1,8 +1,9 @@
 import Link from "next/link";
 import Router, { useRouter } from "next/router";
 import { useState } from "react";
-import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_HOME, ROUTE_PAGE_NOTEBOOKS, ROUTE_PAGE_PROFILE, ROUTE_PAGE_TENANCY_SELECTOR } from "../contants/InternalRoutesConstants";
+import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_HOME, ROUTE_PAGE_MEMBERS, ROUTE_PAGE_NOTEBOOKS, ROUTE_PAGE_PROFILE, ROUTE_PAGE_TENANCY_SELECTOR } from "../contants/InternalRoutesConstants";
 import useComponentVisible from "../hooks/UseComponentVisible";
+import { useMembersPageTenancy } from "../hooks/UseWorkspace";
 import Head from "../node_modules/next/head";
 import { MaterialSymbol } from "react-material-symbols";
 import { Logo } from "./Brand/Logo";
@@ -23,6 +24,7 @@ export default function LoggedLayour(props: Props) {
   const { ref, isComponentVisible, setIsComponentVisible } = useComponentVisible(false);
   const isTenancySelected = useTenancyStore((state) => state.isTenancySelected)
   const tenancySelected = useTenancyStore((state) => state.tenancySelected)
+  const { tenancy: membersTenancy } = useMembersPageTenancy();
 
   function toggleMenu(): void {
     setMenuClosed(!menuClosed);
@@ -110,6 +112,7 @@ export default function LoggedLayour(props: Props) {
             <MenuItem href={ROUTE_PAGE_HOME} text="Home" icon="home" collapsed={menuClosed} />
             <MenuItem href={ROUTE_PAGE_DATASETS} text="Datasets" icon="database" collapsed={menuClosed} />
             <MenuItem href={ROUTE_PAGE_NOTEBOOKS} text="Notebooks" icon="code" collapsed={menuClosed} />
+            {membersTenancy && <MenuItem href={ROUTE_PAGE_MEMBERS} text="Members" icon="group" collapsed={menuClosed} />}
           </ul>
           <hr className="mx-2 border-primary-200" />
           <ul className="p-2">

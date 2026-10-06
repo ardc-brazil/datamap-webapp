@@ -10,6 +10,7 @@ import { CreateUserRequest, GetUserByProviderResponse, createUser, getUserByProv
 import { logError } from "../../../lib/logging";
 import { getMetrics } from "../../../lib/metrics";
 import { claimInvitations } from "../../../lib/share";
+import { listMyTenancies } from "../../../lib/tenancies";
 import { STALE_SESSION_ERROR, TOKEN_VERSION } from "../../../lib/sessionToken";
 import { fetchOrcidPublicEmail, isPlaceholderEmail } from "../../../lib/orcidEmail";
 import { DEV_ORCID_MOCK_PROVIDER_ID, ORCID_LINK_OUTCOME_PARAM, OrcidLinkOutcomeKind } from "../../../contants/AccountConstants";
@@ -109,7 +110,7 @@ export function authOptionsFor(request?: AuthRequest): AuthOptions {
             token = await hydratePasswordSignIn(token, user.id);
           } else {
             const signedIn = await getUserByProviderAuthentication(account, token);
-            token = hydrateWithUserInfo(token, signedIn);
+            token = await hydrateWithUserInfo(token, signedIn);
           }
           await claimPendingInvitations(token.uid as string);
         }
@@ -126,7 +127,7 @@ export function authOptionsFor(request?: AuthRequest): AuthOptions {
           // and being granted access looks to the user like nothing happened.
           try {
             const user = await getUserByUID({ uid: token.uid as string, tenancy: undefined });
-            token = hydrateWithUserInfo(token, user);
+            token = await hydrateWithUserInfo(token, user);
           } catch (error) {
             // A failed refresh must not log the user out. Keep the current claims.
             logError("failed to refresh session claims", error);
@@ -145,6 +146,7 @@ export function authOptionsFor(request?: AuthRequest): AuthOptions {
           session.user.uid = token.uid
           session.user.tenancies = token.tenancies
           session.user.pending = Boolean(token.pending)
+          session.user.admin = token.admin === true
           if (token.pending?.emailHint) {
             session.user.emailHint = token.pending.emailHint
           }
@@ -197,15 +199,32 @@ export async function connectOrcid(uid: string, orcid: string): Promise<OrcidLin
   }
 }
 
-export function hydrateWithUserInfo(token, user: any) {
+/** The enabled tenancies, the ones the selector lists; the user record also names disabled ones. */
+async function enabledTenancyPaths(user: any): Promise<string[] | undefined> {
+  try {
+    return (await listMyTenancies(user.id)).map(tenancy => tenancy.path);
+  } catch (error) {
+    logError("reading the enabled tenancies failed", error);
+    return user.tenancies;
+  }
+}
+
+export async function hydrateWithUserInfo(token, user: any) {
   token.uid = user.id;
 
-  if (user.tenancies?.length) {
-    token.tenancies = user.tenancies as string[];
+  const tenancies = await enabledTenancyPaths(user);
+  if (tenancies?.length) {
+    token.tenancies = tenancies;
   } else {
     // The user has no tenancy. Leaving a claim from a previous hydration would
     // let a revoked session keep querying the tenancy it was removed from.
     delete token.tenancies;
+  }
+
+  if (Array.isArray(user.roles) && user.roles.includes("admin")) {
+    token.admin = true;
+  } else {
+    delete token.admin;
   }
 
   return token;
@@ -216,11 +235,11 @@ export async function hydratePasswordSignIn(token: JWT, uid: string): Promise<JW
     const signedIn = await getUserByUID({ uid, tenancy: undefined });
     token.name = signedIn.name;
     token.email = signedIn.email;
-    return hydrateWithUserInfo(token, signedIn);
+    return await hydrateWithUserInfo(token, signedIn);
   } catch (error) {
     // The gatekeeper already accepted the password: a failed read must not undo the sign-in.
     logError("hydrating a password sign-in failed", error);
-    return hydrateWithUserInfo(token, { id: uid });
+    return await hydrateWithUserInfo(token, { id: uid });
   }
 }
 
@@ -282,7 +301,7 @@ async function emailHintFor(user: GetUserByProviderResponse | null, attempt: Orc
 }
 
 async function finishOrcidSignIn(token: JWT, user: GetUserByProviderResponse): Promise<JWT> {
-  token = hydrateWithUserInfo(token, user);
+  token = await hydrateWithUserInfo(token, user);
   token.email = user.email;
   if (user.name) {
     token.name = user.name;

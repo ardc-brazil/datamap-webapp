@@ -2,6 +2,8 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { MaterialSymbol, SymbolCodepoints } from 'react-material-symbols';
 import LoggedLayout from '../../../components/LoggedLayout';
+import { TenancyInvitationsPanel } from '../../../components/Tenancy/TenancyInvitationsPanel';
+import { TenancyRequestNotice } from '../../../components/Tenancy/TenancyRequestStatus';
 import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_DATASETS_NEW, ROUTE_PAGE_NOTEBOOKS, ROUTE_PAGE_PROFILE } from '../../../contants/InternalRoutesConstants';
 
 export default function HomePage() {
@@ -14,6 +16,9 @@ export default function HomePage() {
                 <p className="mt-2 mb-0 text-[15px] leading-[23px] text-primary-600">
                     Step into the world of scientific data analysis with DataMap, where data exploration becomes a breeze.
                 </p>
+
+                <TenancyInvitationsPanel className="mt-8" />
+                <TenancyRequestNotice className="mt-4" />
 
                 <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     <Shortcut href={ROUTE_PAGE_DATASETS} icon="database" title="Browse datasets" text="Search and filter the catalog." />

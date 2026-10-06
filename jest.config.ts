@@ -185,7 +185,7 @@ const config: Config = {
   // A map from regular expressions to paths to transformers
   transform: {
     // tsconfig uses jsx: "preserve" for Next, so ts-jest must compile JSX here.
-    '^.+\\.tsx?$': ['ts-jest', { tsconfig: { jsx: 'react-jsx' } }]
+    '^.+\\.[jt]sx?$': ['ts-jest', { tsconfig: { jsx: 'react-jsx' } }]
   },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation

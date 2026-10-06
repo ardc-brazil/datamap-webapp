@@ -1,3 +1,4 @@
+jest.mock("../tenancies", () => ({ listMyTenancies: jest.fn(async () => []) }));
 jest.mock("next-auth/jwt", () => ({ ...jest.requireActual("next-auth/jwt"), getToken: jest.fn() }));
 jest.mock("../share", () => ({ claimInvitations: jest.fn() }));
 jest.mock("../users", () => ({

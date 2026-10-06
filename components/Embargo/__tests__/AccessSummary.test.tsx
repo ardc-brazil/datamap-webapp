@@ -58,6 +58,13 @@ describe("AccessSummary", () => {
         expect(screen.getByText("No access during the embargo · afterwards: read only")).toBeTruthy();
     });
 
+    test("the share state alone saying the tenancy is the default one is enough to read Everyone on DataMap", () => {
+        shareState = stateWith({ name: "Public", path: "datamap/production/data-amazon", members: 47, members_can_edit: true, is_default: true });
+        render(<AccessSummary dataset={{ id: "d1", tenancy: "datamap/production/data-amazon", access: owner, embargo: null, members_can_edit: true } as any} />);
+
+        expect(screen.getByText("Everyone on DataMap · can read")).toBeTruthy();
+    });
+
     test("a write holder reads it and cannot change it", () => {
         shareState = stateWith({ name: "Data Amazon", path: "datamap/production/data-amazon", members: 14, members_can_edit: false });
         render(<AccessSummary dataset={{ id: "d1", tenancy: "datamap/production/data-amazon", access: { ...owner, level: "write", can_manage_embargo: false }, embargo: null } as any} />);

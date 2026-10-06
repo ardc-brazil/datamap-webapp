@@ -4,21 +4,13 @@ import { createRouter } from "next-connect";
 import { maskPathTokens } from "./externalCalls";
 import { logError } from "./logging";
 import { pendingOnlyChain, publicChain } from "./middlewareChain";
+import { uuidOr404 } from "./routeParams";
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export function isUuid(value: unknown): value is string {
-    return typeof value === "string" && UUID.test(value);
-}
+export { isUuid } from "./routeParams";
 
 /** Every public challenge route takes the same id from the same place; a non-UUID never reaches the gatekeeper. */
 export function challengeIdOr404(req: NextApiRequest, res: NextApiResponse): string | undefined {
-    const challengeId = req.query.challengeId as string;
-    if (isUuid(challengeId)) {
-        return challengeId;
-    }
-    res.status(404).json({ detail: "challenge_not_found" });
-    return undefined;
+    return uuidOr404(req, res, "challengeId", "challenge_not_found");
 }
 
 const JSON_CONTENT_TYPE = /^application\/json\b/i;
@@ -55,6 +47,12 @@ export function pendingAccountRouter() {
     return createRouter<NextApiRequest, NextApiResponse>().use(pendingOnlyChain).use(requireJsonContentType);
 }
 
+/** A gatekeeper `detail` that is not a string code (a FastAPI 422 list, for one) never reaches the browser. */
+export function gatekeeperDetail(body: unknown): string | undefined {
+    const detail = (body as { detail?: unknown } | undefined)?.detail;
+    return typeof detail === "string" ? detail : undefined;
+}
+
 /** The account screens map the gatekeeper's `detail` codes to their own copy, so both reach the browser as they were. */
 export function accountHandler(router: ReturnType<typeof createRouter<NextApiRequest, NextApiResponse>>) {
     return router.handler({
@@ -64,7 +62,7 @@ export function accountHandler(router: ReturnType<typeof createRouter<NextApiReq
             if (status >= 500) {
                 logError("account route failed", err, { method: req.method, path: maskPathTokens((req.url ?? "").split("?")[0]) });
             }
-            res.status(status).json({ detail: response?.data?.detail ?? "unavailable" });
+            res.status(status).json({ detail: gatekeeperDetail(response?.data) ?? "unavailable" });
         },
         onNoMatch: (req, res) => {
             res.status(405).end(`Method ${req.method} not allowed`);

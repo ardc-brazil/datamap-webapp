@@ -101,4 +101,11 @@ describe("SetEmbargoDialog", () => {
 
         expect(screen.getByText("When the embargo ends, members of Data Amazon can read but not edit.")).toBeTruthy();
     });
+
+    test("a Public dataset reads members as read-only, even with a stale members_can_edit, and hides Change", () => {
+        render(<SetEmbargoDialog dataset={{ ...dataset, tenancy: "datamap/production/public", members_can_edit: true }} show onClose={jest.fn()} />);
+
+        expect(screen.getByText("When the embargo ends, members of Public can read but not edit.")).toBeTruthy();
+        expect(screen.queryByRole("button", { name: /Change what members/ })).toBeNull();
+    });
 });

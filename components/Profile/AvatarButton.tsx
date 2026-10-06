@@ -4,8 +4,11 @@ import Link from "next/link";
 import Router from "next/router";
 import { useEffect, useState } from "react";
 import { MaterialSymbol, SymbolCodepoints } from "react-material-symbols";
-import { ROUTE_PAGE_PROFILE, ROUTE_PAGE_TENANCY_SELECTOR } from "../../contants/InternalRoutesConstants";
+import { ROUTE_PAGE_MEMBERS, ROUTE_PAGE_PROFILE, ROUTE_PAGE_TENANCY_SELECTOR } from "../../contants/InternalRoutesConstants";
 import useComponentVisible from "../../hooks/UseComponentVisible";
+import { useMyTenancies } from "../../hooks/UseTenancies";
+import { useMembersPageTenancy } from "../../hooks/UseWorkspace";
+import { RequestAccessDialog } from "../Tenancy/RequestAccessDialog";
 import { useTenancyStore } from "../TenancyStore";
 
 const AVATAR_PLACEHOLDER = "/img/avatar-placeholder.svg";
@@ -14,7 +17,16 @@ export default function AvatarButton(props) {
   const { data: session, status } = useSession();
   const [profileImage, setProfileImage] = useState(AVATAR_PLACEHOLDER);
   const tenancySelected = useTenancyStore((state) => state.tenancySelected)
+  const { tenancy: membersTenancy } = useMembersPageTenancy();
   const { ref, isComponentVisible, setIsComponentVisible } = useComponentVisible(false);
+  const [requesting, setRequesting] = useState(false);
+  const { data: tenancies } = useMyTenancies();
+  const canSwitch = (tenancies?.length ?? 0) > 1;
+
+  function requestAccess() {
+    setIsComponentVisible(false);
+    setRequesting(true);
+  }
 
   useEffect(() => {
     if (status == "authenticated") {
@@ -77,7 +89,9 @@ export default function AvatarButton(props) {
 
           <div className="border-t border-primary-200 py-1">
             <MenuItem icon="person" text="Profile" onClick={() => go(ROUTE_PAGE_PROFILE)} />
-            <MenuItem icon="tenancy" text="Switch tenancy" onClick={() => go(ROUTE_PAGE_TENANCY_SELECTOR)} />
+            {membersTenancy && <MenuItem icon="group" text="Members" onClick={() => go(ROUTE_PAGE_MEMBERS)} />}
+            {canSwitch && <MenuItem icon="tenancy" text="Switch tenancy" onClick={() => go(ROUTE_PAGE_TENANCY_SELECTOR)} />}
+            <MenuItem icon="add" text="Request access to a tenancy" onClick={requestAccess} />
             <MenuItem icon="logout" text="Sign out" onClick={clickSignOut} />
           </div>
 
@@ -88,6 +102,7 @@ export default function AvatarButton(props) {
           </div>
         </div>
       )}
+      <RequestAccessDialog show={requesting} onClose={() => setRequesting(false)} />
     </div>
   );
 }

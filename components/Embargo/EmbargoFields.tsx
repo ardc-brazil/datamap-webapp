@@ -19,7 +19,7 @@ const MEMBER_OPTIONS = [
     { value: "hidden", label: "Don't see it at all", hint: "Hidden from every listing and search. Only you and the people you share it with know it exists." },
 ];
 
-export function EmbargoFields(props: { tenancyName: string, disabled?: boolean }) {
+export function EmbargoFields(props: { tenancyName: string, disabled?: boolean, membersEditable?: boolean }) {
     const { values, setFieldValue } = useFormikContext<Values>();
     const [changingMembers, setChangingMembers] = useState(false);
     const membersCanEdit = values.membersCanEdit !== false;
@@ -63,16 +63,19 @@ export function EmbargoFields(props: { tenancyName: string, disabled?: boolean }
                 </div>
             </fieldset>
             <p className="m-0 -mt-2 text-xs leading-[17px] text-primary-600">
-                {membersAfterEmbargoLine(props.tenancyName, membersCanEdit)}{" "}
-                <button
-                    type="button"
-                    aria-label={`Change what members of ${props.tenancyName} can do`}
-                    disabled={props.disabled}
-                    onClick={() => setChangingMembers(true)}
-                    className="font-semibold text-primary-900 underline underline-offset-2 disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
-                >
-                    Change
-                </button>
+                {membersAfterEmbargoLine(props.tenancyName, membersCanEdit)}
+                {props.membersEditable !== false && <>
+                    {" "}
+                    <button
+                        type="button"
+                        aria-label={`Change what members of ${props.tenancyName} can do`}
+                        disabled={props.disabled}
+                        onClick={() => setChangingMembers(true)}
+                        className="font-semibold text-primary-900 underline underline-offset-2 disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
+                    >
+                        Change
+                    </button>
+                </>}
             </p>
             <MembersAccessDialog
                 show={changingMembers}
