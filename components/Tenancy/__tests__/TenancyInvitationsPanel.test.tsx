@@ -65,6 +65,17 @@ describe("TenancyInvitationsPanel", () => {
         expect(mutate).toHaveBeenCalled();
     });
 
+    test("an accepted invitation leaves the list even if the session refresh fails", async () => {
+        update.mockReset().mockImplementation(async () => { calls.push("update"); throw new Error("session refresh failed"); });
+        render(<TenancyInvitationsPanel />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Accept" }));
+
+        await waitFor(() => expect(push).toHaveBeenCalledWith("/app/home"));
+        expect(mutate).toHaveBeenCalled();
+        expect(screen.queryByRole("alert")).toBeNull();
+    });
+
     test("Decline declines and refreshes the list", async () => {
         declineTenancyInvitation.mockResolvedValue(undefined);
         render(<TenancyInvitationsPanel />);

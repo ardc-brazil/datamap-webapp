@@ -45,8 +45,12 @@ export function TenancyInvitationsPanel(props: { className?: string }) {
         setError(null);
         try {
             const { tenancy } = await bffGateway.acceptTenancyInvitation(invitation.id);
-            await update();
-            setTenancySelected(tenancy.path);
+            try {
+                await update();
+                setTenancySelected(tenancy.path);
+            } catch (e) {
+                console.error("Joined the tenancy, but refreshing the session failed", e);
+            }
             await mutate();
             Router.push(ROUTE_PAGE_HOME);
         } catch (e) {
