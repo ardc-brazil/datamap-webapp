@@ -4,9 +4,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 
 const push = jest.fn() as any;
 let tenancies: any;
+let tenanciesError: any;
 
 jest.mock("../../../hooks/UseTenancies", () => ({
-    useMyTenancies: () => ({ data: tenancies, error: undefined }),
+    useMyTenancies: () => ({ data: tenancies, error: tenanciesError }),
     useLatestTenancyRequest: () => ({ state: null, mutate: jest.fn() }),
 }));
 jest.mock("../../TenancyStore", () => ({
@@ -24,9 +25,28 @@ const AMAZON = { path: "datamap/production/data-amazon", display_name: "Data Ama
 
 beforeEach(() => {
     push.mockReset();
+    tenanciesError = undefined;
 });
 
 describe("ProfileTenancies", () => {
+    test("while loading, says so and shows no list", () => {
+        tenancies = undefined;
+        render(<ProfileTenancies />);
+
+        expect(screen.getByText("Loading…")).toBeTruthy();
+        expect(screen.queryByRole("listitem")).toBeNull();
+    });
+
+    test("a failed load shows an alert instead of the list", () => {
+        tenancies = undefined;
+        tenanciesError = { status: 500 };
+        render(<ProfileTenancies />);
+
+        expect(screen.getByRole("alert").textContent).toBe("Your tenancies could not be loaded.");
+        expect(screen.queryByText("Loading…")).toBeNull();
+        expect(screen.queryByRole("listitem")).toBeNull();
+    });
+
     test("lists display names and paths, marks Public and the current tenancy", () => {
         tenancies = [PUBLIC, AMAZON];
         render(<ProfileTenancies />);

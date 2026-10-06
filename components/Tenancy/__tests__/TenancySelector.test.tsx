@@ -8,6 +8,7 @@ const push = jest.fn() as any;
 const setTenancySelected = jest.fn() as any;
 let session: any;
 let tenancies: any;
+let tenanciesError: any;
 let selected = "";
 
 jest.mock("next-auth/react", () => ({ useSession: () => ({ data: session, status: "authenticated", update }) }));
@@ -23,7 +24,7 @@ jest.mock("../../TenancyStore", () => ({
     useTenancyStore: (selector: (state: unknown) => unknown) => selector({ tenancySelected: selected, setTenancySelected }),
 }));
 jest.mock("../../../hooks/UseTenancies", () => ({
-    useMyTenancies: () => ({ data: tenancies, error: undefined }),
+    useMyTenancies: () => ({ data: tenancies, error: tenanciesError }),
     useLatestTenancyRequest: () => ({ state: null, mutate: jest.fn() }),
 }));
 jest.mock("../../../gateways/BFFAPI", () => ({ BFFAPI: jest.fn().mockImplementation(() => ({})) }));
@@ -41,10 +42,41 @@ beforeEach(() => {
     push.mockReset();
     setTenancySelected.mockReset();
     selected = "";
+    tenanciesError = undefined;
     session = { user: { name: "Fernanda Lima", tenancies: [PUBLIC.path, AMAZON.path] } };
 });
 
 describe("TenancySelector", () => {
+    test("while the tenancies are loading, nothing is decided yet", () => {
+        tenancies = undefined;
+        render(<TenancySelector />);
+
+        expect(screen.getByText("Loading your tenancies…")).toBeTruthy();
+        expect(setTenancySelected).not.toHaveBeenCalled();
+        expect(update).not.toHaveBeenCalled();
+    });
+
+    test("a failure to load shows an alert and never redirects", () => {
+        tenancies = undefined;
+        tenanciesError = { status: 500 };
+        render(<TenancySelector />);
+
+        expect(screen.getByRole("alert").textContent).toBe("Your tenancies could not be loaded. Reload the page to try again.");
+        expect(replace).not.toHaveBeenCalled();
+        expect(setTenancySelected).not.toHaveBeenCalled();
+    });
+
+    test("a new array with the same tenancies does not call update() again", () => {
+        tenancies = [PUBLIC, AMAZON];
+        const { rerender } = render(<TenancySelector />);
+        expect(update).not.toHaveBeenCalled();
+
+        tenancies = [PUBLIC, AMAZON];
+        rerender(<TenancySelector />);
+
+        expect(update).not.toHaveBeenCalled();
+    });
+
     test("with exactly one tenancy it is selected and the home opens, with no list", async () => {
         tenancies = [PUBLIC];
         session.user.tenancies = [PUBLIC.path];
