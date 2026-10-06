@@ -140,6 +140,15 @@ describe("RequestsView", () => {
         expect(mockReplace).toHaveBeenCalledWith({ pathname: "/app/admin/requests", query: {} }, undefined, { shallow: true });
     });
 
+    test("an approval closes the review at once, before the route change lands, so it never shows the request as already approved", () => {
+        mockRouter.query = { request: REQUEST_ID };
+
+        render(<RequestsView now={NOW} />);
+        fireEvent.click(screen.getByRole("button", { name: "stub approve" }));
+
+        expect(screen.queryByText(`reviewing ${REQUEST_ID}`)).toBeNull();
+    });
+
     test("Decline… from the row menu opens the decline prompt", () => {
         render(<RequestsView now={NOW} />);
 

@@ -46,12 +46,19 @@ export function RequestsView({ now }: { now?: Date }) {
     const offset = paging.filter === filter && paging.q === q ? paging.offset : 0;
     const { data: counts } = useAdminCounts();
     const { data: page, error, mutate } = useAdminRequests(queryFor(filter, q, offset));
+    const [approvedId, setApprovedId] = useState<string | null>(null);
     const reviewing = typeof router.query.request === "string" ? router.query.request : null;
     const closed = filter === "closed";
 
     function setOffset(value: number) {
         setPaging({ filter, q, offset: value });
     }
+
+    useEffect(() => {
+        if (approvedId && reviewing !== approvedId) {
+            setApprovedId(null);
+        }
+    }, [approvedId, reviewing]);
 
     useEffect(() => {
         if (page && page.offset === offset && page.items.length === 0 && page.offset > 0) {
@@ -76,6 +83,7 @@ export function RequestsView({ now }: { now?: Date }) {
     }
 
     function approved() {
+        setApprovedId(reviewing);
         setReviewing(null);
         revalidateAdminRequests();
         revalidateAdminTenancies();
@@ -147,7 +155,7 @@ export function RequestsView({ now }: { now?: Date }) {
 
             <RecentlyClosed />
 
-            {reviewing && (
+            {reviewing && reviewing !== approvedId && (
                 <ReviewRequestDialog requestId={reviewing} now={today} onClose={() => dismissed(() => setReviewing(null))} onApproved={approved} onDecline={startDecline} />
             )}
             {declining && <DeclineRequestDialog request={declining} onCancel={() => dismissed(() => setDeclining(null))} onDeclined={declined} />}
