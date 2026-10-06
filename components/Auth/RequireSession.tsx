@@ -6,11 +6,13 @@ import { ROUTE_PAGE_TENANCY_SELECTOR } from "../../contants/InternalRoutesConsta
 import { revalidateMyTenancies } from "../../hooks/UseTenancies";
 import { loginUrlFor } from "../../lib/authRoutes";
 import { isTenancyRevoked } from "../../lib/tenancyRevocation";
+import Custom404 from "../../pages/404";
 import { useTenancyStore } from "../TenancyStore";
 
 interface Props {
     loading: ReactNode
     children: ReactNode
+    admin?: boolean
 }
 
 function tenanciesKey(tenancies: string[] | undefined): string {
@@ -18,7 +20,7 @@ function tenanciesKey(tenancies: string[] | undefined): string {
 }
 
 /** Renders a page only for a signed-in visitor; a session refresh keeps the page mounted. */
-export function RequireSession({ loading, children }: Props) {
+export function RequireSession({ loading, children, admin = false }: Props) {
     const router = useRouter();
     const setTenancySelected = useTenancyStore((state) => state.setTenancySelected);
     const isTenancySelected = useTenancyStore((state) => state.isTenancySelected);
@@ -54,6 +56,10 @@ export function RequireSession({ loading, children }: Props) {
 
     if (status === "loading" && !session) {
         return <>{loading}</>;
+    }
+
+    if (admin && session?.user?.admin !== true) {
+        return <Custom404 />;
     }
 
     if (revokedFrom.current !== null && tenanciesKey(tenancies) !== revokedFrom.current) {

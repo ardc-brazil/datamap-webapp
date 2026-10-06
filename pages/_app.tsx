@@ -20,6 +20,8 @@ interface CustomAppProps {
       role: string
       // The component that should be visible when the page is loading
       loading: any
+      // Admin pages: anyone without the admin role gets the not-found page.
+      admin?: boolean
     }
   }
   pageProps: AppProps<{ session: Session }>["pageProps"]
@@ -44,7 +46,7 @@ export default function App({
       `}</style>
       <PendingSessionGuard loading={Component.auth?.loading}>
         {Component.auth ? (
-          <RequireSession loading={Component.auth.loading}>
+          <RequireSession loading={Component.auth.loading} admin={Component.auth.admin === true}>
             <Component {...pageProps} />
           </RequireSession>
         ) : (
