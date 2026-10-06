@@ -1,9 +1,9 @@
 import { WAITING_STALE_DAYS } from "../contants/AdminConstants";
 import { AdminTenancyRequest } from "../types/GatekeeperAPI";
-import { daysFromToday } from "./embargoDisplay";
+import { calendarDaysFromToday } from "./embargoDisplay";
 
 export function daysSince(iso: string, now: Date): number {
-    return Math.max(0, -daysFromToday(new Date(iso).toISOString().slice(0, 10), now));
+    return Math.max(0, -calendarDaysFromToday(iso, now));
 }
 
 export function waitingLabel(createdAt: string, now: Date): { text: string; stale: boolean } {
