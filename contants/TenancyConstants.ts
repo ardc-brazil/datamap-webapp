@@ -57,9 +57,10 @@ export const TENANCY_ERROR_MESSAGES: Record<string, string> = {
     tenancy_cannot_change: "A dataset stays in the tenancy it was created in.",
 };
 
+export function messageFor(messages: Record<string, string>, detail: string | undefined, fallback: string): string {
+    return typeof detail === "string" && Object.prototype.hasOwnProperty.call(messages, detail) ? messages[detail] : fallback;
+}
+
 export function tenancyErrorMessage(detail?: string): string {
-    if (typeof detail === "string" && Object.prototype.hasOwnProperty.call(TENANCY_ERROR_MESSAGES, detail)) {
-        return TENANCY_ERROR_MESSAGES[detail];
-    }
-    return TENANCY_GENERIC_ERROR_MESSAGE;
+    return messageFor(TENANCY_ERROR_MESSAGES, detail, TENANCY_GENERIC_ERROR_MESSAGE);
 }

@@ -2,10 +2,12 @@ import axios from "axios";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createRouter } from "next-connect";
 import { maskPathTokens } from "./externalCalls";
+import { gatekeeperDetail } from "./gatekeeperDetail";
 import { logError } from "./logging";
 import { pendingOnlyChain, publicChain } from "./middlewareChain";
 import { uuidOr404 } from "./routeParams";
 
+export { gatekeeperDetail } from "./gatekeeperDetail";
 export { isUuid } from "./routeParams";
 
 /** Every public challenge route takes the same id from the same place; a non-UUID never reaches the gatekeeper. */
@@ -45,12 +47,6 @@ export function publicAccountRouter() {
 /** Email verification of an ORCID sign-in that has no account, or no confirmed email, yet. */
 export function pendingAccountRouter() {
     return createRouter<NextApiRequest, NextApiResponse>().use(pendingOnlyChain).use(requireJsonContentType);
-}
-
-/** A gatekeeper `detail` that is not a string code (a FastAPI 422 list, for one) never reaches the browser. */
-export function gatekeeperDetail(body: unknown): string | undefined {
-    const detail = (body as { detail?: unknown } | undefined)?.detail;
-    return typeof detail === "string" ? detail : undefined;
 }
 
 /** The account screens map the gatekeeper's `detail` codes to their own copy, so both reach the browser as they were. */

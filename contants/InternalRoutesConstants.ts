@@ -97,6 +97,16 @@ export const ROUTE_PAGE_DOI_LANDING = (params) => replaceIt('/doi/datasets/:id/v
 export const ROUTE_PAGE_PROFILE = ROUTE_APP_CONTEXT + '/profile';
 
 /**
+ * Routes of the admin area; `/app/admin` itself opens the requests.
+ * @constant
+ */
+export const ROUTE_PAGE_ADMIN = ROUTE_APP_CONTEXT + "/admin";
+export const ROUTE_PAGE_ADMIN_REQUESTS = ROUTE_PAGE_ADMIN + "/requests";
+export const ROUTE_PAGE_ADMIN_USERS = ROUTE_PAGE_ADMIN + "/users";
+export const ROUTE_PAGE_ADMIN_TENANCIES = ROUTE_PAGE_ADMIN + "/tenancies";
+export const ROUTE_PAGE_ADMIN_ACTIVITY = ROUTE_PAGE_ADMIN + "/activity";
+
+/**
  * Route to the search internal page.
  * @constant
  */
