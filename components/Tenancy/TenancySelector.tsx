@@ -10,6 +10,7 @@ import { useTenancyStore } from "../TenancyStore";
 import { AccessPending } from "./AccessPending";
 import { RequestAccessDialog } from "./RequestAccessDialog";
 import { TenancyIcon } from "./TenancyIcon";
+import { TenancyInvitationsPanel } from "./TenancyInvitationsPanel";
 import { TenancyRequestRow } from "./TenancyRequestStatus";
 
 export function TenancySelector() {
@@ -63,6 +64,7 @@ export function TenancySelector() {
             {welcome}
             {selection.kind === "none" ? (
                 <div className="mt-8 flex flex-col gap-4">
+                    <TenancyInvitationsPanel />
                     <AccessPending onRequestAccess={() => setRequesting(true)} />
                     <TenancyRequestRow standalone />
                 </div>

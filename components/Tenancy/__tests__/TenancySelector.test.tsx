@@ -10,6 +10,10 @@ let session: any;
 let tenancies: any;
 let tenanciesError: any;
 let selected = "";
+let invitations: any;
+const invitationsMutate = jest.fn() as any;
+const acceptTenancyInvitation = jest.fn() as any;
+const revalidateMyTenancies = jest.fn() as any;
 
 jest.mock("next-auth/react", () => ({ useSession: () => ({ data: session, status: "authenticated", update }) }));
 jest.mock("next/router", () => ({
@@ -26,8 +30,10 @@ jest.mock("../../TenancyStore", () => ({
 jest.mock("../../../hooks/UseTenancies", () => ({
     useMyTenancies: () => ({ data: tenancies, error: tenanciesError }),
     useLatestTenancyRequest: () => ({ state: null, mutate: jest.fn() }),
+    useTenancyInvitations: () => ({ data: invitations, mutate: invitationsMutate }),
+    revalidateMyTenancies: () => revalidateMyTenancies(),
 }));
-jest.mock("../../../gateways/BFFAPI", () => ({ BFFAPI: jest.fn().mockImplementation(() => ({})) }));
+jest.mock("../../../gateways/BFFAPI", () => ({ BFFAPI: jest.fn().mockImplementation(() => ({ acceptTenancyInvitation })) }));
 jest.mock("swr", () => ({ __esModule: true, default: jest.fn(), mutate: jest.fn() }));
 jest.mock("../../../lib/telemetryClient", () => ({ trackUiEvent: jest.fn() }));
 
@@ -43,6 +49,10 @@ beforeEach(() => {
     setTenancySelected.mockReset();
     selected = "";
     tenanciesError = undefined;
+    invitations = [];
+    invitationsMutate.mockReset();
+    acceptTenancyInvitation.mockReset();
+    revalidateMyTenancies.mockReset().mockResolvedValue(undefined);
     session = { user: { name: "Fernanda Lima", tenancies: [PUBLIC.path, AMAZON.path] } };
 });
 
@@ -116,6 +126,34 @@ describe("TenancySelector", () => {
 
         expect(screen.getByText("You're not in any tenancy")).toBeTruthy();
         expect(screen.getByRole("button", { name: "Request access" })).toBeTruthy();
+    });
+
+    test("with none, pending invitations are shown above the empty state", () => {
+        tenancies = [];
+        session.user.tenancies = [];
+        invitations = [{ id: "ti1", tenancy: AMAZON, invited_by: { id: "o", name: "Luciana Rizzo" }, datasets: 108, created_at: "2026-10-04T09:50:00+00:00" }];
+        render(<TenancySelector />);
+
+        const card = screen.getByText("Luciana Rizzo invited you to Data Amazon");
+        const empty = screen.getByText("You're not in any tenancy");
+        expect(card.compareDocumentPosition(empty) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    test("with none, accepting an invitation refreshes the session, selects the tenancy and opens the home", async () => {
+        tenancies = [];
+        session.user.tenancies = [];
+        invitations = [{ id: "ti1", tenancy: AMAZON, invited_by: { id: "o", name: "Luciana Rizzo" }, datasets: 108, created_at: "2026-10-04T09:50:00+00:00" }];
+        acceptTenancyInvitation.mockResolvedValue({ tenancy: AMAZON });
+        update.mockResolvedValue(undefined);
+        render(<TenancySelector />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Accept" }));
+
+        await waitFor(() => expect(push).toHaveBeenCalledWith("/app/home"));
+        expect(acceptTenancyInvitation).toHaveBeenCalledWith("ti1");
+        expect(update).toHaveBeenCalled();
+        expect(revalidateMyTenancies).toHaveBeenCalled();
+        expect(setTenancySelected).toHaveBeenCalledWith(AMAZON.path);
     });
 
     test("a session whose tenancies differ from the gatekeeper's is refreshed", () => {
