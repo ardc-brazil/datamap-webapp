@@ -1,6 +1,7 @@
 import { WAITING_STALE_DAYS } from "../contants/AdminConstants";
 import { AdminTenancyRequest } from "../types/GatekeeperAPI";
 import { calendarDaysFromToday } from "./embargoDisplay";
+import { plural } from "./textProcessor";
 
 export function daysSince(iso: string, now: Date): number {
     return Math.max(0, -calendarDaysFromToday(iso, now));
@@ -8,7 +9,7 @@ export function daysSince(iso: string, now: Date): number {
 
 export function waitingLabel(createdAt: string, now: Date): { text: string; stale: boolean } {
     const days = daysSince(createdAt, now);
-    const text = days === 0 ? "today" : days === 1 ? "1 day waiting" : `${days} days waiting`;
+    const text = days === 0 ? "today" : `${days} ${plural(days, "day", "days")} waiting`;
     return { text, stale: days >= WAITING_STALE_DAYS };
 }
 
@@ -30,8 +31,4 @@ export function closedOutcome(request: AdminTenancyRequest): { text: string; ton
 
 export function closedTenancyName(request: AdminTenancyRequest): string {
     return request.tenancy?.display_name ?? request.requested_name;
-}
-
-export function plural(n: number, one: string, many: string): string {
-    return n === 1 ? one : many;
 }

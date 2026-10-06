@@ -14,6 +14,8 @@ export const ADMIN_SEARCH_DEBOUNCE_MS = 300;
 export const ADMIN_USER_SEARCH_MIN_LENGTH = 2;
 export const WAITING_STALE_DAYS = 3;
 export const ADMIN_FIELD_ERROR_CLASS = "m-0 mt-1.5 text-[13px] text-danger-700";
+export const ADMIN_STATE_BOX_CLASS = "m-0 rounded-lg border border-primary-200 bg-primary-0 px-4 py-10 text-center text-sm text-primary-500";
+export const ADMIN_OUTCOME_TONE_CLASS: Record<"approved" | "declined", string> = { approved: "text-success-500", declined: "text-danger-700" };
 
 export type RequestFilter = "open" | "join" | "new" | "closed";
 

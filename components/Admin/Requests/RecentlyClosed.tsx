@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ADMIN_COPY } from "../../../contants/AdminConstants";
+import { ADMIN_COPY, ADMIN_OUTCOME_TONE_CLASS } from "../../../contants/AdminConstants";
 import { ROUTE_PAGE_ADMIN_ACTIVITY } from "../../../contants/InternalRoutesConstants";
 import { useRecentlyClosed } from "../../../hooks/UseAdmin";
 import { closedOutcome, closedTenancyName } from "../../../lib/adminDisplay";
@@ -37,7 +37,7 @@ function ClosedRow({ request }: { request: AdminTenancyRequest }) {
             <span className="min-w-0 truncate text-primary-700">
                 <span className="font-semibold text-primary-900">{request.requester.name}</span>
                 {` · ${closedTenancyName(request)} · `}
-                <span className={outcome.tone === "approved" ? "text-success-500" : "text-danger-700"}>{outcome.text}</span>
+                <span className={ADMIN_OUTCOME_TONE_CLASS[outcome.tone]}>{outcome.text}</span>
             </span>
             <span className="flex-none text-xs text-primary-500">
                 {`by ${request.decided_by?.name ?? "an administrator"} · ${request.decided_at ? formatShortDate(request.decided_at, false) : ""}`}

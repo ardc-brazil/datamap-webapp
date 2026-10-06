@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { ADMIN_COPY } from "../../../contants/AdminConstants";
+import { ADMIN_COPY, ADMIN_STATE_BOX_CLASS } from "../../../contants/AdminConstants";
 import { revalidateAdminTenancies, useAdminTenancies } from "../../../hooks/UseAdmin";
 import { AdminTenancy } from "../../../types/GatekeeperAPI";
 import { AdminLoadError } from "../AdminLoadError";
@@ -8,8 +8,6 @@ import { AdminPageHeader } from "../AdminPageHeader";
 import { NewTenancyDialog } from "./NewTenancyDialog";
 import { TenancyList } from "./TenancyList";
 import { TenancyMembersPanel } from "./TenancyMembersPanel";
-
-const STATE_BOX = "m-0 rounded-lg border border-primary-200 bg-primary-0 px-4 py-10 text-center text-sm text-primary-500";
 
 export function defaultTenancy(tenancies: AdminTenancy[]): AdminTenancy | null {
     return tenancies.find((tenancy) => !tenancy.is_default && !tenancy.is_legacy) ?? tenancies[0] ?? null;
@@ -47,9 +45,9 @@ export function TenanciesView() {
                 {error ? (
                     <AdminLoadError message={ADMIN_COPY.tenanciesLoadError} onRetry={() => mutate()} />
                 ) : !tenancies ? (
-                    <p role="status" className={STATE_BOX}>Loading tenancies…</p>
+                    <p role="status" className={ADMIN_STATE_BOX_CLASS}>Loading tenancies…</p>
                 ) : tenancies.length === 0 ? (
-                    <p className={STATE_BOX}>{ADMIN_COPY.tenanciesEmpty}</p>
+                    <p className={ADMIN_STATE_BOX_CLASS}>{ADMIN_COPY.tenanciesEmpty}</p>
                 ) : (
                     <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
                         <TenancyList tenancies={tenancies} selectedPath={selected?.path ?? null} onSelect={select} />

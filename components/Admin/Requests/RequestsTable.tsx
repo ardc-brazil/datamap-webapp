@@ -1,4 +1,5 @@
 import { MaterialSymbol } from "react-material-symbols";
+import { ADMIN_OUTCOME_TONE_CLASS } from "../../../contants/AdminConstants";
 import useComponentVisible from "../../../hooks/UseComponentVisible";
 import { closedOutcome, requestTarget, waitingLabel } from "../../../lib/adminDisplay";
 import { formatShortDate } from "../../../lib/embargoDisplay";
@@ -104,7 +105,7 @@ function EmailState({ verified }: { verified: boolean }) {
 function ClosedOutcome({ request }: { request: AdminTenancyRequest }) {
     const outcome = closedOutcome(request);
     return (
-        <span className={`text-[13px] font-semibold ${outcome.tone === "approved" ? "text-success-500" : "text-danger-700"}`}>{outcome.text}</span>
+        <span className={`text-[13px] font-semibold ${ADMIN_OUTCOME_TONE_CLASS[outcome.tone]}`}>{outcome.text}</span>
     );
 }
 

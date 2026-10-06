@@ -1,5 +1,5 @@
 import { adminRequest, DATA_AMAZON } from "../../fake-data/adminFixtures";
-import { closedOutcome, closedTenancyName, plural, requestTarget, requestedAgo, waitingLabel } from "../adminDisplay";
+import { closedOutcome, closedTenancyName, requestTarget, requestedAgo, waitingLabel } from "../adminDisplay";
 
 const NOW = new Date("2026-10-04T12:00:00Z");
 
@@ -37,13 +37,5 @@ describe("a closed request", () => {
         expect(closedOutcome(declined)).toEqual({ text: "Declined", tone: "declined" });
         expect(closedTenancyName(approved)).toBe("Data Amazon");
         expect(closedTenancyName(declined)).toBe("ATTO");
-    });
-});
-
-describe("plural", () => {
-    test("one or many", () => {
-        expect(plural(1, "dataset", "datasets")).toBe("dataset");
-        expect(plural(0, "dataset", "datasets")).toBe("datasets");
-        expect(plural(108, "dataset", "datasets")).toBe("datasets");
     });
 });

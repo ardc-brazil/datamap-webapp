@@ -1,13 +1,13 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { MaterialSymbol } from "react-material-symbols";
-import { ADMIN_COPY, ADMIN_SEARCH_DEBOUNCE_MS, RequestFilter } from "../../../contants/AdminConstants";
+import { ADMIN_COPY, ADMIN_SEARCH_DEBOUNCE_MS, ADMIN_STATE_BOX_CLASS, RequestFilter } from "../../../contants/AdminConstants";
 import { revalidateAdminRequests, revalidateAdminTenancies, useAdminCounts, useAdminRequests } from "../../../hooks/UseAdmin";
 import { useDebouncedValue } from "../../../hooks/UseDebouncedValue";
 import { isLastPage, lastPageOffset } from "../../../lib/paging";
 import { AdminRequestsQuery, AdminTenancyRequest, GatekeeperPage, TenancyRequestCounts } from "../../../types/GatekeeperAPI";
 import { AdminLoadError } from "../AdminLoadError";
 import { AdminPageHeader } from "../AdminPageHeader";
+import { AdminSearchField } from "../AdminSearchField";
 import { DeclineRequestDialog } from "./DeclineRequestDialog";
 import { RecentlyClosed } from "./RecentlyClosed";
 import { RequestsTable } from "./RequestsTable";
@@ -20,7 +20,7 @@ const FILTERS: { value: RequestFilter; label: string; count(counts: TenancyReque
     { value: "closed", label: "Closed", count: (counts) => counts.closed },
 ];
 
-const STATE_BOX = "m-0 mt-4 rounded-lg border border-primary-200 bg-primary-0 px-4 py-10 text-center text-sm text-primary-500";
+const STATE_BOX = `${ADMIN_STATE_BOX_CLASS} mt-4`;
 
 export function queryFor(filter: RequestFilter, q: string, offset: number): AdminRequestsQuery {
     if (filter === "closed") {
@@ -128,17 +128,7 @@ export function RequestsView({ now }: { now?: Date }) {
                         );
                     })}
                 </div>
-                <div className="relative w-[300px]">
-                    <MaterialSymbol icon="search" size={18} weight={400} grade={-25} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-primary-500" />
-                    <input
-                        type="search"
-                        aria-label="Search requests"
-                        placeholder={ADMIN_COPY.searchPlaceholder}
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        className="h-9 py-0 pl-9"
-                    />
-                </div>
+                <AdminSearchField label="Search requests" value={search} onChange={setSearch} className="w-[300px]" />
             </div>
 
             <RequestsBody

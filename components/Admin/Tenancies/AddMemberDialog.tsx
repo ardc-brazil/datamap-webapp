@@ -1,6 +1,5 @@
 import { useFormik } from "formik";
 import { useState } from "react";
-import { MaterialSymbol } from "react-material-symbols";
 import * as Yup from "yup";
 import { ADMIN_COPY, ADMIN_SEARCH_DEBOUNCE_MS, ADMIN_USER_SEARCH_MIN_LENGTH, adminErrorFrom } from "../../../contants/AdminConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
@@ -10,7 +9,10 @@ import { useDebouncedValue } from "../../../hooks/UseDebouncedValue";
 import { firstNameOf } from "../../../lib/tenancySelection";
 import { AdminTenancy, AdminUserHit } from "../../../types/GatekeeperAPI";
 import { PersonInitial } from "../../Share/PersonInitial";
+import { DialogError } from "../../base/DialogError";
 import { AdminDialog } from "../AdminDialog";
+import { AdminSearchField } from "../AdminSearchField";
+import { EmailedNote } from "../EmailedNote";
 
 interface Props {
     tenancy: AdminTenancy
@@ -60,23 +62,16 @@ export function AddMemberDialog({ tenancy, onCancel, onAdded }: Props) {
             primary={{ label: "Add", disabled: !picked || busy || done, onClick: () => { void formik.submitForm(); } }}
         >
             <form onSubmit={(event) => event.preventDefault()} className="flex flex-col gap-4" noValidate>
-                <div className="relative">
-                    <MaterialSymbol icon="search" size={18} weight={400} grade={-25} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-primary-500" />
-                    <input
-                        type="search"
-                        aria-label="Search people"
-                        placeholder={ADMIN_COPY.searchPlaceholder}
-                        value={search}
-                        onChange={(event) => {
-                            const next = event.target.value;
-                            if (next.trim() !== search.trim()) {
-                                pick(null);
-                            }
-                            setSearch(next);
-                        }}
-                        className="h-9 py-0 pl-9"
-                    />
-                </div>
+                <AdminSearchField
+                    label="Search people"
+                    value={search}
+                    onChange={(next) => {
+                        if (next.trim() !== search.trim()) {
+                            pick(null);
+                        }
+                        setSearch(next);
+                    }}
+                />
                 {q.length < ADMIN_USER_SEARCH_MIN_LENGTH ? (
                     <p className={HINT}>{ADMIN_COPY.searchHint}</p>
                 ) : searchError ? (
@@ -112,12 +107,9 @@ export function AddMemberDialog({ tenancy, onCancel, onAdded }: Props) {
                     </fieldset>
                 )}
                 {picked?.email && (
-                    <p className="m-0 flex items-center gap-2 rounded-md bg-primary-100 px-3 py-2.5 text-[13px] text-primary-700">
-                        <MaterialSymbol icon="mail" size={18} weight={400} grade={-25} />
-                        <span>{`${firstNameOf(picked.name)} is emailed.`}</span>
-                    </p>
+                    <EmailedNote text={`${firstNameOf(picked.name)} is emailed.`} />
                 )}
-                {error && <p id={ERROR_ID} role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
+                <DialogError id={ERROR_ID} message={error} />
             </form>
         </AdminDialog>
     );

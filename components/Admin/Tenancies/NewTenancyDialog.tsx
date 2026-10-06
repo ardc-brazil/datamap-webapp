@@ -4,6 +4,7 @@ import * as Yup from "yup";
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { useSubmitOnce } from "../../../hooks/UseSubmitOnce";
 import { AdminTenancy } from "../../../types/GatekeeperAPI";
+import { DialogError } from "../../base/DialogError";
 import { AdminDialog } from "../AdminDialog";
 import { NEW_TENANCY_SCHEMA, NewTenancyFailure, NewTenancyFields, newTenancyFailure } from "../NewTenancyFields";
 
@@ -42,7 +43,7 @@ export function NewTenancyDialog({ onCancel, onCreated }: Props) {
         >
             <form onSubmit={(event) => event.preventDefault()} className="flex flex-col gap-4" noValidate>
                 <NewTenancyFields formik={formik} idPrefix="new-tenancy" failure={failure} onEdit={() => setFailure(null)} className="flex flex-col gap-4" />
-                {failure && !failure.field && <p role="alert" className="m-0 text-sm text-danger-700">{failure.message}</p>}
+                <DialogError message={failure && !failure.field ? failure.message : null} />
             </form>
         </AdminDialog>
     );

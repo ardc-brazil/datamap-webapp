@@ -3,9 +3,11 @@ import { ADMIN_COPY, adminErrorFrom } from "../../../contants/AdminConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { useRemovalImpact } from "../../../hooks/UseAdmin";
 import { useSubmitOnce } from "../../../hooks/UseSubmitOnce";
-import { plural } from "../../../lib/adminDisplay";
 import { formatShortDate } from "../../../lib/embargoDisplay";
+import { plural } from "../../../lib/textProcessor";
 import { AdminTenancy, RemovalImpact, TenancyMember } from "../../../types/GatekeeperAPI";
+import { ConsequenceList } from "../../base/ConsequenceList";
+import { DialogError } from "../../base/DialogError";
 import { AdminDialog } from "../AdminDialog";
 
 interface Props {
@@ -56,13 +58,9 @@ export function RemoveMemberDialog({ tenancy, member, onCancel, onRemoved }: Pro
             ) : !impact ? (
                 <p role="status" className="m-0 text-[13px] text-primary-500">Checking what changes…</p>
             ) : (
-                <ul className="m-0 flex list-none flex-col gap-2.5 p-0 text-sm leading-[21px] text-primary-700">
-                    {removalBullets(impact).map((line) => (
-                        <li key={line} className="flex gap-2.5"><span className="text-primary-400">—</span><span>{line}</span></li>
-                    ))}
-                </ul>
+                <ConsequenceList items={removalBullets(impact)} />
             )}
-            {error && <p role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
+            <DialogError message={error} />
         </AdminDialog>
     );
 }

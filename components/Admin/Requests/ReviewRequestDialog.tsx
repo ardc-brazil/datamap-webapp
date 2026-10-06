@@ -7,12 +7,15 @@ import { DISPLAY_NAME_MAX_LENGTH, PRODUCTION_PREFIX } from "../../../contants/Te
 import { BFFAPI } from "../../../gateways/BFFAPI";
 import { useAdminRequest, useAdminTenancies } from "../../../hooks/UseAdmin";
 import { useSubmitOnce } from "../../../hooks/UseSubmitOnce";
-import { plural, requestedAgo } from "../../../lib/adminDisplay";
+import { closedTenancyName, requestedAgo } from "../../../lib/adminDisplay";
 import { formatShortDate } from "../../../lib/embargoDisplay";
 import { errorDetail } from "../../../lib/gatekeeperDetail";
 import { firstNameOf } from "../../../lib/tenancySelection";
+import { plural } from "../../../lib/textProcessor";
 import { AdminTenancy, AdminTenancyRequest, AdminTenancyRequestDetail, TenancyDecision } from "../../../types/GatekeeperAPI";
+import { DialogError } from "../../base/DialogError";
 import { AdminDialog } from "../AdminDialog";
+import { EmailedNote } from "../EmailedNote";
 import { NEW_TENANCY_SCHEMA, NewTenancyFailure, NewTenancyFields, newTenancyFailure } from "../NewTenancyFields";
 
 type Mode = "join" | "new";
@@ -43,7 +46,7 @@ function joinable(tenancies: AdminTenancy[], detail: AdminTenancyRequestDetail):
 }
 
 function decidedText(detail: AdminTenancyRequestDetail): string {
-    const outcome = detail.status === "approved" ? `approved into ${detail.tenancy?.display_name ?? detail.requested_name}` : "declined";
+    const outcome = detail.status === "approved" ? `approved into ${closedTenancyName(detail)}` : "declined";
     const who = detail.decided_by?.name ?? "an administrator";
     const when = detail.decided_at ? ` on ${formatShortDate(detail.decided_at)}` : "";
     return `This request was already ${outcome} by ${who}${when}.`;
@@ -56,7 +59,7 @@ export function ReviewRequestDialog(props: Props) {
     if (error || tenanciesError) {
         return (
             <AdminDialog title="Review request" widthClassName={WIDTH} onClose={props.onClose}>
-                <p role="alert" className="m-0 text-sm text-danger-700">{adminErrorMessage(error?.detail)}</p>
+                <DialogError message={adminErrorMessage(error?.detail)} />
             </AdminDialog>
         );
     }
@@ -221,11 +224,8 @@ function ReviewForm({ detail, tenancies, now, onClose, onApproved, onDecline }: 
                     />
                 )}
 
-                <p className="m-0 flex items-center gap-2 rounded-md bg-primary-100 px-3 py-2.5 text-[13px] text-primary-700">
-                    <MaterialSymbol icon="mail" size={18} weight={400} grade={-25} />
-                    <span>{`${firstNameOf(detail.requester.name)} is emailed either way.`}</span>
-                </p>
-                {generalError && <p role="alert" className="m-0 text-sm text-danger-700">{generalError}</p>}
+                <EmailedNote text={`${firstNameOf(detail.requester.name)} is emailed either way.`} />
+                <DialogError message={generalError} />
             </form>
         </AdminDialog>
     );
