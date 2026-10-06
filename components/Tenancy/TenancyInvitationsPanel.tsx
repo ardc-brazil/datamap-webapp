@@ -6,7 +6,7 @@ import { tenancyErrorMessage } from "../../contants/TenancyConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { useTenancyInvitations } from "../../hooks/UseTenancies";
 import { formatShortDate } from "../../lib/embargoDisplay";
-import { TenancyInvitation } from "../../types/GatekeeperAPI";
+import { TenancyInvitation, TenancySummary } from "../../types/GatekeeperAPI";
 import { useTenancyStore } from "../TenancyStore";
 import { TenancyIcon } from "./TenancyIcon";
 
@@ -43,21 +43,27 @@ export function TenancyInvitationsPanel(props: { className?: string }) {
     async function accept(invitation: TenancyInvitation) {
         setBusy(true);
         setError(null);
+        let tenancy: TenancySummary;
         try {
-            const { tenancy } = await bffGateway.acceptTenancyInvitation(invitation.id);
-            try {
-                await update();
-                setTenancySelected(tenancy.path);
-            } catch (e) {
-                console.error("Joined the tenancy, but refreshing the session failed", e);
-            }
-            await mutate();
-            Router.push(ROUTE_PAGE_HOME);
+            ({ tenancy } = await bffGateway.acceptTenancyInvitation(invitation.id));
         } catch (e) {
             await failed(e);
-        } finally {
             setBusy(false);
+            return;
         }
+        try {
+            await update();
+        } catch (e) {
+            console.error("Joined the tenancy, but refreshing the session failed", e);
+        }
+        setTenancySelected(tenancy.path);
+        try {
+            await mutate();
+        } catch (e) {
+            console.error("Joined the tenancy, but refreshing the invitations failed", e);
+        }
+        setBusy(false);
+        Router.push(ROUTE_PAGE_HOME);
     }
 
     async function decline(invitation: TenancyInvitation) {

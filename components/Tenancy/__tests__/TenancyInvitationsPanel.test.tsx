@@ -72,7 +72,20 @@ describe("TenancyInvitationsPanel", () => {
         fireEvent.click(screen.getByRole("button", { name: "Accept" }));
 
         await waitFor(() => expect(push).toHaveBeenCalledWith("/app/home"));
+        expect(setTenancySelected).toHaveBeenCalledWith(AMAZON.path);
         expect(mutate).toHaveBeenCalled();
+        expect(screen.queryByRole("alert")).toBeNull();
+    });
+
+    test("an accepted invitation still opens the home if refreshing the list fails", async () => {
+        mutate.mockReset().mockRejectedValue(new Error("revalidation failed"));
+        render(<TenancyInvitationsPanel />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Accept" }));
+
+        await waitFor(() => expect(push).toHaveBeenCalledWith("/app/home"));
+        expect(setTenancySelected).toHaveBeenCalledWith(AMAZON.path);
+        expect(acceptTenancyInvitation).toHaveBeenCalledTimes(1);
         expect(screen.queryByRole("alert")).toBeNull();
     });
 
