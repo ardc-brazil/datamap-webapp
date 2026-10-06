@@ -3,11 +3,12 @@ import { useState } from 'react';
 import Moment from "react-moment";
 import * as Yup from 'yup';
 import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_HINT_CLASS, EDIT_FORM_INPUT_CLASS, EDIT_FORM_LABEL_CLASS, EMPTY_VALUE_CLASS } from "../../contants/EditFormConstants";
-import { BFFAPI } from "../../gateways/BFFAPI";
+import { useDatasetSave } from "../../hooks/UseDatasetSave";
 import { UserDetailsResponse, canEditDataset } from "../../lib/users";
-import { GetDatasetDetailsResponse, UpdateDatasetRequest } from "../../types/BffAPI";
+import { GetDatasetDetailsResponse } from "../../types/BffAPI";
 import { CardItem } from "./CardItem";
 import { EditFormActions } from "./EditFormActions";
+import { EditFormError } from "./EditFormError";
 import { TextActionButton } from "./TextActionButton";
 
 interface Props {
@@ -29,7 +30,7 @@ function isInformedNumber(value: any): boolean {
 }
 
 export default function DatasetCoverageForm(props: Props) {
-    const bffGateway = new BFFAPI();
+    const { save, error, clearError } = useDatasetSave(props.dataset);
     const infoText = "Add coverage information about this dataset.";
     const [editing, setEditing] = useState(false);
     const canEdit = canEditDataset(props.user, props.dataset);
@@ -39,6 +40,7 @@ export default function DatasetCoverageForm(props: Props) {
     }
 
     function handleCancelClick(event): void {
+        clearError();
         setEditing(false)
     }
 
@@ -59,28 +61,10 @@ export default function DatasetCoverageForm(props: Props) {
         })
     });
 
-    function onSubmit(values, { setSubmitting }) {
-        setSubmitting(true);
-        props.dataset.data.start_date = values.coverage.start_date;
-        props.dataset.data.end_date = values.coverage.end_date;
-        props.dataset.data.location = values.coverage.location;
-
-        try {
-            const updateDatasetRequest = {
-                id: props.dataset.id,
-                name: props.dataset.name,
-                data: props.dataset.data,
-                tenancy: props.dataset.tenancy,
-                is_enabled: props.dataset.is_enabled
-            } as UpdateDatasetRequest
-
-            bffGateway.updateDataset(updateDatasetRequest);
+    async function onSubmit(values) {
+        const { start_date, end_date, location } = values.coverage;
+        if (await save({ data: { start_date, end_date, location } })) {
             setEditing(false);
-        } catch (error) {
-            console.log(error);
-            alert("Sorry! Error...");
-        } finally {
-            setSubmitting(false);
         }
     }
 
@@ -185,6 +169,7 @@ export default function DatasetCoverageForm(props: Props) {
                                 />
                             </div>
                         </div>
+                        <EditFormError error={error} />
                         <EditFormActions onCancel={handleCancelClick} isSubmitting={isSubmitting} />
                     </Form>
                 )}

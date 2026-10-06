@@ -3,6 +3,7 @@ import { ErrorMessage, Field, Form, Formik, FormikHelpers, FormikProps } from "f
 import { useSession } from "next-auth/react";
 import Router from "next/router";
 import { useEffect, useRef, useState } from "react";
+import { EditFormError } from "../../../components/DatasetDetails/EditFormError";
 import { EmbargoChoice } from "../../../components/Embargo/EmbargoChoice";
 import LayoutFullScreen from "../../../components/LayoutFullScreen";
 import LoggedLayout from "../../../components/LoggedLayout";
@@ -15,6 +16,7 @@ import { messageForApiError } from "../../../contants/EmbargoConstants";
 import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
 import { isDefaultTenancy } from "../../../contants/TenancyConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
+import { datasetSaveErrorMessage } from "../../../hooks/UseDatasetSave";
 import { useResetMembersCanEditOnPublic } from "../../../hooks/UseResetMembersCanEditOnPublic";
 import { EmbargoStepError, embargoLockFor, finishDatasetCreation } from "../../../lib/datasetCreation";
 import { embargoRequestFrom, toEmbargoUntil, validateEmbargoDate } from "../../../lib/embargoDates";
@@ -44,6 +46,7 @@ export default function NewPage() {
   const [datasetPrototyping, setDatasetPrototyping] = useState({} as DatasetPrototyping);
   const [uppyReference, setUppyReference] = useState(null as Uppy);
   const [embargoError, setEmbargoError] = useState(null as string | null);
+  const [createError, setCreateError] = useState(null as string | null);
   const [embargoSetUntil, setEmbargoSetUntil] = useState(null as string | null);
   const membersCanEditSent = useRef(false);
   const formikRef = useRef<FormikProps<FormValues>>(null);
@@ -123,6 +126,7 @@ export default function NewPage() {
     const datasetId = datasetPrototyping.createDatasetResponseV2.id;
 
     setEmbargoError(null);
+    setCreateError(null);
     finishDatasetCreation({
       setEmbargo: embargoRequest
         ? async () => {
@@ -157,7 +161,7 @@ export default function NewPage() {
           return;
         }
         console.log("Erro when finish the dataset creation:", error);
-        alert("Sorry! Error to create dataset.");
+        setCreateError(datasetSaveErrorMessage(error));
       })
       .finally(() => actions.setSubmitting(false));
   }
@@ -266,6 +270,7 @@ export default function NewPage() {
                   />
                   {embargoError && <p role="alert" className={EDIT_FORM_ERROR_CLASS}>{embargoError}</p>}
                 </div>
+                <EditFormError error={createError} />
               </div>
 
               <div className="mx-auto w-full max-w-[640px] h-full px-4 sm:px-0 flex justify-between items-center gap-4">

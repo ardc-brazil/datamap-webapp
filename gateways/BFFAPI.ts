@@ -57,21 +57,8 @@ export class BFFAPI {
      * @returns Dataset updated response
      */
     async updateDataset(dataset: UpdateDatasetRequest): Promise<UpdateDatasetResponse> {
-        try {
-            const response = await axios.put("/api/datasets/" + dataset.id, dataset)
-
-            if (response.status == 200) {
-                // TODO: Review the response because is returning {} (object empty)
-                return response.data as UpdateDatasetResponse;
-            }
-
-            console.log(response);
-
-        } catch (error) {
-            console.log(error);
-        }
-
-        return Promise.reject("Error to updateDataset");
+        const response = await axios.put("/api/datasets/" + dataset.id, dataset);
+        return response.data as UpdateDatasetResponse;
     }
 
     /**
