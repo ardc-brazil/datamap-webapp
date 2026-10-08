@@ -4,6 +4,7 @@ import { Props } from "../types/BaseInterfaces";
 export interface TabProps extends Props {
   id: number;
   active?: number;
+  testId?: string;
   onSelected(tabId: number): void;
 }
 
@@ -24,6 +25,7 @@ export function Tab(props: TabProps) {
     <li>
       <button
         type="button"
+        data-testid={props.testId}
         className={`inline-block pb-3 border-0 border-b-2 border-solid text-sm font-medium transition-colors ${cssForActiveTab()}`}
         onClick={onSelected}
       >

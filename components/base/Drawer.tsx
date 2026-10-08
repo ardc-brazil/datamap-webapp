@@ -37,7 +37,7 @@ export default function Drawer(props: DrawerProps) {
         <div className="fixed inset-0 overflow-hidden">
             <div className="absolute inset-0 overflow-hidden">
                 <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
-                    <div className="pointer-events-auto relative w-screen max-w-screen-md">
+                    <div data-testid="drawer" className="pointer-events-auto relative w-screen max-w-screen-md">
                         <div className="flex h-full flex-col bg-primary-0 border-l border-primary-200 shadow-xl">
 
                             <div className="flex flex-none items-center justify-between gap-4 h-16 pl-6 pr-4 border-b border-primary-200">
@@ -69,6 +69,7 @@ export default function Drawer(props: DrawerProps) {
                                 {props.showCreateButton &&
                                     <button
                                         type="button"
+                                        data-testid="drawer-create"
                                         className={PRIMARY_BUTTON_CLASS}
                                         onClick={() => { setSubmitting(true); props.onCreate() }}
                                         disabled={submitting}>

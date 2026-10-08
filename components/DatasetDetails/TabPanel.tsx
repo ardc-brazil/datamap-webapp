@@ -4,6 +4,7 @@ import { GetDatasetDetailsResponse } from "../../types/BffAPI";
 
 export interface TabPanelProps extends Props {
   title: String;
+  testId?: string;
   dataset?: GetDatasetDetailsResponse;
   user?: UserDetailsResponse
   selectedVersionName?: string

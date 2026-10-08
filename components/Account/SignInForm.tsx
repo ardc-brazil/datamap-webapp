@@ -45,16 +45,16 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
                 <Form noValidate className="flex flex-col gap-4">
                     <div>
                         <label htmlFor="sign-in-email" className={EDIT_FORM_LABEL_CLASS}>Email</label>
-                        <Field id="sign-in-email" name="email" type="email" autoComplete="email" className={EDIT_FORM_INPUT_CLASS} />
+                        <Field id="sign-in-email" data-testid="sign-in-email" name="email" type="email" autoComplete="email" className={EDIT_FORM_INPUT_CLASS} />
                         <ErrorMessage name="email" component="p" className={EDIT_FORM_ERROR_CLASS} />
                     </div>
                     <div>
                         <label htmlFor="sign-in-password" className={EDIT_FORM_LABEL_CLASS}>Password</label>
-                        <Field id="sign-in-password" name="password" type="password" autoComplete="current-password" className={EDIT_FORM_INPUT_CLASS} />
+                        <Field id="sign-in-password" data-testid="sign-in-password" name="password" type="password" autoComplete="current-password" className={EDIT_FORM_INPUT_CLASS} />
                         <ErrorMessage name="password" component="p" className={EDIT_FORM_ERROR_CLASS} />
                     </div>
                     {error && <p role="alert" className="m-0 text-sm text-error-600">{error}</p>}
-                    <button type="submit" disabled={isSubmitting} className="btn-primary m-0">Sign in</button>
+                    <button type="submit" data-testid="sign-in-submit" disabled={isSubmitting} className="btn-primary m-0">Sign in</button>
                     <Link href={ROUTE_PAGE_FORGOT_PASSWORD} className="self-start text-sm underline underline-offset-2">Forgot password?</Link>
                 </Form>
             )}

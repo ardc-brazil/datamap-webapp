@@ -12,6 +12,8 @@ module.exports = async () => {
   })({
     // ... rest of the configuration.
     output: "standalone",
+    // `make manual` builds into its own directory so it never replaces a running `next dev`.
+    distDir: process.env.NEXT_DIST_DIR || ".next",
     experimental: {
       // Starts the metrics port (instrumentation.ts) once per server process.
       instrumentationHook: true,

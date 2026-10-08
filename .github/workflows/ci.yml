@@ -28,6 +28,9 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
+      - name: Type check the capture pipeline
+        run: npm run manual:check
+
       - name: Run tests
         run: npx jest --ci --coverage=false
 

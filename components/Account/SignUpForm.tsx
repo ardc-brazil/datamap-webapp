@@ -82,22 +82,22 @@ export function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
                 <Form noValidate className="flex flex-col gap-4">
                     <div>
                         <label htmlFor="sign-up-name" className={EDIT_FORM_LABEL_CLASS}>Name</label>
-                        <Field id="sign-up-name" name="name" type="text" autoComplete="name" className={EDIT_FORM_INPUT_CLASS} />
+                        <Field id="sign-up-name" data-testid="sign-up-name" name="name" type="text" autoComplete="name" className={EDIT_FORM_INPUT_CLASS} />
                         <ErrorMessage name="name" component="p" className={EDIT_FORM_ERROR_CLASS} />
                     </div>
                     <div>
                         <label htmlFor="sign-up-email" className={EDIT_FORM_LABEL_CLASS}>Email</label>
-                        <Field id="sign-up-email" name="email" type="email" autoComplete="email" className={EDIT_FORM_INPUT_CLASS} />
+                        <Field id="sign-up-email" data-testid="sign-up-email" name="email" type="email" autoComplete="email" className={EDIT_FORM_INPUT_CLASS} />
                         <ErrorMessage name="email" component="p" className={EDIT_FORM_ERROR_CLASS} />
                     </div>
                     <div>
                         <label htmlFor="sign-up-password" className={EDIT_FORM_LABEL_CLASS}>Password</label>
-                        <Field id="sign-up-password" name="password" type="password" autoComplete="new-password" className={EDIT_FORM_INPUT_CLASS} />
+                        <Field id="sign-up-password" data-testid="sign-up-password" name="password" type="password" autoComplete="new-password" className={EDIT_FORM_INPUT_CLASS} />
                         <p className={`${EDIT_FORM_HINT_CLASS} mt-1`}>At least {PASSWORD_MIN_LENGTH} characters.</p>
                         <ErrorMessage name="password" component="p" className={EDIT_FORM_ERROR_CLASS} />
                     </div>
                     {error && <p role="alert" className="m-0 text-sm text-error-600">{error}</p>}
-                    <button type="submit" disabled={isSubmitting} className="btn-primary m-0">Create account</button>
+                    <button type="submit" data-testid="sign-up-submit" disabled={isSubmitting} className="btn-primary m-0">Create account</button>
                 </Form>
             )}
         </Formik>

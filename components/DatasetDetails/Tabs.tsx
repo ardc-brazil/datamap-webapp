@@ -31,6 +31,7 @@ export function Tabs(props: TabsProps) {
                 id={index}
                 onSelected={onTabSelected}
                 active={tabSelected}
+                testId={child?.props.testId}
               >
                 {child?.props.title}
               </Tab>

@@ -68,7 +68,7 @@ export default function DatasetFilesList(props: Props) {
     const gridColumns = "grid grid-cols-[minmax(0,1fr)_100px_40px] items-center gap-2";
 
     return (
-        <div className="flex flex-col gap-3">
+        <div data-testid="dataset-files" className="flex flex-col gap-3">
             {shouldPaginate() &&
                 <div className="w-full">
                     <input
@@ -91,7 +91,7 @@ export default function DatasetFilesList(props: Props) {
                         </div>
                         <ul className="list-none m-0 p-0">
                             {getPage().map((file, i) => (
-                                <li className={`${gridColumns} h-11 px-4 border-b border-primary-100 last:border-b-0 text-sm hover:bg-primary-50`} key={i}>
+                                <li data-testid="dataset-file-row" className={`${gridColumns} h-11 px-4 border-b border-primary-100 last:border-b-0 text-sm hover:bg-primary-50`} key={i}>
                                     <FileListRowItem
                                         dataset={props.dataset}
                                         datasetVersion={props.datasetVersion}
@@ -266,7 +266,7 @@ function DownloadFileButton(props: DownloadFileButtonProps) {
 
 
     return (
-        <button type="button" className="flex items-center text-primary-500 hover:text-primary-900 transition-colors" onClick={onDownloadRequest} aria-label="Download file">
+        <button type="button" data-testid="file-download" className="flex items-center text-primary-500 hover:text-primary-900 transition-colors" onClick={onDownloadRequest} aria-label="Download file">
             <MaterialSymbol icon="download" grade={-25} size={20} weight={400} />
         </button>
     );

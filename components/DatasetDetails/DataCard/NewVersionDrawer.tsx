@@ -155,7 +155,7 @@ export default function NewVersionDrawer(props: NewVersionDrawerProps) {
                     </h2>
                     <div className="" >
                         <Formik initialValues={{ a: "test" }} onSubmit={() => { }}>
-                            <Form>
+                            <Form data-testid="uppy-uploader">
                                 <UppyUploader
                                     datasetId={props.dataset.id}
                                     userId={uploadAuth?.user?.id}
