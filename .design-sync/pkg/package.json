@@ -1,0 +1,6 @@
+{
+  "name": "@datamap/ui",
+  "private": true,
+  "module": "dist/index.js",
+  "types": "dist/types/.design-sync/pkg/index.d.ts"
+}
