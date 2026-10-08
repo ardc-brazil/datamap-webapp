@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Props } from "../components/types/BaseInterfaces";
 import { ROUTE_PAGE_DATASETS, ROUTE_PAGE_NOTEBOOKS } from "../contants/InternalRoutesConstants";
+import { MANUAL_LINK_LABEL, MANUAL_ROUTE } from "../contants/ManualConstants";
 import { Logo } from "./Brand/Logo";
 
 export interface FooterProps extends Props {
@@ -25,6 +26,7 @@ export function Footer(props: FooterProps) {
           <FooterColumn title="Project">
             <FooterLink href="/project/about">About</FooterLink>
             <FooterLink href="/project/support">Support</FooterLink>
+            <FooterLink href={MANUAL_ROUTE}>{MANUAL_LINK_LABEL}</FooterLink>
             <FooterLink href="/project/data-policy">Data Policy</FooterLink>
             <FooterLink href="/project/research-group">Research Group</FooterLink>
             <FooterLink href="/project/partners-and-supporters">Partners and Supporters</FooterLink>

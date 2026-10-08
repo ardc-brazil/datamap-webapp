@@ -31,6 +31,8 @@ export const PAGES: readonly string[] = [
   "/design-system",
   "/doi/datasets/[datasetId]/versions/[versionName]",
   "/invitations/[token]",
+  "/manual",
+  "/manual/[capitulo]",
   "/orcid-oauth-callback",
   "/project/about",
   "/project/data-policy",

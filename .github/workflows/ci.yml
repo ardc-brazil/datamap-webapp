@@ -33,7 +33,7 @@ jobs:
 
       # The deploy builds the image; `tsc` and `jest` do not run webpack.
       - name: Production build
-        run: npx next build
+        run: npm run build
 
   deploy:
     # Why this job lives here rather than in its own workflow: two workflows on

@@ -1,8 +1,8 @@
+import Link from "next/link";
 import React from 'react'
 import { MaterialSymbol, SymbolCodepoints } from "react-material-symbols";
 import { ProjectPage, ProjectSection } from "../../components/Project/ProjectPage";
-
-const USER_MANUAL_URL = "https://docs.google.com/document/d/1U46J67JKt82u2mj1mKKC1BJSid0BifnFHf4Aw0chOHo/edit#heading=h.8yi650lks7ua";
+import { MANUAL_ROUTE } from "../../contants/ManualConstants";
 
 interface ChannelProps {
     icon: SymbolCodepoints;
@@ -11,6 +11,27 @@ interface ChannelProps {
     href: string;
     action: string;
     external?: boolean;
+    actionIcon?: SymbolCodepoints;
+}
+
+function ActionLink(props: ChannelProps) {
+    const className = "self-start inline-flex items-center gap-2 rounded-md border border-primary-300 bg-primary-0 px-3.5 py-2 text-sm font-semibold text-primary-900 hover:border-primary-500 hover:text-primary-900";
+    const icon = <MaterialSymbol icon={props.actionIcon ?? (props.external ? "open_in_new" : "mail")} size={18} weight={400} grade={-25} />;
+
+    if (props.href.startsWith("/")) {
+        return <Link href={props.href} className={className}>{props.action}{icon}</Link>;
+    }
+    return (
+        <a
+            href={props.href}
+            target={props.external ? "_blank" : undefined}
+            rel={props.external ? "noreferrer" : undefined}
+            className={className}
+        >
+            {props.action}
+            {icon}
+        </a>
+    );
 }
 
 function SupportChannel(props: ChannelProps) {
@@ -23,15 +44,7 @@ function SupportChannel(props: ChannelProps) {
                 <h3 className="m-0 text-lg">{props.title}</h3>
                 <div className="text-sm leading-[22px] text-primary-700 [&_p]:m-0 [&_p]:text-sm [&_p]:leading-[22px]">{props.children}</div>
             </div>
-            <a
-                href={props.href}
-                target={props.external ? "_blank" : undefined}
-                rel={props.external ? "noreferrer" : undefined}
-                className="self-start inline-flex items-center gap-2 rounded-md border border-primary-300 bg-primary-0 px-3.5 py-2 text-sm font-semibold text-primary-900 hover:border-primary-500 hover:text-primary-900"
-            >
-                {props.action}
-                <MaterialSymbol icon={props.external ? "open_in_new" : "mail"} size={18} weight={400} grade={-25} />
-            </a>
+            <ActionLink {...props} />
         </div>
     );
 }
@@ -43,7 +56,7 @@ export default function SupportPage() {
             lede="We are committed to providing you with the assistance you need to make the most of our platform. Whether you are new to Datamap or an experienced user, we have resources to help you navigate and utilize our system effectively."
         >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-12 md:py-16">
-                <SupportChannel icon="menu_book" title="User manual" href={USER_MANUAL_URL} action="Access the user manual" external>
+                <SupportChannel icon="menu_book" title="User manual" href={MANUAL_ROUTE} action="Access the user manual" actionIcon="arrow_forward">
                     <p>Step-by-step instructions, tips, and troubleshooting advice to help you with all aspects of the platform.</p>
                 </SupportChannel>
                 <SupportChannel icon="support_agent" title="Institutional support" href="mailto:pedro.correa@usp.br" action="pedro.correa@usp.br">
