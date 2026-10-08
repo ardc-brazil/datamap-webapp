@@ -34,6 +34,7 @@ function TenancyRow({ tenancy, selected, onSelect }: { tenancy: AdminTenancy; se
             <button
                 type="button"
                 aria-current={selected ? "true" : undefined}
+                data-testid={`admin-tenancy-${tenancy.path}`}
                 onClick={() => onSelect(tenancy.path)}
                 className={`flex w-full items-center gap-4 px-4 py-3 text-left ${selected ? "bg-primary-50" : "hover:bg-primary-50"}`}
             >

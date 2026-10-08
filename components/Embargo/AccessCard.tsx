@@ -28,10 +28,10 @@ export function AccessCard(props: { dataset: GetDatasetDetailsResponse }) {
     const shown = people.slice(0, 4);
 
     return (
-        <div className="flex flex-col gap-2.5 rounded-lg border border-primary-200 bg-primary-0 p-4">
+        <div data-testid="access-card" className="flex flex-col gap-2.5 rounded-lg border border-primary-200 bg-primary-0 p-4">
             <div className="flex justify-between items-baseline">
                 <span className="text-[11px] tracking-[0.08em] uppercase font-semibold text-primary-500">Who has access</span>
-                <button type="button" className="text-[13px] font-medium text-primary-600 hover:text-primary-900" onClick={() => setShow(true)}>Manage</button>
+                <button type="button" data-testid="access-manage" className="text-[13px] font-medium text-primary-600 hover:text-primary-900" onClick={() => setShow(true)}>Manage</button>
             </div>
             <div className="flex items-center">
                 {shown.map((person, index) => (

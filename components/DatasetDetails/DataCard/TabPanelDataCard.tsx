@@ -114,11 +114,13 @@ export function TabPanelDataCard(props: TabPanelProps) {
                 <DatasetProvenance dataset={props.dataset} user={props.user} />
               </MetadataRow>
               <MetadataRow label="Citation">
-                <DatasetCitation
-                  dataset={props.dataset}
-                  user={props.user}
-                  selectedVersionName={props.selectedVersionName}
-                />
+                <div data-testid="dataset-citation">
+                  <DatasetCitation
+                    dataset={props.dataset}
+                    user={props.user}
+                    selectedVersionName={props.selectedVersionName}
+                  />
+                </div>
               </MetadataRow>
             </div>
           </section>
@@ -142,7 +144,7 @@ export function TabPanelDataCard(props: TabPanelProps) {
               <Moment date={props.dataset.created_at} format="MMM D, YYYY" />
             </FactRow>
             {selectedVersion?.doi?.identifier &&
-              <FactRow label="DOI" valueClassName="font-mono text-xs break-all">
+              <FactRow label="DOI" testId="fact-doi" valueClassName="font-mono text-xs break-all">
                 {selectedVersion.doi.identifier}
               </FactRow>
             }

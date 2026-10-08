@@ -286,6 +286,7 @@ export default function NewPage() {
                     Cancel
                   </button>
                   <button type="submit"
+                    data-testid="new-dataset-submit"
                     className="btn-primary m-0"
                     disabled={isSubmitting || !(datasetPrototyping?.createDatasetResponseV2) || !(datasetPrototyping.fileUploadAuthTokenResponse)}
                   >

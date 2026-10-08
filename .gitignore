@@ -617,3 +617,4 @@ FodyWeavers.xsd
 /public/manual/search-index.json
 .next-manual/
 /manual-capture/.run/
+.next-manual-dev/

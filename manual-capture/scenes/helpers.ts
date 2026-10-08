@@ -8,3 +8,16 @@ export async function signIn(page: Page, email: string, password: string): Promi
   await page.getByTestId("sign-in-submit").click();
   await page.waitForURL((url) => !url.pathname.startsWith("/account"), { timeout: 30_000 });
 }
+
+export async function chooseWorkspace(page: Page, path: string): Promise<void> {
+  await page.goto(`${WEBAPP_URL}/app/tenancy`);
+  await page.getByTestId(`tenancy-option-${path}`).click();
+  await page.waitForURL((url) => !url.pathname.startsWith("/app/tenancy"), { timeout: 30_000 });
+}
+
+export async function signInTo(page: Page, person: { email: string }, password: string, workspace?: string): Promise<void> {
+  await signIn(page, person.email, password);
+  if (workspace) {
+    await chooseWorkspace(page, workspace);
+  }
+}

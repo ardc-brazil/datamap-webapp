@@ -40,7 +40,7 @@ export function ProfileTenancies() {
                 </ul>
             }
             <div className="flex justify-end gap-2 border-t border-primary-100 px-4 py-3">
-                <button type="button" className="btn-primary-outline btn-small m-0 flex items-center gap-2" onClick={() => setRequesting(true)}>
+                <button type="button" data-testid="profile-request-access" className="btn-primary-outline btn-small m-0 flex items-center gap-2" onClick={() => setRequesting(true)}>
                     <MaterialSymbol icon="add" size={18} weight={400} grade={-25} />
                     Request access
                 </button>

@@ -22,7 +22,7 @@ function Tab(props: { href: string, label: string, count?: number, active: boole
 
 export function DatasetsTabs(props: Props) {
     return (
-        <nav className="flex gap-6 border-b border-primary-200" aria-label="Datasets">
+        <nav data-testid="datasets-tabs" className="flex gap-6 border-b border-primary-200" aria-label="Datasets">
             {props.tenancyName &&
                 <Tab href={ROUTE_PAGE_DATASETS} label={props.tenancyName} count={props.tenancyCount} active={props.active === "tenancy"} />
             }

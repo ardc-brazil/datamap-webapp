@@ -59,7 +59,7 @@ export function TenancyMembersPanel({ tenancy }: { tenancy: AdminTenancy }) {
                     <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
                         <span className="text-[13px] font-semibold text-primary-900">{`Members · ${data ? total : "…"}`}</span>
                         {manageable && (
-                            <button type="button" onClick={() => setAdding(true)} className="text-[13px] font-semibold text-primary-900 hover:text-primary-600">+ Add</button>
+                            <button type="button" data-testid="admin-member-add" onClick={() => setAdding(true)} className="text-[13px] font-semibold text-primary-900 hover:text-primary-600">+ Add</button>
                         )}
                     </div>
                     {!data ? (

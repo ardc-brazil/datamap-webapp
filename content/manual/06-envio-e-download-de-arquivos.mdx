@@ -4,4 +4,64 @@ ordem: 6
 resumo: Como o envio funciona, como baixar e quais são os limites.
 ---
 
-Como o envio funciona, como baixar e quais são os limites.
+Os arquivos entram no DataMap quando você cria um dataset ou uma versão nova. Este capítulo explica o caminho que eles fazem e o que fazer quando algo dá errado.
+
+## Como funciona o envio
+
+<FluxoEnvio />
+
+1. **Navegador**: você escolhe os arquivos e confirma.
+2. **Servidor de envio (tusd)**: os arquivos sobem por aqui. Se a conexão cair, o envio retoma de onde parou.
+3. **Área temporária**: o arquivo espera aqui. Nesta etapa ele ainda não aparece para download.
+4. **Dataset**: o DataMap registra o arquivo na versão.
+5. **Armazenamento definitivo**: um processo em segundo plano move o arquivo para o lugar final. A partir daí ele pode ser baixado, e isso pode levar alguns minutos.
+
+O envio acontece em dois lugares: na criação do dataset e no painel **New version**.
+
+## Enviar arquivos para uma versão nova
+
+1. Abra o dataset e clique em **New version**.
+2. Em **New uploads**, solte os arquivos ou use **browse files**. A área mostra quantos arquivos foram escolhidos.
+3. Se a versão anterior tiver arquivos, eles aparecem em **Previously uploaded**. Clique no **x** de um arquivo para deixá-lo de fora da versão nova.
+4. Clique em **Create**.
+
+<Captura nome="envio-arquivos-adicionados" alt="Painel New version com dois arquivos escolhidos, temperatura-manaus.nc e estacao-manaus.csv" legenda="Arquivos escolhidos, antes de criar a versão." />
+
+Enquanto os arquivos sobem, o painel mostra o andamento.
+
+<Captura nome="envio-em-progresso" alt="Painel New version com a mensagem Uploading 2 files e a barra de andamento" legenda="Envio em andamento." />
+
+Quando todos chegam, o painel avisa que a versão está sendo criada e depois mostra **Version created**.
+
+<Captura nome="envio-concluido" alt="Painel New version com a mensagem Version created" legenda="Versão criada." />
+
+Clique em **Close**. O dataset volta com a versão nova e a lista de arquivos.
+
+<Captura nome="versao-publicada-arquivos" alt="Lista de arquivos da versão publicada, com estacao-manaus.csv e temperatura-manaus.nc" legenda="Arquivos da versão publicada." />
+
+## Quando um arquivo falha
+
+Se algum arquivo não chegar, a versão **não é publicada**. O painel mostra **The version was not created** e diz quais arquivos falharam.
+
+<Captura nome="envio-falha" alt="Painel New version com o aviso The version was not created e a lista de arquivos que não chegaram" legenda="Aviso de falha no envio." />
+
+Nada fica pela metade: nenhuma versão é publicada sem todos os arquivos. Resolva o problema, feche o painel e tente de novo.
+
+## Como baixar
+
+Na lista de arquivos da versão, clique no ícone de download (**Download file**) ao lado do arquivo.
+
+<Captura nome="download-arquivo" alt="Lista de arquivos com o ícone de download do primeiro arquivo em destaque" legenda="Ícone de download (1)." />
+
+- O download é de um arquivo por vez.
+- Para baixar, é preciso entrar com a sua conta, mesmo que o dataset seja público.
+- Cada clique gera um link temporário para aquele arquivo.
+- Durante o embargo, os membros do workspace veem o botão de download bloqueado.
+
+<Limites>
+- Não há limite de tamanho nem de tipo de arquivo.
+- A chave de envio vale por 24 horas. Um envio que passa disso continua sendo processado.
+- O download é de um arquivo por vez.
+- Um arquivo enviado não pode ser apagado. Para deixá-lo fora da versão seguinte, tire-o de **Previously uploaded** antes de **Create**.
+- O link de download vale 1 hora durante o embargo e 7 dias fora dele.
+</Limites>

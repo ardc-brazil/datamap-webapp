@@ -4,4 +4,77 @@ ordem: 8
 resumo: Quem acessa o quê, definir, estender, encerrar, lembretes e fim do embargo.
 ---
 
-Quem acessa o quê, definir, estender, encerrar, lembretes e fim do embargo.
+O embargo guarda um dataset enquanto o artigo não sai. Durante o embargo, só você e as pessoas com quem você compartilhou chegam aos arquivos. O dataset continua citável: você pode reservar um DOI e dar um link de leitura a quem vai revisar o artigo.
+
+## Quem acessa o quê
+
+- **Você e as pessoas com quem compartilhou**: veem tudo, inclusive os arquivos.
+- **Os outros membros do workspace**: não chegam aos arquivos. Você escolhe se eles veem que o dataset existe.
+- **Quem revisa por link anônimo**: lê só os metadados, com as autorias ocultas. O capítulo 10 explica.
+- **Fora do DataMap**: não há página pública. O DOI só informa que o dataset está em embargo.
+
+## Definir o embargo
+
+1. Abra o dataset e vá à aba **Settings**.
+2. Na seção **Embargo**, clique em **Set embargo**.
+3. Em **Embargo ends**, escolha a data de término. O limite é de 90 dias a partir de hoje.
+4. Se quiser, escreva uma **Note**. Ela fica visível para você e para as pessoas com acesso.
+5. Em **While embargoed, other members of** o workspace, escolha **See that it exists** ou **Don't see it at all**.
+6. Clique em **Set embargo**.
+
+<Captura nome="embargo-definir" alt="Janela Put under embargo com a data de término, a nota e a escolha de quem vê que o dataset existe" legenda="Janela para definir o embargo." />
+
+Com **See that it exists**, o dataset aparece nas listas com a etiqueta **Embargoed**. O título, a descrição e as autorias podem ser lidos, mas os nomes dos arquivos e os downloads ficam retidos. Com **Don't see it at all**, o dataset some das listas e das buscas.
+
+Também dá para escolher o embargo ao criar o dataset (capítulo 5).
+
+<Nota>
+Se o dataset já tem um DOI manual, o botão **Set embargo** não aparece. Um DOI gerado pelo DataMap mantém o embargo.
+</Nota>
+
+## Acompanhar o embargo
+
+No lado direito do dataset, o cartão **EMBARGO** mostra quantos dias faltam e a data de término.
+
+<Captura nome="embargo-cartao" alt="Cartão do embargo com 60 dias restantes, a data de término e os botões Extend e End early" legenda="Cartão do embargo." />
+
+Na aba **Settings**, a seção **Embargo** reúne tudo: o estado, a data de término (**Ends**), quem vê o dataset (**Other members**), a nota (**Note**) e os lembretes (**Reminders**).
+
+<Captura nome="embargo-configuracoes" alt="Aba Settings com a seção Embargo, a data de término, os lembretes e o histórico" legenda="Seção Embargo da aba Settings." />
+
+Para mudar o que os outros membros veem, use **Hide** ou **Show**. Para mudar o texto, use **Edit** na linha **Note**.
+
+## Estender o embargo
+
+1. Clique em **Extend**.
+2. Escolha a nova data em **New end date**. Ela precisa ser posterior à data atual e dar, no máximo, 90 dias a partir de hoje.
+3. Se quiser, explique em **Reason**.
+4. Clique em **Extend**.
+
+<Captura nome="embargo-estender" alt="Janela Extend embargo com a data atual de término e o campo New end date" legenda="Janela para estender o embargo." />
+
+Só o dono do dataset define, estende e encerra o embargo.
+
+## Encerrar o embargo antes da data
+
+Clique em **End early**. O DataMap pergunta **End embargo now?** e lista o que acontece. Não dá para desfazer.
+
+<Captura nome="embargo-encerrar" alt="Janela End embargo now? com as consequências de encerrar o embargo" legenda="Confirmação para encerrar o embargo." />
+
+## Lembretes
+
+O DataMap avisa por e-mail 15, 10, 5 e 1 dia antes do fim do embargo. O aviso vai para você e para as pessoas com quem você compartilhou o dataset.
+
+## Quando o embargo termina
+
+- Os arquivos passam a ser lidos por todos os membros do workspace. Na janela **Share**, a linha **Members of** o workspace tem o botão **Change**, em que você escolhe se eles só leem (**Read only**) ou também editam (**Read and edit**).
+- **Nada se torna público sozinho.** A página pública só existe quando o DOI está **FINDABLE**. Um aviso no topo do dataset lembra o passo que falta e traz o botão **Make DOI findable**.
+- Os links anônimos que já existem continuam mostrando a página com as autorias ocultas até o dataset ser publicado.
+
+<Limites>
+- O embargo dura até 90 dias, na criação e em cada extensão.
+- Os lembretes saem 15, 10, 5 e 1 dia antes do fim.
+- Só se cria link anônimo enquanto o dataset está em embargo.
+- O link de download vale 1 hora durante o embargo e 7 dias fora dele.
+- Encerrar o embargo não pode ser desfeito.
+</Limites>

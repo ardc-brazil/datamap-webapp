@@ -15,6 +15,7 @@ export function ShareButton(props: { dataset: GetDatasetDetailsResponse }) {
         <>
             <button
                 type="button"
+                data-testid="share-button"
                 aria-label="Share"
                 className="inline-flex items-center gap-2 h-[38px] px-3.5 rounded-md border border-primary-300 bg-primary-0 text-primary-900 text-sm font-semibold whitespace-nowrap hover:bg-primary-100 transition-colors"
                 onClick={() => setShow(true)}

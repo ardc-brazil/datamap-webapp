@@ -80,7 +80,8 @@ export function sceneContext(browser: Browser, seed: Seed, outDir: string, onSho
         : undefined;
       await addHighlights(page, options.highlight ?? []);
       const file = path.join(outDir, `${name}.png`);
-      const common = { path: file, mask: options.mask, maskColor: MASK_COLOR, animations: "disabled" as const };
+      const mask = [...(options.mask ?? []), page.locator("time")];
+      const common = { path: file, mask, maskColor: MASK_COLOR, animations: "disabled" as const };
       if (options.target) {
         await options.target.screenshot(common);
       } else {

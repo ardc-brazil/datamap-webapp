@@ -14,7 +14,7 @@ export function headers(userId?: string, tenancy?: string): Record<string, strin
 
 export const asAdmin = () => headers(ADMIN_USER_ID, ADMIN_TENANCY);
 
-export async function call(method: string, path: string, init: { headers: Record<string, string>; body?: Json }, expected: number[]): Promise<Json> {
+export async function call(method: string, path: string, init: { headers: Record<string, string>; body?: Json | unknown[] }, expected: number[]): Promise<Json> {
   const response = await fetch(`${GATEKEEPER_URL}${path}`, {
     method,
     headers: init.headers,

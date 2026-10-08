@@ -42,7 +42,7 @@ export default function SharedDatasetsPage() {
                     sharedCount={datasets?.total_count}
                 />
 
-                <div>
+                <div data-testid="dataset-list">
                     {isLoading && <EmptySearch>Loading datasets...</EmptySearch>}
                     {error && <EmptySearch>The shared datasets could not be loaded.</EmptySearch>}
                     {datasets && datasets.content.length === 0 &&

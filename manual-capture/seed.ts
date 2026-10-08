@@ -7,8 +7,10 @@ export interface Seed {
   password: string;
   ana: { id: string; name: string; email: string };
   bruno: { id: string; name: string; email: string };
+  admin: { id: string; name: string; email: string };
   workspace: { path: string; name: string };
   datasets: { publicado: string; embargo: string; rascunho: string };
+  anonymousLink: { id: string; url: string };
 }
 
 const WORKSPACE_NAME = "Clima Amazônia";
@@ -53,6 +55,8 @@ async function publish(userId: string, tenancy: string, datasetId: string, versi
 async function main() {
   const ana = await signUp("Ana Pesquisadora", "ana.pesquisadora@example.com");
   const bruno = await signUp("Bruno Revisor", "bruno.revisor@example.com");
+  const admin = await signUp("Admin DataMap", "admin.datamap@example.com");
+  await call("PUT", `/users/${admin.id}/roles`, { headers: asAdmin(), body: ["admin"] }, [200]);
 
   const created = await call("POST", "/admin/tenancies", {
     headers: asAdmin(),
@@ -63,7 +67,7 @@ async function main() {
 
   await call("POST", `/users/${bruno.id}/tenancy-requests`, {
     headers: headers(bruno.id),
-    body: { tenancy_name: path, reason: "Vou revisar o artigo que cita o dataset de temperatura." },
+    body: { tenancy_name: WORKSPACE_NAME, reason: "Vou revisar o artigo que cita o dataset de temperatura." },
   }, [200, 201]);
 
   const publicado = await createDataset(ana.id, path, "Temperatura do ar em Manaus, 2025", "Medições horárias de temperatura do ar na estação de Manaus.");
@@ -78,7 +82,8 @@ async function main() {
     headers: headers(ana.id, path),
     body: { until: noon(60).toISOString(), metadata_visible: true, note: "Até a publicação do artigo." },
   }, [200]);
-  await call("POST", `/datasets/${embargo.id}/anonymous-links`, { headers: headers(ana.id, path), body: { label: "Revisão do periódico, rodada 1" } }, [201]);
+  const anonymous = await call("POST", `/datasets/${embargo.id}/anonymous-links`, { headers: headers(ana.id, path), body: { label: "Revisão do periódico, rodada 1" } }, [201]);
+  console.log("anonymous link response keys:", Object.keys(anonymous).join(","));
   await call("POST", `/datasets/${embargo.id}/share`, { headers: headers(ana.id, path), body: { level: "read", email: "colega.convidada@example.com" } }, [200, 201]);
 
   const rascunho = await createDataset(ana.id, path, "Perfis verticais de vento, rascunho", "Ainda sem versão publicada.");
@@ -88,8 +93,10 @@ async function main() {
     password: PASSWORD,
     ana,
     bruno,
+    admin,
     workspace: { path, name: WORKSPACE_NAME },
     datasets: { publicado: publicado.id, embargo: embargo.id, rascunho: rascunho.id },
+    anonymousLink: { id: anonymous.id, url: anonymous.url ?? anonymous.link },
   };
   fs.mkdirSync(WORK_DIR, { recursive: true });
   fs.writeFileSync(SEED_FILE, JSON.stringify(seed, null, 2));

@@ -224,7 +224,7 @@ export default function ListDatasetPage() {
           />
         </div>
 
-        <div className="mt-7 mb-4">
+        <div data-testid="dataset-search" className="mt-7 mb-4">
           <TextSearchBar onTextSearchChanged={onTextSearchChanged} />
           <FilterBadges
             currentSearchParameterState={currentSearchParameters}
@@ -233,8 +233,8 @@ export default function ListDatasetPage() {
 
         <div className="mt-7">
           <div className="flex flex-row gap-8">
-            <FilterCriteriaList onCriteriaChanged={onCriteriaChanged} lastSearchParameterDeselected={lastSearchParameterDeselected} />
-            <div className="basis-full min-w-0 min-h-screen">
+            <div data-testid="dataset-filters" className="contents"><FilterCriteriaList onCriteriaChanged={onCriteriaChanged} lastSearchParameterDeselected={lastSearchParameterDeselected} /></div>
+            <div data-testid="dataset-list" className="basis-full min-w-0 min-h-screen">
               <div>
                 {datasetsError && <EmptySearch>Error to read datasets</EmptySearch>}
                 {datasetsIsLoading && <EmptySearch>Loading datasets...</EmptySearch>}

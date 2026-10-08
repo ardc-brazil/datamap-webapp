@@ -15,11 +15,12 @@ export function AnonymousLinksSection(props: Props) {
     const links = props.links.filter((link) => !link.revoked_at);
 
     return (
-        <section className="flex flex-col gap-1" aria-labelledby="anonymous-links-title">
+        <section data-testid="anonymous-links" className="flex flex-col gap-1" aria-labelledby="anonymous-links-title">
             <div className="flex justify-between items-center pb-2">
                 <h4 id="anonymous-links-title" className={SHARE_SECTION_LABEL_CLASS}>Anonymous links</h4>
                 <button
                     type="button"
+                    data-testid="anonymous-new"
                     aria-label="New anonymous link"
                     className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-primary-300 bg-primary-0 text-[13px] font-semibold text-primary-900 hover:bg-primary-100"
                     onClick={props.onNew}
@@ -36,7 +37,7 @@ export function AnonymousLinksSection(props: Props) {
                         <span className="flex flex-col min-w-0">
                             <span className="flex items-center gap-2 text-sm font-medium text-primary-900 min-w-0">
                                 <span className="truncate">{link.label}</span>
-                                {link.token_hint && <span className="font-mono text-[11px] font-normal text-primary-400 whitespace-nowrap">/anonymous/{link.token_hint}</span>}
+                                {link.token_hint && <span data-testid="anonymous-link-hint" className="font-mono text-[11px] font-normal text-primary-400 whitespace-nowrap">/anonymous/{link.token_hint}</span>}
                             </span>
                             <span className={SHARE_PERSON_DETAIL_CLASS}>{describeLinkStats(link, now)}</span>
                         </span>

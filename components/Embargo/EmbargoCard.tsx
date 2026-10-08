@@ -17,7 +17,7 @@ export function EmbargoCard(props: { dataset: GetDatasetDetailsResponse }) {
     const action = "border border-primary-300 bg-primary-0 rounded-md px-2.5 py-[7px] text-[13px] font-semibold";
 
     return (
-        <div className="flex flex-col gap-3 rounded-lg border border-embargo-200 bg-embargo-50 p-4">
+        <div data-testid="embargo-card" className="flex flex-col gap-3 rounded-lg border border-embargo-200 bg-embargo-50 p-4">
             <div className="flex justify-between items-center">
                 <span className="text-[11px] tracking-[0.08em] uppercase font-semibold text-embargo-800">Embargo</span>
                 <MaterialSymbol icon="lock" size={18} grade={-25} weight={400} fill className="text-embargo-800" aria-hidden="true" />
