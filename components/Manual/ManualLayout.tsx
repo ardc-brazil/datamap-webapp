@@ -56,7 +56,7 @@ export function ManualLayout({ chapters, current, children }: ManualLayoutProps)
           <div className="hidden lg:block"><Indice chapters={chapters} current={current} /></div>
         </aside>
 
-        <article className="min-w-0 max-w-3xl text-[17px] leading-7 text-primary-700 [&_p]:my-4 [&_ol]:my-4 [&_ul]:my-4 [&_li]:my-1 [&_table]:w-full [&_table]:text-sm [&_th]:text-left [&_th]:border-b [&_th]:border-primary-300 [&_th]:py-2 [&_td]:border-b [&_td]:border-primary-200 [&_td]:py-2 [&_strong]:text-primary-900">
+        <article className="min-w-0 max-w-3xl text-[17px] leading-7 text-primary-700 [&_p]:my-4 [&_ol]:my-4 [&_ul]:my-4 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-6 [&_ol]:pl-6 [&_li]:my-1 [&_table]:w-full [&_table]:text-sm [&_th]:text-left [&_th]:border-b [&_th]:border-primary-300 [&_th]:py-2 [&_td]:border-b [&_td]:border-primary-200 [&_td]:py-2 [&_strong]:text-primary-900">
           {current && (
             <header className="mb-8">
               <p className="m-0 text-sm font-medium text-primary-500">Capítulo {current.ordem}</p>

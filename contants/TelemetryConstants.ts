@@ -33,6 +33,7 @@ export const PAGES: readonly string[] = [
   "/invitations/[token]",
   "/manual",
   "/manual/[capitulo]",
+  "/manual/imprimir",
   "/orcid-oauth-callback",
   "/project/about",
   "/project/data-policy",

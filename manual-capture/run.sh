@@ -45,3 +45,4 @@ curl -sf -o /dev/null "http://localhost:$PORT/account/login" || { echo "O webapp
 
 "${TS_NODE[@]}" "$HERE/seed.ts"
 "${TS_NODE[@]}" "$HERE/run.ts"
+"${TS_NODE[@]}" "$HERE/pdf.ts"

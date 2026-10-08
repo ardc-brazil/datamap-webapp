@@ -15,3 +15,7 @@ export const MANUAL_SEARCH_INDEX_FILE = "public/manual/search-index.json";
 export const MANUAL_SEARCH_INDEX_URL = "/manual/search-index.json";
 
 export const MANUAL_LINK_LABEL = "Guia do usuário";
+
+export const MANUAL_PRINT_ROUTE = "/manual/imprimir";
+
+export const MANUAL_PUBLIC_URL = "https://datamap.pcs.usp.br/manual";
