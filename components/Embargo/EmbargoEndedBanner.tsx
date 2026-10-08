@@ -6,7 +6,9 @@ import { BFFAPI } from "../../gateways/BFFAPI";
 import { formatShortDate, tenancyDisplayName } from "../../lib/embargoDisplay";
 import { membersOutcomeSentence } from "../../lib/membersAccess";
 import { GetDatasetDetailsDOIResponseState, GetDatasetDetailsResponse } from "../../types/BffAPI";
+import { ConsequenceList } from "../base/ConsequenceList";
 import Modal from "../base/PopupModal";
+import { DialogError } from "../base/DialogError";
 
 export function EmbargoEndedBanner(props: { dataset: GetDatasetDetailsResponse }) {
     const [bffGateway] = useState(() => new BFFAPI());
@@ -68,7 +70,7 @@ export function EmbargoEndedBanner(props: { dataset: GetDatasetDetailsResponse }
                     </div>
                 </div>
                 <span className="text-[13px] text-primary-500">Promoting it publishes the public page with the authors; anonymous links then lead there. Nothing does this for you.</span>
-                {error && <p role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
+                <DialogError message={error} />
             </div>
             {registered &&
                 <div className="flex flex-col items-start md:items-end gap-2">
@@ -86,11 +88,7 @@ export function EmbargoEndedBanner(props: { dataset: GetDatasetDetailsResponse }
                 confirmDisabled={promoting}
                 maxWidthClassName="max-w-[440px]"
             >
-                <ul className="m-0 p-0 list-none flex flex-col gap-2.5 text-sm leading-[21px] text-primary-700">
-                    <li className="flex gap-2.5"><span className="text-primary-400">—</span><span>The public page is published, with the authors</span></li>
-                    <li className="flex gap-2.5"><span className="text-primary-400">—</span><span>DataCite indexes the DOI</span></li>
-                    <li className="flex gap-2.5"><span className="text-primary-400">—</span><span>Anonymous links lead to the public page</span></li>
-                </ul>
+                <ConsequenceList items={["The public page is published, with the authors", "DataCite indexes the DOI", "Anonymous links lead to the public page"]} />
             </Modal>
         </div>
     );

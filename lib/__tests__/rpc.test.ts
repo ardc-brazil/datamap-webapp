@@ -47,6 +47,12 @@ describe('httpErrorHandler', () => {
         expect(e.name).toBe("FORBIDDEN");
     })
 
+    test('a 401 keeps the gatekeeper detail', () => {
+        const e = httpErrorHandler(axiosErrorWith(401, { detail: "unauthorized_tenancy: removed" }));
+        expect(e.httpCode).toBe(401);
+        expect(e.detail).toBe("unauthorized_tenancy: removed");
+    })
+
     test('a 409 keeps the gatekeeper detail', () => {
         const e = httpErrorHandler(axiosErrorWith(409, { detail: "invitation_already_accepted" }));
         expect(e.httpCode).toBe(409);

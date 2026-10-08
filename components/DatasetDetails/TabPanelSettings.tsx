@@ -3,16 +3,16 @@ import { TabPanel } from "./TabPanel";
 
 import { useRouter } from "next/router";
 import * as Yup from 'yup';
-import { BFFAPI } from "../../gateways/BFFAPI";
+import { useDatasetSave } from "../../hooks/UseDatasetSave";
 import { canEditDataset, canSeeAccessHistory } from "../../lib/users";
-import { UpdateDatasetRequest } from "../../types/BffAPI";
 import { TabPanelProps } from "./TabPanel";
 import { AccessHistory } from "../Embargo/AccessHistory";
 import { AccessSummary } from "../Embargo/AccessSummary";
 import { EmbargoSettingsSection, SettingsBlock } from "../Embargo/EmbargoSettingsSection";
+import { EditFormError } from "./EditFormError";
 
 export function TabPanelSettings(props: TabPanelProps) {
-  const bffGateway = new BFFAPI();
+  const { save, error } = useDatasetSave(props.dataset);
   const router = useRouter();
   const schema = Yup.object().shape({
     name: Yup.string()
@@ -23,27 +23,9 @@ export function TabPanelSettings(props: TabPanelProps) {
       .max(255, 'Too long. Max 255 chars')
   });
 
-  function onSubmit(values, { setSubmitting }) {
-    setSubmitting(true);
-    props.dataset.name = values.name;
-    props.dataset.data.institution = values.institution;
-
-    try {
-      const updateDatasetRequest = {
-        id: props.dataset.id,
-        name: props.dataset.name,
-        data: props.dataset.data,
-        tenancy: props.dataset.tenancy,
-        is_enabled: props.dataset.is_enabled
-      } as UpdateDatasetRequest
-
-      bffGateway.updateDataset(updateDatasetRequest);
+  async function onSubmit(values) {
+    if (await save({ name: values.name, data: { institution: values.institution } })) {
       router.reload();
-    } catch (error) {
-      console.log(error);
-      alert("Sorry! Error...");
-    } finally {
-      setSubmitting(false)
     }
   }
 
@@ -77,6 +59,7 @@ export function TabPanelSettings(props: TabPanelProps) {
                       placeholder="What is the institution owner of this dataset?"
                     />
                     {/* TODO: Define how visibility will work */}
+                    <EditFormError error={error} />
                   </div>
 
                   <div className="flex items-center justify-end gap-2 border-t border-primary-200 bg-primary-50 px-5 py-3 rounded-b-lg">

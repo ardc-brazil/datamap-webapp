@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import TextareaAutosize from 'react-textarea-autosize';
 import remarkGfm from "remark-gfm";
-import { BFFAPI } from "../../../gateways/BFFAPI";
+import { useDatasetSave } from "../../../hooks/UseDatasetSave";
 import { UserDetailsResponse, canEditDataset } from "../../../lib/users";
-import { GetDatasetDetailsResponse, UpdateDatasetRequest } from "../../../types/BffAPI";
+import { GetDatasetDetailsResponse } from "../../../types/BffAPI";
 import { EditFormActions } from "../EditFormActions";
+import { EditFormError } from "../EditFormError";
 import { TextActionButton } from "../TextActionButton";
 import { ExpansibleDiv } from "./ExpansibleDiv";
 
@@ -15,7 +16,7 @@ interface Props {
 }
 
 export function DatasetDescription(props: Props) {
-    const bffGateway = new BFFAPI();
+    const { save, saving, error, clearError } = useDatasetSave(props.dataset);
     const [editingDescription, setEditDescription] = useState(false);
     const [textContent, setTextContent] = useState(props.dataset.data.description)
     const canEdit = canEditDataset(props.user, props.dataset);
@@ -30,26 +31,13 @@ export function DatasetDescription(props: Props) {
     }
     function handleCancelEditing(event): void {
         setTextContent(props.dataset.data.description);
+        clearError();
         setEditDescription(false);
     }
 
-    function handleSave(event): void {
-        props.dataset.data.description = textContent;
-
-        try {
-            const updateDatasetRequest = {
-                id: props.dataset.id,
-                name: props.dataset.name,
-                data: props.dataset.data,
-                tenancy: props.dataset.tenancy,
-                is_enabled: props.dataset.is_enabled
-            } as UpdateDatasetRequest
-
-            bffGateway.updateDataset(updateDatasetRequest);
+    async function handleSave(event): Promise<void> {
+        if (await save({ data: { description: textContent } })) {
             setEditDescription(false);
-        } catch (error) {
-            console.log(error);
-            alert("Sorry! Error...");
         }
     }
 
@@ -73,7 +61,8 @@ export function DatasetDescription(props: Props) {
                                 onChange={e => setTextContent(e.target.value)} />
                         </div>
 
-                        <EditFormActions onCancel={handleCancelEditing} onSave={handleSave} />
+                        <EditFormError error={error} />
+                        <EditFormActions onCancel={handleCancelEditing} onSave={handleSave} isSubmitting={saving} />
                     </div>
                 )
                 : (

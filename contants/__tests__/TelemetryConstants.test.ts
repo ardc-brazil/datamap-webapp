@@ -66,8 +66,22 @@ describe("the embargo telemetry", () => {
   });
 });
 
+describe("the workspace Members page", () => {
+  it("is a page the browser may report", () => {
+    expect(pageLabel("/app/members")).toBe("/app/members");
+  });
+});
+
 describe("members' access", () => {
   it("accepts its ui event", () => {
     expect(uiEventLabel("members_access_changed")).toBe("members_access_changed");
+  });
+});
+
+describe("the admin area", () => {
+  it("knows its pages", () => {
+    for (const page of ["/app/admin", "/app/admin/requests", "/app/admin/users", "/app/admin/tenancies", "/app/admin/activity"]) {
+      expect(pageLabel(page)).toBe(page);
+    }
   });
 });

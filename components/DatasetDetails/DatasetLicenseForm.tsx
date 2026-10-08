@@ -2,11 +2,12 @@ import { ErrorMessage, Field, Form, Formik } from 'formik';
 import { useState } from 'react';
 import * as Yup from 'yup';
 import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_LABEL_CLASS, EDIT_FORM_SELECT_CLASS, EMPTY_VALUE_CLASS } from "../../contants/EditFormConstants";
-import { BFFAPI } from "../../gateways/BFFAPI";
+import { useDatasetSave } from "../../hooks/UseDatasetSave";
 import { getAllLicensesIds, licenseMapping } from "../../lib/licenseMapping";
 import { UserDetailsResponse, canEditDataset } from "../../lib/users";
-import { GetDatasetDetailsResponse, UpdateDatasetRequest } from "../../types/BffAPI";
+import { GetDatasetDetailsResponse } from "../../types/BffAPI";
 import { EditFormActions } from "./EditFormActions";
+import { EditFormError } from "./EditFormError";
 import { TextActionButton } from "./TextActionButton";
 
 interface Props {
@@ -16,7 +17,7 @@ interface Props {
 }
 
 export default function DatasetLicenseForm(props: Props) {
-    const bffGateway = new BFFAPI();
+    const { save, error, clearError } = useDatasetSave(props.dataset);
     const [editing, setEditing] = useState(false);
     const canEdit = canEditDataset(props.user, props.dataset);
 
@@ -25,6 +26,7 @@ export default function DatasetLicenseForm(props: Props) {
     }
 
     function handleCancelClick(event): void {
+        clearError();
         setEditing(false)
     }
 
@@ -33,26 +35,9 @@ export default function DatasetLicenseForm(props: Props) {
             .max(50, 'Too long. Max 80 chars')
     });
 
-    function onSubmit(values, { setSubmitting }) {
-        setSubmitting(true);
-        props.dataset.data.license = values.license;
-
-        try {
-            const updateDatasetRequest = {
-                id: props.dataset.id,
-                name: props.dataset.name,
-                data: props.dataset.data,
-                tenancy: props.dataset.tenancy,
-                is_enabled: props.dataset.is_enabled
-            } as UpdateDatasetRequest
-
-            bffGateway.updateDataset(updateDatasetRequest);
+    async function onSubmit(values) {
+        if (await save({ data: { license: values.license } })) {
             setEditing(false);
-        } catch (error) {
-            console.log(error);
-            alert("Sorry! Error...");
-        } finally {
-            setSubmitting(false);
         }
     }
 
@@ -89,6 +74,7 @@ export default function DatasetLicenseForm(props: Props) {
                                 className={EDIT_FORM_ERROR_CLASS}
                             />
                         </div>
+                        <EditFormError error={error} />
                         <EditFormActions onCancel={handleCancelClick} isSubmitting={isSubmitting} />
                     </Form>
                 )}

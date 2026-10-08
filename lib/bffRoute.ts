@@ -3,11 +3,17 @@ import { createRouter } from "next-connect";
 import { ResponseError } from "../types/ResponseError";
 import { maskPathTokens } from "./externalCalls";
 import { logError } from "./logging";
-import { authOnlyChain } from "./middlewareChain";
+import { requireJsonOnChanges } from "./accountRoute";
+import { adminChain, authOnlyChain } from "./middlewareChain";
 import { httpErrorHandler } from "./rpc";
 
 export function bffRouter() {
     return createRouter<NextApiRequest, NextApiResponse>().use(authOnlyChain);
+}
+
+/** Admin routes answer through `accountHandler`, which keeps the gatekeeper's `detail` on every status. */
+export function adminBffRouter() {
+    return createRouter<NextApiRequest, NextApiResponse>().use(adminChain).use(requireJsonOnChanges);
 }
 
 export function bffHandler(router: ReturnType<typeof bffRouter>) {

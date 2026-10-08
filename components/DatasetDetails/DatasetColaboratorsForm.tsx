@@ -2,11 +2,12 @@ import { ArrayHelpers, ErrorMessage, Field, FieldArray, Form, Formik } from 'for
 import { useState } from 'react';
 import * as Yup from 'yup';
 import { EDIT_FORM_ERROR_CLASS, EDIT_FORM_HINT_CLASS, EDIT_FORM_INPUT_CLASS, EDIT_FORM_LABEL_CLASS, EMPTY_VALUE_CLASS } from "../../contants/EditFormConstants";
-import { BFFAPI } from "../../gateways/BFFAPI";
+import { useDatasetSave } from "../../hooks/UseDatasetSave";
 import { UserDetailsResponse, canEditDataset } from "../../lib/users";
-import { GetDatasetDetailsResponse, UpdateDatasetRequest } from "../../types/BffAPI";
+import { GetDatasetDetailsResponse } from "../../types/BffAPI";
 import CloseButton from '../base/CloseButton';
 import { EditFormActions } from "./EditFormActions";
+import { EditFormError } from "./EditFormError";
 import { TextActionButton } from "./TextActionButton";
 
 export const CONTRIBUTORS_ACCESS_NOTE = "Listing someone here credits them; it does not give them access. To give someone access to this dataset, use Share.";
@@ -18,7 +19,7 @@ interface Props {
 }
 
 export default function DatasetColaboratorsForm(props: Props) {
-    const bffGateway = new BFFAPI();
+    const { save, error, clearError } = useDatasetSave(props.dataset);
     const infoText = "Add collaborators who are responsible for maintaining the dataset including being available for questions from users.";
     const [editing, setEditing] = useState(false);
     const canEdit = canEditDataset(props.user, props.dataset);
@@ -28,6 +29,7 @@ export default function DatasetColaboratorsForm(props: Props) {
     }
 
     function handleCancelClick(event): void {
+        clearError();
         setEditing(false)
     }
 
@@ -42,26 +44,9 @@ export default function DatasetColaboratorsForm(props: Props) {
             )
     });
 
-    function onSubmit(values, { setSubmitting }) {
-        setSubmitting(true);
-        props.dataset.data.colaborators = values.colaborators;
-
-        try {
-            const updateDatasetRequest = {
-                id: props.dataset.id,
-                name: props.dataset.name,
-                data: props.dataset.data,
-                tenancy: props.dataset.tenancy,
-                is_enabled: props.dataset.is_enabled
-            } as UpdateDatasetRequest
-
-            bffGateway.updateDataset(updateDatasetRequest);
+    async function onSubmit(values) {
+        if (await save({ data: { colaborators: values.colaborators } })) {
             setEditing(false);
-        } catch (error) {
-            console.log(error);
-            alert("Sorry! Error...");
-        } finally {
-            setSubmitting(false);
         }
     }
 
@@ -121,6 +106,7 @@ export default function DatasetColaboratorsForm(props: Props) {
 
                                         <button type="button" className="mt-3 text-[13px] font-semibold text-primary-700 hover:text-primary-900" onClick={() => arrayHelpers.push({ name: "" })}>+ Add collaborator</button>
 
+                                        <EditFormError error={error} />
                                         <EditFormActions onCancel={handleCancelClick} isSubmitting={isSubmitting} />
                                     </div>
                                 )

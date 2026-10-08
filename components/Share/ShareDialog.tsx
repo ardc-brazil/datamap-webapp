@@ -6,7 +6,7 @@ import { messageForApiError } from "../../contants/EmbargoConstants";
 import { BFFAPI } from "../../gateways/BFFAPI";
 import { useMembersAccess } from "../../hooks/UseMembersAccess";
 import { tenancyDisplayName } from "../../lib/embargoDisplay";
-import { canChangeMembersAccess, membersAccessDetail, membersCanEditOf } from "../../lib/membersAccess";
+import { canChangeMembersAccess, inPublic, membersAccessDetail, membersCanEditOf } from "../../lib/membersAccess";
 import { fetcher } from "../../lib/fetcher";
 import { GetDatasetDetailsResponse } from "../../types/BffAPI";
 import { GrantRequest, PermissionLevel, SharePermission, ShareState } from "../../types/GatekeeperAPI";
@@ -17,6 +17,7 @@ import { NewAnonymousLinkDialog } from "./NewAnonymousLinkDialog";
 import { OneTimeLinkDialog } from "./OneTimeLinkDialog";
 import { RemoveAccessDialog } from "./RemoveAccessDialog";
 import { ShareInput } from "./ShareInput";
+import { DialogError } from "../base/DialogError";
 
 interface Props {
     dataset: GetDatasetDetailsResponse
@@ -50,7 +51,7 @@ export function ShareDialog(props: Props) {
         ? {
             tenancyName,
             canChange: canChangeMembersAccess(props.dataset),
-            detail: membersAccessDetail({ membersCanEdit, embargoActive, members: state?.tenancy?.members ?? null }),
+            detail: membersAccessDetail({ membersCanEdit, embargoActive, members: state?.tenancy?.members ?? null, everyone: inPublic(props.dataset, state) }),
         }
         : null;
 
@@ -104,7 +105,7 @@ export function ShareDialog(props: Props) {
 
                     <div className="flex flex-col gap-4 px-6 pb-5 overflow-y-auto">
                         <ShareInput datasetId={datasetId} tenancyName={tenancyName} onGrant={onGrant} busy={busy} />
-                        {error && <p role="alert" className="m-0 text-sm text-danger-700">{error}</p>}
+                        <DialogError message={error} />
                         {loadError && <p className="m-0 text-sm text-danger-700">The people with access could not be loaded.</p>}
                         {state &&
                             <AccessList

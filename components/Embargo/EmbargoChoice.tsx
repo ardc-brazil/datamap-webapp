@@ -1,4 +1,5 @@
 import { useFormikContext } from "formik";
+import { PUBLIC_DATASET_HINT } from "../../contants/TenancyConstants";
 import { EmbargoFields } from "./EmbargoFields";
 
 interface Values {
@@ -7,11 +8,11 @@ interface Values {
     embargoNote: string
 }
 
-export function EmbargoChoice(props: { tenancyName: string, disabled?: boolean, statusLine?: string | null }) {
+export function EmbargoChoice(props: { tenancyName: string, disabled?: boolean, statusLine?: string | null, isPublic?: boolean }) {
     const { values, setFieldValue } = useFormikContext<Values>();
     const embargoed = values.embargoMode !== "none";
     const options = [
-        { embargo: false, label: "Open to the workspace", hint: `Every member of ${props.tenancyName} can read and download the files.` },
+        { embargo: false, label: "Open to the workspace", hint: props.isPublic ? PUBLIC_DATASET_HINT : `Every member of ${props.tenancyName} can read and download the files.` },
         { embargo: true, label: "Under embargo", hint: "Only you and the people you share it with reach the files. The dataset stays citable: you can reserve a DOI and give reviewers a read-only link." },
     ];
 
@@ -41,7 +42,7 @@ export function EmbargoChoice(props: { tenancyName: string, disabled?: boolean, 
                             </label>
                             {option.embargo && embargoed &&
                                 <div className="border-t border-primary-200 pt-5 pr-4 pb-4 pl-12">
-                                    <EmbargoFields tenancyName={props.tenancyName} disabled={props.disabled} />
+                                    <EmbargoFields tenancyName={props.tenancyName} disabled={props.disabled} membersEditable={!props.isPublic} />
                                 </div>
                             }
                         </div>

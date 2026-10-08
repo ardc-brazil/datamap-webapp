@@ -1,3 +1,4 @@
+jest.mock("../tenancies", () => ({ listMyTenancies: jest.fn(async () => []) }));
 jest.mock("../share", () => ({ claimInvitations: jest.fn() }));
 jest.mock("../users", () => ({
     ...jest.requireActual("../users"),

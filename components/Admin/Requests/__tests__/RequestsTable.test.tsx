@@ -1,0 +1,99 @@
+/** @jest-environment jsdom */
+import { describe, expect, jest, test } from "@jest/globals";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { adminRequest, newTenancyRequest } from "../../../../fake-data/adminFixtures";
+import { RequestsTable } from "../RequestsTable";
+
+const NOW = new Date("2026-10-04T12:00:00Z");
+
+function renderTable(requests: any[]) {
+    const onReview = jest.fn();
+    const onDecline = jest.fn();
+    render(<RequestsTable requests={requests} now={NOW} onReview={onReview} onDecline={onDecline} />);
+    return { onReview, onDecline };
+}
+
+describe("RequestsTable", () => {
+    test("a join row: who, what, since when, email state, and Review", () => {
+        const { onReview } = renderTable([adminRequest()]);
+
+        expect(screen.getByText("Account")).toBeTruthy();
+        expect(screen.getByText("Fernanda Lima")).toBeTruthy();
+        expect(screen.getByText("fernanda.lima@inpe.br")).toBeTruthy();
+        expect(screen.getByText("Join")).toBeTruthy();
+        expect(screen.getByText("Data Amazon")).toBeTruthy();
+        expect(screen.getByText("Postdoc in Luciana Rizzo's group, GoAmazon SMPS data")).toBeTruthy();
+        expect(screen.getByText("Sep 28, 2026")).toBeTruthy();
+        expect(screen.getByText("6 days waiting").className).toContain("text-embargo-800");
+        expect(screen.getByText("verified")).toBeTruthy();
+
+        fireEvent.click(screen.getByRole("button", { name: "Review" }));
+        expect(onReview).toHaveBeenCalledWith(expect.objectContaining({ id: "7a9b5d5e-fa6d-4c18-9a51-2b1e2c3d4e5f" }));
+    });
+
+    test("a fresh new-tenancy row from an unverified account", () => {
+        renderTable([newTenancyRequest()]);
+
+        expect(screen.getByText("New")).toBeTruthy();
+        expect(screen.getByText("Cerrado Flux")).toBeTruthy();
+        expect(screen.getByText("1 day waiting").className).toContain("text-primary-500");
+        expect(screen.getByText("unverified")).toBeTruthy();
+    });
+
+    test("the row menu is a plain disclosure that holds Decline…", () => {
+        const { onDecline } = renderTable([adminRequest()]);
+        const toggle = screen.getByRole("button", { name: "More actions for Fernanda Lima" });
+        expect(toggle.getAttribute("aria-expanded")).toBe("false");
+
+        fireEvent.click(toggle);
+        expect(toggle.getAttribute("aria-expanded")).toBe("true");
+        expect(screen.queryByRole("menu")).toBeNull();
+        expect(screen.queryByRole("menuitem")).toBeNull();
+        fireEvent.click(screen.getByRole("button", { name: "Decline…" }));
+
+        expect(onDecline).toHaveBeenCalledWith(expect.objectContaining({ id: "7a9b5d5e-fa6d-4c18-9a51-2b1e2c3d4e5f" }));
+    });
+
+    test("a closed row shows how it ended instead of the actions", () => {
+        renderTable([newTenancyRequest({
+            status: "approved",
+            created_tenancy: true,
+            tenancy: { path: "datamap/production/cerrado-flux", display_name: "Cerrado Flux", is_default: false, is_legacy: false },
+            decided_by: { id: "c1", name: "Caio Maia" },
+            decided_at: "2026-10-01T10:48:00+00:00",
+        })]);
+
+        expect(screen.getByText("Approved · new tenancy").className).toContain("text-success-500");
+        expect(screen.getByText("decided Oct 1")).toBeTruthy();
+        expect(screen.queryByRole("button", { name: "Review" })).toBeNull();
+    });
+
+    test("each row decides its own mode from its status, not a shared flag", () => {
+        renderTable([
+            adminRequest(),
+            newTenancyRequest({ id: "closed-1", status: "declined" }),
+        ]);
+
+        expect(screen.getByRole("button", { name: "Review" })).toBeTruthy();
+        expect(screen.getByText("Declined").className).toContain("text-danger-700");
+        expect(screen.queryAllByRole("button", { name: "Review" }).length).toBe(1);
+    });
+
+    test("table semantics: table, row, columnheader and cell, no visual change", () => {
+        renderTable([adminRequest()]);
+
+        expect(screen.getByRole("table")).toBeTruthy();
+        const rows = screen.getAllByRole("row");
+        expect(rows.length).toBe(2);
+        expect(screen.getAllByRole("columnheader").length).toBe(5);
+        expect(screen.getAllByRole("cell").length).toBe(5);
+    });
+
+    test("the request rows sit in a rowgroup, not a bare list", () => {
+        renderTable([adminRequest(), newTenancyRequest()]);
+
+        const group = screen.getByRole("rowgroup");
+        expect(group.querySelectorAll('[role="row"]').length).toBe(2);
+        expect(screen.queryByRole("list")).toBeNull();
+    });
+});

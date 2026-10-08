@@ -5,6 +5,8 @@ import { UserDetailsResponse } from "../lib/users";
 import { CreateDatasetRequestV2, CreateDatasetResponseV2, CreateDOIRequest, CreateDOIResponse, CreateDraftDatasetVersionRequest, CreateDraftDatasetVersionResponse, DeleteDOIRequest, FileDownloadLinkRequest, FileDownloadLinkResponse, FileUploadAuthTokenRequest, FileUploadAuthTokenResponse, NavigateDOIStatusRequest, PublishDatasetVersionRequest, PublishDatasetVersionResponse, UpdateDatasetRequest, UpdateDatasetResponse } from "../types/BffAPI";
 import {
     AcceptInvitationResponse,
+    AdminTenancy,
+    AdminTenancyRequest,
     CreatedAnonymousLink,
     DatasetEmbargo,
     EmbargoModeRequest,
@@ -18,6 +20,12 @@ import {
     SetEmbargoRequest,
     SharePermission,
     ShareUser,
+    InviteeLookup,
+    TenancyDecision,
+    TenancyMember,
+    TenancyRequest,
+    TenancySummary,
+    WorkspaceInvitation,
 } from "../types/GatekeeperAPI";
 
 
@@ -53,21 +61,8 @@ export class BFFAPI {
      * @returns Dataset updated response
      */
     async updateDataset(dataset: UpdateDatasetRequest): Promise<UpdateDatasetResponse> {
-        try {
-            const response = await axios.put("/api/datasets/" + dataset.id, dataset)
-
-            if (response.status == 200) {
-                // TODO: Review the response because is returning {} (object empty)
-                return response.data as UpdateDatasetResponse;
-            }
-
-            console.log(response);
-
-        } catch (error) {
-            console.log(error);
-        }
-
-        return Promise.reject("Error to updateDataset");
+        const response = await axios.put("/api/datasets/" + dataset.id, dataset);
+        return response.data as UpdateDatasetResponse;
     }
 
     /**
@@ -372,6 +367,11 @@ export class BFFAPI {
         await axios.put("/api/account/password", { currentPassword, newPassword });
     }
 
+    /** Marks the ORCID sign-in that follows as connecting ORCID to the signed-in account. */
+    async startOrcidConnection(): Promise<void> {
+        await axios.post("/api/account/connect-orcid", {});
+    }
+
     async requestEmailVerification(email: string): Promise<{ challengeId: string }> {
         const response = await axios.post("/api/account/email-verifications", { email });
         return response.data as { challengeId: string };
@@ -379,5 +379,68 @@ export class BFFAPI {
 
     async confirmEmailVerification(challengeId: string, code: string): Promise<void> {
         await axios.post(`/api/account/email-verifications/${encodeURIComponent(challengeId)}/confirm`, { code });
+    }
+
+    async requestTenancyAccess(input: { tenancyName: string; reason: string }): Promise<TenancyRequest> {
+        const response = await axios.post("/api/tenancy-requests", input);
+        trackUiEvent("tenancy_access_requested");
+        return response.data as TenancyRequest;
+    }
+
+    async withdrawTenancyRequest(requestId: string): Promise<void> {
+        await axios.delete(`/api/tenancy-requests/${encodeURIComponent(requestId)}`);
+    }
+
+    async acceptTenancyInvitation(invitationId: string): Promise<{ tenancy: TenancySummary }> {
+        const response = await axios.post(`/api/tenancy-invitations/${encodeURIComponent(invitationId)}/accept`, {});
+        trackUiEvent("tenancy_invitation_accepted");
+        return response.data as { tenancy: TenancySummary };
+    }
+
+    async declineTenancyInvitation(invitationId: string): Promise<void> {
+        await axios.post(`/api/tenancy-invitations/${encodeURIComponent(invitationId)}/decline`, {});
+    }
+
+    async lookupInvitee(tenancy: string, value: string): Promise<InviteeLookup> {
+        const response = await axios.get(`/api/workspace/lookup?tenancy=${encodeURIComponent(tenancy)}&value=${encodeURIComponent(value)}`);
+        return response.data as InviteeLookup;
+    }
+
+    async inviteToWorkspace(tenancy: string, userId: string): Promise<WorkspaceInvitation> {
+        const response = await axios.post(`/api/workspace/invitations?tenancy=${encodeURIComponent(tenancy)}`, { userId });
+        trackUiEvent("tenancy_invitation_sent");
+        return response.data as WorkspaceInvitation;
+    }
+
+    async withdrawWorkspaceInvitation(tenancy: string, invitationId: string): Promise<void> {
+        await axios.delete(`/api/workspace/invitations/${encodeURIComponent(invitationId)}?tenancy=${encodeURIComponent(tenancy)}`);
+    }
+
+    async approveTenancyRequest(requestId: string, decision: TenancyDecision): Promise<AdminTenancyRequest> {
+        const response = await axios.post(`/api/admin/tenancy-requests/${encodeURIComponent(requestId)}/approve`, decision);
+        return response.data as AdminTenancyRequest;
+    }
+
+    async declineTenancyRequest(requestId: string, message?: string): Promise<AdminTenancyRequest> {
+        const response = await axios.post(`/api/admin/tenancy-requests/${encodeURIComponent(requestId)}/decline`, { message: message ?? null });
+        return response.data as AdminTenancyRequest;
+    }
+
+    async createTenancy(input: { displayName: string; namespace: string }): Promise<AdminTenancy> {
+        const response = await axios.post("/api/admin/tenancies", input);
+        return response.data as AdminTenancy;
+    }
+
+    async addTenancyMember(tenancy: string, userId: string): Promise<TenancyMember> {
+        const response = await axios.post(`/api/admin/tenancies/members?tenancy=${encodeURIComponent(tenancy)}`, { userId });
+        return response.data as TenancyMember;
+    }
+
+    async removeTenancyMember(tenancy: string, userId: string): Promise<void> {
+        await axios.delete(`/api/admin/tenancies/members/${encodeURIComponent(userId)}?tenancy=${encodeURIComponent(tenancy)}`, { data: {} });
+    }
+
+    async withdrawTenancyInvitationAsAdmin(invitationId: string): Promise<void> {
+        await axios.delete(`/api/admin/tenancy-invitations/${encodeURIComponent(invitationId)}`, { data: {} });
     }
 }

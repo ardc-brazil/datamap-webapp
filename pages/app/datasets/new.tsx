@@ -1,8 +1,9 @@
 import Uppy from "@uppy/core";
-import { ErrorMessage, Field, Form, Formik, FormikHelpers } from "formik";
+import { ErrorMessage, Field, Form, Formik, FormikHelpers, FormikProps } from "formik";
 import { useSession } from "next-auth/react";
 import Router from "next/router";
 import { useEffect, useRef, useState } from "react";
+import { EditFormError } from "../../../components/DatasetDetails/EditFormError";
 import { EmbargoChoice } from "../../../components/Embargo/EmbargoChoice";
 import LayoutFullScreen from "../../../components/LayoutFullScreen";
 import LoggedLayout from "../../../components/LoggedLayout";
@@ -10,13 +11,17 @@ import { useTenancyStore } from "../../../components/TenancyStore";
 import Alert from "../../../components/base/Alert";
 import Modal from "../../../components/base/PopupModal";
 import UppyUploader from "../../../components/base/UppyUploader";
-import { EDIT_FORM_ERROR_CLASS } from "../../../contants/EditFormConstants";
+import { DATASET_CREATE_ERROR_MESSAGE } from "../../../contants/EditFormConstants";
 import { messageForApiError } from "../../../contants/EmbargoConstants";
 import { ROUTE_PAGE_DATASETS_DETAILS } from "../../../contants/InternalRoutesConstants";
+import { isDefaultTenancy } from "../../../contants/TenancyConstants";
 import { BFFAPI } from "../../../gateways/BFFAPI";
+import { datasetSaveErrorMessage } from "../../../hooks/UseDatasetSave";
+import { useResetMembersCanEditOnPublic } from "../../../hooks/UseResetMembersCanEditOnPublic";
 import { EmbargoStepError, embargoLockFor, finishDatasetCreation } from "../../../lib/datasetCreation";
 import { embargoRequestFrom, toEmbargoUntil, validateEmbargoDate } from "../../../lib/embargoDates";
 import { formatShortDate, tenancyDisplayName } from "../../../lib/embargoDisplay";
+import { membersCanEditToSend } from "../../../lib/membersAccess";
 import {
   CreateDatasetResponseV2,
   FileUploadAuthTokenRequest,
@@ -34,14 +39,19 @@ export default function NewPage() {
   const bffGateway = new BFFAPI();
   const { data: session } = useSession();
   const tenancySelected = useTenancyStore((state) => state.tenancySelected);
+  const isPublicSelected = isDefaultTenancy(tenancySelected ?? "");
   const [showModal, setShowModal] = useState(false);
   const [datasetCreateResponse, setDatasetCreateResponse] = useState(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [datasetPrototyping, setDatasetPrototyping] = useState({} as DatasetPrototyping);
   const [uppyReference, setUppyReference] = useState(null as Uppy);
   const [embargoError, setEmbargoError] = useState(null as string | null);
+  const [createError, setCreateError] = useState(null as string | null);
   const [embargoSetUntil, setEmbargoSetUntil] = useState(null as string | null);
-  const membersCanEditSent = useRef(true);
+  const membersCanEditSent = useRef(false);
+  const formikRef = useRef<FormikProps<FormValues>>(null);
+
+  useResetMembersCanEditOnPublic(isPublicSelected, formikRef);
 
   function datasetCreated(datasetResponse: any): void {
     setShowModal(true);
@@ -61,7 +71,7 @@ export default function NewPage() {
     embargoMode: 'none',
     embargoUntil: '',
     embargoNote: '',
-    membersCanEdit: true
+    membersCanEdit: false
   };
 
   function onAlertClose(): void {
@@ -116,10 +126,11 @@ export default function NewPage() {
     const datasetId = datasetPrototyping.createDatasetResponseV2.id;
 
     setEmbargoError(null);
+    setCreateError(null);
     finishDatasetCreation({
       setEmbargo: embargoRequest
         ? async () => {
-          const membersCanEdit = values.membersCanEdit !== false;
+          const membersCanEdit = membersCanEditToSend(isPublicSelected, values.membersCanEdit);
           if (membersCanEdit !== membersCanEditSent.current) {
             await bffGateway.setMembersAccess(datasetId, { members_can_edit: membersCanEdit });
             membersCanEditSent.current = membersCanEdit;
@@ -150,7 +161,7 @@ export default function NewPage() {
           return;
         }
         console.log("Erro when finish the dataset creation:", error);
-        alert("Sorry! Error to create dataset.");
+        setCreateError(datasetSaveErrorMessage(error, DATASET_CREATE_ERROR_MESSAGE));
       })
       .finally(() => actions.setSubmitting(false));
   }
@@ -185,6 +196,7 @@ export default function NewPage() {
   return (
     <LoggedLayout noPadding={false}>
       <Formik
+        innerRef={formikRef}
         initialValues={initialValues}
         validate={handleValidateForm}
         onSubmit={handleSubmitForm}
@@ -252,11 +264,13 @@ export default function NewPage() {
                 <div className="flex flex-col gap-2">
                   <EmbargoChoice
                     tenancyName={tenancyDisplayName(tenancySelected)}
+                    isPublic={isPublicSelected}
                     disabled={embargoLock.locked}
                     statusLine={embargoLock.statusLine}
                   />
-                  {embargoError && <p role="alert" className={EDIT_FORM_ERROR_CLASS}>{embargoError}</p>}
+                  <EditFormError error={embargoError} />
                 </div>
+                <EditFormError error={createError} />
               </div>
 
               <div className="mx-auto w-full max-w-[640px] h-full px-4 sm:px-0 flex justify-between items-center gap-4">

@@ -1,7 +1,15 @@
+import { PUBLIC_MEMBERS_DETAIL, isDefaultTenancy } from "../contants/TenancyConstants";
 import { GetDatasetDetailsResponse } from "../types/BffAPI";
 import { ShareState } from "../types/GatekeeperAPI";
 
+export function inPublic(dataset: GetDatasetDetailsResponse, state?: ShareState | null): boolean {
+    return isDefaultTenancy(dataset?.tenancy ?? "") || state?.tenancy?.is_default === true;
+}
+
 export function membersCanEditOf(dataset: GetDatasetDetailsResponse, state?: ShareState | null): boolean {
+    if (inPublic(dataset, state)) {
+        return false;
+    }
     if (state?.tenancy) {
         return state.tenancy.members_can_edit !== false;
     }
@@ -9,12 +17,19 @@ export function membersCanEditOf(dataset: GetDatasetDetailsResponse, state?: Sha
 }
 
 export function canChangeMembersAccess(dataset: GetDatasetDetailsResponse): boolean {
-    return dataset?.access?.level === "owner";
+    return dataset?.access?.level === "owner" && !isDefaultTenancy(dataset?.tenancy ?? "");
 }
 
-export function membersAccessDetail(options: { membersCanEdit: boolean, embargoActive: boolean, members?: number | null }): string {
+export function membersCanEditToSend(isPublicSelected: boolean, membersCanEdit: boolean): boolean {
+    return !isPublicSelected && membersCanEdit !== false;
+}
+
+export function membersAccessDetail(options: { membersCanEdit: boolean, embargoActive: boolean, members?: number | null, everyone?: boolean }): string {
     if (options.embargoActive) {
         return `No access during the embargo · afterwards: ${options.membersCanEdit ? "read and edit" : "read only"}`;
+    }
+    if (options.everyone) {
+        return PUBLIC_MEMBERS_DETAIL;
     }
     const what = options.membersCanEdit ? "can read and edit" : "can read · editing limited to the people above";
     if (options.members === undefined || options.members === null) {

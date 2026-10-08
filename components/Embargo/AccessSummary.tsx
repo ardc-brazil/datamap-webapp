@@ -3,7 +3,7 @@ import useSWR from "swr";
 import { useMembersAccess } from "../../hooks/UseMembersAccess";
 import { tenancyDisplayName } from "../../lib/embargoDisplay";
 import { fetcher } from "../../lib/fetcher";
-import { canChangeMembersAccess, membersAccessDetail, membersCanEditOf } from "../../lib/membersAccess";
+import { canChangeMembersAccess, inPublic, membersAccessDetail, membersCanEditOf } from "../../lib/membersAccess";
 import { GetDatasetDetailsResponse } from "../../types/BffAPI";
 import { ShareState } from "../../types/GatekeeperAPI";
 import { MembersAccessDialog } from "../Share/MembersAccessDialog";
@@ -41,7 +41,7 @@ export function AccessSummary(props: { dataset: GetDatasetDetailsResponse }) {
                     <div className="grid grid-cols-[180px_minmax(0,1fr)_auto] gap-x-3 items-center px-4 py-3.5">
                         <span className="text-primary-500">Members of {tenancyName}</span>
                         <span className="min-w-0 text-primary-900">
-                            {membersAccessDetail({ membersCanEdit, embargoActive, members: state.tenancy?.members ?? null })}
+                            {membersAccessDetail({ membersCanEdit, embargoActive, members: state.tenancy?.members ?? null, everyone: inPublic(props.dataset, state) })}
                         </span>
                         {canChangeMembersAccess(props.dataset)
                             ? <button

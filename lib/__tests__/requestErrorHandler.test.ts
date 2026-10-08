@@ -13,6 +13,11 @@ describe("handleDatasetRequestErrors", () => {
         expect(result.redirect.destination).toContain("/account/login");
     });
 
+    test("a tenancy the user was removed from sends them to choose another", () => {
+        const result: any = handleDatasetRequestErrors({ response: { status: 401, data: { detail: "unauthorized_tenancy: removed" } } }, req, "d1");
+        expect(result).toEqual({ redirect: { destination: "/app/tenancy", permanent: false } });
+    });
+
     test("anything else propagates", () => {
         expect(() => handleDatasetRequestErrors({ status: 500 }, req, "d1")).toThrow();
     });

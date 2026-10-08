@@ -97,7 +97,6 @@ export async function createUser(requestParams: CreateUserRequest): Promise<GetU
     const request = {
         "name": requestParams.personName,
         "email": requestParams.email,
-        "roles": [],
         "providers": [
             {
                 "name": requestParams.providerName,

@@ -21,6 +21,9 @@ export const publicChain = createRouter<NextApiRequest, NextApiResponse>().use(r
 // Email-verification routes: an ORCID sign-in that has no account, or no confirmed email, yet.
 export const pendingOnlyChain = createRouter<NextApiRequest, NextApiResponse>().use(requestLogging, pendingOnly);
 
+// Admin routes: a convenience in front of the gatekeeper's Casbin check, which is the authority.
+export const adminChain = createRouter<NextApiRequest, NextApiResponse>().use(requestLogging, auth, adminOnly);
+
 async function auth(req: NextApiRequest, res: NextApiResponse, next: any) {
     const token = await getToken({ req })
     if (!token?.uid || token.v !== TOKEN_VERSION) {
@@ -34,6 +37,16 @@ async function pendingOnly(req: NextApiRequest, res: NextApiResponse, next: any)
     const token = await getToken({ req })
     if (!token?.pending || token.uid || token.v !== TOKEN_VERSION) {
         res.status(401).end("401 Unauthorized");
+    } else {
+        await next();
+    }
+}
+
+// The same 404 as a route that does not exist, so the admin area does not reveal itself.
+async function adminOnly(req: NextApiRequest, res: NextApiResponse, next: any) {
+    const token = await getToken({ req })
+    if (token?.admin !== true) {
+        res.status(404).json({ detail: "not_found" });
     } else {
         await next();
     }

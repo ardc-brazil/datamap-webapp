@@ -1,3 +1,4 @@
+jest.mock("../tenancies", () => ({ listMyTenancies: jest.fn(async () => [{ path: "t1" }]) }));
 jest.mock("../share", () => ({ claimInvitations: jest.fn() }));
 jest.mock("../account", () => ({ login: jest.fn() }));
 jest.mock("../users", () => ({ ...(jest.requireActual("../users") as object), getUserByUID: jest.fn() }));
@@ -11,6 +12,7 @@ import { authOptions, authorizeCredentials, hydratePasswordSignIn } from "../../
 import { login } from "../account";
 import { logError } from "../logging";
 import { claimInvitations } from "../share";
+import { listMyTenancies } from "../tenancies";
 import { getUserByUID } from "../users";
 
 function gatekeeperError(status: number, detail: string) {
@@ -78,6 +80,7 @@ describe("signing in with a password", () => {
 
     test("a new account with no role is read as itself, with no tenancy", async () => {
         jest.mocked(getUserByUID).mockResolvedValue({ id: "u1", name: "Ana", email: "ana@usp.br", roles: [], tenancies: [] } as any);
+        jest.mocked(listMyTenancies).mockResolvedValueOnce([]);
 
         expect(await hydratePasswordSignIn({ email: "ana@usp.br", tenancies: ["stale"] }, "u1")).toEqual({
             uid: "u1", name: "Ana", email: "ana@usp.br",
@@ -87,6 +90,7 @@ describe("signing in with a password", () => {
 
     test("a gatekeeper that fails to read the user still signs in, with no tenancy, and says so in the log", async () => {
         jest.mocked(getUserByUID).mockRejectedValue({ status: 500 });
+        jest.mocked(listMyTenancies).mockRejectedValueOnce({ status: 500 });
 
         expect(await hydratePasswordSignIn({ email: "ana@usp.br", tenancies: ["stale"] }, "u1")).toEqual({
             uid: "u1", email: "ana@usp.br",

@@ -6,6 +6,7 @@ import { createDataset, getAllDataset } from "../../../lib/dataset";
 import middlewareChain from "../../../lib/middlewareChain";
 import { ResponseError } from "../../../types/ResponseError";
 import { logError } from "../../../lib/logging";
+import { gatekeeperDetail } from "../../../lib/accountRoute";
 
 const router = createRouter<NextApiRequest, NextApiResponse>();
 
@@ -20,7 +21,7 @@ router
 
     } catch (error) {
       logError("listing datasets failed", error);
-      res.status(error?.response?.status).end();
+      res.status(error?.response?.status ?? 502).json({ detail: gatekeeperDetail(error?.response?.data) });
     }
   })
   .post(async (req, res) => {

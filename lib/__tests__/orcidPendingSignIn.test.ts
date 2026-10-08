@@ -1,3 +1,4 @@
+jest.mock("../tenancies", () => ({ listMyTenancies: jest.fn(async () => [{ path: "datamap/production/data-amazon" }]) }));
 jest.mock("../share", () => ({ claimInvitations: jest.fn() }));
 jest.mock("../users", () => ({
     ...jest.requireActual("../users"),
@@ -179,14 +180,14 @@ describe("the session a browser sees", () => {
     test("a pending session says so and carries the hint, with no user id and no ORCID iD", async () => {
         const result = await session({ pending: { orcid: ORCID, name: "Ada Lovelace", emailHint: "ada@usp.br" }, v: TOKEN_VERSION });
 
-        expect(result.user).toEqual({ name: "Ada Lovelace", pending: true, emailHint: "ada@usp.br" });
+        expect(result.user).toEqual({ name: "Ada Lovelace", pending: true, emailHint: "ada@usp.br", admin: false });
         expect(JSON.stringify(result)).not.toContain(ORCID);
     });
 
     test("a signed-in session is not pending", async () => {
         const result = await session({ uid: "u1", tenancies: [TENANCY], v: TOKEN_VERSION });
 
-        expect(result.user).toEqual({ name: "Ada Lovelace", uid: "u1", tenancies: [TENANCY], pending: false });
+        expect(result.user).toEqual({ name: "Ada Lovelace", uid: "u1", tenancies: [TENANCY], pending: false, admin: false });
     });
 });
 

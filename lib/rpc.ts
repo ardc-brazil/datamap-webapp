@@ -122,7 +122,9 @@ export function httpErrorHandler(error) {
           "UNAUTHORIZED",
           HttpStatusCode.Unauthorized,
           "user not authorized to perform the operation",
-          true
+          true,
+          undefined,
+          response?.data?.detail
         )
       } else if (statusCode === 400) {
         handledError = new APIError(
