@@ -52,7 +52,7 @@ function MembersOf({ tenancy }: { tenancy: TenancySummary }) {
                         {tenancy.display_name} · <span className="font-mono text-[13px]">{tenancy.path}</span>
                     </p>
                 </div>
-                <button type="button" className="btn-primary m-0 flex-none" onClick={() => setInviting(true)}>+ Invite</button>
+                <button type="button" data-testid="members-invite" className="btn-primary m-0 flex-none" onClick={() => setInviting(true)}>+ Invite</button>
             </div>
 
             <section aria-label={`Members of ${tenancy.display_name}`} className="mt-8">

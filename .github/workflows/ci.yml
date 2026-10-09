@@ -28,12 +28,15 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
+      - name: Type check the capture pipeline
+        run: npm run manual:check
+
       - name: Run tests
         run: npx jest --ci --coverage=false
 
       # The deploy builds the image; `tsc` and `jest` do not run webpack.
       - name: Production build
-        run: npx next build
+        run: npm run build
 
   deploy:
     # Why this job lives here rather than in its own workflow: two workflows on

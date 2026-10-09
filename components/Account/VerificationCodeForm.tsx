@@ -77,7 +77,7 @@ export function VerificationCodeForm({ email, onSubmit, onResend }: Props) {
     }
 
     return (
-        <form onSubmit={onFormSubmit} className="flex flex-col gap-4">
+        <form onSubmit={onFormSubmit} data-testid="code-form" className="flex flex-col gap-4">
             <p className="m-0 text-sm text-primary-700">
                 We sent a {CODE_LENGTH}-digit code to <span className="font-semibold text-primary-900">{email}</span>. It can take up to a minute to arrive and expires in 15 minutes.
             </p>

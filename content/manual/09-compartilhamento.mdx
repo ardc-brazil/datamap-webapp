@@ -1,0 +1,52 @@
+---
+titulo: Compartilhamento
+ordem: 9
+resumo: Convidar pessoas, níveis de acesso, o que os membros podem fazer e histórico de acesso.
+---
+
+Compartilhar dá a uma pessoa acesso a um dataset específico, mesmo que ela não seja do workspace.
+
+## Abrir a janela de compartilhamento
+
+No alto do dataset, clique em **Share**. O número ao lado dele diz quantas pessoas têm acesso. Você também chega à janela pelo cartão **WHO HAS ACCESS**, no botão **Manage**.
+
+<Captura nome="compartilhar-acesso" alt="Página de um dataset com o botão Share e o botão Manage do cartão Who has access em destaque" legenda="Botão Share (1) e cartão de acesso (2)." />
+
+## Convidar alguém
+
+1. Ao lado do campo, em **Access level**, escolha **Can read** ou **Can write**.
+2. No campo **Add people by name, email or ORCID**, comece a digitar o nome de alguém do workspace e clique na pessoa sugerida.
+3. Para alguém de fora do workspace, digite o e-mail ou o ORCID iD completo e clique no item **Invite**.
+
+<Captura nome="compartilhar-dialogo" alt="Janela Share com a lista de quem tem acesso, o convite pendente, os links anônimos e o acesso dos membros do workspace" legenda="Janela Share." />
+
+Se a pessoa já tem conta, o acesso vale na hora. Se não tem, ela recebe um convite por e-mail. O convite aparece na lista como pendente (**pending**) até ser aceito, e você pode cancelá-lo com **Revoke**.
+
+## Níveis de acesso
+
+- **Owner**: quem criou o dataset. Define e encerra o embargo e controla o acesso.
+- **Can write**: lê, baixa e também edita o dataset, envia arquivos e cria versões, e compartilha o dataset.
+- **Can read**: lê e baixa.
+
+Para mudar o nível de alguém ou tirar o acesso, use a lista ao lado do nome da pessoa: **Can read**, **Can write** ou **Remove access**. Ao tirar, o DataMap pede confirmação (**Remove access?**).
+
+## O que os membros do workspace podem fazer
+
+A linha **Members of** o workspace mostra o que todos os membros podem fazer. Clique em **Change** para ajustar:
+
+- **Read and edit**: vale o papel de cada pessoa no workspace, como em qualquer dataset dele.
+- **Read only**: os membros leem e baixam. Editar, enviar arquivos e criar versões fica com você e com quem tem **Can write**.
+
+Durante um embargo, os membros não têm acesso. Essa escolha vale para quando o embargo terminar.
+
+## Histórico de acesso
+
+Na aba **Settings**, a seção **History** lista, em ordem, o que mudou: convites, links anônimos, embargos, quem fez e quando.
+
+<Captura nome="historico-de-acesso" alt="Seção History com os registros de convite, link anônimo e embargo" legenda="Histórico de acesso." />
+
+<Limites>
+- Um convite só pode ser usado uma vez.
+- Só quem tem **Can write** ou é dono compartilha o dataset.
+- Só o dono define o embargo.
+</Limites>

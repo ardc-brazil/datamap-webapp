@@ -468,6 +468,7 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
         return (
             <button
                 type="button"
+                data-testid="doi-register-manual"
                 className={`btn-primary-outline btn-small !m-0 h-8 w-fit text-[13px]`}
                 onClick={props.onClick}>
                 Register manual DOI
@@ -479,6 +480,7 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
         return (
             <button
                 type="button"
+                data-testid="doi-register-auto"
                 className={`btn-primary btn-small !m-0 h-8 w-fit text-[13px]`}
                 onClick={props.onClick}>
                 Generate DOI automatically
@@ -538,7 +540,7 @@ function CitationDOIViewer(props: CitationDOIViewerProps) {
 
                 <div className="w-full flex flex-row flex-wrap justify-start items-start gap-x-8 gap-y-3">
                     <CardItem testId="doi-identifier" title="DOI (DIGITAL OBJECT IDENTIFIER)">
-                        <a href={getDOIURL(props.currentDOI)} target="_blank" className="font-mono text-[13px] break-all">
+                        <a href={getDOIURL(props.currentDOI)} data-testid="doi-link" target="_blank" className="font-mono text-[13px] break-all">
                             {getDOIURL(props.currentDOI)}
                         </a>
                     </CardItem>

@@ -49,6 +49,15 @@ describe("AvatarButton", () => {
         expect(screen.getByRole("menuitem", { name: /Request access to a tenancy/ })).toBeTruthy();
     });
 
+    test("Guia do usuário opens the manual", () => {
+        render(<AvatarButton />);
+        openMenu();
+
+        fireEvent.click(screen.getByRole("menuitem", { name: /Guia do usuário/ }));
+
+        expect(push).toHaveBeenCalledWith("/manual");
+    });
+
     test("with more than one, Switch tenancy opens the selector", () => {
         mockTenancies = [PUBLIC, AMAZON];
         render(<AvatarButton />);

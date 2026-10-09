@@ -40,7 +40,7 @@ export function TenanciesView() {
                         {`${tenancies.length} tenancies · root `}<code className="font-mono text-[14px]">datamap</code>{" · everyone is in "}<code className="font-mono text-[14px]">public</code>
                     </>
                 ) : undefined}
-                action={<button type="button" className="btn-primary m-0" onClick={() => setCreating(true)}>+ New tenancy</button>}
+                action={<button type="button" data-testid="admin-new-tenancy" className="btn-primary m-0" onClick={() => setCreating(true)}>+ New tenancy</button>}
             />
             <div className="mt-8">
                 {error ? (

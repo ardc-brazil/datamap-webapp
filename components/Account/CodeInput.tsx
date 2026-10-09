@@ -89,7 +89,7 @@ export function CodeInput({ value, onChange, onComplete, disabled, invalid, desc
     }
 
     return (
-        <div role="group" aria-label="Verification code" aria-describedby={describedBy} className="flex gap-2">
+        <div role="group" data-testid="code-input" aria-label="Verification code" aria-describedby={describedBy} className="flex gap-2">
             {digits.map((digit, index) => (
                 <input
                     key={index}

@@ -171,7 +171,7 @@ export default function LoginPage(props: Props) {
 
       <div className="w-11/12 max-w-[440px] h-fit border border-primary-200 self-center rounded-lg bg-primary-0">
         <Tabs className="px-6 py-8" headerClassName="px-6 pt-5" defaultSelectedIndex={loginTabFor(props.phase)} onTabChanged={onTabChanged}>
-          <TabPanel title="Sign in">
+          <TabPanel title="Sign in" testId="login-tab-sign-in">
             <div className="flex flex-col">
               <OrcidButton callbackUrl={callbackUrl}>Sign in with ORCID</OrcidButton>
               {process.env.NODE_ENV == "development" &&
@@ -184,7 +184,7 @@ export default function LoginPage(props: Props) {
               <SignInForm callbackUrl={callbackUrl} />
             </div>
           </TabPanel>
-          <TabPanel title="Create account">
+          <TabPanel title="Create account" testId="login-tab-sign-up">
             <div className="flex flex-col">
               <OrcidButton callbackUrl={callbackUrl}>Sign up with ORCID</OrcidButton>
               <OrDivider />

@@ -97,7 +97,7 @@ export default function DatasetDetailsPage(props: Props) {
             {/* <TabPanelDiscussion title="Discussions" dataset={props.dataset} /> */}
             {/* <TabPanelDiscussion title="Discussions" dataset={props.dataset} /> */}
             {canSeeSettings(props.dataset, canEditDataset(props.user, props.dataset)) &&
-              <TabPanelSettings title="Settings" dataset={props.dataset} user={props.user} />
+              <TabPanelSettings title="Settings" testId="dataset-tab-settings" dataset={props.dataset} user={props.user} />
             }
           </Tabs>
         </div>

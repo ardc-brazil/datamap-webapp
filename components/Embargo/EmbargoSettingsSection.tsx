@@ -26,9 +26,9 @@ function Row(props: { label: string, children: React.ReactNode, action?: React.R
     );
 }
 
-function Action(props: { label: string, danger?: boolean, onClick(): void }) {
+function Action(props: { label: string, testId: string, danger?: boolean, onClick(): void }) {
     return (
-        <button type="button" onClick={props.onClick} className={`text-[13px] font-medium hover:underline underline-offset-2 ${props.danger ? "text-danger-700" : "text-primary-600"}`}>
+        <button type="button" data-testid={props.testId} onClick={props.onClick} className={`text-[13px] font-medium hover:underline underline-offset-2 ${props.danger ? "text-danger-700" : "text-primary-600"}`}>
             {props.label}
         </button>
     );
@@ -51,7 +51,7 @@ export function EmbargoSettingsSection(props: { dataset: GetDatasetDetailsRespon
             <div className="rounded-lg border border-primary-200 bg-primary-0">
                 {embargo?.active
                     ? <>
-                        <Row label="Status" action={manage && <Action label="End early" danger onClick={() => setOpen("end")} />}>
+                        <Row label="Status" action={manage && <Action label="End early" testId="embargo-end" danger onClick={() => setOpen("end")} />}>
                             <span className="flex items-center gap-2">
                                 <span className="inline-flex items-center gap-1.5 rounded-full bg-embargo-100 px-2.5 py-[3px] text-xs font-semibold text-embargo-800">
                                     <MaterialSymbol icon="lock" size={14} grade={-25} weight={400} fill aria-hidden="true" />
@@ -60,18 +60,18 @@ export function EmbargoSettingsSection(props: { dataset: GetDatasetDetailsRespon
                                 <span className="text-primary-600">{days} {days === 1 ? "day" : "days"} left</span>
                             </span>
                         </Row>
-                        <Row label="Ends" action={access.can_extend_embargo && <Action label="Extend" onClick={() => setOpen("extend")} />}>
+                        <Row label="Ends" action={access.can_extend_embargo && <Action label="Extend" testId="embargo-extend" onClick={() => setOpen("extend")} />}>
                             {formatShortDate(embargo.until)}
                         </Row>
-                        <Row label="Other members" action={manage && <Action label={embargo.metadata_visible ? "Hide" : "Show"} onClick={() => setOpen("mode")} />}>
+                        <Row label="Other members" action={manage && <Action testId="embargo-mode" label={embargo.metadata_visible ? "Hide" : "Show"} onClick={() => setOpen("mode")} />}>
                             {embargo.metadata_visible ? "Visible to members" : "Hidden from members"}
                         </Row>
-                        <Row label="Note" action={manage && <Action label="Edit" onClick={() => setOpen("note")} />}>
+                        <Row label="Note" action={manage && <Action label="Edit" testId="embargo-note" onClick={() => setOpen("note")} />}>
                             <span className="text-primary-700">{embargo.note ?? "No note"}</span>
                         </Row>
                         <Row label="Reminders"><span className="text-primary-700">15, 10, 5 and 1 day before the end</span></Row>
                     </>
-                    : <Row label="Status" action={manage && !hasManualDoi(props.dataset) && <Action label="Set embargo" onClick={() => setOpen("set")} />}>
+                    : <Row label="Status" action={manage && !hasManualDoi(props.dataset) && <Action label="Set embargo" testId="embargo-set" onClick={() => setOpen("set")} />}>
                         <span className="flex flex-col gap-0.5">
                             <span>Not under embargo</span>
                             {manage && hasManualDoi(props.dataset) && <span className="text-[13px] text-primary-500">{EMBARGO_ERROR_MESSAGES.embargo_manual_doi}</span>}

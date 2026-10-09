@@ -4,6 +4,7 @@ import Link from "next/link";
 import Router from "next/router";
 import { useEffect, useState } from "react";
 import { MaterialSymbol, SymbolCodepoints } from "react-material-symbols";
+import { MANUAL_LINK_LABEL, MANUAL_ROUTE } from "../../contants/ManualConstants";
 import { ROUTE_PAGE_MEMBERS, ROUTE_PAGE_PROFILE, ROUTE_PAGE_TENANCY_SELECTOR } from "../../contants/InternalRoutesConstants";
 import useComponentVisible from "../../hooks/UseComponentVisible";
 import { useMyTenancies } from "../../hooks/UseTenancies";
@@ -92,6 +93,7 @@ export default function AvatarButton(props) {
             {membersTenancy && <MenuItem icon="group" text="Members" onClick={() => go(ROUTE_PAGE_MEMBERS)} />}
             {canSwitch && <MenuItem icon="tenancy" text="Switch tenancy" onClick={() => go(ROUTE_PAGE_TENANCY_SELECTOR)} />}
             <MenuItem icon="add" text="Request access to a tenancy" onClick={requestAccess} />
+            <MenuItem icon="menu_book" text={MANUAL_LINK_LABEL} onClick={() => go(MANUAL_ROUTE)} />
             <MenuItem icon="logout" text="Sign out" onClick={clickSignOut} />
           </div>
 

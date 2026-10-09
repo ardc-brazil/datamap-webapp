@@ -6,7 +6,7 @@ export function AnonymousBanner(props: { page: AnonymousPageActive | AnonymousPa
     const active = props.page.state === "active";
 
     return (
-        <div role="note" className={`flex gap-2.5 items-start px-4 md:px-8 py-3 text-[13px] leading-[19px] ${active ? "bg-embargo-100 text-embargo-800" : "bg-secondary-500 text-primary-900"}`}>
+        <div role="note" data-testid="anonymous-banner" className={`flex gap-2.5 items-start px-4 md:px-8 py-3 text-[13px] leading-[19px] ${active ? "bg-embargo-100 text-embargo-800" : "bg-secondary-500 text-primary-900"}`}>
             <MaterialSymbol icon="visibility_off" size={18} grade={-25} weight={400} className="flex-none" aria-hidden="true" />
             <span>
                 {props.page.state === "active"

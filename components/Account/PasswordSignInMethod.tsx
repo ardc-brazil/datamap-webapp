@@ -42,7 +42,7 @@ export function PasswordSignInMethod({ user }: Props) {
                 {error && <span role="alert" className="text-error-600">{error}</span>}
             </span>
             {user.has_password && (
-                <button type="button" className="btn-primary-outline btn-small m-0" onClick={() => setChanging(true)}>Change password</button>
+                <button type="button" data-testid="profile-change-password" className="btn-primary-outline btn-small m-0" onClick={() => setChanging(true)}>Change password</button>
             )}
             {!user.has_password && user.email_verified_at && (
                 <button type="button" className="btn-primary-outline btn-small m-0" disabled={sending || notice !== null} onClick={sendSetPasswordLink}>Set a password</button>

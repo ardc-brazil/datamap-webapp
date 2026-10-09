@@ -72,7 +72,7 @@ export default function Modal(props: ModalProps) {
         aria-modal="true"
         aria-labelledby={titleId}
       >
-        <div className={`relative flex flex-col w-full ${props.maxWidthClassName ?? "max-w-lg"} max-h-[calc(100vh-2rem)] bg-primary-0 border border-primary-200 ${frame.card} outline-none focus:outline-none`}>
+        <div data-testid="modal" className={`relative flex flex-col w-full ${props.maxWidthClassName ?? "max-w-lg"} max-h-[calc(100vh-2rem)] bg-primary-0 border border-primary-200 ${frame.card} outline-none focus:outline-none`}>
           <div className={`flex flex-none justify-between gap-4 ${frame.header}`}>
             <div className="min-w-0">
               <h3 id={titleId} className="m-0 text-lg leading-7 font-semibold tracking-[-0.01em] text-primary-900">
@@ -116,6 +116,7 @@ export default function Modal(props: ModalProps) {
             }
             {props.confim &&
               <button
+                data-testid="modal-confirm"
                 className={`h-9 px-3.5 rounded-md text-[13px] font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed ${frame.disabled} ${confirmColorsOf(props, frame)}`}
                 type="button"
                 disabled={props.confirmDisabled}

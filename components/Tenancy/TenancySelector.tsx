@@ -71,6 +71,7 @@ export function TenancySelector() {
                             <li key={tenancy.path}>
                                 <button
                                     type="button"
+                                    data-testid={`tenancy-option-${tenancy.path}`}
                                     className="group flex w-full items-center gap-4 px-4 py-4 text-left hover:bg-primary-100"
                                     onClick={() => choose(tenancy.path)}
                                 >

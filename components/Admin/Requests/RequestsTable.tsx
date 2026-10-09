@@ -38,7 +38,7 @@ function RequestRow({ request, now, onReview, onDecline }: Omit<Props, "requests
     const waiting = waitingLabel(request.created_at, now);
     const closed = request.status !== "pending";
     return (
-        <li role="row" className={`${GRID} min-h-[64px] items-center border-t border-primary-100 px-4 py-2.5`}>
+        <li role="row" data-testid="admin-request-row" className={`${GRID} min-h-[64px] items-center border-t border-primary-100 px-4 py-2.5`}>
             <div role="cell" className="flex min-w-0 items-center gap-3">
                 <PersonInitial name={request.requester.name} />
                 <div className="min-w-0">
@@ -69,6 +69,7 @@ function RequestRow({ request, now, onReview, onDecline }: Omit<Props, "requests
                     <>
                         <button
                             type="button"
+                            data-testid="admin-request-review"
                             onClick={() => onReview(request)}
                             className="h-8 rounded-md bg-primary-900 px-3 text-[13px] font-semibold text-primary-50 hover:bg-primary-800"
                         >

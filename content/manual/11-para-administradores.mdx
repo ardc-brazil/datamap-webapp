@@ -1,0 +1,43 @@
+---
+titulo: Para administradores
+ordem: 11
+resumo: Fila de pedidos, aprovar e recusar, workspaces, membros e convites.
+---
+
+Quem tem o papel de administrador vê o item **Admin** no menu lateral. Ali ficam os pedidos de acesso e os workspaces.
+
+## Analisar pedidos de acesso
+
+A aba **Requests** mostra a fila. No alto, os contadores separam os pedidos abertos (**Open**), os de entrada em um workspace que já existe (**Join existing**), os de criação (**New tenancy**) e os já fechados (**Closed**).
+
+<Captura nome="admin-pedidos" alt="Página Requests do painel Admin com a fila de pedidos e o botão Review em destaque" legenda="Fila de pedidos (botão Review em destaque)." />
+
+Para analisar um pedido:
+
+1. Clique em **Review** na linha do pedido.
+2. Leia o motivo (**Reason**) e veja em que workspace a pessoa está hoje.
+3. Escolha **Join existing**, para colocar a pessoa em um workspace que já existe, ou **New tenancy**, para criar um novo. Em um novo, preencha **Display name** e o nome do espaço (**Namespace**).
+4. Clique em **Approve** (ou em **Create and approve**, no caso de um workspace novo), ou em **Decline…** para recusar.
+
+<Captura nome="admin-revisar-pedido" alt="Janela de análise de um pedido com as opções Join existing e New tenancy, o motivo e os botões Decline, Cancel e Approve" legenda="Janela de análise do pedido." />
+
+A pessoa que pediu recebe um e-mail com a resposta, seja ela qual for. Os pedidos fechados aparecem em **RECENTLY CLOSED**.
+
+## Workspaces, membros e convites
+
+A aba **Tenancies** lista todos os workspaces, com o número de membros e de datasets de cada um. O workspace **Public** reúne todas as pessoas e não tem lista de membros.
+
+<Captura nome="admin-workspaces" alt="Página Tenancies do painel Admin com a lista de workspaces, o botão New tenancy e o botão Add em destaque" legenda="Lista de workspaces (botões + New tenancy e + Add em destaque)." />
+
+- Para criar um workspace, clique em **+ New tenancy**, preencha **Display name** e **Namespace** e confirme.
+- Para ver os membros de um workspace, clique nele na lista.
+- Para acrescentar alguém, use **+ Add**. Para tirar, use o botão de remover ao lado do nome da pessoa.
+
+<Captura nome="admin-novo-workspace" alt="Janela New tenancy com os campos Display name e Namespace" legenda="Janela para criar um workspace." />
+
+Os membros de cada workspace também podem convidar pessoas pela página **Members**, como descrito no capítulo 3.
+
+<Limites>
+- Cada pessoa pode ter 1 pedido pendente por vez e até 3 pedidos a cada 24 horas.
+- Um convite só pode ser usado uma vez.
+</Limites>

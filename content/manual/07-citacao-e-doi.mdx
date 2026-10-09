@@ -1,0 +1,46 @@
+---
+titulo: Citação e DOI
+ordem: 7
+resumo: DOI automático e manual, estados e página pública.
+---
+
+O DOI é o identificador que permite citar o seu dataset em artigos. Cada versão pode ter um.
+
+## Registrar um DOI
+
+O DOI fica na seção **Citation** da aba **Data card**. Se a versão ainda não tem um, a seção pergunta se você quer registrar.
+
+<Captura nome="doi-registrar" alt="Seção Citation de um dataset sem DOI, com os botões Register manual DOI e Generate DOI automatically" legenda="Seção Citation sem DOI." />
+
+- **Generate DOI automatically**: o DataMap cria o DOI para você. Dentro de um embargo, esta é a opção que mantém o embargo.
+- **Register manual DOI**: você informa um DOI que já existe, criado fora do DataMap.
+
+<Nota>
+Ao registrar um DOI manual, o dataset deixa de poder entrar em embargo. Se ele já está em embargo, o DataMap pede a sua confirmação antes.
+</Nota>
+
+## Ver o DOI
+
+Depois do registro, a seção mostra o endereço do DOI, o modo (**AUTO** ou **MANUAL**) e o estado (**STATUS**).
+
+<Captura nome="doi-publicado" alt="Seção Citation com o endereço do DOI, o modo AUTO e o estado FINDABLE" legenda="DOI registrado." />
+
+Os estados são três:
+
+- **DRAFT**: o DOI existe, mas ainda não foi registrado. Só neste estado ele pode ser apagado, com **Delete DOI**.
+- **REGISTERED**: o DOI está registrado e funciona, mas não aparece nas buscas do DataCite e o dataset ainda não tem página pública.
+- **FINDABLE**: o DOI também aparece nas buscas do DataCite e o dataset tem página pública. É o estado final.
+
+Um DOI **REGISTERED** ou **FINDABLE** não pode ser apagado. Para mudar o estado, fale com a equipe do DataMap; a seção **Citation** indica os contatos. Depois do fim de um embargo, o aviso no topo do dataset traz o botão **Make DOI findable**, que leva o DOI a **FINDABLE**.
+
+## A página pública
+
+O endereço do DOI leva a uma página do DataMap. Para ver os dados, a pessoa precisa entrar ou criar uma conta. Depois de entrar, ela volta para a mesma página.
+
+<Captura nome="doi-pagina-publica" alt="Página de entrada que aparece a quem abre um endereço de DOI sem ter entrado" legenda="Quem abre o DOI sem entrar passa pela tela de entrada." />
+
+<Limites>
+- O dataset só tem página pública quando o DOI está **FINDABLE**.
+- Um DOI manual impede que o dataset entre em embargo.
+- Só um DOI em **DRAFT** pode ser apagado.
+</Limites>

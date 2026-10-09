@@ -92,7 +92,7 @@ export function ShareDialog(props: Props) {
         <>
             <div className="fixed inset-0 z-40 bg-primary-900/40" aria-hidden="true"></div>
             <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
-                <div role="dialog" aria-modal="true" aria-labelledby="share-dialog-title" className="flex flex-col w-full max-w-[640px] max-h-[calc(100vh-2rem)] bg-primary-0 border border-primary-300 rounded-xl shadow-xl shadow-primary-900/20">
+                <div role="dialog" data-testid="share-dialog" aria-modal="true" aria-labelledby="share-dialog-title" className="flex flex-col w-full max-w-[640px] max-h-[calc(100vh-2rem)] bg-primary-0 border border-primary-300 rounded-xl shadow-xl shadow-primary-900/20">
                     <div className="flex justify-between items-start gap-4 px-6 pt-5 pb-4">
                         <div className="flex flex-col gap-0.5 min-w-0">
                             <h3 id="share-dialog-title" className="m-0 text-lg font-semibold tracking-[-0.01em] text-primary-900">Share</h3>

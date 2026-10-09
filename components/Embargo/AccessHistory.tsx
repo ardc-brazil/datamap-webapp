@@ -15,7 +15,7 @@ export function AccessHistory(props: { datasetId: string }) {
     }
 
     return (
-        <SettingsBlock title="History">
+        <div data-testid="access-history"><SettingsBlock title="History">
             <ul className="m-0 p-0 list-none rounded-lg border border-primary-200 bg-primary-0">
                 {items.map((entry, index) => {
                     const row = describeAccessEvent(entry);
@@ -26,11 +26,11 @@ export function AccessHistory(props: { datasetId: string }) {
                                 <strong className="font-semibold text-primary-900">{row.who}</strong> <span className="text-primary-700">{row.what}</span>
                                 {row.detail && <span className="block text-xs text-primary-500">{row.detail}</span>}
                             </span>
-                            <span className="text-right font-mono text-xs text-primary-500">{formatHistoryWhen(entry.occurred_at)}</span>
+                            <span data-testid="history-when" className="text-right font-mono text-xs text-primary-500">{formatHistoryWhen(entry.occurred_at)}</span>
                         </li>
                     );
                 })}
             </ul>
-        </SettingsBlock>
+        </SettingsBlock></div>
     );
 }

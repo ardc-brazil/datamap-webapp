@@ -57,7 +57,7 @@ export default function ProfilePage(props) {
 
           <div className="mt-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-10 items-start">
             <div className="flex flex-col gap-10 min-w-0">
-              <ProfileSection title="Tenancies" description="The tenancies you can work in. Datasets and notebooks belong to the selected one.">
+              <ProfileSection title="Tenancies" testId="profile-tenancies" description="The tenancies you can work in. Datasets and notebooks belong to the selected one.">
                 <ProfileTenancies />
               </ProfileSection>
 
@@ -125,9 +125,9 @@ export default function ProfilePage(props) {
   );
 }
 
-function ProfileSection(props: { title: string, description?: string, children: React.ReactNode }) {
+function ProfileSection(props: { title: string, description?: string, testId?: string, children: React.ReactNode }) {
   return (
-    <section className="flex flex-col gap-3">
+    <section data-testid={props.testId} className="flex flex-col gap-3">
       <div>
         <h3 className="m-0 text-lg">{props.title}</h3>
         {props.description && <p className="m-0 mt-1 text-sm text-primary-600">{props.description}</p>}
