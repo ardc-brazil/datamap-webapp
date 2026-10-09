@@ -28,12 +28,11 @@ jobs:
           path: datamap-webapp
 
       # `make manual` reads the stack from ../gatekeeper, so the two sit side by
-      # side. GATEKEEPER_CHECKOUT_TOKEN needs read access to ardc-brazil/gatekeeper.
+      # side. The repository is public, so the default token is enough.
       - uses: actions/checkout@v4
         with:
           repository: ardc-brazil/gatekeeper
           path: gatekeeper
-          token: ${{ secrets.GATEKEEPER_CHECKOUT_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
