@@ -1,0 +1,133 @@
+{
+  "projectId": "2b067e98-0563-4976-aaec-f6c3612a1319",
+  "shape": "package",
+  "pkg": "@datamap/ui",
+  "globalName": "DataMap",
+  "entry": ".design-sync/pkg/dist/index.js",
+  "buildCmd": "node .design-sync/pkg/build.mjs",
+  "srcDir": "../../components",
+  "cssEntry": "dist/styles.css",
+  "componentSrcMap": {
+    "Badge": "../../components/ui/badge.tsx"
+  },
+  "dtsPropsFor": {
+    "Button": "variant?: \"default\" | \"destructive\" | \"outline\" | \"secondary\" | \"ghost\" | \"link\"; size?: \"default\" | \"sm\" | \"lg\" | \"icon\"; /** Render the single child (e.g. an <a>) with button styling instead of a <button>. */ asChild?: boolean; type?: \"button\" | \"submit\" | \"reset\"; disabled?: boolean; onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void; className?: string; children?: React.ReactNode;",
+    "Badge": "variant?: \"default\" | \"secondary\" | \"destructive\" | \"outline\"; className?: string; children?: React.ReactNode;",
+    "CloseButton": "/** Accessible label and tooltip. Default \"Remove\". */ label?: string; onClick?: () => void;",
+    "MaterialSymbol": "/** Material Symbols icon name, e.g. \"close\", \"search\", \"upload_file\", \"lock\". */ icon: string; fill?: boolean; weight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900; grade?: number; size?: number; color?: string; className?: string; style?: React.CSSProperties;",
+    "AvatarIcon": "/** Extra classes for the svg, e.g. a fill-* tone. Size is fixed at 20px (the built-in w-5 h-5 wins over size classes). */ className?: string;",
+    "DatasetIcon": "/** Extra classes for the svg, e.g. a fill-* tone. Size is fixed at 20px (the built-in w-5 h-5 wins over size classes). */ className?: string;",
+    "HomeIcon": "/** Extra classes for the svg, e.g. a fill-* tone. Size is fixed at 20px (the built-in w-5 h-5 wins over size classes). */ className?: string;",
+    "NotebookIcon": "/** Extra classes for the svg, e.g. a fill-* tone. Size is fixed at 20px (the built-in w-5 h-5 wins over size classes). */ className?: string;",
+    "PiechartIcon": "/** Extra classes for the svg, e.g. a fill-* tone. Size is fixed at 20px (the built-in w-5 h-5 wins over size classes). */ className?: string;",
+    "SearchIcon": "/** Extra classes for the svg, e.g. a fill-* tone. Size is fixed at 20px (the built-in w-5 h-5 wins over size classes). */ className?: string;"
+  },
+  "overrides": {
+    "PopupModal": {
+      "cardMode": "single",
+      "viewport": "720x420"
+    },
+    "Dialog": {
+      "cardMode": "single",
+      "viewport": "880x480"
+    },
+    "DialogContent": {
+      "cardMode": "single",
+      "viewport": "720x480"
+    },
+    "DialogHeader": {
+      "cardMode": "single",
+      "viewport": "720x480"
+    },
+    "DialogFooter": {
+      "cardMode": "single",
+      "viewport": "720x480"
+    },
+    "DialogTitle": {
+      "cardMode": "single",
+      "viewport": "880x480"
+    },
+    "DialogDescription": {
+      "cardMode": "single",
+      "viewport": "720x480"
+    },
+    "DialogClose": {
+      "cardMode": "single",
+      "viewport": "720x480"
+    },
+    "DialogOverlay": {
+      "cardMode": "single",
+      "viewport": "720x480"
+    },
+    "DialogPortal": {
+      "cardMode": "single",
+      "viewport": "720x480"
+    },
+    "DialogTrigger": {
+      "cardMode": "single",
+      "viewport": "720x480"
+    },
+    "Drawer": {
+      "cardMode": "single",
+      "viewport": "720x480"
+    },
+    "Accordion": {
+      "cardMode": "column"
+    },
+    "AccordionTrigger": {
+      "cardMode": "column"
+    },
+    "Alert": {
+      "cardMode": "column"
+    },
+    "AvatarIcon": {
+      "cardMode": "column"
+    },
+    "Card": {
+      "cardMode": "column"
+    },
+    "CardFooter": {
+      "cardMode": "column"
+    },
+    "CardHeader": {
+      "cardMode": "column"
+    },
+    "CardTitle": {
+      "cardMode": "column"
+    },
+    "CloseButton": {
+      "cardMode": "column"
+    },
+    "DatasetIcon": {
+      "cardMode": "column"
+    },
+    "HomeIcon": {
+      "cardMode": "column"
+    },
+    "Logo": {
+      "cardMode": "column"
+    },
+    "MaterialSymbol": {
+      "cardMode": "column"
+    },
+    "PiechartIcon": {
+      "cardMode": "column"
+    },
+    "ScrollBar": {
+      "cardMode": "column"
+    },
+    "SearchIcon": {
+      "cardMode": "column"
+    },
+    "Separator": {
+      "cardMode": "column"
+    },
+    "Table": {
+      "cardMode": "column"
+    },
+    "UppyUploader": {
+      "cardMode": "column"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}
